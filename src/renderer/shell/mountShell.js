@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
   'use strict';
 
   async function mountShell(root, api) {
@@ -15,21 +15,29 @@
 
     root.innerHTML = '';
     const app = document.createElement('main');
-    app.className = 'app-shell';
+    app.className = 'app-shell is-start';
     app.innerHTML = [
+      '<section class="start-screen">',
+      '  <div class="start-kicker">Local-first Markdown assistant</div>',
+      '  <h1>ZEUS Agent</h1>',
+      '  <p>Open an Obsidian vault to analyze, organize, and review Markdown changes safely.</p>',
+      '  <button type="button" class="start-open" data-open-vault>Open Vault</button>',
+      '</section>',
       '<aside class="left-nav">',
       '  <div class="brand">ZEUS Agent</div>',
-      '  <button id="open-vault" type="button">Open Vault</button>',
+      '  <button type="button" data-open-vault>Open Vault</button>',
       '  <button type="button">New Project</button>',
       '  <button type="button">Inbox Review</button>',
       '  <button type="button">Review</button>',
       '  <button type="button">Settings</button>',
       '</aside>',
       '<section class="main-workspace">',
-      '  <div class="chat-placeholder">Chat history</div>',
-      '  <div class="review-placeholder">Review Basket</div>',
-      '  <div id="context-bar" class="context-placeholder">Context: no vault open</div>',
-      '  <div class="input-placeholder">Input field</div>',
+      '  <div class="workspace-stack">',
+      '    <div class="chat-placeholder">Chat history</div>',
+      '    <div class="review-placeholder">Review Basket</div>',
+      '    <div id="context-bar" class="context-placeholder">Context: no vault open</div>',
+      '    <div class="input-placeholder">Input field</div>',
+      '  </div>',
       '</section>',
       '<aside class="vault-panel">',
       '  <div class="files-placeholder">',
@@ -54,7 +62,7 @@
   }
 
   function wireVaultShell(api, app) {
-    const openButton = app.querySelector('#open-vault');
+    const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
     const preview = app.querySelector('#markdown-preview');
     const contextBar = app.querySelector('#context-bar');
@@ -73,7 +81,7 @@
       context: contextBar
     });
 
-    openButton.addEventListener('click', async () => {
+    openButtons.forEach((openButton) => openButton.addEventListener('click', async () => {
       setText(statusBar, 'Opening vault...');
       const selected = await api.vault.selectFolder();
       if (!selected.ok) {
@@ -82,8 +90,9 @@
       }
       setText(contextBar, 'Vault: ' + selected.root);
       setText(statusBar, 'Vault opened.');
+      app.classList.remove('is-start');
       await filePanel.openRoot();
-    });
+    }));
   }
 
   function setText(node, value) {
