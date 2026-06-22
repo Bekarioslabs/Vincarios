@@ -1,0 +1,40 @@
+﻿:root {
+  --background-primary: #0a0a0a;
+  --background-secondary: #111111;
+  --background-tertiary: #161616;
+  --background-modifier-form-field: #1a1a1a;
+  --background-modifier-border: #2a2a2a;
+  --background-subtle: rgba(255,255,255,.018);
+  --background-subtle-strong: rgba(255,255,255,.035);
+
+  --text-normal: #e8e8e8;
+  --text-muted: #686868;
+  --text-faint: #4f4f4f;
+  --text-strong: #ffffff;
+  --text-readable: #dddddd;
+  --text-on-accent: #050505;
+  --text-accent: #f59e0b;
+  --text-accent-rgb: 245,158,11;
+
+  --interactive-accent: #d97706;
+  --interactive-accent-rgb: 217,119,6;
+
+  --status-success: #16a34a;
+  --status-danger: #dc2626;
+  --status-error: #f08a8a;
+
+  --font-interface: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-monospace: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+
+  --titlebar-height: 39px;
+  --statusbar-height: 24px;
+  --left-nav-width: 200px;
+  --vault-panel-width: 44vw;
+  --file-tree-width: 260px;
+  --min-main-width: 420px;
+  --min-vault-width: 520px;
+  --min-file-tree-width: 170px;
+  --min-preview-width: 260px;
+}
+
+

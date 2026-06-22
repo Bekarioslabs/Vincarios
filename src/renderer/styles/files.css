@@ -1,0 +1,141 @@
+﻿.file-toolbar {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.file-title-wrap {
+  min-width: 0;
+  flex: 1;
+  padding: 7px 10px;
+}
+
+.file-label {
+  color: var(--interactive-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.file-vault-name {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-refresh-button {
+  width: 34px;
+  height: 38px;
+  flex: 0 0 34px;
+  border: 0;
+  border-left: 1px solid var(--background-modifier-border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.file-refresh-button:hover:not(:disabled) {
+  color: var(--interactive-accent);
+  background: var(--background-modifier-form-field);
+}
+
+.file-refresh-button:disabled {
+  opacity: .38;
+  cursor: default;
+}
+
+.file-breadcrumb {
+  min-height: 28px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: var(--background-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-monospace);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tree {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: auto;
+  padding: 6px 0;
+}
+
+.file-tree.muted,
+.file-tree.error {
+  padding: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.file-tree.error,
+.file-tree-inline-error {
+  color: var(--status-error);
+}
+
+.file-row {
+  min-height: 23px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+  padding: 3px 9px 3px calc(9px + (var(--tree-depth, 0) * 16px));
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-normal);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.file-row:hover {
+  background: var(--background-modifier-form-field);
+}
+
+.file-row.is-selected {
+  color: var(--interactive-accent);
+  background: var(--background-modifier-form-field);
+  box-shadow: inset 3px 0 0 var(--interactive-accent);
+}
+
+.file-row-folder {
+  color: var(--interactive-accent);
+  font-weight: 650;
+}
+
+.file-row-icon {
+  color: inherit;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.file-row-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 11px;
+}
+
+.file-tree-inline-muted,
+.file-tree-inline-error {
+  padding: 4px 8px 4px calc(24px + (var(--tree-depth, 0) * 16px));
+  font-size: 11px;
+  color: var(--text-muted);
+}
+

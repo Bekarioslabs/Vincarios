@@ -1,6 +1,7 @@
-'use strict';
+﻿'use strict';
 
 const path = require('node:path');
+const { DEFAULT_THEME_COLORS } = require('../../shared/ui/themeDefaults');
 
 function createWindowOptions(projectRoot) {
   return {
@@ -9,7 +10,7 @@ function createWindowOptions(projectRoot) {
     minWidth: 980,
     minHeight: 640,
     show: true,
-    backgroundColor: '#111317',
+    backgroundColor: DEFAULT_THEME_COLORS.backgroundPrimary,
     webPreferences: {
       preload: path.join(projectRoot, 'src', 'preload', 'index.js'),
       contextIsolation: true,
