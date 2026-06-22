@@ -1,0 +1,29 @@
+# dependencies
+node_modules/
+
+# logs and runtime state
+*.log
+npm-debug.log*
+.zeus/
+.zeus_backups/
+
+# private vault/runtime data
+ZEUS/
+demo-vault/.obsidian/
+demo-vault/.zeus/
+demo-vault/.zeus_backups/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# local env/secrets
+.env
+.env.*
+
+# build output
+dist/
+build/
+out/

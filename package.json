@@ -1,0 +1,22 @@
+{
+  "name": "zeus-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local review-first assistant for Obsidian-style Markdown vaults.",
+  "main": "src/main/index.js",
+  "scripts": {
+    "check": "node --check src/main/index.js && node --check src/renderer/bootstrap.js",
+    "test": "npm run check && node --test tests/*.test.js"
+  },
+  "keywords": [
+    "obsidian",
+    "markdown",
+    "local-first",
+    "vault",
+    "assistant"
+  ],
+  "author": "Bekarios Labs",
+  "license": "UNLICENSED",
+  "devDependencies": {},
+  "dependencies": {}
+}
