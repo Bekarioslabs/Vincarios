@@ -3,16 +3,20 @@
 const path = require('node:path');
 const { createMainWindow } = require('./createMainWindow');
 const { registerAppIpc } = require('../ipc/registerAppIpc');
+const { registerVaultIpc } = require('../ipc/registerVaultIpc');
+const { createVaultReadService } = require('../vault/vaultReadService');
 
 function bootstrapElectron(electron, options) {
   options = options || {};
-  const { app, ipcMain } = electron;
+  const { app, ipcMain, dialog, BrowserWindow } = electron;
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
+  const vaultReadService = options.vaultReadService || createVaultReadService();
 
   registerAppIpc(ipcMain, {
     appName: 'ZEUS Agent',
     version: app.getVersion ? app.getVersion() : '0.1.0'
   });
+  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService);
 
   app.whenReady().then(() => {
     createMainWindow(electron, { projectRoot });

@@ -20,10 +20,11 @@
 
 ## Phase 2 - Vault Core
 
-- [ ] open vault.
-- [ ] vault profile.
-- [ ] file tree.
-- [ ] Markdown read/render.
+- [x] open vault.
+- [x] vault profile foundation.
+- [ ] file tree module.
+- [x] Markdown read foundation.
+- [ ] Markdown render/sanitize.
 - [x] path safety foundation.
 - [x] dot-folder block foundation.
 

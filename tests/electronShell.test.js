@@ -17,7 +17,15 @@ test('main window options keep the renderer sandboxed', () => {
   assert.match(options.webPreferences.preload, /src[\\/]preload[\\/]index\.js$/);
 });
 
-test('IPC channels start with a minimal app namespace', () => {
-  assert.deepEqual(Object.keys(IPC_CHANNELS), ['APP_INFO']);
+test('IPC channels expose only app info and read-only vault basics', () => {
+  assert.deepEqual(Object.keys(IPC_CHANNELS).sort(), [
+    'APP_INFO',
+    'VAULT_LIST_FOLDER',
+    'VAULT_READ_MARKDOWN',
+    'VAULT_SELECT_FOLDER',
+    'VAULT_SET_ROOT',
+    'VAULT_STATE'
+  ]);
   assert.equal(IPC_CHANNELS.APP_INFO, 'app:info');
+  assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
 });
