@@ -11,13 +11,21 @@ function main() {
   };
 }
 
+function shouldBootstrapElectron(processLike) {
+  const proc = processLike || process;
+  return !!(proc.versions && proc.versions.electron && proc.type !== 'renderer');
+}
+
 module.exports = {
   main,
   createVaultContext,
-  bootstrapElectron
+  bootstrapElectron,
+  shouldBootstrapElectron
 };
 
-if (require.main === module) {
+if (shouldBootstrapElectron()) {
   const electron = require('electron');
   bootstrapElectron(electron);
+} else if (require.main === module) {
+  console.log(main());
 }

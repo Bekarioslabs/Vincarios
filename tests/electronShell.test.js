@@ -9,6 +9,7 @@ const { IPC_CHANNELS } = require('../src/shared/ipc/channels');
 test('main window options keep the renderer sandboxed', () => {
   const options = createWindowOptions(path.join('D:', 'ZEUS_AGENT'));
 
+  assert.equal(options.show, true);
   assert.equal(options.webPreferences.contextIsolation, true);
   assert.equal(options.webPreferences.nodeIntegration, false);
   assert.equal(options.webPreferences.sandbox, true);

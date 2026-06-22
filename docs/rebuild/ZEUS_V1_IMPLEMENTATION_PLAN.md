@@ -22,7 +22,7 @@
 
 - [x] open vault.
 - [x] vault profile foundation.
-- [ ] file tree module.
+- [x] file navigation module foundation.
 - [x] Markdown read foundation.
 - [ ] Markdown render/sanitize.
 - [x] path safety foundation.

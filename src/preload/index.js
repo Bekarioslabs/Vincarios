@@ -1,7 +1,17 @@
 'use strict';
 
 const { contextBridge, ipcRenderer } = require('electron');
-const { IPC_CHANNELS } = require('../shared/ipc/channels');
+
+// Keep preload self-contained while BrowserWindow sandbox is enabled.
+// Sandboxed preload scripts must not depend on arbitrary local modules.
+const IPC_CHANNELS = Object.freeze({
+  APP_INFO: 'app:info',
+  VAULT_STATE: 'vault:state',
+  VAULT_SELECT_FOLDER: 'vault:select-folder',
+  VAULT_SET_ROOT: 'vault:set-root',
+  VAULT_LIST_FOLDER: 'vault:list-folder',
+  VAULT_READ_MARKDOWN: 'vault:read-markdown'
+});
 
 const zeus = Object.freeze({
   appInfo() {

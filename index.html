@@ -141,10 +141,37 @@
       color: var(--text-normal);
       font: 13px/1.5 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
     }
+
+    .file-toolbar {
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .file-toolbar button {
+      text-align: center;
+      padding: 7px 8px;
+    }
+
+    .file-toolbar button:disabled {
+      opacity: 0.45;
+    }
+
+    .file-breadcrumb {
+      overflow: hidden;
+      color: var(--text-muted);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
   <div id="app"></div>
+  <script src="./src/renderer/files/fileNavigator.js"></script>
+  <script src="./src/renderer/files/mountFilePanel.js"></script>
   <script src="./src/renderer/shell/mountShell.js"></script>
   <script src="./src/renderer/bootstrap.js"></script>
 </body>

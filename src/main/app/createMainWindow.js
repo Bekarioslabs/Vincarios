@@ -8,7 +8,7 @@ function createWindowOptions(projectRoot) {
     height: 820,
     minWidth: 980,
     minHeight: 640,
-    show: false,
+    show: true,
     backgroundColor: '#111317',
     webPreferences: {
       preload: path.join(projectRoot, 'src', 'preload', 'index.js'),
@@ -28,11 +28,22 @@ function createMainWindow(electron, options) {
 
   const win = new BrowserWindow(createWindowOptions(projectRoot));
 
-  win.once('ready-to-show', () => {
-    win.show();
+  win.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
+    console.error('ZEUS window failed to load:', errorCode, errorDescription);
   });
 
-  win.loadFile(path.join(projectRoot, 'index.html'));
+  win.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error('ZEUS preload failed:', preloadPath, error);
+  });
+
+  win.webContents.on('render-process-gone', (_event, details) => {
+    console.error('ZEUS renderer process gone:', details);
+  });
+
+  win.loadFile(path.join(projectRoot, 'index.html')).catch((error) => {
+    console.error('ZEUS loadFile failed:', error);
+  });
+
   return win;
 }
 

@@ -34,7 +34,7 @@
       '<aside class="vault-panel">',
       '  <div class="files-placeholder">',
       '    <div class="panel-title">Vault files</div>',
-      '    <div id="file-list" class="file-list muted">Open a vault to list files.</div>',
+      '    <div id="file-panel"></div>',
       '  </div>',
       '  <div class="preview-placeholder">',
       '    <div class="panel-title">Markdown preview</div>',
@@ -55,15 +55,23 @@
 
   function wireVaultShell(api, app) {
     const openButton = app.querySelector('#open-vault');
-    const fileList = app.querySelector('#file-list');
+    const filePanelRoot = app.querySelector('#file-panel');
     const preview = app.querySelector('#markdown-preview');
     const contextBar = app.querySelector('#context-bar');
     const statusBar = app.querySelector('#status-bar');
 
-    if (!api || !api.vault) {
+    if (!api || !api.vault || !window.ZeusFilePanel) {
       setText(statusBar, 'Vault API unavailable.');
       return;
     }
+
+    const filePanel = window.ZeusFilePanel.mountFilePanel({
+      api,
+      root: filePanelRoot,
+      preview,
+      status: statusBar,
+      context: contextBar
+    });
 
     openButton.addEventListener('click', async () => {
       setText(statusBar, 'Opening vault...');
@@ -74,49 +82,7 @@
       }
       setText(contextBar, 'Vault: ' + selected.root);
       setText(statusBar, 'Vault opened.');
-      await renderFolder(api, fileList, preview, statusBar, '');
-    });
-  }
-
-  async function renderFolder(api, fileList, preview, statusBar, folderPath) {
-    const result = await api.vault.listFolder(folderPath || '');
-    fileList.innerHTML = '';
-    if (!result.ok) {
-      fileList.className = 'file-list error';
-      fileList.textContent = result.message || 'Could not list folder.';
-      return;
-    }
-
-    fileList.className = 'file-list';
-    if (!result.entries.length) {
-      fileList.className = 'file-list muted';
-      fileList.textContent = 'No Markdown files or visible folders here.';
-      return;
-    }
-
-    result.entries.forEach((entry) => {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'file-row file-row-' + entry.kind;
-      button.textContent = (entry.kind === 'folder' ? '▸ ' : '• ') + entry.name;
-      button.addEventListener('click', async () => {
-        if (entry.kind === 'folder') {
-          setText(statusBar, 'Listing ' + entry.path + '...');
-          await renderFolder(api, fileList, preview, statusBar, entry.path);
-          setText(statusBar, 'Folder listed: ' + entry.path);
-        } else {
-          setText(statusBar, 'Reading ' + entry.path + '...');
-          const read = await api.vault.readMarkdown(entry.path);
-          if (!read.ok) {
-            setText(preview, read.message || 'Could not read file.');
-            setText(statusBar, 'Read failed.');
-            return;
-          }
-          setText(preview, read.content);
-          setText(statusBar, 'Read: ' + read.path);
-        }
-      });
-      fileList.appendChild(button);
+      await filePanel.openRoot();
     });
   }
 

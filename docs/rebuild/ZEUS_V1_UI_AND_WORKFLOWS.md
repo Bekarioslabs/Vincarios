@@ -247,3 +247,69 @@ Not V1 Options:
 - trusted/yolo mode
 - monetization
 - complex shortcut editor
+## Early Scaffold UX Findings
+
+These findings came from the first runnable Electron scaffold. They are product/UX requirements, not just visual polish.
+
+### Startup / Vault Opening
+
+The app should not drop the user directly into an empty workspace.
+
+V1 should start with a simple splash/start screen:
+
+- ZEUS Agent name/logo area
+- primary `Open Vault` action
+- later: recent vaults if useful
+
+`Open Vault` can remain available inside the app, but the first-run/opening experience should feel intentional and central, similar to the prototype.
+
+### File List / Tree
+
+The prototype file tree felt better than the first scaffold list.
+
+V1 file navigation should move toward:
+
+- compact file rows, not large button-sized rows
+- persistent tree behavior
+- folders expand/collapse in place instead of replacing the whole tree view
+- selected file/folder state remains visible
+- tree area owns its own scrolling
+
+The current "enter folder and replace list" behavior is acceptable only as temporary scaffold behavior.
+
+### Vault Panel Layout
+
+The first scaffold places files above preview. This is not the desired V1 layout.
+
+V1 should use the full app height better:
+
+```text
+Vault Panel:
+File Tree | Preview
+```
+
+or an equivalent layout where file navigation and preview stay visible side by side.
+
+The whole app shell should not scroll during normal use. Scroll should be local to:
+
+- file tree
+- Markdown preview
+- chat history
+- review basket when needed
+
+### Selection UX
+
+The prototype's context-aware selection behavior should be recovered cleanly:
+
+- `Ctrl+A` selects within the relevant hovered/focused region, not the whole app.
+- right-click can offer region-specific selection/copy actions.
+- selection behavior belongs in a focused shortcuts/selection module, not scattered across shell, chat, and preview code.
+
+### Implementation Note
+
+Do not solve these by adding more logic to the shell. Keep the shell as layout orchestration and implement these in focused modules:
+
+- startup/splash in `renderer/shell` or `renderer/startup`
+- file tree behavior in `renderer/files`
+- preview layout in `renderer/markdown` plus shell layout slots
+- selection shortcuts in `renderer/shortcuts` or `renderer/selection`
