@@ -2,21 +2,21 @@
 
 ## Phase 0 - Rebuild Setup
 
-- [ ] Confirm V1 product sentence.
-- [ ] Confirm V1 feature list.
-- [ ] Confirm non-V1 list.
-- [ ] Create clean project folder.
-- [ ] Create new `AGENTS.md`.
-- [ ] Create minimal README.
-- [ ] Decide whether to reuse the current GitHub repo after archiving the prototype.
+- [x] Confirm V1 product sentence.
+- [x] Confirm V1 feature list.
+- [x] Confirm non-V1 list.
+- [x] Create clean project folder.
+- [x] Create new `AGENTS.md`.
+- [x] Create minimal README.
+- [x] Decide whether to reuse the current GitHub repo after archiving the prototype.
 
 ## Phase 1 - Foundation
 
-- [ ] Electron scaffold.
-- [ ] strict preload bridge.
-- [ ] main/renderer/shared separation.
-- [ ] automated test setup.
-- [ ] first security/path tests.
+- [x] Electron scaffold.
+- [x] strict preload bridge.
+- [x] main/renderer/shared separation.
+- [x] automated test setup.
+- [x] first security/path tests.
 
 ## Phase 2 - Vault Core
 
@@ -24,8 +24,8 @@
 - [ ] vault profile.
 - [ ] file tree.
 - [ ] Markdown read/render.
-- [ ] path safety.
-- [ ] dot-folder blocks.
+- [x] path safety foundation.
+- [x] dot-folder block foundation.
 
 ## Phase 3 - Action And Review Core
 

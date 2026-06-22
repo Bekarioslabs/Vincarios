@@ -5,7 +5,9 @@
   "description": "Local review-first assistant for Obsidian-style Markdown vaults.",
   "main": "src/main/index.js",
   "scripts": {
-    "check": "node --check src/main/index.js && node --check src/renderer/bootstrap.js",
+    "start": "electron .",
+    "dev": "electron .",
+    "check": "node scripts/check-js.js",
     "test": "npm run check && node --test tests/*.test.js"
   },
   "keywords": [
@@ -17,6 +19,8 @@
   ],
   "author": "Bekarios Labs",
   "license": "UNLICENSED",
-  "devDependencies": {},
+  "devDependencies": {
+    "electron": "^42.4.1"
+  },
   "dependencies": {}
 }

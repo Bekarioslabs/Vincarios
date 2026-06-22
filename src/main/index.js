@@ -1,16 +1,23 @@
 'use strict';
 
+const { createVaultContext } = require('./vault/vaultContext');
+const { bootstrapElectron } = require('./app/bootstrapElectron');
+
 function main() {
   return {
     app: 'ZEUS Agent',
-    status: 'scaffold'
+    status: 'scaffold',
+    createVaultContext
   };
 }
 
 module.exports = {
-  main
+  main,
+  createVaultContext,
+  bootstrapElectron
 };
 
 if (require.main === module) {
-  console.log(main());
+  const electron = require('electron');
+  bootstrapElectron(electron);
 }
