@@ -25,6 +25,7 @@
 - [x] file navigation module foundation.
 - [x] Markdown read foundation.
 - [ ] Markdown render/sanitize.
+- [ ] Markdown link navigation with preview open, preview history, and explicit Reveal in Files.
 - [x] path safety foundation.
 - [x] dot-folder block foundation.
 

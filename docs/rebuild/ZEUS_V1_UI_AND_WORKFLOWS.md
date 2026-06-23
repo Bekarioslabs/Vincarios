@@ -168,6 +168,20 @@ Permission shortcuts:
 
 Recursive permission application must not read Markdown contents. It only needs folder/file paths from the vault listing API. Context remains a separate workflow based on the selected file/folder and explicit context rules.
 
+## Markdown Link Navigation Decisions
+
+Markdown rendering and Markdown navigation are separate blocks.
+
+- Wikilinks and relative Markdown links should render safely first.
+- A later navigation block makes them clickable.
+- Clicking a resolved note link opens the target note in the preview.
+- Clicking a link must not automatically expand the file tree.
+- The preview should provide a `Reveal in Files` control so the user can intentionally locate the opened note in the tree.
+- Preview history should support back/forward navigation after link clicks.
+- Link resolution must prefer folder-relative and project-local context before falling back to broader vault search.
+
+This keeps Markdown rendering, vault path resolution, preview history, and file-tree reveal as separate modules instead of coupling them inside the renderer.
+
 ## Context System Decisions
 
 Auto-context is enabled by default.

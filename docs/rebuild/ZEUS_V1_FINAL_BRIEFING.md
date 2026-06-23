@@ -69,6 +69,8 @@ Input field
 
 Vault panel keeps file tree and preview visible at the same time.
 
+Markdown links should later open notes in preview without automatically expanding the file tree. Use an explicit `Reveal in Files` control and preview back/forward history.
+
 Resizable panes need minimum sizes.
 
 ## Review Basket
