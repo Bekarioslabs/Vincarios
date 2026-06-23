@@ -187,20 +187,18 @@
       const controls = document.createElement('span');
       controls.className = 'file-permission-controls';
 
-      const readButton = createPermissionButton('R', 'Toggle read permission', (event) => {
+      const readButton = createPermissionButton('R', 'Toggle read permission', async (event) => {
         if (!permissionState) return null;
-        if (event.ctrlKey) {
-          const next = !permissionState.get(path).read;
-          return permissionState.setReadForPaths(knownDescendantPaths(path), next);
-        }
+        const next = !permissionState.get(path).read;
+        if (event.shiftKey) return setPermissionRecursively(path, 'read', next);
+        if (event.ctrlKey) return permissionState.setReadForPaths(knownDescendantPaths(path), next);
         return permissionState.toggleRead(path);
       });
-      const writeButton = createPermissionButton('W', 'Toggle write permission', (event) => {
+      const writeButton = createPermissionButton('W', 'Toggle write permission', async (event) => {
         if (!permissionState) return null;
-        if (event.ctrlKey) {
-          const next = !permissionState.get(path).write;
-          return permissionState.setWriteForPaths(knownDescendantPaths(path), next);
-        }
+        const next = !permissionState.get(path).write;
+        if (event.shiftKey) return setPermissionRecursively(path, 'write', next);
+        if (event.ctrlKey) return permissionState.setWriteForPaths(knownDescendantPaths(path), next);
         return permissionState.toggleWrite(path);
       });
 
@@ -208,6 +206,35 @@
       controls.appendChild(writeButton);
       updatePermissionButtons(path, readButton, writeButton);
       return controls;
+    }
+
+    async function setPermissionRecursively(path, flag, enabled) {
+      const paths = await recursiveDescendantPaths(path);
+      if (flag === 'read') permissionState.setReadForPaths(paths, enabled);
+      else permissionState.setWriteForPaths(paths, enabled);
+
+      setStatus(
+        (enabled ? 'Enabled ' : 'Disabled ') +
+        flag +
+        ' permission for ' +
+        paths.length +
+        ' entr' +
+        (paths.length === 1 ? 'y.' : 'ies.')
+      );
+      return paths;
+    }
+
+    async function recursiveDescendantPaths(path) {
+      const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
+      const collector = window.ZeusPermissionPathCollector;
+      if (!collector || !collector.collectRecursivePermissionPaths) return knownDescendantPaths(normalizedPath);
+
+      return collector.collectRecursivePermissionPaths(normalizedPath, async (folderPath) => {
+        await ensureFolderLoaded(folderPath);
+        const folderData = entriesByFolder.get(window.ZeusFileNavigator.normalizePath(folderPath || ''));
+        if (!folderData || !folderData.ok) return { ok: false, entries: [] };
+        return { ok: true, entries: folderData.entries || [] };
+      });
     }
 
     function knownDescendantPaths(path) {
@@ -233,15 +260,19 @@
       button.className = 'file-permission-button';
       button.textContent = label;
       button.title = title;
-      button.addEventListener('click', (event) => {
+      button.addEventListener('click', async (event) => {
         event.preventDefault();
         event.stopPropagation();
-        toggle(event);
-        renderTree();
+        button.disabled = true;
+        try {
+          await toggle(event);
+        } finally {
+          button.disabled = false;
+          renderTree();
+        }
       });
       return button;
     }
-
     function updatePermissionButtons(path, readButton, writeButton) {
       const permissions = permissionState
         ? permissionState.get(path)

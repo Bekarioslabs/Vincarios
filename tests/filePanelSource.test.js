@@ -31,3 +31,10 @@ test('file panel uses ctrl click for known descendant permission application', (
   assert.match(source, /knownDescendantPaths\(path\)/);
   assert.match(source, /entriesByFolder\.get\(folderPath\)/);
 });
+test('file panel uses shift click for recursive permission path collection', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /event\.shiftKey/);
+  assert.match(source, /collectRecursivePermissionPaths/);
+  assert.match(source, /ensureFolderLoaded\(folderPath\)/);
+});
