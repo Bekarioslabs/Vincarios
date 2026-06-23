@@ -125,6 +125,20 @@ Never silently broaden read/write scope. Risky future actions such as batch edit
 - Do not recreate a large `renderer.js`-style catch-all file.
 
 
+## UI Shell Verification Rule
+
+After changing app shell, splash screen, layout mounting, script load order, or shared renderer wiring, do not rely on unit tests alone.
+
+Before claiming the change is done:
+
+- run `npm test`,
+- verify that the app starts,
+- verify that the splash `Open Vault` path is clickable,
+- verify that the main visible panels still mount,
+- add or update a regression test when the failure was caused by initialization order, missing handlers, or module load order.
+
+Do not say the UI shell is clean or working if these checks were not performed.
+
 ## Placeholder And Future Slot Rules
 
 Avoid placeholder code by default. A placeholder is allowed only when it is an intentional V1 scaffold for a near-future feature or visual planning slot.
