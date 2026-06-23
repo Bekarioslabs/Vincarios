@@ -176,6 +176,8 @@ YAML frontmatter is shown as a visible Properties block by default. It is not ed
 
 Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`.
 
+The preview toolbar includes an `Edit` button that switches to local Markdown source mode. In this block, source mode is for inspection and local preview edits only. Saving to the vault must wait for the Review/Write core because persisted writes require review, backup, and audit logging.
+
 ## Markdown Link Navigation Decisions
 
 Markdown rendering and Markdown navigation are separate blocks.

@@ -5,7 +5,7 @@
     options = options || {};
     const api = options.api;
     const root = options.root;
-    const preview = options.preview;
+    const previewController = options.previewController || null;
     const status = options.status;
     const context = options.context;
     const contextState = options.contextState || null;
@@ -174,11 +174,11 @@
       setStatus('Reading ' + entry.path + '...');
       const read = await api.vault.readMarkdown(entry.path);
       if (!read.ok) {
-        setText(preview, read.message || 'Could not read file.');
+        setPreviewMessage(read.message || 'Could not read file.');
         setStatus('Read failed.');
         return;
       }
-      renderMarkdownPreview(read.content);
+      setPreviewSource(read.content, read.path);
       if (contextState) contextState.setFile(read.path);
       else setText(context, 'Context file: ' + read.path);
       setStatus('Read: ' + read.path);
@@ -291,13 +291,12 @@
         : parts;
     }
 
-    function renderMarkdownPreview(content) {
-      if (!preview) return;
-      if (!window.ZeusMarkdownRenderer || !window.ZeusMarkdownRenderer.renderMarkdown) {
-        preview.textContent = String(content || '');
-        return;
-      }
-      preview.innerHTML = window.ZeusMarkdownRenderer.renderMarkdown(content);
+    function setPreviewSource(content, path) {
+      if (previewController && previewController.setSource) previewController.setSource(content, path);
+    }
+
+    function setPreviewMessage(message) {
+      if (previewController && previewController.setMessage) previewController.setMessage(message);
     }
 
     function setStatus(value) {

@@ -68,7 +68,14 @@
         '    </section>',
         '    <div class="pane-resizer" data-resize="files" title="Resize files and preview"></div>',
         '    <section class="preview-pane">',
-        '      <article id="markdown-preview" class="markdown-preview">No file selected.</article>',
+        '      <div class="markdown-preview-shell">',
+        '        <div class="markdown-preview-toolbar">',
+        '          <div id="markdown-preview-title" class="markdown-preview-title">Markdown Preview</div>',
+        '          <button id="markdown-edit-toggle" class="markdown-edit-toggle" type="button" disabled>Edit</button>',
+        '        </div>',
+        '        <article id="markdown-preview" class="markdown-preview">No file selected.</article>',
+        '        <textarea id="markdown-source-editor" class="markdown-source-editor" spellcheck="false" hidden></textarea>',
+        '      </div>',
         '    </section>',
         '  </aside>',
         '</section>'
@@ -137,7 +144,9 @@
   function wireVaultShell(api, app) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
-    const preview = app.querySelector('#markdown-preview');
+    const previewController = window.ZeusMarkdownPreview
+      ? window.ZeusMarkdownPreview.mountMarkdownPreview({ app, status: statusBar })
+      : null;
     const contextValue = app.querySelector('#context-value');
     const statusBar = app.querySelector('#status-bar');
     const contextState = createContextState(contextValue);
@@ -151,7 +160,7 @@
     const filePanel = window.ZeusFilePanel.mountFilePanel({
       api,
       root: filePanelRoot,
-      preview,
+      previewController,
       status: statusBar,
       context: contextValue,
       contextState,
