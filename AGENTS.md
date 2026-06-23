@@ -155,6 +155,10 @@ Docs should be short, active, and decision-oriented.
 
 Archive historical material instead of letting active docs become a long diary.
 
+When implementing or changing a visible feature, workflow, shortcut, permission behavior, action type, provider behavior, or safety rule, update the relevant active documentation in the same change. At minimum, check `README.md`, `docs/rebuild/ZEUS_V1_FINAL_BRIEFING.md`, and the specific V1 doc that owns the behavior.
+
+Do not leave implemented behavior only in code, chat history, or commit messages.
+
 ## Before Committing
 
 Run at least:

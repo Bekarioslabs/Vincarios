@@ -19,6 +19,14 @@ The previous prototype is archived outside this working tree and is used only as
 - Diff, backup, and audit log before risky changes.
 - Local embeddings V1-light for suggestions, not autonomous decisions.
 
+Current implemented foundations include vault opening, file tree plus Markdown preview, explicit context target display, LM Studio status/chat basics, and file-tree Read/Write permission toggles.
+
+Permission shortcuts:
+
+- Click `R` or `W`: toggle only the selected file or folder.
+- Ctrl+Click `R` or `W`: apply to currently loaded/visible descendants.
+- Shift+Click `R` or `W`: recursively apply to all descendants by listing folder structure only. It does not read Markdown contents or change chat context.
+
 ## Planning Docs
 
 Start here:

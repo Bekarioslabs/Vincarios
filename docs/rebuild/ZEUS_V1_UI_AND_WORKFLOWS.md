@@ -160,6 +160,14 @@ The UI must make direct vs inherited state understandable without making inherit
 
 Dot folders and runtime/private folders such as `.obsidian`, `.zeus`, and `.zeus_backups` remain blocked regardless of UI state.
 
+Permission shortcuts:
+
+- Click `R` or `W`: toggle only the current file or folder.
+- Ctrl+Click `R` or `W`: apply to loaded/visible descendants that are already known to the file tree.
+- Shift+Click `R` or `W`: recursively apply to all descendants by listing folder structure only.
+
+Recursive permission application must not read Markdown contents. It only needs folder/file paths from the vault listing API. Context remains a separate workflow based on the selected file/folder and explicit context rules.
+
 ## Context System Decisions
 
 Auto-context is enabled by default.
