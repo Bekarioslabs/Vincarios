@@ -3,8 +3,10 @@
 const path = require('node:path');
 const { createMainWindow } = require('./createMainWindow');
 const { registerAppIpc } = require('../ipc/registerAppIpc');
+const { registerChatIpc } = require('../ipc/registerChatIpc');
 const { registerVaultIpc } = require('../ipc/registerVaultIpc');
 const { registerProviderIpc } = require('../ipc/registerProviderIpc');
+const { createProviderChatService } = require('../providers/providerChatService');
 const { createProviderStatusService } = require('../providers/providerStatusService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 
@@ -14,7 +16,9 @@ function bootstrapElectron(electron, options) {
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
   const vaultReadService = options.vaultReadService || createVaultReadService();
   const providerStatusService = options.providerStatusService || createProviderStatusService(options.providerOptions);
+  const chatService = options.chatService || createProviderChatService(options.providerOptions);
 
+  registerChatIpc(ipcMain, chatService);
   registerAppIpc(ipcMain, {
     appName: 'ZEUS Agent',
     version: app.getVersion ? app.getVersion() : '0.1.0'

@@ -1,4 +1,4 @@
-﻿* { box-sizing: border-box; }
+* { box-sizing: border-box; }
 
 html,
 body,
@@ -213,6 +213,54 @@ button { cursor: pointer; }
   grid-template-rows: minmax(240px, 1fr) auto auto auto;
 }
 
+
+.chat-log {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: auto;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.chat-message {
+  max-width: min(720px, 88%);
+  display: grid;
+  gap: 5px;
+}
+
+.chat-message-user {
+  align-self: flex-end;
+}
+
+.chat-message-assistant {
+  align-self: flex-start;
+}
+
+.chat-message-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.chat-message-body {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.chat-message-user .chat-message-body {
+  border-color: rgba(var(--text-accent-rgb), .35);
+  background: rgba(var(--text-accent-rgb), .08);
+}
 .chat-empty-state {
   display: grid;
   place-items: start center;

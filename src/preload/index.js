@@ -6,6 +6,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Sandboxed preload scripts must not depend on arbitrary local modules.
 const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
+  CHAT_SEND: 'chat:send',
   PROVIDER_STATUS: 'provider:status',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
@@ -18,6 +19,11 @@ const zeus = Object.freeze({
   appInfo() {
     return ipcRenderer.invoke(IPC_CHANNELS.APP_INFO);
   },
+  chat: Object.freeze({
+    send(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.CHAT_SEND, payload);
+    }
+  }),
   provider: Object.freeze({
     status() {
       return ipcRenderer.invoke(IPC_CHANNELS.PROVIDER_STATUS);

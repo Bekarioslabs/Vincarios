@@ -18,7 +18,7 @@
         '<header class="titlebar">',
         '  <div class="titlebar-brand">ZEUS Agent</div>',
         '  <div class="titlebar-spacer"></div>',
-        '  <div class="topbar-actions" aria-label="Provider status" data-future-slot="provider-status">',
+        '  <div class="topbar-actions" aria-label="Provider status" data-provider-status-widget>',
         '    <span id="provider-status" class="status-pill" data-provider-status="offline">',
         '      <span id="provider-dot" class="status-dot" aria-hidden="true"></span>',
         '      <span id="provider-status-label">Provider offline</span>',
@@ -44,7 +44,9 @@
         '  </aside>',
         '  <section class="main-workspace">',
         '    <div class="workspace-stack">',
-        '      <div class="chat-empty-state">Vault loaded. How can I help?</div>',
+        '      <section id="chat-log" class="chat-log" aria-label="Chat messages">',
+        '        <div class="chat-empty-state">Vault loaded. How can I help?</div>',
+        '      </section>',
         '      <section class="review-slot" aria-label="Review Basket" data-future-slot="review-basket">',
         '        <div class="mini-panel-title">Review Basket</div>',
         '        <div class="mini-panel-empty">No suggestions yet.</div>',
@@ -53,9 +55,9 @@
         '        <span class="context-label">Context</span>',
         '        <span id="context-value" class="context-value">No vault open.</span>',
         '      </section>',
-        '      <section class="input-slot" aria-label="Chat input" data-future-slot="chat-input">',
-        '        <textarea class="chat-input-shell" rows="1" placeholder="Write something..." readonly aria-disabled="true"></textarea>',
-        '        <button type="button" class="send-button-shell" disabled>→</button>',
+        '      <section class="input-slot" aria-label="Chat input">',
+        '        <textarea id="chat-input" class="chat-input-shell" rows="1" placeholder="Write something..." readonly aria-disabled="true"></textarea>',
+        '        <button id="chat-send" type="button" class="send-button-shell" disabled>&gt;</button>',
         '      </section>',
         '    </div>',
         '  </section>',
@@ -81,6 +83,7 @@
       root.appendChild(app);
       wireShellInteractions(app);
       if (window.ZeusProviderStatus) window.ZeusProviderStatus.mountProviderStatus({ api, app });
+      if (window.ZeusChat) window.ZeusChat.mountChat({ api, app, status });
       wireVaultShell(api, app);
       if (window.ZeusPaneResize) window.ZeusPaneResize.mountPaneResize(app);
     });

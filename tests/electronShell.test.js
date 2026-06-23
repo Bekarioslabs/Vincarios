@@ -23,6 +23,7 @@ test('main window options keep the renderer sandboxed', () => {
 test('IPC channels expose only app info and read-only vault basics', () => {
   assert.deepEqual(Object.keys(IPC_CHANNELS).sort(), [
     'APP_INFO',
+    'CHAT_SEND',
     'PROVIDER_STATUS',
     'VAULT_LIST_FOLDER',
     'VAULT_READ_MARKDOWN',
@@ -31,6 +32,7 @@ test('IPC channels expose only app info and read-only vault basics', () => {
     'VAULT_STATE'
   ]);
   assert.equal(IPC_CHANNELS.APP_INFO, 'app:info');
+  assert.equal(IPC_CHANNELS.CHAT_SEND, 'chat:send');
   assert.equal(IPC_CHANNELS.PROVIDER_STATUS, 'provider:status');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
 });
