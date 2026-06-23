@@ -18,3 +18,10 @@ test('permission buttons have explicit inactive and active styling', () => {
   assert.match(css, /\.file-permission-button\s*\{/);
   assert.match(css, /\.file-permission-button\.is-active\s*\{/);
 });
+
+test('permission controls sit before file icons in the tree grid', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+
+  assert.match(css, /grid-template-columns:\s*auto\s+14px\s+minmax\(0, 1fr\);/);
+  assert.match(css, /\.file-permission-controls\s*\{[\s\S]*margin-left:\s*0;/);
+});

@@ -116,9 +116,9 @@
         label.className = 'file-row-label';
         label.textContent = entry.name;
 
+        row.appendChild(createPermissionControls(entry.path));
         row.appendChild(icon);
         row.appendChild(label);
-        row.appendChild(createPermissionControls(entry.path));
 
         const selected = navigator.snapshot().selectedPath === entry.path;
         if (selected) row.classList.add('is-selected');
@@ -187,12 +187,20 @@
       const controls = document.createElement('span');
       controls.className = 'file-permission-controls';
 
-      const readButton = createPermissionButton('R', 'Toggle read permission', () => {
+      const readButton = createPermissionButton('R', 'Toggle read permission', (event) => {
         if (!permissionState) return null;
+        if (event.ctrlKey) {
+          const next = !permissionState.get(path).read;
+          return permissionState.setReadForPaths(knownDescendantPaths(path), next);
+        }
         return permissionState.toggleRead(path);
       });
-      const writeButton = createPermissionButton('W', 'Toggle write permission', () => {
+      const writeButton = createPermissionButton('W', 'Toggle write permission', (event) => {
         if (!permissionState) return null;
+        if (event.ctrlKey) {
+          const next = !permissionState.get(path).write;
+          return permissionState.setWriteForPaths(knownDescendantPaths(path), next);
+        }
         return permissionState.toggleWrite(path);
       });
 
@@ -200,6 +208,23 @@
       controls.appendChild(writeButton);
       updatePermissionButtons(path, readButton, writeButton);
       return controls;
+    }
+
+    function knownDescendantPaths(path) {
+      const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
+      const paths = new Set([normalizedPath]);
+      collectKnownDescendants(normalizedPath, paths);
+      return Array.from(paths);
+    }
+
+    function collectKnownDescendants(folderPath, paths) {
+      const folderData = entriesByFolder.get(folderPath);
+      if (!folderData || !folderData.ok) return;
+
+      folderData.entries.forEach((entry) => {
+        paths.add(entry.path);
+        if (entry.kind === 'folder') collectKnownDescendants(entry.path, paths);
+      });
     }
 
     function createPermissionButton(label, title, toggle) {
@@ -211,7 +236,7 @@
       button.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        toggle();
+        toggle(event);
         renderTree();
       });
       return button;

@@ -19,12 +19,37 @@
       return update(path, (entry) => ({ ...entry, write: !entry.write }));
     }
 
+    function setReadForPaths(paths, value) {
+      return setFlagForPaths(paths, 'read', value);
+    }
+
+    function setWriteForPaths(paths, value) {
+      return setFlagForPaths(paths, 'write', value);
+    }
+
     function clear(path) {
       const normalized = normalizePermissionPath(path);
       entries.delete(normalized);
       const state = createEntry(normalized);
       notify(state);
       return cloneEntry(state);
+    }
+
+    function setFlagForPaths(paths, flag, value) {
+      const normalizedPaths = Array.from(new Set((Array.isArray(paths) ? paths : [])
+        .map(normalizePermissionPath)
+        .filter(Boolean)));
+
+      normalizedPaths.forEach((path) => {
+        const current = entries.get(path) || createEntry(path);
+        const next = { ...current, [flag]: !!value };
+        if (next.read || next.write) entries.set(path, next);
+        else entries.delete(path);
+      });
+
+      const result = snapshot().filter((entry) => normalizedPaths.includes(entry.path));
+      if (onChange && result.length) onChange(cloneEntry(result[0]), snapshot());
+      return result;
     }
 
     function snapshot() {
@@ -49,7 +74,7 @@
       if (onChange) onChange(cloneEntry(entry), snapshot());
     }
 
-    return Object.freeze({ get, toggleRead, toggleWrite, clear, snapshot });
+    return Object.freeze({ get, toggleRead, toggleWrite, setReadForPaths, setWriteForPaths, clear, snapshot });
   }
 
   function createEntry(path) {

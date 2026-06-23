@@ -59,3 +59,31 @@ test('permission state can clear one path without changing others', () => {
     { path: '02_Projekte/StarLu/Tasks.md', read: false, write: true }
   ]);
 });
+test('permission state applies read recursively to known child paths only', () => {
+  const permissions = createPermissionState();
+  const result = permissions.setReadForPaths([
+    '02_Projekte/StarLu',
+    '02_Projekte/StarLu/Tasks.md',
+    '02_Projekte/StarLu/Knowledge'
+  ], true);
+
+  assert.deepEqual(result, [
+    { path: '02_Projekte/StarLu', read: true, write: false },
+    { path: '02_Projekte/StarLu/Knowledge', read: true, write: false },
+    { path: '02_Projekte/StarLu/Tasks.md', read: true, write: false }
+  ]);
+});
+
+test('permission state applies write recursively without changing read', () => {
+  const permissions = createPermissionState();
+  permissions.toggleRead('02_Projekte/StarLu/Tasks.md');
+  const result = permissions.setWriteForPaths([
+    '02_Projekte/StarLu',
+    '02_Projekte/StarLu/Tasks.md'
+  ], true);
+
+  assert.deepEqual(result, [
+    { path: '02_Projekte/StarLu', read: false, write: true },
+    { path: '02_Projekte/StarLu/Tasks.md', read: true, write: true }
+  ]);
+});
