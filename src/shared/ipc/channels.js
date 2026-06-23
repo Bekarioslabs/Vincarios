@@ -2,6 +2,7 @@
 
 const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
+  PROVIDER_STATUS: 'provider:status',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',

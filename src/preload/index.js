@@ -6,6 +6,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 // Sandboxed preload scripts must not depend on arbitrary local modules.
 const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
+  PROVIDER_STATUS: 'provider:status',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',
@@ -17,6 +18,11 @@ const zeus = Object.freeze({
   appInfo() {
     return ipcRenderer.invoke(IPC_CHANNELS.APP_INFO);
   },
+  provider: Object.freeze({
+    status() {
+      return ipcRenderer.invoke(IPC_CHANNELS.PROVIDER_STATUS);
+    }
+  }),
   vault: Object.freeze({
     state() {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_STATE);

@@ -79,6 +79,8 @@
 
       app.appendChild(status);
       root.appendChild(app);
+      wireShellInteractions(app);
+      if (window.ZeusProviderStatus) window.ZeusProviderStatus.mountProviderStatus({ api, app });
       wireVaultShell(api, app);
       if (window.ZeusPaneResize) window.ZeusPaneResize.mountPaneResize(app);
     });
@@ -96,6 +98,7 @@
       presetList.hidden = isExpanded;
     });
   }
+
   async function getAppInfo(api) {
     if (api && typeof api.appInfo === 'function') {
       try {
