@@ -90,6 +90,14 @@
   }
 
 
+  function createContextState(contextValue) {
+    if (!window.ZeusContextState) return null;
+    return window.ZeusContextState.createContextState({
+      onChange(state) {
+        setText(contextValue, state.label);
+      }
+    });
+  }
   function wireShellInteractions(app) {
     const presetToggle = app.querySelector('[data-toggle="new-entry-presets"]');
     const presetList = app.querySelector('#new-entry-presets');
@@ -119,6 +127,7 @@
     const preview = app.querySelector('#markdown-preview');
     const contextValue = app.querySelector('#context-value');
     const statusBar = app.querySelector('#status-bar');
+    const contextState = createContextState(contextValue);
 
     if (!api || !api.vault || !window.ZeusFilePanel) {
       setText(statusBar, 'Vault API unavailable.');
@@ -130,7 +139,8 @@
       root: filePanelRoot,
       preview,
       status: statusBar,
-      context: contextValue
+      context: contextValue,
+      contextState
     });
 
     openButtons.forEach((openButton) => openButton.addEventListener('click', async () => {

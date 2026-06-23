@@ -146,3 +146,27 @@ test('chat IPC exposes chat sending through a chat-specific channel', async () =
     message: { role: 'assistant', content: 'OK' }
   });
 });
+test('chat IPC does not receive renderer context state automatically', async () => {
+  const calls = [];
+  const chatService = {
+    async sendChat(payload) {
+      calls.push(payload);
+      return { ok: true, message: { role: 'assistant', content: 'OK' } };
+    }
+  };
+  const handlers = new Map();
+  const ipcMain = {
+    handle(channel, handler) {
+      handlers.set(channel, handler);
+    }
+  };
+
+  registerChatIpc(ipcMain, chatService);
+  await handlers.get(IPC_CHANNELS.CHAT_SEND)(null, {
+    messages: [{ role: 'user', content: 'Summarize this.' }]
+  });
+
+  assert.deepEqual(calls[0], {
+    messages: [{ role: 'user', content: 'Summarize this.' }]
+  });
+});

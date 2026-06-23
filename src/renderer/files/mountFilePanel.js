@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   function mountFilePanel(options) {
@@ -8,6 +8,7 @@
     const preview = options.preview;
     const status = options.status;
     const context = options.context;
+    const contextState = options.contextState || null;
     const navigator = options.navigator || window.ZeusFileNavigator.createFileNavigator();
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
@@ -122,6 +123,8 @@
         row.addEventListener('click', async () => {
           if (entry.kind === 'folder') {
             navigator.toggleFolder(entry.path);
+            if (contextState) contextState.setFolder(entry.path);
+            else setText(context, 'Context folder: ' + entry.path + '/');
             if (navigator.isExpanded(entry.path)) {
               setStatus('Listing ' + entry.path + '...');
               await ensureFolderLoaded(entry.path);
@@ -142,7 +145,8 @@
             return;
           }
           setText(preview, read.content);
-          setText(context, 'Context target: ' + read.path);
+          if (contextState) contextState.setFile(read.path);
+          else setText(context, 'Context file: ' + read.path);
           setStatus('Read: ' + read.path);
         });
 
