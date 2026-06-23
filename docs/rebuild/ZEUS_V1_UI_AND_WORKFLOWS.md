@@ -168,6 +168,14 @@ Permission shortcuts:
 
 Recursive permission application must not read Markdown contents. It only needs folder/file paths from the vault listing API. Context remains a separate workflow based on the selected file/folder and explicit context rules.
 
+## Markdown Preview Rendering Decisions
+
+Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
+
+YAML frontmatter is shown as a visible Properties block by default. It is not editable in this renderer block. Future Properties editing belongs to action/review workflows, not direct preview editing.
+
+Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`.
+
 ## Markdown Link Navigation Decisions
 
 Markdown rendering and Markdown navigation are separate blocks.

@@ -19,7 +19,7 @@ The previous prototype is archived outside this working tree and is used only as
 - Diff, backup, and audit log before risky changes.
 - Local embeddings V1-light for suggestions, not autonomous decisions.
 
-Current implemented foundations include vault opening, file tree plus Markdown preview, explicit context target display, LM Studio status/chat basics, and file-tree Read/Write permission toggles.
+Current implemented foundations include vault opening, file tree plus sanitized Markdown preview, visible YAML properties, explicit context target display, LM Studio status/chat basics, and file-tree Read/Write permission toggles.
 
 Permission shortcuts:
 

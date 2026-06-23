@@ -69,6 +69,8 @@ Input field
 
 Vault panel keeps file tree and preview visible at the same time.
 
+Markdown preview renders sanitized HTML and displays YAML frontmatter as a visible Properties block.
+
 Markdown links should later open notes in preview without automatically expanding the file tree. Use an explicit `Reveal in Files` control and preview back/forward history.
 
 Resizable panes need minimum sizes.

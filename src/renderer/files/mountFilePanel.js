@@ -178,7 +178,7 @@
         setStatus('Read failed.');
         return;
       }
-      setText(preview, read.content);
+      renderMarkdownPreview(read.content);
       if (contextState) contextState.setFile(read.path);
       else setText(context, 'Context file: ' + read.path);
       setStatus('Read: ' + read.path);
@@ -289,6 +289,15 @@
       breadcrumb.textContent = state.selectedKind === 'markdown'
         ? parts + ' / ' + state.selectedPath.split('/').pop()
         : parts;
+    }
+
+    function renderMarkdownPreview(content) {
+      if (!preview) return;
+      if (!window.ZeusMarkdownRenderer || !window.ZeusMarkdownRenderer.renderMarkdown) {
+        preview.textContent = String(content || '');
+        return;
+      }
+      preview.innerHTML = window.ZeusMarkdownRenderer.renderMarkdown(content);
     }
 
     function setStatus(value) {

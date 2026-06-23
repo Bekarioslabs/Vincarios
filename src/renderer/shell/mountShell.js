@@ -68,7 +68,7 @@
         '    </section>',
         '    <div class="pane-resizer" data-resize="files" title="Resize files and preview"></div>',
         '    <section class="preview-pane">',
-        '      <pre id="markdown-preview" class="markdown-preview">No file selected.</pre>',
+        '      <article id="markdown-preview" class="markdown-preview">No file selected.</article>',
         '    </section>',
         '  </aside>',
         '</section>'
