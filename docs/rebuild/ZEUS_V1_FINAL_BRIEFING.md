@@ -96,7 +96,7 @@ V1 uses automatic safe execution ordering. Manual drag-and-drop ordering is futu
 - Write never means silent execution.
 - Three states: direct, inherited, blocked/off.
 - Dot/runtime folders are blocked regardless of UI state.
-- Permission shortcuts: Click affects one path, Ctrl+Click affects loaded descendants, Shift+Click recursively affects all descendants through folder listing only.
+- Permission shortcuts: Click affects one path, Ctrl+Click affects visible/expanded descendants, Shift+Click recursively affects all descendants through folder listing only.
 
 ## Context
 

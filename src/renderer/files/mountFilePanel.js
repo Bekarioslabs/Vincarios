@@ -191,14 +191,14 @@
         if (!permissionState) return null;
         const next = !permissionState.get(path).read;
         if (event.shiftKey) return setPermissionRecursively(path, 'read', next);
-        if (event.ctrlKey) return permissionState.setReadForPaths(knownDescendantPaths(path), next);
+        if (event.ctrlKey) return permissionState.setReadForPaths(knownVisibleDescendantPaths(path), next);
         return permissionState.toggleRead(path);
       });
       const writeButton = createPermissionButton('W', 'Toggle write permission', async (event) => {
         if (!permissionState) return null;
         const next = !permissionState.get(path).write;
         if (event.shiftKey) return setPermissionRecursively(path, 'write', next);
-        if (event.ctrlKey) return permissionState.setWriteForPaths(knownDescendantPaths(path), next);
+        if (event.ctrlKey) return permissionState.setWriteForPaths(knownVisibleDescendantPaths(path), next);
         return permissionState.toggleWrite(path);
       });
 
@@ -227,7 +227,7 @@
     async function recursiveDescendantPaths(path) {
       const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
       const collector = window.ZeusPermissionPathCollector;
-      if (!collector || !collector.collectRecursivePermissionPaths) return knownDescendantPaths(normalizedPath);
+      if (!collector || !collector.collectRecursivePermissionPaths) return knownVisibleDescendantPaths(normalizedPath);
 
       return collector.collectRecursivePermissionPaths(normalizedPath, async (folderPath) => {
         await ensureFolderLoaded(folderPath);
@@ -237,20 +237,20 @@
       });
     }
 
-    function knownDescendantPaths(path) {
+    function knownVisibleDescendantPaths(path) {
       const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
       const paths = new Set([normalizedPath]);
-      collectKnownDescendants(normalizedPath, paths);
+      collectVisibleDescendants(normalizedPath, paths);
       return Array.from(paths);
     }
 
-    function collectKnownDescendants(folderPath, paths) {
+    function collectVisibleDescendants(folderPath, paths) {
       const folderData = entriesByFolder.get(folderPath);
       if (!folderData || !folderData.ok) return;
 
       folderData.entries.forEach((entry) => {
         paths.add(entry.path);
-        if (entry.kind === 'folder') collectKnownDescendants(entry.path, paths);
+        if (entry.kind === 'folder' && navigator.isExpanded(entry.path)) collectVisibleDescendants(entry.path, paths);
       });
     }
 

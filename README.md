@@ -24,7 +24,7 @@ Current implemented foundations include vault opening, file tree plus Markdown p
 Permission shortcuts:
 
 - Click `R` or `W`: toggle only the selected file or folder.
-- Ctrl+Click `R` or `W`: apply to currently loaded/visible descendants.
+- Ctrl+Click `R` or `W`: apply to currently visible/expanded descendants only.
 - Shift+Click `R` or `W`: recursively apply to all descendants by listing folder structure only. It does not read Markdown contents or change chat context.
 
 ## Planning Docs

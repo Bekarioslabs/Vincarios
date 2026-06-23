@@ -24,12 +24,12 @@ test('file panel renders permission controls before icon and label', () => {
   assert.equal(labelIndex > iconIndex, true);
 });
 
-test('file panel uses ctrl click for known descendant permission application', () => {
+test('file panel uses ctrl click for visible descendant permission application', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
   assert.match(source, /event\.ctrlKey/);
-  assert.match(source, /knownDescendantPaths\(path\)/);
-  assert.match(source, /entriesByFolder\.get\(folderPath\)/);
+  assert.match(source, /knownVisibleDescendantPaths\(path\)/);
+  assert.match(source, /navigator\.isExpanded\(entry\.path\)/);
 });
 test('file panel uses shift click for recursive permission path collection', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
