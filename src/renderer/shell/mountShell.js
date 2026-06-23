@@ -144,11 +144,11 @@
   function wireVaultShell(api, app) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
+    const contextValue = app.querySelector('#context-value');
+    const statusBar = app.querySelector('#status-bar');
     const previewController = window.ZeusMarkdownPreview
       ? window.ZeusMarkdownPreview.mountMarkdownPreview({ app, status: statusBar })
       : null;
-    const contextValue = app.querySelector('#context-value');
-    const statusBar = app.querySelector('#status-bar');
     const contextState = createContextState(contextValue);
     const permissionState = createPermissionState(statusBar);
 
