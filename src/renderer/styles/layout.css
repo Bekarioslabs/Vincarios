@@ -181,6 +181,7 @@ button { cursor: pointer; }
   padding-left: 8px;
   border-left: 1px solid var(--background-modifier-border);
 }
+.left-subactions[hidden] { display: none; }
 
 .left-subbutton {
   min-height: 24px;
