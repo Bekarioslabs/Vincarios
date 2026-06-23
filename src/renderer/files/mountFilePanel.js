@@ -9,6 +9,7 @@
     const status = options.status;
     const context = options.context;
     const contextState = options.contextState || null;
+    const permissionState = options.permissionState || null;
     const navigator = options.navigator || window.ZeusFileNavigator.createFileNavigator();
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
@@ -98,8 +99,9 @@
 
     function renderEntries(entries, depth, parentNode) {
       entries.forEach((entry) => {
-        const row = document.createElement('button');
-        row.type = 'button';
+        const row = document.createElement('div');
+        row.setAttribute('role', 'button');
+        row.tabIndex = 0;
         row.className = 'file-row file-row-' + entry.kind;
         row.dataset.path = entry.path;
         row.style.setProperty('--tree-depth', String(depth));
@@ -116,38 +118,17 @@
 
         row.appendChild(icon);
         row.appendChild(label);
+        row.appendChild(createPermissionControls(entry.path));
 
         const selected = navigator.snapshot().selectedPath === entry.path;
         if (selected) row.classList.add('is-selected');
 
-        row.addEventListener('click', async () => {
-          if (entry.kind === 'folder') {
-            navigator.toggleFolder(entry.path);
-            if (contextState) contextState.setFolder(entry.path);
-            else setText(context, 'Context folder: ' + entry.path + '/');
-            if (navigator.isExpanded(entry.path)) {
-              setStatus('Listing ' + entry.path + '...');
-              await ensureFolderLoaded(entry.path);
-              setStatus('Folder listed: ' + entry.path);
-            }
-            renderTree();
-            return;
+        row.addEventListener('click', () => activateEntry(entry));
+        row.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            activateEntry(entry);
           }
-
-          navigator.selectFile(entry.path);
-          updateNavigation(navigator.snapshot());
-          renderTree();
-          setStatus('Reading ' + entry.path + '...');
-          const read = await api.vault.readMarkdown(entry.path);
-          if (!read.ok) {
-            setText(preview, read.message || 'Could not read file.');
-            setStatus('Read failed.');
-            return;
-          }
-          setText(preview, read.content);
-          if (contextState) contextState.setFile(read.path);
-          else setText(context, 'Context file: ' + read.path);
-          setStatus('Read: ' + read.path);
         });
 
         parentNode.appendChild(row);
@@ -173,6 +154,78 @@
       });
     }
 
+    async function activateEntry(entry) {
+      if (entry.kind === 'folder') {
+        navigator.toggleFolder(entry.path);
+        if (contextState) contextState.setFolder(entry.path);
+        else setText(context, 'Context folder: ' + entry.path + '/');
+        if (navigator.isExpanded(entry.path)) {
+          setStatus('Listing ' + entry.path + '...');
+          await ensureFolderLoaded(entry.path);
+          setStatus('Folder listed: ' + entry.path);
+        }
+        renderTree();
+        return;
+      }
+
+      navigator.selectFile(entry.path);
+      updateNavigation(navigator.snapshot());
+      renderTree();
+      setStatus('Reading ' + entry.path + '...');
+      const read = await api.vault.readMarkdown(entry.path);
+      if (!read.ok) {
+        setText(preview, read.message || 'Could not read file.');
+        setStatus('Read failed.');
+        return;
+      }
+      setText(preview, read.content);
+      if (contextState) contextState.setFile(read.path);
+      else setText(context, 'Context file: ' + read.path);
+      setStatus('Read: ' + read.path);
+    }
+    function createPermissionControls(path) {
+      const controls = document.createElement('span');
+      controls.className = 'file-permission-controls';
+
+      const readButton = createPermissionButton('R', 'Toggle read permission', () => {
+        if (!permissionState) return null;
+        return permissionState.toggleRead(path);
+      });
+      const writeButton = createPermissionButton('W', 'Toggle write permission', () => {
+        if (!permissionState) return null;
+        return permissionState.toggleWrite(path);
+      });
+
+      controls.appendChild(readButton);
+      controls.appendChild(writeButton);
+      updatePermissionButtons(path, readButton, writeButton);
+      return controls;
+    }
+
+    function createPermissionButton(label, title, toggle) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'file-permission-button';
+      button.textContent = label;
+      button.title = title;
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        toggle();
+        renderTree();
+      });
+      return button;
+    }
+
+    function updatePermissionButtons(path, readButton, writeButton) {
+      const permissions = permissionState
+        ? permissionState.get(path)
+        : { read: false, write: false };
+      readButton.classList.toggle('is-active', permissions.read);
+      writeButton.classList.toggle('is-active', permissions.write);
+      readButton.setAttribute('aria-pressed', String(permissions.read));
+      writeButton.setAttribute('aria-pressed', String(permissions.write));
+    }
     function updateNavigation(state) {
       const parts = state.breadcrumb.length
         ? state.breadcrumb.map((part) => part.label).join(' / ')

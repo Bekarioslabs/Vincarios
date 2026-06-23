@@ -98,6 +98,19 @@
       }
     });
   }
+  function createPermissionState(statusBar) {
+    if (!window.ZeusPermissionState) return null;
+    return window.ZeusPermissionState.createPermissionState({
+      onChange(entry) {
+        const modes = [];
+        if (entry.read) modes.push('read');
+        if (entry.write) modes.push('write');
+        setText(statusBar, modes.length
+          ? 'Permission set: ' + entry.path + ' (' + modes.join(', ') + ')'
+          : 'Permission cleared: ' + entry.path);
+      }
+    });
+  }
   function wireShellInteractions(app) {
     const presetToggle = app.querySelector('[data-toggle="new-entry-presets"]');
     const presetList = app.querySelector('#new-entry-presets');
@@ -128,6 +141,7 @@
     const contextValue = app.querySelector('#context-value');
     const statusBar = app.querySelector('#status-bar');
     const contextState = createContextState(contextValue);
+    const permissionState = createPermissionState(statusBar);
 
     if (!api || !api.vault || !window.ZeusFilePanel) {
       setText(statusBar, 'Vault API unavailable.');
@@ -140,7 +154,8 @@
       preview,
       status: statusBar,
       context: contextValue,
-      contextState
+      contextState,
+      permissionState
     });
 
     openButtons.forEach((openButton) => openButton.addEventListener('click', async () => {
