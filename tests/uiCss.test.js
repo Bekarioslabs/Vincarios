@@ -42,6 +42,12 @@ test('create note preview title input is styled in review stylesheet', () => {
   assert.match(reviewCss, /\.review-modal-field\s*\{/);
   assert.match(reviewCss, /\.review-modal-title-input\s*\{/);
 });
+test('folder scope action buttons use chat message styles', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.chat-message-actions\s*\{/);
+  assert.match(css, /\.chat-message-action-button\s*\{/);
+});
 test('assistant chat markdown has compact scoped styles', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
 

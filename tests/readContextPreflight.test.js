@@ -6,6 +6,7 @@ const {
   runReadContextPreflight,
   resolveReadTarget
 } = require('../src/renderer/chat/readContextPreflight');
+const { createPendingActionState } = require('../src/renderer/context/pendingActionState');
 const intent = require('../src/renderer/context/contextIntent');
 
 test('read context preflight lists the selected folder when read is enabled', async () => {
@@ -124,8 +125,34 @@ test('read context preflight ignores general questions for selected folders', as
   assert.equal(result.handled, false);
   assert.equal(called, false);
 });
-test('read context preflight recursively lists selected folder descendants for all-subfolders requests', async () => {
+test('read context preflight ignores all-subfolders scope replies without a pending folder action', async () => {
   const calls = [];
+  const result = await runReadContextPreflight({
+    userText: 'alle',
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain',
+      readAllowed: true,
+      selectionId: 12
+    },
+    api: {
+      vault: {
+        listFolder: async (path) => {
+          calls.push(path);
+          return { ok: true, entries: [] };
+        }
+      }
+    }
+  });
+
+  assert.equal(result.handled, false);
+  assert.deepEqual(calls, []);
+});
+
+test('read context preflight recursively lists selected folder descendants for pending all-subfolders requests', async () => {
+  const calls = [];
+  const pendingState = createPendingActionState();
+  pendingState.set({ type: 'folder_scope', selectionId: 12, targetPath: '90_AI_Brain', targetKind: 'folder' });
   const tree = {
     '90_AI_Brain': [
       { kind: 'folder', name: 'Core', path: '90_AI_Brain/Core' },
@@ -154,7 +181,8 @@ test('read context preflight recursively lists selected folder descendants for a
           return { ok: true, entries: tree[path] || [] };
         }
       }
-    }
+    },
+    pendingState
   });
 
   assert.equal(result.handled, true);

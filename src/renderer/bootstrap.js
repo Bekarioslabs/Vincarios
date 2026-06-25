@@ -8,6 +8,8 @@
     { name: 'ZeusProposalPlan', globalName: 'ZeusProposalPlan' },
     { name: 'ZeusDiffPreview', globalName: 'ZeusDiffPreview' },
     { name: 'ZeusContextIntent', globalName: 'ZeusContextIntent' },
+    { name: 'ZeusPendingActionState', globalName: 'ZeusPendingActionState', methods: ['createPendingActionState'] },
+    { name: 'ZeusFolderContextController', globalName: 'ZeusFolderContextController', methods: ['runFolderContextFlow'] },
     { name: 'ZeusContextState', globalName: 'ZeusContextState', methods: ['createContextState', 'buildChatContextPackage'] },
     { name: 'ZeusContextPackageBuilder', globalName: 'ZeusContextPackageBuilder', methods: ['buildChatContextPackage'] },
     { name: 'ZeusPermissionState', globalName: 'ZeusPermissionState' },

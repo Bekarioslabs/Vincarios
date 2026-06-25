@@ -227,7 +227,7 @@ For selected folders:
 - Future Folder Context Index workflow: when a folder is selected, ZEUS may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
 - Persistent Folder Context Indexes must be stored in `.zeus/` or a configured cache location, not blindly as normal vault notes.
 
-- Planned refactor: replace the current lightweight wording-based folder preflight with PendingActionState plus FolderContextController. Folder-scope choices such as current level vs all subfolders should become explicit UI scope cards. Short replies like 'all' or 'alle' should only resolve an existing pending folder action, not trigger standalone interpretation.
+- Current folder controller: selected-folder preflight now runs through `PendingActionState` plus `FolderContextController`. Ambiguous folder work creates explicit scope buttons for current level, all subfolders, or cancel. Short replies like 'all' or 'alle' only resolve an existing pending folder action and do not trigger standalone recursive listing.
 
 Context sources must remain visible and separated:
 

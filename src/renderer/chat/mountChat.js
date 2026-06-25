@@ -41,9 +41,16 @@
         const preflight = await runReadContextPreflight({ api, content, contextState });
         if (preflight && preflight.handled) {
           pending.remove();
-          messages.push({ role: 'assistant', content: preflight.historyContent || preflight.message });
-          appendMessage(chatLog, 'assistant', preflight.message, { allowSave: false });
-          setText(status, 'Read context handled.');
+          appendPreflightResult({
+            api,
+            chatLog,
+            input,
+            sendButton,
+            messages,
+            preflight,
+            contextState,
+            status
+          });
           return;
         }
 
@@ -98,10 +105,53 @@
     return preflight.runReadContextPreflight({
       api: options.api,
       userText: options.content,
+      scopeChoice: options.scopeChoice,
       selection: options.contextState && typeof options.contextState.snapshot === 'function'
         ? options.contextState.snapshot()
         : null
     });
+  }
+
+  function appendPreflightResult(options) {
+    const preflight = options.preflight || {};
+    const actions = Array.isArray(preflight.scopeActions)
+      ? preflight.scopeActions.map((action) => ({
+          label: action.label,
+          onClick: () => runScopeAction(Object.assign({}, options, { scopeChoice: action.scopeChoice }))
+        }))
+      : [];
+
+    options.messages.push({ role: 'assistant', content: preflight.historyContent || preflight.message });
+    appendMessage(options.chatLog, 'assistant', preflight.message, { allowSave: false, actions });
+    setText(options.status, preflight.kind === 'scope_request' ? 'Folder scope requested.' : 'Read context handled.');
+  }
+
+  async function runScopeAction(options) {
+    setInputEnabled(options.input, options.sendButton, false);
+    setText(options.status, 'Reading folder scope...');
+    const pending = appendMessage(options.chatLog, 'assistant', 'Reading folder scope...', { allowSave: false });
+    try {
+      const result = await runReadContextPreflight({
+        api: options.api,
+        content: '',
+        scopeChoice: options.scopeChoice,
+        contextState: options.contextState
+      });
+      pending.remove();
+      if (result && result.handled) {
+        appendPreflightResult(Object.assign({}, options, { preflight: result }));
+      } else {
+        appendMessage(options.chatLog, 'assistant', 'Folder scope is no longer available. Please select the folder again.', { allowSave: false });
+        setText(options.status, 'Folder scope expired.');
+      }
+    } catch (error) {
+      pending.remove();
+      appendMessage(options.chatLog, 'assistant', 'Folder scope error: ' + ((error && error.message) || 'request failed'), { allowSave: false });
+      setText(options.status, 'Folder scope failed.');
+    } finally {
+      setInputEnabled(options.input, options.sendButton, true);
+      options.input.focus();
+    }
   }
   function buildOutboundMessages(messages, userText, contextState) {
     const outboundMessages = messages.slice();
@@ -171,6 +221,9 @@
 
     message.appendChild(label);
     message.appendChild(body);
+    if (Array.isArray(options.actions) && options.actions.length > 0) {
+      message.appendChild(createMessageActions(options.actions));
+    }
     if (role === 'assistant' && options.allowSave !== false) {
       message.appendChild(createSaveAsNoteButton(content, options));
     }
@@ -193,6 +246,23 @@
     }
 
     body.textContent = content;
+  }
+
+  function createMessageActions(actions) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chat-message-actions';
+    actions.forEach((action) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'chat-message-action-button';
+      button.textContent = action.label || 'Action';
+      button.addEventListener('click', () => {
+        Array.from(wrapper.querySelectorAll('button')).forEach((item) => { item.disabled = true; });
+        if (typeof action.onClick === 'function') action.onClick();
+      });
+      wrapper.appendChild(button);
+    });
+    return wrapper;
   }
 
   function createSaveAsNoteButton(content, options) {

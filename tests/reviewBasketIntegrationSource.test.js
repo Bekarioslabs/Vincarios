@@ -148,25 +148,31 @@ test('file panel stores loaded Markdown content in context state', () => {
 
   assert.match(source, /contextState\.setFile\(read\.path, createContextDetails\(read\.path, read\.content\)\)/);
 });
-test('index loads context intent and package builder before chat uses context state', () => {
+test('index loads context intent and folder controller before chat uses context state', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const intentIndex = source.indexOf('./src/renderer/context/contextIntent.js');
+  const pendingIndex = source.indexOf('./src/renderer/context/pendingActionState.js');
+  const folderControllerIndex = source.indexOf('./src/renderer/context/folderContextController.js');
   const stateIndex = source.indexOf('./src/renderer/context/contextState.js');
   const packageIndex = source.indexOf('./src/renderer/context/contextPackageBuilder.js');
   const runnerIndex = source.indexOf('./src/renderer/chat/modelReadActionRunner.js');
+  const preflightIndex = source.indexOf('./src/renderer/chat/readContextPreflight.js');
   const chatIndex = source.indexOf('./src/renderer/chat/mountChat.js');
 
   assert.equal(intentIndex > -1, true);
-  assert.equal(stateIndex > intentIndex, true);
+  assert.equal(pendingIndex > intentIndex, true);
+  assert.equal(folderControllerIndex > pendingIndex, true);
+  assert.equal(stateIndex > folderControllerIndex, true);
   assert.equal(packageIndex > stateIndex, true);
   assert.equal(runnerIndex > packageIndex, true);
-  assert.equal(chatIndex > runnerIndex, true);
+  assert.equal(preflightIndex > runnerIndex, true);
+  assert.equal(chatIndex > preflightIndex, true);
 });
-
 test('renderer browser globals take priority over CommonJS fallbacks', () => {
   const files = [
     path.join(__dirname, '..', 'src', 'renderer', 'context', 'contextState.js'),
     path.join(__dirname, '..', 'src', 'renderer', 'context', 'contextPackageBuilder.js'),
+    path.join(__dirname, '..', 'src', 'renderer', 'context', 'folderContextController.js'),
     path.join(__dirname, '..', 'src', 'renderer', 'chat', 'modelReadActionRunner.js'),
     path.join(__dirname, '..', 'src', 'renderer', 'chat', 'readContextPreflight.js'),
     path.join(__dirname, '..', 'src', 'renderer', 'review', 'reviewBasketState.js')
@@ -179,6 +185,14 @@ test('renderer browser globals take priority over CommonJS fallbacks', () => {
     assert.equal(firstWindow > -1, true, file);
     if (firstRequire > -1) assert.equal(firstWindow < firstRequire, true, file);
   });
+});
+test('chat renders folder scope actions as message actions', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
+
+  assert.match(source, /scopeActions/);
+  assert.match(source, /createMessageActions/);
+  assert.match(source, /chat-message-action-button/);
+  assert.match(source, /runScopeAction/);
 });
 test('index loads model action parser before model read action runner and chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');

@@ -54,9 +54,9 @@ Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
 
 ## Phase 4 - Context And Workflow Control
 
-- [ ] Refactor folder context flow to `PendingActionState` plus `FolderContextController`.
-- [ ] Add explicit scope cards for folder actions: current level, all subfolders, cancel.
-- [ ] Ensure short replies such as `all` or `alle` only resolve an existing pending folder action.
+- [x] Refactor folder context flow to `PendingActionState` plus `FolderContextController`.
+- [x] Add explicit scope cards for folder actions: current level, all subfolders, cancel.
+- [x] Ensure short replies such as `all` or `alle` only resolve an existing pending folder action.
 - [ ] Keep selected-file, selected-folder, dropped-file, and future embedding context sources visibly separated.
 - [ ] Add limits for max context size and max listed folders/files per request.
 
