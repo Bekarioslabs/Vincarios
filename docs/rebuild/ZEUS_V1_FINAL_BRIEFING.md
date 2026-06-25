@@ -188,6 +188,10 @@ Default structure:
 
 The default ships with V1 but must be implemented as a template/preset.
 
+## Provider And Chat Request Control
+
+V1 provider work must include real chat cancellation, not only UI-side ignoring. A running chat request needs a request id, cancellable provider call, `chat:cancel` IPC, Send-to-Cancel button state, and protection against late cancelled responses appearing in chat.
+
 ## Options
 
 V1 Options:

@@ -64,6 +64,7 @@ Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
 
 - [ ] LM Studio chat baseline.
 - [ ] Ollama chat baseline.
+- [ ] Real chat abort: request id, `AbortController`, `chat:cancel` IPC, Send-to-Cancel UI state, and ignored late responses.
 - [ ] Provider settings foundation: URL, model, timeout, token/context limits.
 - [ ] Local-provider URL validation.
 - [ ] Model/capability display.
