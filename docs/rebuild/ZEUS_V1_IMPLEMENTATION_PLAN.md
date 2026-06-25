@@ -1,5 +1,7 @@
 # ZEUS V1 Implementation Plan
 
+Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
+
 ## Phase 0 - Rebuild Setup
 
 - [x] Confirm V1 product sentence.
@@ -13,78 +15,117 @@
 ## Phase 1 - Foundation
 
 - [x] Electron scaffold.
-- [x] strict preload bridge.
-- [x] main/renderer/shared separation.
-- [x] automated test setup.
-- [x] first security/path tests.
+- [x] Strict preload bridge.
+- [x] Main/renderer/shared separation.
+- [x] Automated test setup.
+- [x] First security/path tests.
 
 ## Phase 2 - Vault Core
 
-- [x] open vault.
-- [x] vault profile foundation.
-- [x] file navigation module foundation.
-- [x] file-tree refresh preserves expanded folders.
+- [x] Open vault.
+- [x] Vault profile foundation.
+- [x] File navigation module foundation.
+- [x] File-tree refresh preserves expanded folders.
 - [x] Markdown read foundation.
 - [x] Markdown render/sanitize.
 - [x] Assistant chat Markdown rendering through shared renderer.
 - [x] Request-scoped selected Markdown context with visible Auto-context toggle.
+- [x] Selected-folder read-context preflight.
+- [x] Recursive folder listing reads structure only, not note contents.
 - [x] Local Markdown source/edit preview mode without persistence.
 - [x] Markdown link navigation with preview open and explicit Reveal in Files.
 - [x] Preview navigation history with back/forward controls.
-- [x] path safety foundation.
-- [x] dot-folder block foundation.
+- [x] Path safety foundation.
+- [x] Dot-folder block foundation.
 
 ## Phase 3 - Action And Review Core
 
-- [x] action schema.
-- [x] proposal plan parser.
-- [x] review basket state foundation.
-- [x] review basket selection, remove, clear-open, and execute controls.
-- [x] create note service with reviewed execution and audit logging.
-- [x] update note service with reviewed diff execution, backup, stale-content check, and audit logging.
-- [ ] insert/move/rename/archive note services.
-- [x] diff preview foundation for line-based Markdown summaries in Review Basket.
-- [x] diff review modal for existing-file proposals without enabling execution.
-- [x] backup service foundation for existing Markdown notes.
-- [ ] separate archive/trash-empty workflow planning, not as normal assistant delete.
-- [x] audit log foundation for executed `create_note`.
-- [x] audit log coverage for executed `create_note` and `update_note`.
-- [ ] full audit log coverage for future insert/move/rename/archive actions.
+- [x] Action schema.
+- [x] Proposal plan parser.
+- [x] Review Basket state foundation.
+- [x] Review Basket selection, remove, clear-open, and execute controls.
+- [x] Create note service with reviewed execution and audit logging.
+- [x] Update note service with reviewed diff execution, backup, stale-content check, and audit logging.
+- [x] Diff preview foundation for line-based Markdown summaries in Review Basket.
+- [x] Diff review modal for existing-file proposals.
+- [x] Backup service foundation for existing Markdown notes.
+- [x] Audit log coverage for executed `create_note` and `update_note`.
+- [x] Guard tests keep future write workflow actions non-executable until their services exist.
 
-## Phase 4 - Providers
+## Phase 4 - Context And Workflow Control
 
-- [ ] LM Studio chat.
-- [ ] Ollama chat.
-- [ ] provider settings.
-- [ ] local-provider URL validation.
-- [ ] model/capability display.
+- [ ] Refactor folder context flow to `PendingActionState` plus `FolderContextController`.
+- [ ] Add explicit scope cards for folder actions: current level, all subfolders, cancel.
+- [ ] Ensure short replies such as `all` or `alle` only resolve an existing pending folder action.
+- [ ] Keep selected-file, selected-folder, dropped-file, and future embedding context sources visibly separated.
+- [ ] Add limits for max context size and max listed folders/files per request.
 
-## Phase 5 - Embeddings V1-Light
+## Phase 5 - Providers And Settings Foundation
 
-- [ ] choose local embedding runtime.
-- [ ] index Markdown files.
-- [ ] store index locally/private.
-- [ ] similar note candidates.
-- [ ] tag candidates.
-- [ ] folder/link candidates.
-- [ ] Folder Context Index maps combined with embeddings and stale-scan detection.
-- [ ] review-basket integration.
+- [ ] LM Studio chat baseline.
+- [ ] Ollama chat baseline.
+- [ ] Provider settings foundation: URL, model, timeout, token/context limits.
+- [ ] Local-provider URL validation.
+- [ ] Model/capability display.
+- [ ] Settings persistence in app/user-data storage.
 
-## Phase 6 - V1 Workflows
+## Phase 6 - V1 Release Hardening
 
-- [ ] New Project workflow.
-- [ ] Inbox cleanup workflow.
-- [ ] selected folder analysis.
-- [ ] selected folder count/list prompt before creating a Folder Context Index.
-- [ ] project note maintenance suggestions.
-- [ ] manual smoke tests.
-- [ ] focused external audit.
+- [ ] Add renderer Content Security Policy.
+- [ ] Add max-size guards for create/update note content and provider/context payloads.
+- [ ] Add GitHub Actions CI for JS checks and Node tests.
+- [ ] Add `CONTRIBUTING.md`.
+- [ ] Add `CHANGELOG.md`.
+- [ ] Add `SECURITY.md`.
+- [ ] Run dependency/security audit.
+- [ ] Run accessibility pass for custom controls, keyboard operation, contrast, and ARIA labels.
+- [ ] Add IPC wrapper/helper only if duplicated validation/error mapping becomes evident.
 
-## Phase 7 - Release Baseline
+## Phase 7 - V1 Feature Candidates
 
-- [ ] README.
-- [ ] architecture docs.
-- [ ] testing docs.
+These are V1 candidates if they stay small and do not destabilize safety/review flows.
+
+- [ ] New Project workflow from deterministic template/preset logic.
+- [ ] Minimal template/preset support for new notes and projects.
+- [ ] Insert into note service with focused diff preview, backup, stale-content validation, and audit logging.
+- [ ] Move note service with collision checks, backup/audit coverage, and no automatic link repair unless separately previewed.
+- [ ] Rename note service with collision checks, backup/audit coverage, and later link-update planning.
+- [ ] Archive note service as the normal delete alternative, plus separate archive/trash-empty workflow planning.
+- [ ] Inbox cleanup workflow with reviewable suggestions.
+- [ ] Selected folder analysis with explicit scope and limits.
+- [ ] Project note maintenance suggestions.
+- [ ] Basic image handling foundation: display/import/move/rename through safe IPC.
+- [ ] Local embeddings V1-light: choose runtime, store private index, suggest similar notes/tags/links/folders.
+- [ ] Review Basket integration for embedding-backed suggestions.
+- [ ] Folder Context Index maps combined with embeddings and stale-scan detection, stored in `.zeus/` or configured cache.
+
+## Phase 8 - V1 Freeze And Release Baseline
+
+- [ ] README update.
+- [ ] Architecture docs update.
+- [ ] Testing docs update.
+- [ ] Manual smoke tests.
+- [ ] Focused external audit.
 - [ ] GitHub cleanup.
-- [ ] dependency/security audit.
-- [ ] package/build check.
+- [ ] Package/build check.
+- [ ] V1 freeze decision.
+
+## V1.1 / V1.2 Backlog
+
+- [ ] Search within vault.
+- [ ] Audit log / backup history UI with restore-oriented controls.
+- [ ] End-to-end Electron tests.
+- [ ] Async or worker-based deep folder crawling for very large vaults.
+- [ ] Backup retention policy and optional cleanup UI.
+- [ ] Batch AI actions over multiple notes with grouped diffs.
+- [ ] Plugin-style extension points for community contributions.
+- [ ] More complete settings UI, including hotkeys and theme presets.
+- [ ] Vision analysis and image tagging gated by model capability.
+
+## Parking Lot
+
+- [ ] Voice input.
+- [ ] Peer-to-peer sync.
+- [ ] External HTTP/CLI automation API.
+- [ ] Encrypted backups with user-managed passphrases.
+- [ ] Full plugin marketplace or broad agent-harness behavior.

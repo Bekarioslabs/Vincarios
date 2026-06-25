@@ -1,5 +1,7 @@
 # ZEUS V1 Final Briefing
 
+Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
+
 ## Product Sentence
 
 ZEUS is a local Obsidian-vault assistant that helps users safely analyze, organize, connect, and update Markdown notes through visible, reviewable, reversible actions.
@@ -34,15 +36,17 @@ ZEUS V1 is not:
 8. Inbox/project/knowledge cleanup suggestions.
 9. Local embeddings V1-light.
 10. New Project workflow from templates.
+11. Minimal settings foundation.
+12. Basic image file handling foundation if it remains safe and small.
 
 ## Not V1
 
-- Vision/images.
+- Vision analysis and full image workflows.
 - PDF/audio/video.
 - Cloud providers.
 - Plugin system.
 - Trusted/Yolo mode.
-- Theme system.
+- Theme system beyond basic CSS-variable readiness.
 - Large autonomous cleanup.
 - Complex link repair after mass rename.
 - Monetization.
@@ -81,7 +85,7 @@ Resizable panes need minimum sizes.
 
 The Review Basket is a standalone module, not part of chat rendering.
 
-Current foundation: shared action schema and proposal-plan parsing normalize V1 action suggestions into Review Basket items. Assistant responses can add a `create_note` proposal for `Save as Note` into the Review Basket. Identical open proposals are de-duplicated. Proposals can be selected, dismissed from the visible basket, and pending proposals can be cleared as a group. Selected `create_note` proposals execute after an in-app Create Preview with an editable title field; main validates paths, refuses overwrites, writes the Markdown file, and appends an audit entry. Selected `update_note` proposals are unselected by default, require current/proposed content, show an Apply Update diff preview, create a `.zeus/backups` copy, reject stale file content, write the proposed Markdown, and append audit entries. Other existing-file actions still require services before execution.
+Current foundation: shared action schema and proposal-plan parsing normalize V1 action suggestions into Review Basket items. Assistant responses can add a `create_note` proposal for `Save as Note` into the Review Basket. Identical open proposals are de-duplicated. Proposals can be selected, dismissed from the visible basket, and pending proposals can be cleared as a group. Selected `create_note` proposals execute after an in-app Create Preview with an editable title field; main validates paths, refuses overwrites, writes the Markdown file, and appends an audit entry. Selected `update_note` proposals are unselected by default, require current/proposed content, show an Apply Update diff preview, create a `.zeus/backups` copy, reject stale file content, write the proposed Markdown, and append audit entries. Phase 3 stops at this foundation: `insert_into_note`, `move_note`, `rename_note`, and `archive_note` are known schema types but remain non-executable until their dedicated reviewed services exist.
 
 Proposal statuses:
 
@@ -118,7 +122,7 @@ If Read is not active for the selected file or one of its parent folders, ZEUS m
 
 Follow-up prompts after enabling Read, such as `ok hab es aktiviert`, `try now`, or `this file is selected`, must still target the selected file. If the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
 
-Selected folders expose the folder path only. They are not blindly fully loaded. When `R` is active, direct folder-content prompts are handled by a request-scoped read-context preflight through the preload vault API. Supported `list_folder` model-action envelopes remain a fallback, are checked against the active selection, and are returned as a ZEUS message instead of raw tool-call text.
+Selected folders expose the folder path only. They are not blindly fully loaded. When `R` is active, direct folder-content prompts are handled by a request-scoped read-context preflight through the preload vault API. The current wording-based folder preflight is a temporary guardrail; the planned stable flow is PendingActionState plus FolderContextController with explicit scope cards. Supported `list_folder` model-action envelopes remain a fallback, are checked against the active selection, and are returned as a ZEUS message instead of raw tool-call text.
 
 Future Folder Context Index: selected folders can be counted first, then listed and remembered only after user approval. Persistent folder indexes belong in `.zeus/` or a configured cache location, not blindly in normal vault notes. They should later combine with embeddings for folder candidates, similar-note lookup, and stale-index detection.
 
@@ -135,12 +139,12 @@ Read/search:
 
 Write:
 
-- `create_note`
-- `update_note`
-- `insert_into_note`
-- `move_note`
-- `rename_note`
-- `archive_note`
+- `create_note` - executable in Phase 3
+- `update_note` - executable in Phase 3 with diff, backup, stale-content check, and audit
+- `insert_into_note` - known, non-executable until its focused service exists
+- `move_note` - known, non-executable until its focused service exists
+- `rename_note` - known, non-executable until its focused service exists
+- `archive_note` - known, non-executable until its focused service exists
 
 Suggestions:
 

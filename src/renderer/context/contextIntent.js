@@ -24,7 +24,11 @@
 
   function hasFolderWorkSignal(text) {
     const value = normalizePromptText(text);
-    return (mentionsFileCollection(value) && (asksForSimilarity(value) || asksToFindOrList(value))) || asksForFolderContents(value);
+    return (mentionsFileCollection(value) && (asksForSimilarity(value) || asksToFindOrList(value))) || asksForFolderContents(value) || asksForRecursiveFolderListing(value);
+  }
+
+  function hasRecursiveFolderWorkSignal(text) {
+    return asksForRecursiveFolderListing(normalizePromptText(text));
   }
 
   function mentionsFolder(value) {
@@ -35,10 +39,14 @@
     return /\b(datei(en)?|files?|notes?|notiz(en)?)\b/.test(value);
   }
 
-
   function asksForFolderContents(value) {
     return mentionsFolder(value) && /\b(was|what|whats|what's|liegt|drin|inhalt|inhalte|contents?|inside)\b/.test(value);
   }
+
+  function asksForRecursiveFolderListing(value) {
+    return /\b(alle|all|recursive|recursively|rekursiv|unterordner|subfolder|subfolders|children|descendants)\b/.test(value);
+  }
+
   function asksForSimilarity(value) {
     return /\b(aehnlich|aehnliche|ahnlich|ahnliche|similar|vergleichbar|related)\b/.test(value);
   }
@@ -54,7 +62,8 @@
   const api = {
     looksLikeSelectedTargetRequest,
     looksLikeFolderScopedRequest,
-    hasFolderWorkSignal
+    hasFolderWorkSignal,
+    hasRecursiveFolderWorkSignal
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

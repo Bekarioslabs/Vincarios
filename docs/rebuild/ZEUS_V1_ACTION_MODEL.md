@@ -51,6 +51,8 @@ The user can select multiple items and click one execute button.
 
 Current implemented slice: assistant `Save as Note` creates a selected `create_note` proposal. The Review Basket can select, dismiss visible entries, clear pending suggestions, show compact diff summaries, and open dedicated preview modals. Selected `create_note` proposals execute after an in-app Create Note preview with an editable title field. Selected `update_note` proposals are executable only when they carry `targetPath`, `currentContent`, and `proposedContent`; they are unselected by default, require an Apply Update diff preview, write through the preload vault API, create a backup in `.zeus/backups/YYYY-MM-DD/...`, reject stale content if the file changed since proposal creation, update the Markdown file, and append audit entries in `.zeus/audit.jsonl`.
 
+Phase 3 is complete at this core foundation boundary. `insert_into_note`, `move_note`, `rename_note`, and `archive_note` remain known schema types so model output can be classified safely, but they are deliberately non-executable until their own reviewed services exist. This prevents accidental execution while keeping the future action vocabulary stable.
+
 Read-context actions are a separate lightweight chat path, not direct provider file access. Selected-folder listing requests are handled first by a request-scoped preflight: when the current selection is a folder with `R` active, the renderer calls the preload vault API and appends the folder listing as a ZEUS message before provider generation. Supported `list_folder` model-action envelopes remain a fallback: the renderer parses them, verifies that the requested folder is inside the active selected folder or selected-file parent folder, calls the preload vault API, and appends the folder listing as a ZEUS message. Unsupported or out-of-selection read actions are blocked instead of being executed or shown as raw tool-call text.
 
 ## V1 Actions
@@ -89,7 +91,7 @@ The user should not need to know action names. The UI and model choose the corre
 ## Write Rules
 
 - New-file `create_note` actions need a Create Preview and explicit confirmation.
-- Any existing-file write needs diff. `update_note` is the first implemented existing-file write: it requires current/proposed content, explicit Apply Update confirmation, backup, stale-content validation, and audit logging. Other existing-file write types remain non-executable until their services exist.
+- Any existing-file write needs diff. `update_note` is the only implemented existing-file write in Phase 3: it requires current/proposed content, explicit Apply Update confirmation, backup, stale-content validation, and audit logging. Other existing-file write types remain non-executable until their services exist.
 - Archive/trash actions need explicit confirmation. Permanent deletion is not a normal V1 assistant action.
 - Any risky action creates a backup first. `update_note` already calls the backup service before writing; future insert/move/rename/archive services must do the same where applicable.
 - Any executed action writes an audit entry.

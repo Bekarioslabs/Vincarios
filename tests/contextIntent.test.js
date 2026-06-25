@@ -5,7 +5,8 @@ const assert = require('node:assert/strict');
 const {
   looksLikeSelectedTargetRequest,
   looksLikeFolderScopedRequest,
-  hasFolderWorkSignal
+  hasFolderWorkSignal,
+  hasRecursiveFolderWorkSignal
 } = require('../src/renderer/context/contextIntent');
 
 test('context intent detects selected target requests without matching general questions', () => {
@@ -26,4 +27,11 @@ test('context intent exposes generic folder work signals without hard-coded typo
   assert.equal(hasFolderWorkSignal('was liegt in diesem ordner?'), true);
   assert.equal(hasFolderWorkSignal('what is inside this folder?'), true);
   assert.equal(hasFolderWorkSignal('was ist der groesste fisch?'), false);
+});
+
+test('context intent detects recursive folder listing requests generically', () => {
+  assert.equal(hasRecursiveFolderWorkSignal('alle'), true);
+  assert.equal(hasRecursiveFolderWorkSignal('check all subfolders'), true);
+  assert.equal(hasRecursiveFolderWorkSignal('rekursiv auflisten'), true);
+  assert.equal(hasRecursiveFolderWorkSignal('was ist der groesste fisch?'), false);
 });

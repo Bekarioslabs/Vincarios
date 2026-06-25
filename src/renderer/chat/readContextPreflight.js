@@ -28,8 +28,13 @@
       };
     }
 
-    const result = await api.vault.listFolder(target.path);
-    const message = formatFolderListing(target, result);
+    const result = target.recursive === true
+      ? await listFolderTree(api.vault, target)
+      : await api.vault.listFolder(target.path);
+    const message = target.recursive === true
+      ? formatRecursiveFolderListing(target, result)
+      : formatFolderListing(target, result);
+
     return {
       handled: true,
       message,
@@ -38,12 +43,15 @@
   }
 
   function resolveReadTarget(selection, userText, intent) {
+    const recursive = typeof intent.hasRecursiveFolderWorkSignal === 'function' && intent.hasRecursiveFolderWorkSignal(userText);
+
     if (selection.kind === 'folder' && intent.hasFolderWorkSignal(userText)) {
       return {
         kind: 'folder',
         path: normalizePath(selection.path),
         readAllowed: selection.readAllowed === true,
-        selectionId: selection.selectionId || 0
+        selectionId: selection.selectionId || 0,
+        recursive
       };
     }
 
@@ -54,11 +62,80 @@
         kind: 'folder',
         path: parent,
         readAllowed: selection.parentReadAllowed === true,
-        selectionId: selection.selectionId || 0
+        selectionId: selection.selectionId || 0,
+        recursive
       };
     }
 
     return null;
+  }
+
+  async function listFolderTree(vaultApi, target) {
+    const maxFolders = Number.isFinite(target.maxFolders) ? target.maxFolders : 100;
+    const queue = [target.path];
+    const visited = new Set();
+    const folders = [];
+
+    while (queue.length > 0 && visited.size < maxFolders) {
+      const folderPath = queue.shift();
+      if (visited.has(folderPath)) continue;
+      visited.add(folderPath);
+
+      const result = await vaultApi.listFolder(folderPath);
+      if (!result || !result.ok) {
+        folders.push({ path: folderPath, ok: false, message: result && (result.message || result.code) || 'Unknown error.', entries: [] });
+        continue;
+      }
+
+      const entries = Array.isArray(result.entries) ? result.entries : [];
+      folders.push({ path: folderPath, ok: true, entries });
+      entries.forEach((entry) => {
+        if (entry && entry.kind === 'folder' && entry.path) queue.push(normalizePath(entry.path));
+      });
+    }
+
+    return {
+      ok: true,
+      truncated: queue.length > 0,
+      folders
+    };
+  }
+
+  function formatRecursiveFolderListing(target, result) {
+    if (!result || !result.ok) {
+      return 'Recursive folder listing failed for current selection ' + target.selectionId + ': ' + ((result && (result.message || result.code)) || 'Unknown error.');
+    }
+
+    const lines = [
+      'Recursive folder listing for current selection ' + target.selectionId + ': ' + target.path,
+      '',
+      'Only real folder-listing results are shown. Markdown file contents were not read.',
+      ''
+    ];
+
+    result.folders.forEach((folder) => {
+      lines.push('## ' + folder.path + '/');
+      if (!folder.ok) {
+        lines.push('- Listing failed: ' + folder.message);
+        lines.push('');
+        return;
+      }
+
+      if (!folder.entries.length) {
+        lines.push('- No supported Markdown folders or files found.');
+        lines.push('');
+        return;
+      }
+
+      folder.entries.forEach((entry) => {
+        const suffix = entry.kind === 'folder' ? '/' : '';
+        lines.push('- ' + (entry.name || entry.path || 'Unnamed') + suffix);
+      });
+      lines.push('');
+    });
+
+    if (result.truncated) lines.push('[Listing stopped because the folder limit was reached.]');
+    return lines.join('\n').trim();
   }
 
   function formatFolderListing(target, result) {
@@ -99,7 +176,9 @@
   const api = {
     runReadContextPreflight,
     resolveReadTarget,
-    formatFolderListing
+    formatFolderListing,
+    formatRecursiveFolderListing,
+    listFolderTree
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

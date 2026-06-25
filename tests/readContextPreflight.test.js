@@ -80,7 +80,8 @@ test('read context preflight maps selected-file folder questions to parent only 
     kind: 'folder',
     path: '03_Wissen/Comics',
     readAllowed: false,
-    selectionId: 8
+    selectionId: 8,
+    recursive: false
   });
 
   const allowed = resolveReadTarget({
@@ -95,7 +96,8 @@ test('read context preflight maps selected-file folder questions to parent only 
     kind: 'folder',
     path: '03_Wissen/Comics',
     readAllowed: true,
-    selectionId: 9
+    selectionId: 9,
+    recursive: false
   });
 });
 
@@ -121,4 +123,45 @@ test('read context preflight ignores general questions for selected folders', as
 
   assert.equal(result.handled, false);
   assert.equal(called, false);
+});
+test('read context preflight recursively lists selected folder descendants for all-subfolders requests', async () => {
+  const calls = [];
+  const tree = {
+    '90_AI_Brain': [
+      { kind: 'folder', name: 'Core', path: '90_AI_Brain/Core' },
+      { kind: 'folder', name: 'Templates', path: '90_AI_Brain/Templates' }
+    ],
+    '90_AI_Brain/Core': [
+      { kind: 'markdown', name: 'Rules.md', path: '90_AI_Brain/Core/Rules.md' }
+    ],
+    '90_AI_Brain/Templates': [
+      { kind: 'markdown', name: 'Note_Types.md', path: '90_AI_Brain/Templates/Note_Types.md' }
+    ]
+  };
+
+  const result = await runReadContextPreflight({
+    userText: 'alle',
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain',
+      readAllowed: true,
+      selectionId: 12
+    },
+    api: {
+      vault: {
+        listFolder: async (path) => {
+          calls.push(path);
+          return { ok: true, entries: tree[path] || [] };
+        }
+      }
+    }
+  });
+
+  assert.equal(result.handled, true);
+  assert.deepEqual(calls, ['90_AI_Brain', '90_AI_Brain/Core', '90_AI_Brain/Templates']);
+  assert.match(result.message, /Recursive folder listing for current selection 12: 90_AI_Brain/);
+  assert.match(result.message, /## 90_AI_Brain\/Core\//);
+  assert.match(result.message, /Rules\.md/);
+  assert.match(result.message, /Only real folder-listing results are shown/);
+  assert.doesNotMatch(result.message, /Agent_Definitions\.md/);
 });

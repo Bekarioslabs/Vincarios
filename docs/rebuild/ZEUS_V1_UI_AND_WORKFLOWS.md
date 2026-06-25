@@ -218,7 +218,7 @@ Selected Markdown context is request-scoped:
 - follow-up prompts after enabling Read, such as `ok hab es aktiviert`, `try now`, or `this file is selected`, must still target the selected file.
 - if the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
 - folder-scoped follow-up prompts such as `find similar files in this folder` should map the selected file to its parent folder only when that parent folder has active `R`; ZEUS must not switch to generic local-file-upload language.
-- selected folder listing requests are handled by a request-scoped read-context preflight when `R` is active. Supported `list_folder` model-action envelopes remain a fallback and are executed through the preload vault API only when the requested folder is inside the active selected folder or selected-file parent folder. The raw tool-call text must not be displayed as the final answer.
+- selected folder listing requests are handled by a request-scoped read-context preflight when `R` is active. Requests for all subfolders use recursive folder listing through repeated `listFolder` calls, but still read only folder/file names, not Markdown contents. Supported `list_folder` model-action envelopes remain a fallback and are executed through the preload vault API only when the requested folder is inside the active selected folder or selected-file parent folder. The raw tool-call text must not be displayed as the final answer.
 
 For selected folders:
 
@@ -226,7 +226,8 @@ For selected folders:
 - ZEUS must not blindly load every file in the folder without an explicit analysis workflow and limits.
 - Future Folder Context Index workflow: when a folder is selected, ZEUS may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
 - Persistent Folder Context Indexes must be stored in `.zeus/` or a configured cache location, not blindly as normal vault notes.
-- Folder indexes are navigation aids and embedding companions, not authority. If files changed since the scan, ZEUS must mark the index as possibly stale and offer to refresh it.
+
+- Planned refactor: replace the current lightweight wording-based folder preflight with PendingActionState plus FolderContextController. Folder-scope choices such as current level vs all subfolders should become explicit UI scope cards. Short replies like 'all' or 'alle' should only resolve an existing pending folder action, not trigger standalone interpretation.
 
 Context sources must remain visible and separated:
 

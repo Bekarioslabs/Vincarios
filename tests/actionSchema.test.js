@@ -78,3 +78,30 @@ test('action type helpers distinguish known, write, and executable actions', () 
   assert.equal(isExecutableActionType('create_note'), true);
   assert.equal(isExecutableActionType('update_note'), true);
 });
+
+test('future write workflow actions stay non-executable until their services exist', () => {
+  const futureWorkflowTypes = [
+    ACTION_TYPES.insertIntoNote,
+    ACTION_TYPES.moveNote,
+    ACTION_TYPES.renameNote,
+    ACTION_TYPES.archiveNote
+  ];
+
+  for (const type of futureWorkflowTypes) {
+    const item = normalizeActionProposal({
+      type,
+      title: 'Future workflow action',
+      sourcePath: '00_Inbox/Example.md',
+      targetPath: '03_Wissen/Example.md',
+      reason: 'Guard against accidental execution.'
+    });
+
+    assert.equal(isKnownActionType(type), true);
+    assert.equal(isWriteActionType(type), true);
+    assert.equal(isExecutableActionType(type), false);
+    assert.equal(item.requiresDiff, true);
+    assert.equal(item.requiresBackup, true);
+    assert.equal(item.executable, false);
+    assert.equal(item.selected, false);
+  }
+});
