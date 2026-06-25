@@ -103,7 +103,7 @@ V1 uses automatic safe execution ordering. Manual drag-and-drop ordering is futu
 
 ## Reviewed Update Flow
 
-Reliable file updating is V1-critical. ZEUS must be able to turn chat or local Edit Mode changes into reviewed `update_note` proposals for the selected Markdown file when `R` and `W` allow it. The app should produce clear permission guidance when access is missing, instead of letting the model fall back to generic filesystem disclaimers. Partial edits need focused insertion/replacement planning so large notes do not have to be pasted back wholesale for small changes. All applied updates still go through diff preview, backup, stale-content validation, and audit logging.
+Reliable file updating is V1-critical. ZEUS must be able to turn chat or local Edit Mode changes into reviewed `update_note` proposals for the selected Markdown file when `R` and `W` allow it. The V1 scope is reliable whole-note replacement through reviewed diff, not a complex partial-edit engine. The app should produce clear permission guidance when access is missing, instead of letting the model fall back to generic filesystem disclaimers. All applied updates still go through diff preview, backup, stale-content validation, and audit logging. Focused insert/replace by section is V1.1 work.
 
 ## Permissions
 

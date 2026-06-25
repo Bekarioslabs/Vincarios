@@ -77,7 +77,7 @@ This is a V1-critical workflow, not a later comfort feature. The prototype alrea
 - [ ] Chat-generated `update_note` proposals reliably target the selected Markdown file when `R` and `W` allow it.
 - [ ] Missing `R` or `W` produces a clear app-level guidance message, not generic model text about lacking filesystem access.
 - [ ] Edit Mode can create an `update_note` proposal from local source changes instead of writing directly.
-- [ ] Partial edits are supported through focused insertion/replacement planning, so ZEUS can add or replace one section without pasting an entire large note back into the file.
+- [ ] V1 update scope stays whole-note replacement through reviewed diff; complex partial insert/replace is explicitly V1.1 work.
 - [ ] Diff preview remains mandatory before applying any update.
 - [ ] Backup, stale-content validation, and audit logging stay on the existing `update_note` service path.
 
@@ -99,7 +99,6 @@ These are V1 candidates if they stay small and do not destabilize safety/review 
 
 - [ ] New Project workflow from deterministic template/preset logic.
 - [ ] Minimal template/preset support for new notes and projects.
-- [ ] Insert into note service with focused diff preview, backup, stale-content validation, and audit logging.
 - [ ] Move note service with collision checks, backup/audit coverage, and no automatic link repair unless separately previewed.
 - [ ] Rename note service with collision checks, backup/audit coverage, and later link-update planning.
 - [ ] Archive note service as the normal delete alternative, plus separate archive/trash-empty workflow planning.
@@ -124,6 +123,7 @@ These are V1 candidates if they stay small and do not destabilize safety/review 
 
 ## V1.1 / V1.2 Backlog
 
+- [ ] Focused partial edit engine: insert/replace a section without sending or pasting back the whole note.
 - [ ] Search within vault.
 - [ ] Audit log / backup history UI with restore-oriented controls.
 - [ ] End-to-end Electron tests.
