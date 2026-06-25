@@ -17,6 +17,7 @@ Tests start on day one. Safety-critical behavior must be tested before feature p
 - archive/trash instead of normal delete
 - audit log without note contents
 - provider boundary: providers never read/write files
+- renderer runtime parity: renderer modules prefer `window.Zeus...` browser APIs before Node/CommonJS test fallbacks
 - embedding index basics: Markdown-only, local, hash/mtime updates
 
 ## Focused Audit Rhythm

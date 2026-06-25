@@ -25,3 +25,42 @@ test('permission controls sit before file icons in the tree grid', () => {
   assert.match(css, /grid-template-columns:\s*auto\s+14px\s+minmax\(0, 1fr\);/);
   assert.match(css, /\.file-permission-controls\s*\{[\s\S]*margin-left:\s*0;/);
 });
+test('review basket styles stay in the review stylesheet', () => {
+  const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
+
+  assert.match(index, /src\/renderer\/styles\/review\.css/);
+  assert.doesNotMatch(layoutCss, /\.review-basket-item/);
+  assert.match(reviewCss, /\.review-basket-item/);
+  assert.match(reviewCss, /\.chat-save-note-button/);
+});
+
+test('create note preview title input is styled in review stylesheet', () => {
+  const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
+
+  assert.match(reviewCss, /\.review-modal-field\s*\{/);
+  assert.match(reviewCss, /\.review-modal-title-input\s*\{/);
+});
+test('assistant chat markdown has compact scoped styles', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.chat-message-markdown\s*\{/);
+  assert.match(css, /\.chat-message-markdown h1/);
+  assert.match(css, /\.chat-message-markdown pre code/);
+});
+test('Markdown history controls are styled in the Markdown stylesheet', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
+
+  assert.match(css, /\.markdown-history-button/);
+  assert.match(css, /\.markdown-history-button:hover:not\(:disabled\)/);
+  assert.match(css, /\.markdown-history-button:disabled/);
+});
+test('diff review modal styles stay in the review stylesheet', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
+
+  assert.match(source, /review-diff-button/);
+  assert.match(source, /review-diff-body/);
+  assert.match(source, /review-diff-line-add/);
+  assert.match(source, /review-diff-line-remove/);
+});

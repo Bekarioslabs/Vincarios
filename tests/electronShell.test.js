@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
+const fs = require('node:fs');
 const { createWindowOptions } = require('../src/main/app/createMainWindow');
 const { IPC_CHANNELS } = require('../src/shared/ipc/channels');
 const { DEFAULT_THEME_COLORS } = require('../src/shared/ui/themeDefaults');
@@ -20,19 +21,36 @@ test('main window options keep the renderer sandboxed', () => {
   assert.match(options.webPreferences.preload, /src[\\/]preload[\\/]index\.js$/);
 });
 
-test('IPC channels expose only app info and read-only vault basics', () => {
+test('IPC channels expose app info, provider, chat, and reviewed vault actions', () => {
   assert.deepEqual(Object.keys(IPC_CHANNELS).sort(), [
     'APP_INFO',
     'CHAT_SEND',
     'PROVIDER_STATUS',
+    'VAULT_CREATE_NOTE',
     'VAULT_LIST_FOLDER',
     'VAULT_READ_MARKDOWN',
     'VAULT_SELECT_FOLDER',
     'VAULT_SET_ROOT',
-    'VAULT_STATE'
+    'VAULT_STATE',
+    'VAULT_UPDATE_NOTE'
   ]);
   assert.equal(IPC_CHANNELS.APP_INFO, 'app:info');
   assert.equal(IPC_CHANNELS.CHAT_SEND, 'chat:send');
   assert.equal(IPC_CHANNELS.PROVIDER_STATUS, 'provider:status');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
+  assert.equal(IPC_CHANNELS.VAULT_CREATE_NOTE, 'vault:create-note');
+  assert.equal(IPC_CHANNELS.VAULT_UPDATE_NOTE, 'vault:update-note');
+});
+
+test('preload exposes reviewed create note writes through the vault API', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /createNote\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.VAULT_CREATE_NOTE, payload\)/);
+});
+test('preload exposes reviewed update note writes through the vault API', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /updateNote\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.VAULT_UPDATE_NOTE, payload\)/);
 });

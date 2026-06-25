@@ -1,15 +1,73 @@
 (function() {
   'use strict';
 
+  const REQUIRED_RENDERER_MODULES = Object.freeze([
+    { name: 'ZeusVaultProfile', globalName: 'ZeusVaultProfile' },
+    { name: 'ZeusActionSchema', globalName: 'ZeusActionSchema' },
+    { name: 'ZeusModelActionParser', globalName: 'ZeusModelActionParser', methods: ['parseModelActionCalls', 'stripModelActionCalls', 'normalizePathLike'] },
+    { name: 'ZeusProposalPlan', globalName: 'ZeusProposalPlan' },
+    { name: 'ZeusDiffPreview', globalName: 'ZeusDiffPreview' },
+    { name: 'ZeusContextIntent', globalName: 'ZeusContextIntent' },
+    { name: 'ZeusContextState', globalName: 'ZeusContextState', methods: ['createContextState', 'buildChatContextPackage'] },
+    { name: 'ZeusContextPackageBuilder', globalName: 'ZeusContextPackageBuilder', methods: ['buildChatContextPackage'] },
+    { name: 'ZeusPermissionState', globalName: 'ZeusPermissionState' },
+    { name: 'ZeusMarkdownRenderer', globalName: 'ZeusMarkdownRenderer', methods: ['renderMarkdown'] },
+    { name: 'ZeusMarkdownPreview', globalName: 'ZeusMarkdownPreview' },
+    { name: 'ZeusFilePanel', globalName: 'ZeusFilePanel' },
+    { name: 'ZeusReviewBasketState', globalName: 'ZeusReviewBasketState' },
+    { name: 'ZeusReviewBasket', globalName: 'ZeusReviewBasket' },
+    { name: 'ZeusModelReadActionRunner', globalName: 'ZeusModelReadActionRunner', methods: ['runModelReadActions'] },
+    { name: 'ZeusReadContextPreflight', globalName: 'ZeusReadContextPreflight', methods: ['runReadContextPreflight'] },
+    { name: 'ZeusChat', globalName: 'ZeusChat', methods: ['mountChat'] },
+    { name: 'ZeusShell', globalName: 'ZeusShell', methods: ['mountShell'] }
+  ]);
+
   function bootstrapZeus(api, root) {
-    if (!window.ZeusShell || typeof window.ZeusShell.mountShell !== 'function') {
-      throw new Error('ZEUS shell module is not available.');
+    const validation = validateRendererModules(typeof window !== 'undefined' ? window : null);
+    if (!validation.ok) {
+      renderStartupError(root, validation.message);
+      throw new Error(validation.message);
     }
     return window.ZeusShell.mountShell(root, api);
   }
 
+  function validateRendererModules(runtime) {
+    if (!runtime) return { ok: false, message: 'ZEUS renderer runtime is not available.' };
+
+    const missing = [];
+    REQUIRED_RENDERER_MODULES.forEach((module) => {
+      const api = runtime[module.globalName];
+      if (!api) {
+        missing.push(module.name);
+        return;
+      }
+      (module.methods || []).forEach((method) => {
+        if (typeof api[method] !== 'function') missing.push(module.name + '.' + method);
+      });
+    });
+
+    if (missing.length > 0) {
+      return {
+        ok: false,
+        message: 'ZEUS startup failed. Missing renderer module(s): ' + missing.join(', ')
+      };
+    }
+
+    return { ok: true, message: 'Renderer modules ready.' };
+  }
+
+  function renderStartupError(root, message) {
+    if (!root) return;
+    root.innerHTML = '';
+    const panel = document.createElement('main');
+    panel.className = 'startup-error';
+    panel.innerHTML = '<h1>ZEUS startup failed</h1><p></p>';
+    panel.querySelector('p').textContent = message;
+    root.appendChild(panel);
+  }
+
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { bootstrapZeus };
+    module.exports = { bootstrapZeus, validateRendererModules, REQUIRED_RENDERER_MODULES };
   }
 
   if (typeof window !== 'undefined') {

@@ -22,7 +22,7 @@
       '    <div class="file-label">Files</div>',
       '    <div id="file-vault-name" class="file-vault-name">No vault</div>',
       '  </div>',
-      '  <button id="file-refresh" class="file-refresh-button" type="button" disabled title="Refresh file tree">↻</button>',
+      '  <button id="file-refresh" class="file-refresh-button" type="button" disabled title="Refresh file tree" aria-label="Refresh file tree"></button>',
       '</div>',
       '<div id="file-breadcrumb" class="file-breadcrumb">Vault root</div>',
       '<div id="file-tree" class="file-tree muted">Open a vault to list files.</div>'
@@ -33,10 +33,7 @@
     const tree = root.querySelector('#file-tree');
     const vaultName = root.querySelector('#file-vault-name');
 
-    refreshButton.addEventListener('click', async () => {
-      entriesByFolder.clear();
-      await openRoot();
-    });
+    refreshButton.addEventListener('click', refreshTree);
 
     function setVaultName(name) {
       setText(vaultName, name || 'Vault');
@@ -46,6 +43,18 @@
       refreshButton.disabled = false;
       navigator.openFolder('');
       await ensureFolderLoaded('');
+      renderTree();
+    }
+
+    async function refreshTree() {
+      refreshButton.disabled = true;
+      entriesByFolder.clear();
+      const expandedFolders = Object.keys(navigator.snapshot().expandedFolders).filter((folderPath) => navigator.isExpanded(folderPath));
+      await ensureFolderLoaded('');
+      for (const folderPath of expandedFolders) {
+        await ensureFolderLoaded(folderPath);
+      }
+      refreshButton.disabled = false;
       renderTree();
     }
 
@@ -108,9 +117,9 @@
 
         const icon = document.createElement('span');
         icon.className = 'file-row-icon';
-        icon.textContent = entry.kind === 'folder'
-          ? (navigator.isExpanded(entry.path) ? '▾' : '▸')
-          : '•';
+        icon.classList.toggle('is-folder', entry.kind === 'folder');
+        icon.classList.toggle('is-file', entry.kind !== 'folder');
+        icon.classList.toggle('is-expanded', entry.kind === 'folder' && navigator.isExpanded(entry.path));
 
         const label = document.createElement('span');
         label.className = 'file-row-label';
@@ -157,7 +166,7 @@
     async function activateEntry(entry) {
       if (entry.kind === 'folder') {
         navigator.toggleFolder(entry.path);
-        if (contextState) contextState.setFolder(entry.path);
+        if (contextState) contextState.setFolder(entry.path, { readAllowed: canUsePathAsContext(entry.path) });
         else setText(context, 'Context folder: ' + entry.path + '/');
         if (navigator.isExpanded(entry.path)) {
           setStatus('Listing ' + entry.path + '...');
@@ -179,9 +188,94 @@
         return;
       }
       setPreviewSource(read.content, read.path);
-      if (contextState) contextState.setFile(read.path);
+      if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
       else setText(context, 'Context file: ' + read.path);
       setStatus('Read: ' + read.path);
+    }
+    async function openLinkedMarkdown(target, currentPath) {
+      const resolver = window.ZeusMarkdownLinkResolver;
+      if (!resolver || !resolver.createMarkdownLinkCandidates) {
+        return { ok: false, message: 'Markdown link resolver unavailable.' };
+      }
+
+      const candidates = resolver.createMarkdownLinkCandidates(target, currentPath);
+      if (!candidates.length) return { ok: false, message: 'Linked target is not an internal Markdown note.' };
+
+      for (const candidate of candidates) {
+        const read = await api.vault.readMarkdown(candidate);
+        if (read.ok) {
+          navigator.selectFile(read.path);
+          setPreviewSource(read.content, read.path);
+          if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
+          else setText(context, 'Context file: ' + read.path);
+          setStatus('Opened linked note: ' + read.path);
+          return { ok: true, path: read.path };
+        }
+      }
+
+      return { ok: false, message: 'Linked note not found: ' + target };
+    }
+
+    async function revealPath(path) {
+      const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
+      if (!normalizedPath) return { ok: false, message: 'No preview file to reveal.' };
+
+      const folders = ancestorFolders(normalizedPath);
+      for (const folder of folders) {
+        navigator.expandFolder(folder);
+        await ensureFolderLoaded(folder);
+      }
+      navigator.selectFile(normalizedPath);
+      renderTree();
+      setStatus('Revealed in Files: ' + normalizedPath);
+      return { ok: true, path: normalizedPath };
+    }
+
+    function ancestorFolders(path) {
+      const parent = window.ZeusFileNavigator.parentFolder(path);
+      if (!parent) return [''];
+      const parts = parent.split('/').filter(Boolean);
+      const folders = [''];
+      for (let index = 0; index < parts.length; index += 1) {
+        folders.push(parts.slice(0, index + 1).join('/'));
+      }
+      return folders;
+    }
+    function createContextDetails(path, content) {
+      const parentFolder = window.ZeusFileNavigator.parentFolder(path);
+      return {
+        content,
+        readAllowed: canUsePathAsContext(path),
+        parentReadAllowed: parentFolder ? canUsePathAsContext(parentFolder) : canUsePathAsContext('')
+      };
+    }
+
+    function syncSelectedContextPermission() {
+      if (!contextState || typeof contextState.snapshot !== 'function') return;
+      const selected = contextState.snapshot();
+      if (!selected.path) return;
+      if (selected.kind === 'folder') {
+        contextState.setFolder(selected.path, { readAllowed: canUsePathAsContext(selected.path) });
+        return;
+      }
+      if (selected.kind === 'file') contextState.setFile(selected.path, createContextDetails(selected.path, selected.content));
+    }
+
+    function canUsePathAsContext(path) {
+      if (!permissionState || typeof permissionState.get !== 'function') return false;
+      return permissionCandidates(path).some((candidate) => permissionState.get(candidate).read === true);
+    }
+
+    function permissionCandidates(path) {
+      const normalized = window.ZeusFileNavigator.normalizePath(path || '');
+      if (!normalized) return [''];
+      const parts = normalized.split('/').filter(Boolean);
+      const candidates = [normalized];
+      for (let count = parts.length - 1; count > 0; count -= 1) {
+        candidates.push(parts.slice(0, count).join('/'));
+      }
+      candidates.push('');
+      return candidates;
     }
     function createPermissionControls(path) {
       const controls = document.createElement('span');
@@ -268,6 +362,7 @@
           await toggle(event);
         } finally {
           button.disabled = false;
+          syncSelectedContextPermission();
           renderTree();
         }
       });
@@ -308,6 +403,8 @@
       renderTree,
       ensureFolderLoaded,
       setVaultName,
+      openLinkedMarkdown,
+      revealPath,
       navigator
     };
   }

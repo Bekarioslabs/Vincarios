@@ -47,12 +47,23 @@
         '      <section id="chat-log" class="chat-log" aria-label="Chat messages">',
         '        <div class="chat-empty-state">Vault loaded. How can I help?</div>',
         '      </section>',
-        '      <section class="review-slot" aria-label="Review Basket" data-future-slot="review-basket">',
-        '        <div class="mini-panel-title">Review Basket</div>',
-        '        <div class="mini-panel-empty">No suggestions yet.</div>',
+        '      <section id="review-basket" class="review-slot" aria-label="Review Basket" data-future-slot="review-basket">',
+        '        <div class="review-basket-header">',
+        '          <div class="mini-panel-title">Review Basket</div>',
+        '          <div class="review-basket-actions">',
+        '            <button id="review-clear" class="review-clear-button" type="button" disabled>Clear pending</button>',
+        '            <button id="review-execute" class="review-execute-button" type="button" disabled>Execute selected</button>',
+        '          </div>',
+        '        </div>',
+        '        <div id="review-basket-items" class="review-basket-items">',
+        '          <div class="mini-panel-empty">No suggestions yet.</div>',
+        '        </div>',
         '      </section>',
         '      <section class="context-slot" aria-label="Active context" data-future-slot="context-bar">',
-        '        <span class="context-label">Context</span>',
+        '        <label class="context-toggle" title="Include selected Markdown files as request-scoped context when relevant.">',
+        '          <input id="active-context-toggle" type="checkbox" checked>',
+        '          <span>Auto-context</span>',
+        '        </label>',
         '        <span id="context-value" class="context-value">No vault open.</span>',
         '      </section>',
         '      <section class="input-slot" aria-label="Chat input">',
@@ -71,6 +82,10 @@
         '      <div class="markdown-preview-shell">',
         '        <div class="markdown-preview-toolbar">',
         '          <div id="markdown-preview-title" class="markdown-preview-title">Markdown Preview</div>',
+        '          <div id="markdown-link-feedback" class="markdown-link-feedback" hidden></div>',
+        '          <button id="markdown-history-back" class="markdown-history-button" type="button" title="Back" disabled>&lt;</button>',
+        '          <button id="markdown-history-forward" class="markdown-history-button" type="button" title="Forward" disabled>&gt;</button>',
+        '          <button id="markdown-reveal-current" class="markdown-reveal-current" type="button" disabled>Reveal in Files</button>',
         '          <button id="markdown-edit-toggle" class="markdown-edit-toggle" type="button" disabled>Edit</button>',
         '        </div>',
         '        <article id="markdown-preview" class="markdown-preview">No file selected.</article>',
@@ -89,22 +104,33 @@
       app.appendChild(status);
       root.appendChild(app);
       wireShellInteractions(app);
+      const contextState = createContextState(app.querySelector('#context-value'), app);
+      const reviewBasket = window.ZeusReviewBasket ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal) }) : null;
       if (window.ZeusProviderStatus) window.ZeusProviderStatus.mountProviderStatus({ api, app });
-      if (window.ZeusChat) window.ZeusChat.mountChat({ api, app, status });
-      wireVaultShell(api, app);
+      if (window.ZeusChat) window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState });
+      wireVaultShell(api, app, contextState);
       if (window.ZeusPaneResize) window.ZeusPaneResize.mountPaneResize(app);
     });
   }
 
 
-  function createContextState(contextValue) {
+  function createContextState(contextValue, app) {
     if (!window.ZeusContextState) return null;
-    return window.ZeusContextState.createContextState({
-      onChange(state) {
-        setText(contextValue, state.label);
+    const toggle = app ? app.querySelector('#active-context-toggle') : null;
+    const state = window.ZeusContextState.createContextState({
+      onChange(snapshot) {
+        setText(contextValue, snapshot.label);
+        if (toggle) toggle.checked = snapshot.autoContextEnabled === true;
       }
     });
+    if (toggle) {
+      toggle.addEventListener('change', () => {
+        state.setAutoContextEnabled(toggle.checked);
+      });
+    }
+    return state;
   }
+
   function createPermissionState(statusBar) {
     if (!window.ZeusPermissionState) return null;
     return window.ZeusPermissionState.createPermissionState({
@@ -130,6 +156,36 @@
     });
   }
 
+
+  async function executeReviewProposal(api, proposal) {
+    if (!proposal) {
+      return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
+    }
+    if (!api || !api.vault) {
+      return { ok: false, code: 'write_unavailable', message: 'Vault write API unavailable.' };
+    }
+    if (proposal.type === 'create_note') {
+      if (typeof api.vault.createNote !== 'function') {
+        return { ok: false, code: 'write_unavailable', message: 'Vault create API unavailable.' };
+      }
+      return api.vault.createNote({
+        targetFolder: proposal.targetFolder,
+        title: proposal.title,
+        content: proposal.content
+      });
+    }
+    if (proposal.type === 'update_note') {
+      if (typeof api.vault.updateNote !== 'function') {
+        return { ok: false, code: 'write_unavailable', message: 'Vault update API unavailable.' };
+      }
+      return api.vault.updateNote({
+        targetPath: proposal.targetPath,
+        currentContent: proposal.currentContent,
+        proposedContent: proposal.proposedContent
+      });
+    }
+    return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
+  }
   async function getAppInfo(api) {
     if (api && typeof api.appInfo === 'function') {
       try {
@@ -141,15 +197,28 @@
     return { name: 'ZEUS Agent', version: '0.1.0' };
   }
 
-  function wireVaultShell(api, app) {
+  function wireVaultShell(api, app, contextState) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
     const contextValue = app.querySelector('#context-value');
     const statusBar = app.querySelector('#status-bar');
+    let filePanel = null;
     const previewController = window.ZeusMarkdownPreview
-      ? window.ZeusMarkdownPreview.mountMarkdownPreview({ app, status: statusBar })
+      ? window.ZeusMarkdownPreview.mountMarkdownPreview({
+        app,
+        status: statusBar,
+        onOpenLink: (request) => filePanel && filePanel.openLinkedMarkdown
+          ? filePanel.openLinkedMarkdown(request.target, request.currentPath)
+          : { ok: false, message: 'File panel unavailable.' },
+        onRevealCurrentPath: (path) => filePanel && filePanel.revealPath
+          ? filePanel.revealPath(path)
+          : { ok: false, message: 'File panel unavailable.' },
+        onOpenHistoryPath: (path) => {
+          setText(statusBar, 'Preview history: ' + path);
+          return { ok: true, path };
+        }
+      })
       : null;
-    const contextState = createContextState(contextValue);
     const permissionState = createPermissionState(statusBar);
 
     if (!api || !api.vault || !window.ZeusFilePanel) {
@@ -157,7 +226,7 @@
       return;
     }
 
-    const filePanel = window.ZeusFilePanel.mountFilePanel({
+    filePanel = window.ZeusFilePanel.mountFilePanel({
       api,
       root: filePanelRoot,
       previewController,

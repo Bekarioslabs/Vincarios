@@ -46,7 +46,7 @@ Creates:
 
 The app can optionally ask the AI for draft content after the structure exists.
 
-The default project structure ships with V1, but the implementation must be template/preset-based so the structure can later become editable in Options without rewriting project creation logic.
+The default project structure ships with V1, but the implementation must be template/preset-based and use vault folder roles so the structure can later become editable in Options without rewriting project creation logic.
 
 ## Options Menu V1
 
@@ -118,6 +118,10 @@ Preview:        min 240 px height
 
 Review Basket is a standalone module, not part of chat rendering.
 
+The first implemented flow is `Save as Note` under assistant responses. It adds a selected `create_note` proposal targeting `00_Inbox/AI Responses` to the basket. The basket can execute selected `create_note` proposals after a Create Note preview modal. It must not write directly from chat or renderer filesystem access; execution goes through the preload vault API and main process vault write service.
+
+Identical open proposals are de-duplicated by the basket state. Re-clicking Save as Note for the same assistant response should not create another open item. Visible proposals can be dismissed individually. Pending proposals can be cleared as a group. Dismissing a completed item only removes it from the visible basket; audit history remains separate.
+
 It should be collapsible and modular enough that its look, card layout, ordering, grouping, or future controls can change without touching chat, file tree, provider, or vault code.
 
 Each proposal has a status:
@@ -168,6 +172,13 @@ Permission shortcuts:
 
 Recursive permission application must not read Markdown contents. It only needs folder/file paths from the vault listing API. Context remains a separate workflow based on the selected file/folder and explicit context rules.
 
+## Chat Markdown Rendering Decisions
+
+Assistant chat messages render through the shared Markdown renderer so chat and note preview improve together over time.
+
+User messages stay plain text to preserve exactly what the user typed.
+
+`Save as Note` keeps the raw assistant Markdown content, not rendered HTML.
 ## Markdown Preview Rendering Decisions
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
@@ -182,29 +193,40 @@ The preview toolbar includes an `Edit` button that switches to local Markdown so
 
 Markdown rendering and Markdown navigation are separate blocks.
 
-- Wikilinks and relative Markdown links should render safely first.
-- A later navigation block makes them clickable.
-- Clicking a resolved note link opens the target note in the preview.
+- Wikilinks and relative Markdown links render safely first, then the preview controller delegates clicks through a navigation callback.
+- Clicking a resolved internal Markdown note link opens the target note in the preview.
 - Clicking a link must not automatically expand the file tree.
-- The preview should provide a `Reveal in Files` control so the user can intentionally locate the opened note in the tree.
-- Preview history should support back/forward navigation after link clicks.
-- Link resolution must prefer folder-relative and project-local context before falling back to broader vault search.
+- The preview toolbar provides a `Reveal in Files` control so the user can intentionally locate the opened note in the tree.
+- V1 link navigation supports internal Markdown files only. External URLs, images, attachments, and raw HTML interaction remain out of scope for this block.
+- Preview back/forward history is available in the preview toolbar. It changes the preview history only and does not auto-expand the file tree.
+- Link resolution prefers folder-relative candidates before broader vault-root candidates.
 
 This keeps Markdown rendering, vault path resolution, preview history, and file-tree reveal as separate modules instead of coupling them inside the renderer.
 
 ## Context System Decisions
 
-Auto-context is enabled by default.
+Auto-context is enabled by default and can be toggled in the context bar below the Review Basket.
 
-For selected files:
+Selected Markdown context is request-scoped:
 
-- if Read permission is active and the file is within limits, the selected Markdown file can be included as context automatically.
-- the context bar must show what is active.
+- the selected file path is always visible in the context bar.
+- loaded Markdown content is attached to the provider request only when the user's prompt clearly refers to the selected/current file or note.
+- general questions must stay neutral and must not be forced into the selected file context.
+- attached selected-file content is not stored back into chat history.
+- if Auto-context is off, ZEUS may mention the selected path but must not claim to know the file content.
+- if Read is not active for the selected file or one of its parent folders, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
+- follow-up prompts after enabling Read, such as `ok hab es aktiviert`, `try now`, or `this file is selected`, must still target the selected file.
+- if the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
+- folder-scoped follow-up prompts such as `find similar files in this folder` should map the selected file to its parent folder only when that parent folder has active `R`; ZEUS must not switch to generic local-file-upload language.
+- selected folder listing requests are handled by a request-scoped read-context preflight when `R` is active. Supported `list_folder` model-action envelopes remain a fallback and are executed through the preload vault API only when the requested folder is inside the active selected folder or selected-file parent folder. The raw tool-call text must not be displayed as the final answer.
 
 For selected folders:
 
-- ZEUS may use the folder path and summary-level information.
+- ZEUS may use the folder path as the active target.
 - ZEUS must not blindly load every file in the folder without an explicit analysis workflow and limits.
+- Future Folder Context Index workflow: when a folder is selected, ZEUS may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
+- Persistent Folder Context Indexes must be stored in `.zeus/` or a configured cache location, not blindly as normal vault notes.
+- Folder indexes are navigation aids and embedding companions, not authority. If files changed since the scan, ZEUS must mark the index as possibly stale and offer to refresh it.
 
 Context sources must remain visible and separated:
 
@@ -302,7 +324,7 @@ The prototype file tree felt better than the first scaffold list.
 V1 file navigation should move toward:
 
 - compact file rows, not large button-sized rows
-- persistent tree behavior
+- persistent tree behavior, including refresh without collapsing expanded folders
 - folders expand/collapse in place instead of replacing the whole tree view
 - selected file/folder state remains visible
 - tree area owns its own scrolling

@@ -1,4 +1,4 @@
-.file-toolbar {
+﻿.file-toolbar {
   min-height: 38px;
   display: flex;
   align-items: center;
@@ -40,6 +40,10 @@
   background: transparent;
   color: var(--text-muted);
   font-size: 14px;
+}
+
+.file-refresh-button::before {
+  content: "\21BB";
 }
 
 .file-refresh-button:hover:not(:disabled) {
@@ -126,6 +130,18 @@
   color: inherit;
   font-size: 11px;
   line-height: 1;
+}
+
+.file-row-icon::before {
+  content: "\2022";
+}
+
+.file-row-icon.is-folder::before {
+  content: "\25B8";
+}
+
+.file-row-icon.is-folder.is-expanded::before {
+  content: "\25BE";
 }
 
 .file-row-label {

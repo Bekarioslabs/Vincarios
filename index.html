@@ -8,18 +8,31 @@
   <link rel="stylesheet" href="./src/renderer/styles/layout.css">
   <link rel="stylesheet" href="./src/renderer/styles/files.css">
   <link rel="stylesheet" href="./src/renderer/styles/markdown.css">
+  <link rel="stylesheet" href="./src/renderer/styles/review.css">
 </head>
 <body>
   <div id="app"></div>
+  <script src="./src/shared/vaultProfile/defaults.js"></script>
+  <script src="./src/shared/actions/actionSchema.js"></script>
+  <script src="./src/shared/actions/modelActionParser.js"></script>
+  <script src="./src/shared/actions/proposalPlan.js"></script>
+  <script src="./src/shared/actions/diffPreview.js"></script>
   <script src="./src/renderer/layout/paneResize.js"></script>
   <script src="./src/renderer/files/fileNavigator.js"></script>
+  <script src="./src/renderer/context/contextIntent.js"></script>
   <script src="./src/renderer/context/contextState.js"></script>
+  <script src="./src/renderer/context/contextPackageBuilder.js"></script>
   <script src="./src/renderer/permissions/permissionState.js"></script>
   <script src="./src/renderer/permissions/permissionPathCollector.js"></script>
   <script src="./src/renderer/markdown/markdownRenderer.js"></script>
+  <script src="./src/renderer/markdown/markdownLinkResolver.js"></script>
   <script src="./src/renderer/markdown/markdownPreviewController.js"></script>
   <script src="./src/renderer/files/mountFilePanel.js"></script>
   <script src="./src/renderer/providers/mountProviderStatus.js"></script>
+  <script src="./src/renderer/review/reviewBasketState.js"></script>
+  <script src="./src/renderer/review/mountReviewBasket.js"></script>
+  <script src="./src/renderer/chat/modelReadActionRunner.js"></script>
+  <script src="./src/renderer/chat/readContextPreflight.js"></script>
   <script src="./src/renderer/chat/mountChat.js"></script>
   <script src="./src/renderer/shell/mountShell.js"></script>
   <script src="./src/renderer/bootstrap.js"></script>

@@ -69,17 +69,19 @@ Input field
 
 Vault panel keeps file tree and preview visible at the same time.
 
-Markdown preview renders sanitized HTML and displays YAML frontmatter as a visible Properties block.
+Markdown preview renders sanitized HTML and displays YAML frontmatter as a visible Properties block. Assistant chat messages use the same shared Markdown renderer; user messages remain plain text, and `Save as Note` stores raw Markdown rather than rendered HTML.
 
 The preview toolbar can switch to local Markdown source mode. Persisting edits is handled later through Review/Write, not by direct preview writes.
 
-Markdown links should later open notes in preview without automatically expanding the file tree. Use an explicit `Reveal in Files` control and preview back/forward history.
+Internal Markdown links and wikilinks can open resolved notes in the preview without automatically expanding the file tree. The preview toolbar provides back/forward history for preview navigation and `Reveal in Files` when the user intentionally wants the file tree to open and select the previewed note.
 
 Resizable panes need minimum sizes.
 
 ## Review Basket
 
 The Review Basket is a standalone module, not part of chat rendering.
+
+Current foundation: shared action schema and proposal-plan parsing normalize V1 action suggestions into Review Basket items. Assistant responses can add a `create_note` proposal for `Save as Note` into the Review Basket. Identical open proposals are de-duplicated. Proposals can be selected, dismissed from the visible basket, and pending proposals can be cleared as a group. Selected `create_note` proposals execute after an in-app Create Preview with an editable title field; main validates paths, refuses overwrites, writes the Markdown file, and appends an audit entry. Selected `update_note` proposals are unselected by default, require current/proposed content, show an Apply Update diff preview, create a `.zeus/backups` copy, reject stale file content, write the proposed Markdown, and append audit entries. Other existing-file actions still require services before execution.
 
 Proposal statuses:
 
@@ -106,11 +108,19 @@ V1 uses automatic safe execution ordering. Manual drag-and-drop ordering is futu
 
 ## Context
 
-Auto-context is enabled by default.
+Auto-context is enabled by default and has a visible toggle in the context bar.
 
-Selected Markdown files can be included automatically if Read is active and limits allow it.
+Selected Markdown files are attached only for the current provider request, only when the user's prompt clearly targets the selected/current file or note. General questions stay neutral. Attached selected-file content is not stored in chat history.
 
-Selected folders are not blindly fully loaded.
+If Auto-context is off, ZEUS may know the selected path but must not claim to know the file content.
+
+If Read is not active for the selected file or one of its parent folders, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
+
+Follow-up prompts after enabling Read, such as `ok hab es aktiviert`, `try now`, or `this file is selected`, must still target the selected file. If the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
+
+Selected folders expose the folder path only. They are not blindly fully loaded. When `R` is active, direct folder-content prompts are handled by a request-scoped read-context preflight through the preload vault API. Supported `list_folder` model-action envelopes remain a fallback, are checked against the active selection, and are returned as a ZEUS message instead of raw tool-call text.
+
+Future Folder Context Index: selected folders can be counted first, then listed and remembered only after user approval. Persistent folder indexes belong in `.zeus/` or a configured cache location, not blindly in normal vault notes. They should later combine with embeddings for folder candidates, similar-note lookup, and stale-index detection.
 
 Dropped `.md` files become temporary context immediately. They are not automatically imported into the vault. External dropped Markdown files get an `Import to Inbox` action.
 

@@ -8,7 +8,9 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',
   VAULT_LIST_FOLDER: 'vault:list-folder',
-  VAULT_READ_MARKDOWN: 'vault:read-markdown'
+  VAULT_READ_MARKDOWN: 'vault:read-markdown',
+  VAULT_CREATE_NOTE: 'vault:create-note',
+  VAULT_UPDATE_NOTE: 'vault:update-note'
 });
 
 module.exports = {

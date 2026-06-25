@@ -1,0 +1,194 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+test('index loads review basket modules before chat and shell modules', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const profileIndex = source.indexOf('./src/shared/vaultProfile/defaults.js');
+  const actionSchemaIndex = source.indexOf('./src/shared/actions/actionSchema.js');
+  const modelActionParserIndex = source.indexOf('./src/shared/actions/modelActionParser.js');
+  const proposalPlanIndex = source.indexOf('./src/shared/actions/proposalPlan.js');
+  const diffPreviewIndex = source.indexOf('./src/shared/actions/diffPreview.js');
+  const stateIndex = source.indexOf('./src/renderer/review/reviewBasketState.js');
+  const viewIndex = source.indexOf('./src/renderer/review/mountReviewBasket.js');
+  const chatIndex = source.indexOf('./src/renderer/chat/mountChat.js');
+  const shellIndex = source.indexOf('./src/renderer/shell/mountShell.js');
+
+  assert.equal(profileIndex > -1, true);
+  assert.equal(actionSchemaIndex > profileIndex, true);
+  assert.equal(modelActionParserIndex > actionSchemaIndex, true);
+  assert.equal(proposalPlanIndex > modelActionParserIndex, true);
+  assert.equal(diffPreviewIndex > proposalPlanIndex, true);
+  assert.equal(stateIndex > diffPreviewIndex, true);
+  assert.equal(stateIndex > -1, true);
+  assert.equal(viewIndex > stateIndex, true);
+  assert.equal(chatIndex > viewIndex, true);
+  assert.equal(shellIndex > chatIndex, true);
+});
+
+test('shell mounts review basket view and passes it into chat', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /ZeusReviewBasket\.mountReviewBasket/);
+  assert.match(source, /reviewBasket/);
+  assert.match(source, /mountChat\(\{ api, app, status, reviewBasket, contextState \}\)/);
+});
+
+test('assistant messages expose a save-as-note action through the review basket', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
+
+  assert.match(source, /Save as Note/);
+  assert.match(source, /createSaveAssistantResponseProposal/);
+  assert.match(source, /reviewBasket\.addProposal/);
+});
+
+test('assistant messages render markdown through the shared renderer while user messages stay plain text', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
+
+  assert.match(source, /renderMessageBody\(body, role, content\)/);
+  assert.match(source, /window\.ZeusMarkdownRenderer/);
+  assert.match(source, /renderer\.renderMarkdown/);
+  assert.match(source, /body\.innerHTML = renderer\.renderMarkdown/);
+  assert.match(source, /body\.textContent = content/);
+});
+test('review basket view is isolated from shell rendering', () => {
+  const shellSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const viewSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.doesNotMatch(shellSource, /function renderReviewBasket/);
+  assert.match(viewSource, /function mountReviewBasket/);
+  assert.match(viewSource, /createReviewBasketState/);
+});
+test('review basket view owns selection and execute controls without vault access', () => {
+  const shellSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const viewSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(shellSource, /id="review-execute"/);
+  assert.match(viewSource, /setSelected/);
+  assert.match(viewSource, /getSelectedOpenItems/);
+  assert.match(viewSource, /updateStatus/);
+  assert.match(viewSource, /executeProposal/);
+  assert.doesNotMatch(viewSource, /fs\./);
+});
+
+test('shell executes create note proposals through the preload vault API only', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /function executeReviewProposal/);
+  assert.match(source, /api\.vault\.createNote/);
+  assert.doesNotMatch(source, /require\('node:fs'\)/);
+});
+
+test('create note preview exposes an editable title field before execution', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(source, /review-modal-title-input/);
+  assert.match(source, /titleInput\.value = item\.title/);
+  assert.match(source, /title:\s*titleInput\.value\.trim\(\)/);
+});
+
+test('review basket sends edited create-note title to the execution boundary', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(source, /Object\.assign\(\{\}, item, confirmed\.patch\)/);
+  assert.match(source, /executeProposal\(proposal\)/);
+});
+test('review basket view displays diff preview summaries for existing-file actions', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(source, /renderDiffSummary/);
+  assert.match(source, /item\.diffPreview\.summary/);
+  assert.match(source, /Diff required/);
+});
+test('review basket exposes a dedicated diff approval modal for diff proposals', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(source, /review-diff-button/);
+  assert.match(source, /showDiffPreviewModal/);
+  assert.match(source, /Diff Preview/);
+  assert.match(source, /review-diff-line/);
+});
+test('review basket confirms update note proposals before execution', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(source, /confirmUpdateNote/);
+  assert.match(source, /Apply Update Preview/);
+  assert.match(source, /Apply update/);
+  assert.match(source, /item\.type === 'update_note'/);
+});test('shell executes update note proposals through the preload vault API only', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /api\.vault\.updateNote/);
+  assert.match(source, /proposal\.currentContent/);
+  assert.match(source, /proposal\.proposedContent/);
+});
+
+test('shell exposes auto-context toggle and passes context state into chat', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /id="active-context-toggle"/);
+  assert.match(source, /setAutoContextEnabled/);
+  assert.match(source, /mountChat\(\{ api, app, status, reviewBasket, contextState \}\)/);
+});
+
+test('chat builds request-scoped context without storing it in chat history', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
+
+  assert.match(source, /buildChatContextPackage/);
+  assert.match(source, /contextState\.snapshot\(\)/);
+  assert.match(source, /outboundMessages/);
+  assert.match(source, /## User Request/);
+});
+
+test('file panel stores loaded Markdown content in context state', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /contextState\.setFile\(read\.path, createContextDetails\(read\.path, read\.content\)\)/);
+});
+test('index loads context intent and package builder before chat uses context state', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const intentIndex = source.indexOf('./src/renderer/context/contextIntent.js');
+  const stateIndex = source.indexOf('./src/renderer/context/contextState.js');
+  const packageIndex = source.indexOf('./src/renderer/context/contextPackageBuilder.js');
+  const runnerIndex = source.indexOf('./src/renderer/chat/modelReadActionRunner.js');
+  const chatIndex = source.indexOf('./src/renderer/chat/mountChat.js');
+
+  assert.equal(intentIndex > -1, true);
+  assert.equal(stateIndex > intentIndex, true);
+  assert.equal(packageIndex > stateIndex, true);
+  assert.equal(runnerIndex > packageIndex, true);
+  assert.equal(chatIndex > runnerIndex, true);
+});
+
+test('renderer browser globals take priority over CommonJS fallbacks', () => {
+  const files = [
+    path.join(__dirname, '..', 'src', 'renderer', 'context', 'contextState.js'),
+    path.join(__dirname, '..', 'src', 'renderer', 'context', 'contextPackageBuilder.js'),
+    path.join(__dirname, '..', 'src', 'renderer', 'chat', 'modelReadActionRunner.js'),
+    path.join(__dirname, '..', 'src', 'renderer', 'chat', 'readContextPreflight.js'),
+    path.join(__dirname, '..', 'src', 'renderer', 'review', 'reviewBasketState.js')
+  ];
+
+  files.forEach((file) => {
+    const source = fs.readFileSync(file, 'utf8');
+    const firstWindow = source.indexOf('typeof window');
+    const firstRequire = source.indexOf('typeof require');
+    assert.equal(firstWindow > -1, true, file);
+    if (firstRequire > -1) assert.equal(firstWindow < firstRequire, true, file);
+  });
+});
+test('index loads model action parser before model read action runner and chat', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const parserIndex = source.indexOf('./src/shared/actions/modelActionParser.js');
+  const runnerIndex = source.indexOf('./src/renderer/chat/modelReadActionRunner.js');
+  const preflightIndex = source.indexOf('./src/renderer/chat/readContextPreflight.js');
+  const chatIndex = source.indexOf('./src/renderer/chat/mountChat.js');
+
+  assert.equal(parserIndex > -1, true);
+  assert.equal(runnerIndex > parserIndex, true);
+  assert.equal(preflightIndex > runnerIndex, true);
+  assert.equal(chatIndex > preflightIndex, true);
+});

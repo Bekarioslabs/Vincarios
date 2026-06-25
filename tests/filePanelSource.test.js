@@ -38,3 +38,36 @@ test('file panel uses shift click for recursive permission path collection', () 
   assert.match(source, /collectRecursivePermissionPaths/);
   assert.match(source, /ensureFolderLoaded\(folderPath\)/);
 });
+
+test('file panel refresh preserves navigator state instead of reopening root', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /async function refreshTree\(\)/);
+  assert.match(source, /refreshButton\.addEventListener\('click', refreshTree\)/);
+  assert.doesNotMatch(source, /refreshButton\.addEventListener\('click', async \(\) => \{\s*entriesByFolder\.clear\(\);\s*await openRoot\(\);\s*\}\);/);
+});
+
+test('file panel source avoids mojibake-prone inline icon glyphs', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.doesNotMatch(source, /â/);
+  assert.doesNotMatch(source, /â†|â–|â€¢/);
+  assert.match(source, /icon\.classList\.toggle\('is-expanded'/);
+  assert.doesNotMatch(source, /icon\.textContent = entry\.kind === 'folder'/);
+});
+
+test('file panel gates selected Markdown chat context through read permission', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /function createContextDetails/);
+  assert.match(source, /function canUsePathAsContext/);
+  assert.match(source, /permissionState\.get\(candidate\)\.read === true/);
+  assert.match(source, /contextState\.setFile\(read\.path, createContextDetails\(read\.path, read\.content\)\)/);
+});
+test('file panel keeps loaded preview content and resyncs read permission for active context', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /readAllowed: canUsePathAsContext\(path\)/);
+  assert.match(source, /function syncSelectedContextPermission/);
+  assert.match(source, /syncSelectedContextPermission\(\)/);
+});
