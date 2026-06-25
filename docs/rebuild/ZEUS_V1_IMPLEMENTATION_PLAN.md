@@ -70,6 +70,17 @@ Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
 - [ ] Model/capability display.
 - [ ] Settings persistence in app/user-data storage.
 
+## Phase 5.5 - Reviewed Update Flow
+
+This is a V1-critical workflow, not a later comfort feature. The prototype already proved the value of chat-driven file updates; the rebuild must make it reliable and review-safe before larger cleanup features.
+
+- [ ] Chat-generated `update_note` proposals reliably target the selected Markdown file when `R` and `W` allow it.
+- [ ] Missing `R` or `W` produces a clear app-level guidance message, not generic model text about lacking filesystem access.
+- [ ] Edit Mode can create an `update_note` proposal from local source changes instead of writing directly.
+- [ ] Partial edits are supported through focused insertion/replacement planning, so ZEUS can add or replace one section without pasting an entire large note back into the file.
+- [ ] Diff preview remains mandatory before applying any update.
+- [ ] Backup, stale-content validation, and audit logging stay on the existing `update_note` service path.
+
 ## Phase 6 - V1 Release Hardening
 
 - [ ] Add renderer Content Security Policy.

@@ -101,6 +101,10 @@ The basket is not blindly cleared after execution. It updates proposal statuses 
 
 V1 uses automatic safe execution ordering. Manual drag-and-drop ordering is future work.
 
+## Reviewed Update Flow
+
+Reliable file updating is V1-critical. ZEUS must be able to turn chat or local Edit Mode changes into reviewed `update_note` proposals for the selected Markdown file when `R` and `W` allow it. The app should produce clear permission guidance when access is missing, instead of letting the model fall back to generic filesystem disclaimers. Partial edits need focused insertion/replacement planning so large notes do not have to be pasted back wholesale for small changes. All applied updates still go through diff preview, backup, stale-content validation, and audit logging.
+
 ## Permissions
 
 - Read means ZEUS may use the path as context.
