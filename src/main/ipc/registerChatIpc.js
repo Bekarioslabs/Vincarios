@@ -7,9 +7,40 @@ function registerChatIpc(ipcMain, chatService) {
     throw new Error('Chat service is required.');
   }
 
-  ipcMain.handle(IPC_CHANNELS.CHAT_SEND, (event, payload) => chatService.sendChat(payload));
+  const pendingRequests = new Map();
+
+  ipcMain.handle(IPC_CHANNELS.CHAT_SEND, async (event, payload) => {
+    payload = payload || {};
+    const requestId = normalizeRequestId(payload.requestId);
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    if (requestId && controller) pendingRequests.set(requestId, controller);
+
+    try {
+      return await chatService.sendChat(payload, {
+        requestId,
+        signal: controller ? controller.signal : undefined
+      });
+    } finally {
+      if (requestId) pendingRequests.delete(requestId);
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.CHAT_CANCEL, (event, payload) => {
+    const requestId = normalizeRequestId(payload && payload.requestId);
+    if (!requestId) return { ok: false, code: 'missing_request_id', message: 'Request id is required.' };
+    const controller = pendingRequests.get(requestId);
+    if (!controller) return { ok: false, code: 'request_not_found', requestId, message: 'Request is no longer running.' };
+    controller.abort();
+    pendingRequests.delete(requestId);
+    return { ok: true, requestId };
+  });
+}
+
+function normalizeRequestId(value) {
+  return String(value || '').trim();
 }
 
 module.exports = {
-  registerChatIpc
+  registerChatIpc,
+  normalizeRequestId
 };

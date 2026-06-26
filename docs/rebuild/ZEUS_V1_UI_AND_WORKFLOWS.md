@@ -183,6 +183,9 @@ Permission shortcuts:
 
 Recursive permission application must not read Markdown contents. It only needs folder/file paths from the vault listing API. Context remains a separate workflow based on the selected file/folder and explicit context rules.
 
+## Chat Request Control Decisions
+
+While a provider request is running, the Send button becomes `Cancel`. Cancel uses the request id and `chat:cancel` IPC to abort the active provider request through `AbortController`. The renderer also checks the active request id before applying a response so late canceled responses cannot appear in chat.
 ## Chat Markdown Rendering Decisions
 
 Assistant chat messages render through the shared Markdown renderer so chat and note preview improve together over time.

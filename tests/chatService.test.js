@@ -138,8 +138,9 @@ test('chat IPC exposes chat sending through a chat-specific channel', async () =
 
   registerChatIpc(ipcMain, chatService);
 
-  assert.equal(handlers.size, 1);
+  assert.equal(handlers.size, 2);
   assert.equal(handlers.has(IPC_CHANNELS.CHAT_SEND), true);
+  assert.equal(handlers.has(IPC_CHANNELS.CHAT_CANCEL), true);
   assert.deepEqual(await handlers.get(IPC_CHANNELS.CHAT_SEND)(null, { messages: [] }), {
     ok: true,
     payload: { messages: [] },
@@ -257,4 +258,85 @@ test('provider chat service resolves Ollama auto model from native tags response
   assert.equal(requests.length, 2);
   assert.equal(requests[0].url, 'http://127.0.0.1:11434/api/tags');
   assert.equal(JSON.parse(requests[1].options.body).model, 'qwen2.5:7b');
+});
+
+test('chat IPC exposes cancel and aborts a pending request by request id', async () => {
+  const handlers = new Map();
+  const ipcMain = {
+    handle(channel, handler) {
+      handlers.set(channel, handler);
+    }
+  };
+  const signals = [];
+  const chatService = {
+    sendChat(payload, options) {
+      signals.push(options.signal);
+      return new Promise(() => {});
+    }
+  };
+
+  registerChatIpc(ipcMain, chatService);
+  handlers.get(IPC_CHANNELS.CHAT_SEND)(null, { requestId: 'req-1', messages: [{ role: 'user', content: 'Hi' }] });
+  const cancelResult = await handlers.get(IPC_CHANNELS.CHAT_CANCEL)(null, { requestId: 'req-1' });
+
+  assert.equal(handlers.has(IPC_CHANNELS.CHAT_CANCEL), true);
+  assert.equal(cancelResult.ok, true);
+  assert.equal(cancelResult.requestId, 'req-1');
+  assert.equal(signals.length, 1);
+  assert.equal(signals[0].aborted, true);
+});
+
+test('provider chat service cancels provider fetch when request signal aborts', async () => {
+  const seenSignals = [];
+  const controller = new AbortController();
+  const service = createProviderChatService({
+    providers: [
+      {
+        id: 'lm-studio',
+        label: 'LM Studio',
+        baseUrl: 'http://127.0.0.1:1234',
+        chatPath: '/v1/chat/completions',
+        model: 'local-model'
+      }
+    ],
+    fetchImpl: async (url, options) => {
+      seenSignals.push(options.signal);
+      controller.abort();
+      const error = new Error('aborted');
+      error.name = 'AbortError';
+      throw error;
+    }
+  });
+
+  const result = await service.sendChat({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controller.signal });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.canceled, true);
+  assert.equal(seenSignals.length, 1);
+  assert.equal(seenSignals[0].aborted, true);
+});
+
+test('provider chat service returns canceled result when aborted before request', async () => {
+  const controller = new AbortController();
+  controller.abort();
+  const service = createProviderChatService({
+    providers: [
+      {
+        id: 'lm-studio',
+        label: 'LM Studio',
+        baseUrl: 'http://127.0.0.1:1234',
+        chatPath: '/v1/chat/completions',
+        model: 'local-model'
+      }
+    ],
+    fetchImpl: async () => {
+      throw new Error('fetch should not run');
+    }
+  });
+
+  const result = await service.sendChat({ messages: [{ role: 'user', content: 'Hi' }] }, { signal: controller.signal });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.canceled, true);
+  assert.match(result.error, /cancel/i);
 });

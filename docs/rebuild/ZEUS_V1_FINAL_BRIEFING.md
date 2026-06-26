@@ -196,7 +196,7 @@ The default ships with V1 but must be implemented as a template/preset.
 
 Current Phase 5 provider foundation: LM Studio uses default URL `http://127.0.0.1:1234` with OpenAI-compatible chat/model endpoints. Ollama uses default URL `http://127.0.0.1:11434` with native `/api/tags` and `/api/chat` endpoints. Both share the same provider registry, in-memory active model selection, and topbar provider/model dropdowns. Provider modules generate model output and model metadata only; they never read or write vault files. Future Settings may override provider URLs without changing provider modules.
 
-V1 provider work still must include real chat cancellation, not only UI-side ignoring. A running chat request needs a request id, cancellable provider call, `chat:cancel` IPC, Send-to-Cancel button state, and protection against late cancelled responses appearing in chat.
+Current chat cancellation: running provider requests use request ids, `AbortController`, `chat:cancel` IPC, Send-to-Cancel button state, and late-response protection. Cancel is a real provider abort, not only UI-side ignoring.
 
 ## Options
 

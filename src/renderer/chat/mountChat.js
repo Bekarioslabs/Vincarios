@@ -14,6 +14,7 @@
     const input = app.querySelector('#chat-input');
     const sendButton = app.querySelector('#chat-send');
     const messages = [];
+    let activeRequest = null;
 
     if (!chatLog || !input || !sendButton) return null;
 
@@ -27,18 +28,30 @@
     setText(status, 'Chat ready.');
 
     async function sendCurrentMessage() {
+      if (activeRequest) {
+        await cancelCurrentRequest();
+        return;
+      }
+
       const content = input.value.trim();
       if (!content) return;
 
+      const requestId = createChatRequestId();
+      activeRequest = { requestId, canceled: false };
       input.value = '';
       messages.push({ role: 'user', content });
       appendMessage(chatLog, 'user', content);
-      setInputEnabled(input, sendButton, false);
+      setChatBusy(input, sendButton, true);
       setText(status, 'Waiting for provider...');
       const pending = appendMessage(chatLog, 'assistant', 'Thinking...', { allowSave: false });
 
       try {
         const preflight = await runReadContextPreflight({ api, content, contextState });
+        if (!isRequestActive(activeRequest, requestId)) {
+          pending.remove();
+          setText(status, 'Request canceled.');
+          return;
+        }
         if (preflight && preflight.handled) {
           pending.remove();
           appendPreflightResult({
@@ -62,7 +75,9 @@
           contextState,
           reviewBasket,
           status,
-          pending
+          pending,
+          requestId,
+          isRequestActive: () => isRequestActive(activeRequest, requestId)
         });
       } catch (error) {
         pending.remove();
@@ -70,8 +85,20 @@
         appendMessage(chatLog, 'assistant', 'Chat pipeline error: ' + message, { allowSave: false });
         setText(status, 'Chat pipeline failed.');
       } finally {
-        setInputEnabled(input, sendButton, true);
+        if (activeRequest && activeRequest.requestId === requestId) activeRequest = null;
+        setChatBusy(input, sendButton, false);
         input.focus();
+      }
+    }
+
+    async function cancelCurrentRequest() {
+      if (!activeRequest) return;
+      const request = activeRequest;
+      request.canceled = true;
+      setText(status, 'Canceling request...');
+      sendButton.disabled = true;
+      if (api.chat && typeof api.chat.cancel === 'function') {
+        await api.chat.cancel({ requestId: request.requestId });
       }
     }
 
@@ -354,6 +381,26 @@
     input.readOnly = !enabled;
     input.setAttribute('aria-disabled', String(!enabled));
     sendButton.disabled = !enabled;
+    if (enabled) {
+      sendButton.textContent = '>';
+      delete sendButton.dataset.chatState;
+    }
+  }
+
+  function setChatBusy(input, sendButton, busy) {
+    input.readOnly = busy;
+    input.setAttribute('aria-disabled', String(busy));
+    sendButton.disabled = false;
+    sendButton.textContent = busy ? 'Cancel' : '>';
+    sendButton.dataset.chatState = busy ? 'running' : 'idle';
+  }
+
+  function createChatRequestId() {
+    return 'chat-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function isRequestActive(activeRequest, requestId) {
+    return Boolean(activeRequest && activeRequest.requestId === requestId && activeRequest.canceled !== true);
   }
 
   function isNearBottom(node) {
@@ -365,7 +412,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountChat, appendMessage, buildOutboundMessages };
+    module.exports = { mountChat, appendMessage, buildOutboundMessages, createChatRequestId, isRequestActive };
   }
 
   if (typeof window !== 'undefined') {

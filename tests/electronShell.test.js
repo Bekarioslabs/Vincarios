@@ -24,6 +24,7 @@ test('main window options keep the renderer sandboxed', () => {
 test('IPC channels expose app info, provider, chat, and reviewed vault actions', () => {
   assert.deepEqual(Object.keys(IPC_CHANNELS).sort(), [
     'APP_INFO',
+    'CHAT_CANCEL',
     'CHAT_SEND',
     'PROVIDER_MODELS',
     'PROVIDER_SET_ACTIVE',
@@ -39,6 +40,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   ]);
   assert.equal(IPC_CHANNELS.APP_INFO, 'app:info');
   assert.equal(IPC_CHANNELS.CHAT_SEND, 'chat:send');
+  assert.equal(IPC_CHANNELS.CHAT_CANCEL, 'chat:cancel');
   assert.equal(IPC_CHANNELS.PROVIDER_STATUS, 'provider:status');
   assert.equal(IPC_CHANNELS.PROVIDER_MODELS, 'provider:models');
   assert.equal(IPC_CHANNELS.PROVIDER_SET_ACTIVE, 'provider:set-active');
