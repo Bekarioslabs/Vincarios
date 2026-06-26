@@ -194,6 +194,24 @@ test('read context preflight recursively lists selected folder descendants for p
   assert.match(result.message, /Only real folder-listing results are shown/);
   assert.doesNotMatch(result.message, /Agent_Definitions\.md/);
 });
+test('read context preflight blocks selected folder listing with a transposed folder typo', async () => {
+  const blockedState = createBlockedActionStateForTest();
+  const result = await runReadContextPreflight({
+    userText: 'was ist in diesem ordenr?',
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain',
+      readAllowed: false,
+      selectionId: 19
+    },
+    blockedState
+  });
+
+  assert.equal(result.handled, true);
+  assert.equal(result.kind, 'blocked_action');
+  assert.match(result.message, /enable R/i);
+  assert.equal(result.blockedActions[0].label, 'Retry after enabling R');
+});
 test('read context preflight creates a retry action for blocked selected-file reads', async () => {
   const blockedState = createBlockedActionStateForTest();
   const result = await runReadContextPreflight({

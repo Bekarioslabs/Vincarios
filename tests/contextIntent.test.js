@@ -18,6 +18,7 @@ test('context intent detects selected target requests without matching general q
 test('context intent detects explicit folder-scoped file work', () => {
   assert.equal(looksLikeFolderScopedRequest('kannst du aehnliche dateien in diesem ordner finden?'), true);
   assert.equal(looksLikeFolderScopedRequest('liste die dateien in diesem ordner'), true);
+  assert.equal(looksLikeFolderScopedRequest('was ist in diesem ordenr?'), true);
   assert.equal(looksLikeFolderScopedRequest('was ist der groesste fisch?'), false);
 });
 
@@ -25,6 +26,7 @@ test('context intent exposes generic folder work signals without hard-coded typo
   assert.equal(hasFolderWorkSignal('kannst du aehnliche dateien finden?'), true);
   assert.equal(hasFolderWorkSignal('liste die dateien'), true);
   assert.equal(hasFolderWorkSignal('was liegt in diesem ordner?'), true);
+  assert.equal(hasFolderWorkSignal('was ist in diesem ordenr?'), true);
   assert.equal(hasFolderWorkSignal('what is inside this folder?'), true);
   assert.equal(hasFolderWorkSignal('was ist der groesste fisch?'), false);
 });

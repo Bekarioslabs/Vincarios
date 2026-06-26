@@ -32,7 +32,7 @@
   }
 
   function mentionsFolder(value) {
-    return /\b(diesem|diesen|dieser|selected|current|this)\b.*\b(ordner|folder)\b/.test(value) || /\b(ordner|folder)\b/.test(value);
+    return hasTargetWord(value, ['ordner', 'folder', 'verzeichnis', 'directory']);
   }
 
   function mentionsFileCollection(value) {
@@ -45,6 +45,33 @@
 
   function asksForRecursiveFolderListing(value) {
     return /\b(alle|all|recursive|recursively|rekursiv|unterordner|subfolder|subfolders|children|descendants)\b/.test(value);
+  }
+
+  function hasTargetWord(value, targets) {
+    const tokens = tokenize(value);
+    return tokens.some((token) => targets.some((target) => tokenMatchesTargetWord(token, target)));
+  }
+
+  function tokenMatchesTargetWord(token, target) {
+    if (token === target) return true;
+    return hasSingleAdjacentTransposition(token, target);
+  }
+
+  function hasSingleAdjacentTransposition(token, target) {
+    if (!token || token.length !== target.length || token.length < 5) return false;
+    const differences = [];
+    for (let index = 0; index < token.length; index += 1) {
+      if (token[index] !== target[index]) differences.push(index);
+      if (differences.length > 2) return false;
+    }
+    return differences.length === 2
+      && differences[1] === differences[0] + 1
+      && token[differences[0]] === target[differences[1]]
+      && token[differences[1]] === target[differences[0]];
+  }
+
+  function tokenize(value) {
+    return String(value || '').match(/[a-z0-9]+/g) || [];
   }
 
   function asksForSimilarity(value) {
