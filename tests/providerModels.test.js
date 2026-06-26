@@ -56,3 +56,28 @@ test('provider model selection is shared with chat requests', async () => {
   assert.equal(requests.length, 1);
   assert.equal(requests[0].body.model, 'model-b');
 });
+test('provider model service lists Ollama models from native tags response', async () => {
+  const settingsState = createProviderSettingsState();
+  settingsState.setActiveProvider('ollama');
+  const requests = [];
+  const service = createProviderModelService({
+    settingsState,
+    fetchImpl: async (url) => {
+      requests.push(url);
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { models: [{ name: 'llama3.2:latest' }, { name: 'qwen2.5:7b' }] };
+        }
+      };
+    }
+  });
+
+  const result = await service.listModels();
+
+  assert.equal(result.ok, true);
+  assert.equal(result.activeProvider.id, 'ollama');
+  assert.deepEqual(result.models.map((model) => model.id), ['auto', 'llama3.2:latest', 'qwen2.5:7b']);
+  assert.deepEqual(requests, ['http://127.0.0.1:11434/api/tags']);
+});

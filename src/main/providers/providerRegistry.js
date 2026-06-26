@@ -11,6 +11,15 @@ const PROVIDER_DEFINITIONS = Object.freeze([
     modelsPath: '/v1/models',
     chatPath: '/v1/chat/completions',
     defaultModel: 'auto'
+  }),
+  Object.freeze({
+    id: 'ollama',
+    label: 'Ollama',
+    kind: 'ollama-native',
+    defaultBaseUrl: 'http://127.0.0.1:11434',
+    modelsPath: '/api/tags',
+    chatPath: '/api/chat',
+    defaultModel: 'auto'
   })
 ]);
 
@@ -116,7 +125,7 @@ function normalizeProviderDefinition(provider) {
     kind: String(provider && provider.kind ? provider.kind : 'openai-compatible').trim(),
     defaultBaseUrl: normalizeBaseUrl(provider && (provider.defaultBaseUrl || provider.baseUrl)),
     modelsPath: String(provider && (provider.modelsPath || provider.healthPath) ? (provider.modelsPath || provider.healthPath) : '/v1/models').trim() || '/v1/models',
-    healthPath: String(provider && provider.healthPath ? provider.healthPath : '/v1/models').trim() || '/v1/models',
+    healthPath: String(provider && (provider.healthPath || provider.modelsPath) ? (provider.healthPath || provider.modelsPath) : '/v1/models').trim() || '/v1/models',
     chatPath: String(provider && provider.chatPath ? provider.chatPath : '/v1/chat/completions').trim() || '/v1/chat/completions',
     defaultModel: normalizeModelName(provider && (provider.defaultModel || provider.model))
   });

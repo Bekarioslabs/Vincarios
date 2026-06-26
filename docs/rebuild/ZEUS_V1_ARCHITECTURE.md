@@ -87,7 +87,7 @@ Consumers should ask for roles such as `inbox`, `projects`, or `knowledge` throu
 V1:
 
 - LM Studio chat through the shared provider registry and OpenAI-compatible chat/model endpoints.
-- Ollama chat through the same provider shape in a later Phase 5 step.
+- Ollama chat through the shared provider registry and Ollama-native `/api/tags` and `/api/chat` endpoints.
 - Provider definitions own default URLs and endpoint paths; future Settings may override URLs without changing provider modules.
 - The topbar shows provider and model dropdowns. The Provider layer still never reads or writes vault files.
 - One local embedding provider path.

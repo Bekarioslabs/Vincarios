@@ -13,13 +13,20 @@ test('provider registry ships LM Studio as the default local chat provider', () 
 
   assert.equal(DEFAULT_PROVIDER_ID, 'lm-studio');
   assert.equal(settings.activeProviderId, 'lm-studio');
-  assert.equal(settings.providers.length, 1);
+  assert.equal(settings.providers.length, 2);
   assert.equal(settings.providers[0].id, 'lm-studio');
   assert.equal(settings.providers[0].label, 'LM Studio');
   assert.equal(settings.providers[0].baseUrl, 'http://127.0.0.1:1234');
   assert.equal(settings.providers[0].modelsPath, '/v1/models');
   assert.equal(settings.providers[0].chatPath, '/v1/chat/completions');
   assert.equal(settings.providers[0].selectedModel, 'auto');
+  assert.equal(settings.providers[1].id, 'ollama');
+  assert.equal(settings.providers[1].label, 'Ollama');
+  assert.equal(settings.providers[1].kind, 'ollama-native');
+  assert.equal(settings.providers[1].baseUrl, 'http://127.0.0.1:11434');
+  assert.equal(settings.providers[1].modelsPath, '/api/tags');
+  assert.equal(settings.providers[1].chatPath, '/api/chat');
+  assert.equal(settings.providers[1].selectedModel, 'auto');
 });
 
 test('provider registry supports URL overrides without changing provider definitions', () => {
@@ -65,4 +72,15 @@ test('provider settings state preserves custom providers across state updates', 
   assert.equal(state.getActiveProvider().id, 'ollama');
   assert.equal(state.getActiveProvider().selectedModel, 'qwen2.5');
   assert.equal(state.setActiveProvider('ollama').ok, true);
+});
+
+test('provider registry uses custom models path as health path when no health path is set', () => {
+  const settings = normalizeProviderSettings({
+    providers: [
+      { id: 'custom-native', label: 'Custom Native', baseUrl: 'http://localhost:7777', modelsPath: '/api/tags' }
+    ]
+  });
+
+  assert.equal(settings.providers[0].modelsPath, '/api/tags');
+  assert.equal(settings.providers[0].healthPath, '/api/tags');
 });

@@ -1,6 +1,7 @@
 'use strict';
 
 const { createProviderSettingsState } = require('./providerRegistry');
+const { buildModelsUrl, normalizeModelList } = require('./providerProtocol');
 
 function createProviderModelService(options) {
   options = options || {};
@@ -23,7 +24,7 @@ function createProviderModelService(options) {
         return createErrorResult(provider, 'Provider returned ' + statusCode + '.');
       }
       const data = await response.json();
-      const models = normalizeModelList(data);
+      const models = normalizeModelList(provider, data);
       return {
         ok: true,
         activeProvider: publicProvider(provider),
@@ -52,22 +53,6 @@ function resolveProvider(settingsState, providerId) {
   const id = String(providerId || '').trim();
   if (!id) return settingsState.getActiveProvider();
   return settingsState.getProviders().find((provider) => provider.id === id) || null;
-}
-
-function normalizeModelList(data) {
-  const ids = new Set(['auto']);
-  if (data && Array.isArray(data.data)) {
-    data.data.forEach((model) => {
-      const id = String(model && model.id ? model.id : '').trim();
-      if (id) ids.add(id);
-    });
-  }
-  return Array.from(ids).map((id) => Object.freeze({ id, label: id === 'auto' ? 'Auto' : id }));
-}
-
-function buildModelsUrl(provider) {
-  const path = provider.modelsPath.startsWith('/') ? provider.modelsPath : '/' + provider.modelsPath;
-  return provider.baseUrl.replace(/\/+$/g, '') + path;
 }
 
 function createErrorResult(provider, message) {
@@ -103,6 +88,4 @@ async function fetchWithTimeout(fetchImpl, url, options, timeoutMs) {
 
 module.exports = {
   createProviderModelService,
-  normalizeModelList,
-  buildModelsUrl
 };

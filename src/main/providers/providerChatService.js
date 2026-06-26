@@ -1,7 +1,13 @@
 'use strict';
 
 const { createProviderSettingsState } = require('./providerRegistry');
-const { buildModelsUrl } = require('./providerModelService');
+const {
+  buildChatRequestBody,
+  buildChatUrl,
+  buildModelsUrl,
+  extractAssistantContent,
+  firstModelId
+} = require('./providerProtocol');
 
 function createProviderChatService(options) {
   options = options || {};
@@ -30,12 +36,7 @@ function createProviderChatService(options) {
       const response = await fetchWithTimeout(fetchImpl, buildChatUrl(provider), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature,
-          stream: false
-        })
+        body: JSON.stringify(buildChatRequestBody(provider, model, messages, temperature))
       }, timeoutMs);
 
       if (!response || response.ok !== true) {
@@ -44,7 +45,7 @@ function createProviderChatService(options) {
       }
 
       const data = await response.json();
-      const content = extractAssistantContent(data);
+      const content = extractAssistantContent(provider, data);
       if (!content) {
         return createErrorResult(provider, 'Provider returned no assistant message.');
       }
@@ -86,19 +87,7 @@ async function resolveChatModel(provider, fetchImpl, timeoutMs) {
 
   if (!response || response.ok !== true) return '';
   const data = await response.json();
-  const firstModel = data && Array.isArray(data.data) ? data.data[0] : null;
-  return firstModel && firstModel.id ? String(firstModel.id).trim() : '';
-}
-
-function buildChatUrl(provider) {
-  const path = provider.chatPath.startsWith('/') ? provider.chatPath : '/' + provider.chatPath;
-  return provider.baseUrl.replace(/\/+$/g, '') + path;
-}
-
-function extractAssistantContent(data) {
-  const choice = data && Array.isArray(data.choices) ? data.choices[0] : null;
-  const content = choice && choice.message ? choice.message.content : '';
-  return typeof content === 'string' ? content.trim() : '';
+  return firstModelId(provider, data);
 }
 
 function createErrorResult(provider, error) {

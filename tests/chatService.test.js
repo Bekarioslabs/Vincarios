@@ -170,3 +170,91 @@ test('chat IPC does not receive renderer context state automatically', async () 
     messages: [{ role: 'user', content: 'Summarize this.' }]
   });
 });
+
+test('provider chat service sends an Ollama-native chat request', async () => {
+  const requests = [];
+  const service = createProviderChatService({
+    activeProviderId: 'ollama',
+    providers: [
+      {
+        id: 'ollama',
+        label: 'Ollama',
+        kind: 'ollama-native',
+        baseUrl: 'http://127.0.0.1:11434',
+        modelsPath: '/api/tags',
+        chatPath: '/api/chat',
+        model: 'llama3.2:latest'
+      }
+    ],
+    fetchImpl: async (url, options) => {
+      requests.push({ url, options });
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { message: { role: 'assistant', content: 'Hello from Ollama.' } };
+        }
+      };
+    }
+  });
+
+  const result = await service.sendChat({
+    messages: [{ role: 'user', content: 'Hello' }]
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.provider.id, 'ollama');
+  assert.equal(result.message.content, 'Hello from Ollama.');
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].url, 'http://127.0.0.1:11434/api/chat');
+  assert.deepEqual(JSON.parse(requests[0].options.body), {
+    model: 'llama3.2:latest',
+    messages: [{ role: 'user', content: 'Hello' }],
+    stream: false,
+    options: { temperature: 0.3 }
+  });
+});
+
+test('provider chat service resolves Ollama auto model from native tags response', async () => {
+  const requests = [];
+  const service = createProviderChatService({
+    activeProviderId: 'ollama',
+    providers: [
+      {
+        id: 'ollama',
+        label: 'Ollama',
+        kind: 'ollama-native',
+        baseUrl: 'http://127.0.0.1:11434',
+        modelsPath: '/api/tags',
+        chatPath: '/api/chat',
+        model: 'auto'
+      }
+    ],
+    fetchImpl: async (url, options) => {
+      requests.push({ url, options });
+      if (url.endsWith('/api/tags')) {
+        return {
+          ok: true,
+          status: 200,
+          async json() {
+            return { models: [{ name: 'qwen2.5:7b' }] };
+          }
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { message: { content: 'Auto Ollama OK.' } };
+        }
+      };
+    }
+  });
+
+  const result = await service.sendChat({ messages: [{ role: 'user', content: 'Hello' }] });
+
+  assert.equal(result.ok, true);
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].url, 'http://127.0.0.1:11434/api/tags');
+  assert.equal(JSON.parse(requests[1].options.body).model, 'qwen2.5:7b');
+});

@@ -68,7 +68,7 @@ Every remaining implementation phase must include focused tests for the behavior
 ## Phase 5 - Providers And Settings Foundation
 
 - [x] LM Studio chat baseline with provider registry, default URL, active model selection, and topbar provider/model dropdowns.
-- [ ] Ollama chat baseline.
+- [x] Ollama chat baseline through the same registry, topbar provider/model controls, and native Ollama endpoints.
 - [ ] Real chat abort: request id, `AbortController`, `chat:cancel` IPC, Send-to-Cancel UI state, and ignored late responses.
 - [ ] Provider settings foundation: URL override UI/persistence, timeout, token/context limits. Model selection foundation exists in the topbar.
 - [ ] Vault Profile settings bridge: expose existing folder-role foundation without replacing the Phase 2 core profile logic.
