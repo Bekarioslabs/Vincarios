@@ -60,15 +60,21 @@ Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
 - [ ] Keep selected-file, selected-folder, dropped-file, and future embedding context sources visibly separated.
 - [ ] Add limits for max context size and max listed folders/files per request.
 
+## Phase Rules For Remaining V1 Work
+
+Every remaining implementation phase must include focused tests for the behavior it adds. If a phase touches UI shell, provider calls, context handling, permissions, write actions, or vault profile behavior, update the relevant active docs in the same change.
+
 ## Phase 5 - Providers And Settings Foundation
 
 - [ ] LM Studio chat baseline.
 - [ ] Ollama chat baseline.
 - [ ] Real chat abort: request id, `AbortController`, `chat:cancel` IPC, Send-to-Cancel UI state, and ignored late responses.
 - [ ] Provider settings foundation: URL, model, timeout, token/context limits.
+- [ ] Vault Profile settings bridge: expose existing folder-role foundation without replacing the Phase 2 core profile logic.
 - [ ] Local-provider URL validation.
 - [ ] Model/capability display.
 - [ ] Settings persistence in app/user-data storage.
+- [ ] Focused provider/settings tests for abort, provider URL validation, model capability display, and persisted settings.
 
 ## Phase 5.5 - Reviewed Update Flow
 
@@ -95,22 +101,27 @@ This is a V1-critical workflow, not a later comfort feature. The prototype alrea
 
 ## Phase 7 - V1 Feature Candidates
 
-These are V1 candidates if they stay small and do not destabilize safety/review flows.
+Phase 7 is not a promise to ship every candidate. Before implementing this phase, do a short V1 necessity review and keep only items that are needed for a presentable V1. Anything useful but not essential moves to V1.1.
+
+### V1 Priority Candidates
 
 - [ ] New Project workflow from deterministic template/preset logic.
 - [ ] Minimal template/preset support for new notes and projects.
-- [ ] Move note service with collision checks, backup/audit coverage, and no automatic link repair unless separately previewed.
-- [ ] Rename note service with collision checks, backup/audit coverage, and later link-update planning.
-- [ ] Archive note service as the normal delete alternative, plus separate archive/trash-empty workflow planning.
-- [ ] Inbox cleanup workflow with reviewable suggestions.
-- [ ] Selected folder analysis with explicit scope and limits.
-- [ ] Project note maintenance suggestions.
-- [ ] Basic image handling foundation: display/import/move/rename through safe IPC.
 - [ ] Local embeddings V1-light: choose runtime, store private index, suggest similar notes/tags/links/folders.
 - [ ] Review Basket integration for embedding-backed suggestions.
-- [ ] Folder Context Index maps combined with embeddings and stale-scan detection, stored in `.zeus/` or configured cache.
+- [ ] Inbox cleanup workflow with reviewable suggestions.
+- [ ] Selected folder analysis with explicit scope, limits, and reviewable output.
+- [ ] Project note maintenance suggestions if they reuse the same review/update pipeline.
+
+### V1 Optional Candidate
+
+- [ ] Basic image handling foundation only if it stays limited to display/import/move/rename through safe IPC and does not delay core Markdown workflows.
+
+Candidates that do not pass the V1 necessity review are tracked only in the V1.1 / V1.2 Backlog below.
 
 ## Phase 8 - V1 Freeze And Release Baseline
+
+V1 is done when all current V1 phases are complete and a sober freeze review finds no remaining must-have gaps. New findings are classified as V1-must only when they block safety, core usefulness, or external testing; otherwise they move to V1.1 or the Parking Lot.
 
 - [ ] README update.
 - [ ] Architecture docs update.
@@ -124,6 +135,9 @@ These are V1 candidates if they stay small and do not destabilize safety/review 
 ## V1.1 / V1.2 Backlog
 
 - [ ] Focused partial edit engine: insert/replace a section without sending or pasting back the whole note.
+- [ ] Move/rename/archive note services if they did not pass the V1 necessity review.
+- [ ] Folder Context Index maps if they did not pass the V1 necessity review.
+- [ ] Slim Brain OS integration with explicit load order, validation, and no ability to override code-side safety laws.
 - [ ] Search within vault.
 - [ ] Audit log / backup history UI with restore-oriented controls.
 - [ ] End-to-end Electron tests.

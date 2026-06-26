@@ -37,7 +37,7 @@ ZEUS V1 is not:
 9. Local embeddings V1-light.
 10. New Project workflow from templates.
 11. Minimal settings foundation.
-12. Basic image file handling foundation if it remains safe and small.
+12. Basic image file handling foundation only if it remains safe, small, and does not delay core Markdown workflows.
 
 ## Not V1
 
@@ -226,9 +226,13 @@ Not V1 Options:
 - Permissions and context are separate modules.
 - The bootstrap entry initializes modules only.
 
+## V1 Freeze Gate
+
+V1 is done when all current V1 phases are complete and a sober freeze review finds no remaining must-have gaps. A new finding becomes V1-must only if it blocks safety, core usefulness, or external testing. Useful but non-blocking ideas move to V1.1 or the Parking Lot.
+
 ## Brain OS Direction
 
-V1 may include a new slim Brain OS, but only after code-side safety laws and app boundaries are defined.
+A new slim Brain OS is not a shortcut around app architecture. It may be added only after code-side safety laws, app boundaries, load order, and validation are defined.
 
 Priority:
 
@@ -241,11 +245,11 @@ Code Safety Laws
 > Current Chat Request
 ```
 
-Brain files may explain and configure behavior. They must not override code safety.
+Brain files may explain and configure behavior. They must not override code safety, permissions, vault profile validation, provider boundaries, or reviewed write flows.
 
 ## Test And Audit Rule
 
-Tests start on day one.
+Tests start on day one and continue in every implementation phase.
 
 Focused audits happen after each major block:
 
@@ -253,8 +257,9 @@ Focused audits happen after each major block:
 - vault safety
 - action/review
 - permissions/context
-- providers
+- providers and real chat abort
 - embeddings
+- reviewed update flow
 - first cleanup workflow
 - V1 freeze
 
