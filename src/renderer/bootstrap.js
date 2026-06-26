@@ -8,6 +8,7 @@
     { name: 'ZeusProposalPlan', globalName: 'ZeusProposalPlan' },
     { name: 'ZeusDiffPreview', globalName: 'ZeusDiffPreview' },
     { name: 'ZeusContextIntent', globalName: 'ZeusContextIntent' },
+    { name: 'ZeusContextLimits', globalName: 'ZeusContextLimits', methods: ['normalizeContextLimits'] },
     { name: 'ZeusPendingActionState', globalName: 'ZeusPendingActionState', methods: ['createPendingActionState'] },
     { name: 'ZeusFolderContextController', globalName: 'ZeusFolderContextController', methods: ['runFolderContextFlow'] },
     { name: 'ZeusContextState', globalName: 'ZeusContextState', methods: ['createContextState', 'buildChatContextPackage'] },

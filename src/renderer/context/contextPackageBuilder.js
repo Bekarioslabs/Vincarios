@@ -1,13 +1,12 @@
 (function() {
   'use strict';
 
-  const DEFAULT_MAX_CONTEXT_CHARS = 8000;
-
   function buildChatContextPackage(options) {
     options = options || {};
     const selection = options.selection || {};
     const userText = String(options.userText || '');
-    const maxChars = Number.isFinite(options.maxChars) ? options.maxChars : DEFAULT_MAX_CONTEXT_CHARS;
+    const limits = getLimitsApi().normalizeContextLimits(options.limits || options);
+    const maxChars = Number.isFinite(options.maxChars) ? options.maxChars : limits.maxSelectedFileChars;
     const kind = selection.kind || 'none';
     const path = normalizeContextPath(selection.path || '');
     const intent = getIntentApi();
@@ -38,6 +37,7 @@
     return context([
       '## Active Selection',
       '',
+      'Context source: selected_folder',
       'Selected type: folder',
       'Selection id: ' + ((selection && selection.selectionId) || 0),
       'Path: ' + path,
@@ -51,6 +51,7 @@
     return context([
       '## Active Selection',
       '',
+      'Context source: selected_file',
       'Selected type: Markdown file',
       'Path: ' + path,
       'Status: Auto-context is disabled.',
@@ -64,6 +65,7 @@
     return context([
       '## Active Selection',
       '',
+      'Context source: selected_file',
       'Selected type: Markdown file',
       'Path: ' + path,
       'Status: Reading is not enabled for this selected file.',
@@ -77,6 +79,7 @@
     return context([
       '## Active Selection',
       '',
+      'Context source: selected_file',
       'Selected type: Markdown file',
       'Path: ' + path,
       'Status: file selected, but no Markdown content is currently loaded into chat context.',
@@ -101,6 +104,7 @@
     return context([
       '## Active Selection',
       '',
+      'Context source: selected_file',
       'Selected type: Markdown file',
       'Selection id: ' + selectionId,
       'Path: ' + path,
@@ -146,6 +150,12 @@
     throw new Error('ZEUS context intent API is not available.');
   }
 
+  function getLimitsApi() {
+    if (typeof window !== 'undefined' && window.ZeusContextLimits) return window.ZeusContextLimits;
+    if (typeof module !== 'undefined' && module.exports) return require('./contextLimits');
+    throw new Error('ZEUS context limits API is not available.');
+  }
+
   function getStateApi() {
     if (typeof window !== 'undefined' && window.ZeusContextState) return window.ZeusContextState;
     if (typeof module !== 'undefined' && module.exports) return require('./contextState');
@@ -160,4 +170,3 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZeusContextPackageBuilder = Object.freeze(api);
 })();
-

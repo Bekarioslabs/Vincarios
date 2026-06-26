@@ -36,6 +36,7 @@ test('context builder includes selected Markdown content only for file-specific 
 
   assert.equal(context.shouldAttach, true);
   assert.match(context.content, /## Active Selection/);
+  assert.match(context.content, /Context source: selected_file/);
   assert.match(context.content, /Selected type: Markdown file/);
   assert.match(context.content, /Path: 03_Wissen\/Topic.md/);
   assert.match(context.content, /Selection id: 7/);
@@ -89,6 +90,7 @@ test('context builder exposes folder targets without loading folder contents', (
 
   assert.equal(context.shouldAttach, true);
   assert.match(context.content, /Selected type: folder/);
+  assert.match(context.content, /Context source: selected_folder/);
   assert.match(context.content, /Selection id: 3/);
   assert.match(context.content, /historical unless they match this exact path and selection id/);
   assert.match(context.content, /Do not claim to know the folder contents/);

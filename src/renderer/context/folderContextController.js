@@ -5,12 +5,13 @@
     options = options || {};
     const selection = options.selection || null;
     const userText = String(options.userText || '');
+    const limits = getLimitsApi().normalizeContextLimits(options.limits || options);
     const pendingState = options.pendingState || createFallbackPendingState();
     const pending = typeof pendingState.snapshot === 'function' ? pendingState.snapshot() : null;
     const scopeChoice = normalizeScopeChoice(options.scopeChoice || userText);
 
     if (pending && pending.type === 'folder_scope') {
-      const pendingTarget = targetFromPending(selection, pending);
+      const pendingTarget = targetFromPending(selection, pending, limits);
       if (!pendingTarget) {
         if (typeof pendingState.clear === 'function') pendingState.clear();
         return { handled: false };
@@ -26,14 +27,14 @@
       }
       if (scopeChoice === 'current' || scopeChoice === 'recursive') {
         if (typeof pendingState.clear === 'function') pendingState.clear();
-        return listTarget(options.api, Object.assign({}, pendingTarget, { recursive: scopeChoice === 'recursive' }));
+        return listTarget(options.api, Object.assign({}, pendingTarget, { recursive: scopeChoice === 'recursive', limits }));
       }
       return { handled: false };
     }
 
     if (isStandaloneScopeReply(userText)) return { handled: false };
 
-    const target = resolveFolderReadTarget(selection, userText);
+    const target = resolveFolderReadTarget(selection, userText, limits);
     if (!target) return { handled: false };
 
     if (target.readAllowed !== true) {
@@ -58,7 +59,8 @@
     return listTarget(options.api, target);
   }
 
-  function resolveFolderReadTarget(selection, userText) {
+  function resolveFolderReadTarget(selection, userText, limits) {
+    limits = normalizeOptionalLimits(limits);
     const intent = getIntentApi();
     if (!selection || !selection.path || !intent) return null;
     const recursive = typeof intent.hasRecursiveFolderWorkSignal === 'function' && intent.hasRecursiveFolderWorkSignal(userText);
@@ -72,6 +74,7 @@
         selectionId: selection.selectionId || 0,
         recursive
       };
+      if (limits) target.limits = limits;
       if (ambiguous && !recursive) target.ambiguous = true;
       return target;
     }
@@ -86,12 +89,14 @@
         selectionId: selection.selectionId || 0,
         recursive
       };
+      if (limits) target.limits = limits;
       if (ambiguous && !recursive) target.ambiguous = true;
       return target;
     }
 
     return null;
   }
+
   async function listTarget(api, target) {
     if (!api || !api.vault || typeof api.vault.listFolder !== 'function') {
       return {
@@ -104,7 +109,7 @@
 
     const result = target.recursive === true
       ? await listFolderTree(api.vault, target)
-      : await api.vault.listFolder(target.path);
+      : limitFolderListingResult(await api.vault.listFolder(target.path), target.limits);
     const message = target.recursive === true
       ? formatRecursiveFolderListing(target, result)
       : formatFolderListing(target, result);
@@ -137,7 +142,7 @@
     };
   }
 
-  function targetFromPending(selection, pending) {
+  function targetFromPending(selection, pending, limits) {
     if (!pending || !pending.targetPath) return null;
     if (selection && selection.selectionId && pending.selectionId && selection.selectionId !== pending.selectionId) return null;
     return {
@@ -145,17 +150,20 @@
       path: pending.targetPath,
       readAllowed: !selection || selection.readAllowed === true,
       selectionId: pending.selectionId || 0,
-      recursive: false
+      recursive: false,
+      limits
     };
   }
 
   async function listFolderTree(vaultApi, target) {
-    const maxFolders = Number.isFinite(target.maxFolders) ? target.maxFolders : 100;
+    const limits = getLimitsApi().normalizeContextLimits(target.limits || target);
     const queue = [target.path];
     const visited = new Set();
     const folders = [];
+    let listedFiles = 0;
+    let fileLimitReached = false;
 
-    while (queue.length > 0 && visited.size < maxFolders) {
+    while (queue.length > 0 && visited.size < limits.maxListedFolders) {
       const folderPath = queue.shift();
       if (visited.has(folderPath)) continue;
       visited.add(folderPath);
@@ -166,9 +174,11 @@
         continue;
       }
 
-      const entries = Array.isArray(result.entries) ? result.entries : [];
-      folders.push({ path: folderPath, ok: true, entries });
-      entries.forEach((entry) => {
+      const limited = limitEntries(Array.isArray(result.entries) ? result.entries : [], limits, listedFiles);
+      listedFiles = limited.listedFiles;
+      fileLimitReached = fileLimitReached || limited.fileLimitReached;
+      folders.push({ path: folderPath, ok: true, entries: limited.entries });
+      limited.entries.forEach((entry) => {
         if (entry && entry.kind === 'folder' && entry.path) queue.push(normalizePath(entry.path));
       });
     }
@@ -176,8 +186,39 @@
     return {
       ok: true,
       truncated: queue.length > 0,
+      fileLimitReached,
       folders
     };
+  }
+
+  function limitFolderListingResult(result, limits) {
+    if (!result || !result.ok) return result;
+    const normalizedLimits = getLimitsApi().normalizeContextLimits(limits);
+    const limited = limitEntries(Array.isArray(result.entries) ? result.entries : [], normalizedLimits, 0);
+    return Object.assign({}, result, {
+      entries: limited.entries,
+      fileLimitReached: limited.fileLimitReached
+    });
+  }
+
+  function limitEntries(entries, limits, initialFileCount) {
+    let listedFiles = Number.isFinite(initialFileCount) ? initialFileCount : 0;
+    let fileLimitReached = false;
+    const visibleEntries = [];
+
+    entries.forEach((entry) => {
+      if (!entry) return;
+      if (entry.kind === 'markdown') {
+        if (listedFiles >= limits.maxListedFiles) {
+          fileLimitReached = true;
+          return;
+        }
+        listedFiles += 1;
+      }
+      visibleEntries.push(entry);
+    });
+
+    return { entries: visibleEntries, listedFiles, fileLimitReached };
   }
 
   function formatRecursiveFolderListing(target, result) {
@@ -214,6 +255,7 @@
     });
 
     if (result.truncated) lines.push('[Listing stopped because the folder limit was reached.]');
+    if (result.fileLimitReached) lines.push('[Listing stopped because the file limit was reached.]');
     return lines.join('\n').trim();
   }
 
@@ -224,12 +266,31 @@
 
     const entries = Array.isArray(result.entries) ? result.entries : [];
     const header = 'Folder listed for current selection ' + target.selectionId + ': ' + target.path;
-    if (entries.length === 0) return header + '\n\nNo supported Markdown folders or files found.';
+    const lines = [header, ''];
+    if (entries.length === 0) {
+      lines.push('No supported Markdown folders or files found.');
+    } else {
+      entries.forEach((entry) => {
+        const suffix = entry.kind === 'folder' ? '/' : '';
+        lines.push('- ' + (entry.name || entry.path || 'Unnamed') + suffix);
+      });
+    }
+    if (result.fileLimitReached) {
+      lines.push('');
+      lines.push('[Listing stopped because the file limit was reached.]');
+    }
+    return lines.join('\n');
+  }
 
-    return header + '\n\n' + entries.map((entry) => {
-      const suffix = entry.kind === 'folder' ? '/' : '';
-      return '- ' + (entry.name || entry.path || 'Unnamed') + suffix;
-    }).join('\n');
+  function normalizeOptionalLimits(value) {
+    if (!value || !hasLimitOption(value)) return null;
+    return getLimitsApi().normalizeContextLimits(value);
+  }
+
+  function hasLimitOption(value) {
+    return Object.prototype.hasOwnProperty.call(value, 'maxSelectedFileChars')
+      || Object.prototype.hasOwnProperty.call(value, 'maxListedFolders')
+      || Object.prototype.hasOwnProperty.call(value, 'maxListedFiles');
   }
 
   function normalizeScopeChoice(value) {
@@ -280,6 +341,12 @@
     if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');
     return null;
+  }
+
+  function getLimitsApi() {
+    if (typeof window !== 'undefined' && window.ZeusContextLimits) return window.ZeusContextLimits;
+    if (typeof module !== 'undefined' && module.exports) return require('./contextLimits');
+    throw new Error('ZEUS context limits API is not available.');
   }
 
   function getPendingActionStateApi() {

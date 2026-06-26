@@ -218,7 +218,7 @@ Selected Markdown context is request-scoped:
 - follow-up prompts after enabling Read, such as `ok hab es aktiviert`, `try now`, or `this file is selected`, must still target the selected file.
 - if the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
 - folder-scoped follow-up prompts such as `find similar files in this folder` should map the selected file to its parent folder only when that parent folder has active `R`; ZEUS must not switch to generic local-file-upload language.
-- selected folder listing requests are handled by a request-scoped read-context preflight when `R` is active. Requests for all subfolders use recursive folder listing through repeated `listFolder` calls, but still read only folder/file names, not Markdown contents. Supported `list_folder` model-action envelopes remain a fallback and are executed through the preload vault API only when the requested folder is inside the active selected folder or selected-file parent folder. The raw tool-call text must not be displayed as the final answer.
+- selected folder listing requests are handled by a request-scoped read-context preflight when `R` is active. Requests for all subfolders use recursive folder listing through repeated `listFolder` calls, but still read only folder/file names, not Markdown contents. Current-level and recursive listings use central context limits for maximum listed folders/files per request. Supported `list_folder` model-action envelopes remain a fallback and are executed through the preload vault API only when the requested folder is inside the active selected folder or selected-file parent folder. The raw tool-call text must not be displayed as the final answer.
 
 For selected folders:
 
@@ -227,11 +227,12 @@ For selected folders:
 - Future Folder Context Index workflow: when a folder is selected, ZEUS may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
 - Persistent Folder Context Indexes must be stored in `.zeus/` or a configured cache location, not blindly as normal vault notes.
 
-- Current folder controller: selected-folder preflight now runs through `PendingActionState` plus `FolderContextController`. Ambiguous folder work creates explicit scope buttons for current level, all subfolders, or cancel. Short replies like 'all' or 'alle' only resolve an existing pending folder action and do not trigger standalone recursive listing.
+- Current folder controller: selected-folder preflight now runs through `PendingActionState` plus `FolderContextController`. Ambiguous folder work creates explicit scope buttons for current level, all subfolders, or cancel. Short replies like 'all' or 'alle' only resolve an existing pending folder action and do not trigger standalone recursive listing. Folder listings are capped by `contextLimits` and show explicit limit markers when the cap is reached.
 
 Context sources must remain visible and separated:
 
-- active selection
+- selected file context (`selected_file`)
+- selected folder context (`selected_folder`)
 - manually attached context
 - temporary dropped Markdown files
 - embedding candidates
@@ -272,7 +273,8 @@ Required V1 sections:
    - selected model
 
 3. Limits
-   - max context size
+   - max selected-file context size
+   - max listed folders/files per request
    - max files per analysis
    - max suggestions per review
    - max index batch size
