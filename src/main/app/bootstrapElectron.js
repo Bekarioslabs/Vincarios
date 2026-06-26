@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const path = require('node:path');
 const { createMainWindow } = require('./createMainWindow');
@@ -6,10 +6,13 @@ const { registerAppIpc } = require('../ipc/registerAppIpc');
 const { registerChatIpc } = require('../ipc/registerChatIpc');
 const { registerVaultIpc } = require('../ipc/registerVaultIpc');
 const { registerProviderIpc } = require('../ipc/registerProviderIpc');
+const { registerSettingsIpc } = require('../ipc/registerSettingsIpc');
 const { createProviderChatService } = require('../providers/providerChatService');
 const { createProviderStatusService } = require('../providers/providerStatusService');
 const { createProviderModelService } = require('../providers/providerModelService');
 const { createProviderSettingsState } = require('../providers/providerRegistry');
+const { createSettingsStore, toProviderRegistryOptions } = require('../settings/settingsStore');
+const { createSettingsService } = require('../settings/settingsService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
 
@@ -19,10 +22,28 @@ function bootstrapElectron(electron, options) {
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
   const vaultReadService = options.vaultReadService || createVaultReadService();
   const vaultWriteService = options.vaultWriteService || createVaultWriteService();
-  const providerSettingsState = options.providerSettingsState || createProviderSettingsState(options.providerOptions);
-  const providerOptions = Object.assign({}, options.providerOptions || {}, { settingsState: providerSettingsState });
+  const settingsFilePath = options.settingsFilePath || getDefaultSettingsPath(app);
+  const settingsStore = options.settingsStore || createSettingsStore({
+    filePath: settingsFilePath,
+    initialSettings: options.initialSettings
+  });
+  const providerSettingsOptions = Object.assign(
+    {},
+    options.providerOptions || {},
+    toProviderRegistryOptions(settingsStore.getSettings())
+  );
+  const providerSettingsState = options.providerSettingsState || createProviderSettingsState(providerSettingsOptions);
+  const providerOptions = Object.assign({}, options.providerOptions || {}, {
+    settingsState: providerSettingsState,
+    settingsStore,
+    timeoutMs: settingsStore.getSettings().limits.providerTimeoutMs,
+    modelListTimeoutMs: settingsStore.getSettings().limits.modelListTimeoutMs
+  });
+  const settingsService = options.settingsService || createSettingsService({ settingsStore, providerSettingsState });
   const providerStatusService = options.providerStatusService || createProviderStatusService(providerOptions);
-  const providerModelService = options.providerModelService || createProviderModelService(providerOptions);
+  const providerModelService = options.providerModelService || createProviderModelService(Object.assign({}, providerOptions, {
+    timeoutMs: providerOptions.modelListTimeoutMs
+  }));
   const chatService = options.chatService || createProviderChatService(providerOptions);
 
   registerChatIpc(ipcMain, chatService);
@@ -32,6 +53,7 @@ function bootstrapElectron(electron, options) {
   });
   registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);
+  registerSettingsIpc(ipcMain, settingsService);
 
   app.whenReady().then(() => {
     createMainWindow(electron, { projectRoot });
@@ -48,6 +70,14 @@ function bootstrapElectron(electron, options) {
   });
 }
 
+function getDefaultSettingsPath(app) {
+  if (app && typeof app.getPath === 'function') {
+    return path.join(app.getPath('userData'), 'settings.json');
+  }
+  return '';
+}
+
 module.exports = {
-  bootstrapElectron
+  bootstrapElectron,
+  getDefaultSettingsPath
 };

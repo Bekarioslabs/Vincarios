@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
   'use strict';
 
   async function mountProviderStatus(options) {
@@ -70,6 +70,11 @@
       });
     }
 
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('zeus:settings-updated', () => {
+        refresh(nodes.providerSelect ? nodes.providerSelect.value : undefined);
+      });
+    }
     await refresh();
   }
 

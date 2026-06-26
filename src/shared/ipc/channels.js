@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
@@ -8,6 +8,9 @@ const IPC_CHANNELS = Object.freeze({
   PROVIDER_MODELS: 'provider:models',
   PROVIDER_SET_ACTIVE: 'provider:set-active',
   PROVIDER_SET_MODEL: 'provider:set-model',
+  SETTINGS_GET: 'settings:get',
+  SETTINGS_SET_PROVIDER_URL: 'settings:set-provider-url',
+  SETTINGS_RESET_PROVIDER_URL: 'settings:reset-provider-url',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',

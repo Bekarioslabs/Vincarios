@@ -1,4 +1,4 @@
-# ZEUS V1 Architecture
+﻿# ZEUS V1 Architecture
 
 ## Core Shape
 
@@ -82,13 +82,28 @@ archive   -> 99_Archiv
 
 Consumers should ask for roles such as `inbox`, `projects`, or `knowledge` through `src/shared/vaultProfile/defaults.js`. They should not hard-code these default folder names in workflow logic. Forks and future Options UI can add or override roles through the profile without rewriting consumers.
 
+
+## Settings Plan
+
+Settings are app configuration, not provider logic.
+
+V1 Settings categories:
+
+- `providers`: active provider, selected models, local URL overrides.
+- `limits`: provider timeout, model-list timeout, context and analysis caps.
+- `vaultProfile`: folder roles and profile overrides.
+- `theme`: basic mode/accent readiness through CSS variables.
+- `safety`: review-required and future trusted-mode flags. Trusted mode is not V1 behavior.
+
+The settings store persists normalized JSON under Electron `userData`. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules.
+
 ## Provider Plan
 
 V1:
 
 - LM Studio chat through the shared provider registry and OpenAI-compatible chat/model endpoints.
 - Ollama chat through the shared provider registry and Ollama-native `/api/tags` and `/api/chat` endpoints.
-- Provider definitions own default URLs and endpoint paths; future Settings may override URLs without changing provider modules.
+- Provider definitions own default URLs and endpoint paths; Settings can override local provider URLs without changing provider modules.
 - The topbar shows provider and model dropdowns. The Provider layer still never reads or writes vault files.
 - One local embedding provider path.
 
@@ -151,3 +166,4 @@ Run a focused audit after each block:
 - `providers` talk to LM Studio/Ollama; they never access files.
 - `vault` reads/writes/lists files only after safety validation.
 - `embeddings` indexes and searches; it only returns candidates.
+- settings owns app configuration categories, normalization, persistence, and Settings UI/IPC. Provider modules consume provider settings but do not own settings storage.

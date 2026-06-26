@@ -58,7 +58,21 @@ function normalizeProviderSettings(options) {
 
 function createProviderSettingsState(options) {
   const baseOptions = Object.assign({}, options || {});
-  let settings = normalizeProviderSettings(baseOptions);
+  const mutableOptions = {
+    providers: baseOptions.providers,
+    activeProviderId: baseOptions.activeProviderId,
+    urlOverrides: Object.assign({}, baseOptions.urlOverrides || {}),
+    selectedModels: Object.assign({}, baseOptions.selectedModels || {})
+  };
+  let settings = normalizeProviderSettings(mutableOptions);
+
+  function rebuild(patch) {
+    patch = patch || {};
+    if (Object.prototype.hasOwnProperty.call(patch, 'activeProviderId')) mutableOptions.activeProviderId = patch.activeProviderId;
+    if (patch.urlOverrides) mutableOptions.urlOverrides = Object.assign({}, patch.urlOverrides);
+    if (patch.selectedModels) mutableOptions.selectedModels = Object.assign({}, patch.selectedModels);
+    settings = normalizeProviderSettings(mutableOptions);
+  }
 
   function getSettings() {
     return settings;
@@ -77,7 +91,7 @@ function createProviderSettingsState(options) {
     if (!settings.providers.some((provider) => provider.id === id)) {
       return { ok: false, code: 'unknown_provider', message: 'Unknown provider.' };
     }
-    settings = normalizeProviderSettings(toMutableSettings({ activeProviderId: id }));
+    rebuild({ activeProviderId: id });
     return { ok: true, activeProvider: getActiveProvider(), providers: getProviders() };
   }
 
@@ -85,25 +99,41 @@ function createProviderSettingsState(options) {
     const id = String(providerId || '').trim();
     const provider = settings.providers.find((item) => item.id === id);
     if (!provider) return { ok: false, code: 'unknown_provider', message: 'Unknown provider.' };
-    const selectedModels = {};
-    settings.providers.forEach((item) => { selectedModels[item.id] = item.selectedModel; });
+    const selectedModels = Object.assign({}, mutableOptions.selectedModels);
     selectedModels[id] = normalizeModelName(model || provider.defaultModel);
-    settings = normalizeProviderSettings(toMutableSettings({ selectedModels }));
+    rebuild({ selectedModels });
     return { ok: true, activeProvider: getActiveProvider(), providers: getProviders() };
   }
 
-  function toMutableSettings(patch) {
-    const urlOverrides = {};
-    const selectedModels = {};
-    settings.providers.forEach((provider) => {
-      urlOverrides[provider.id] = provider.baseUrl;
-      selectedModels[provider.id] = provider.selectedModel;
-    });
-    return Object.assign({}, baseOptions, {
+  function setProviderUrlOverride(providerId, baseUrl) {
+    const id = String(providerId || '').trim();
+    if (!settings.providers.some((provider) => provider.id === id)) {
+      return { ok: false, code: 'unknown_provider', message: 'Unknown provider.' };
+    }
+    const normalized = normalizeBaseUrl(baseUrl);
+    if (!normalized) return { ok: false, code: 'invalid_url', message: 'Provider URL is required.' };
+    const urlOverrides = Object.assign({}, mutableOptions.urlOverrides, { [id]: normalized });
+    rebuild({ urlOverrides });
+    return { ok: true, activeProvider: getActiveProvider(), providers: getProviders() };
+  }
+
+  function resetProviderUrlOverride(providerId) {
+    const id = String(providerId || '').trim();
+    if (!settings.providers.some((provider) => provider.id === id)) {
+      return { ok: false, code: 'unknown_provider', message: 'Unknown provider.' };
+    }
+    const urlOverrides = Object.assign({}, mutableOptions.urlOverrides);
+    delete urlOverrides[id];
+    rebuild({ urlOverrides });
+    return { ok: true, activeProvider: getActiveProvider(), providers: getProviders() };
+  }
+
+  function getMutableProviderSettings() {
+    return {
       activeProviderId: settings.activeProviderId,
-      urlOverrides,
-      selectedModels
-    }, patch || {});
+      selectedModels: Object.assign({}, mutableOptions.selectedModels),
+      urlOverrides: Object.assign({}, mutableOptions.urlOverrides)
+    };
   }
 
   return Object.freeze({
@@ -111,10 +141,12 @@ function createProviderSettingsState(options) {
     getProviders,
     getActiveProvider,
     setActiveProvider,
-    setSelectedModel
+    setSelectedModel,
+    setProviderUrlOverride,
+    resetProviderUrlOverride,
+    getMutableProviderSettings
   });
 }
-
 
 function normalizeProviderDefinition(provider) {
   const id = String(provider && provider.id ? provider.id : '').trim();

@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const { contextBridge, ipcRenderer } = require('electron');
 
@@ -7,10 +7,14 @@ const { contextBridge, ipcRenderer } = require('electron');
 const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
   CHAT_SEND: 'chat:send',
+  CHAT_CANCEL: 'chat:cancel',
   PROVIDER_STATUS: 'provider:status',
   PROVIDER_MODELS: 'provider:models',
   PROVIDER_SET_ACTIVE: 'provider:set-active',
   PROVIDER_SET_MODEL: 'provider:set-model',
+  SETTINGS_GET: 'settings:get',
+  SETTINGS_SET_PROVIDER_URL: 'settings:set-provider-url',
+  SETTINGS_RESET_PROVIDER_URL: 'settings:reset-provider-url',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',
@@ -27,6 +31,9 @@ const zeus = Object.freeze({
   chat: Object.freeze({
     send(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.CHAT_SEND, payload);
+    },
+    cancel(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.CHAT_CANCEL, payload);
     }
   }),
   provider: Object.freeze({
@@ -41,6 +48,17 @@ const zeus = Object.freeze({
     },
     setModel(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.PROVIDER_SET_MODEL, payload);
+    }
+  }),
+  settings: Object.freeze({
+    get() {
+      return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET);
+    },
+    setProviderUrl(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_PROVIDER_URL, payload);
+    },
+    resetProviderUrl(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_RESET_PROVIDER_URL, payload);
     }
   }),
   vault: Object.freeze({

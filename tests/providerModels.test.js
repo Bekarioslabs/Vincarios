@@ -81,3 +81,22 @@ test('provider model service lists Ollama models from native tags response', asy
   assert.deepEqual(result.models.map((model) => model.id), ['auto', 'llama3.2:latest', 'qwen2.5:7b']);
   assert.deepEqual(requests, ['http://127.0.0.1:11434/api/tags']);
 });
+
+test('provider model service persists active provider and selected model when settings store is supplied', () => {
+  const settingsState = createProviderSettingsState();
+  const calls = [];
+  const service = createProviderModelService({
+    settingsState,
+    settingsStore: {
+      setActiveProvider(providerId) { calls.push(['active', providerId]); return { ok: true }; },
+      setSelectedProviderModel(providerId, model) { calls.push(['model', providerId, model]); return { ok: true }; }
+    }
+  });
+
+  assert.equal(service.setActiveProvider('ollama').ok, true);
+  assert.equal(service.setSelectedModel('ollama', 'qwen2.5:7b').ok, true);
+  assert.deepEqual(calls, [
+    ['active', 'ollama'],
+    ['model', 'ollama', 'qwen2.5:7b']
+  ]);
+});

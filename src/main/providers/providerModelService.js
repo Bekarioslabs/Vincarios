@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const { createProviderSettingsState } = require('./providerRegistry');
 const { buildModelsUrl, normalizeModelList } = require('./providerProtocol');
@@ -6,6 +6,7 @@ const { buildModelsUrl, normalizeModelList } = require('./providerProtocol');
 function createProviderModelService(options) {
   options = options || {};
   const settingsState = options.settingsState || createProviderSettingsState(options);
+  const settingsStore = options.settingsStore || null;
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 3000;
 
@@ -38,11 +39,20 @@ function createProviderModelService(options) {
   }
 
   function setActiveProvider(providerId) {
-    return settingsState.setActiveProvider(providerId);
+    const result = settingsState.setActiveProvider(providerId);
+    if (result.ok && settingsStore && typeof settingsStore.setActiveProvider === 'function') {
+      settingsStore.setActiveProvider(result.activeProvider.id);
+    }
+    return result;
   }
 
   function setSelectedModel(providerId, model) {
-    return settingsState.setSelectedModel(providerId, model);
+    const result = settingsState.setSelectedModel(providerId, model);
+    if (result.ok && settingsStore && typeof settingsStore.setSelectedProviderModel === 'function') {
+      const provider = result.providers.find((item) => item.id === String(providerId || '').trim());
+      settingsStore.setSelectedProviderModel(providerId, provider ? provider.selectedModel : model);
+    }
+    return result;
   }
 
   return Object.freeze({ listModels, setActiveProvider, setSelectedModel });

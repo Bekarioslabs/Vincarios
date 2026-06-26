@@ -1,4 +1,4 @@
-# ZEUS V1 UI And Workflows
+﻿# ZEUS V1 UI And Workflows
 
 ## Main Layout
 
@@ -122,7 +122,7 @@ The topbar shows provider state in three separate controls:
 - provider dropdown: active provider selection.
 - model dropdown: selected model for the active provider.
 
-Default provider URLs live in the provider registry. The topbar must not expose raw URLs. URL overrides belong to the future Settings screen and must update the same provider settings state instead of adding a parallel provider path.
+Default provider URLs live in the provider registry. The topbar must not expose raw URLs. URL overrides belong to the Settings screen and update the same provider settings state instead of adding a parallel provider path.
 
 Provider controls never grant vault access. Providers only receive the context package prepared by app logic.
 ## Review Basket Decisions
@@ -267,6 +267,20 @@ Non-V1 drag and drop:
 - PDFs
 - audio/video
 - automatic media organization
+
+
+## Settings UI Decisions
+
+The Settings screen is a dedicated renderer module, not shell logic.
+
+Current V1 Settings implementation:
+
+- `Providers` exposes LM Studio/Ollama URL overrides.
+- Provider URLs are validated and persisted through main-process settings services.
+- Active provider and selected model are persisted through the provider model service.
+- Saving or resetting a provider URL refreshes provider status through an app event, not through direct module coupling.
+
+Future sections such as Limits, Vault Profile, Embeddings, Safety, and Templates must extend the same settings store categories instead of creating parallel config files or provider-specific state.
 
 ## Options Menu Decisions
 

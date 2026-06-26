@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
   'use strict';
 
   const REQUIRED_RENDERER_MODULES = Object.freeze([
@@ -24,6 +24,7 @@
     { name: 'ZeusReadContextPreflight', globalName: 'ZeusReadContextPreflight', methods: ['runReadContextPreflight'] },
     { name: 'ZeusChat', globalName: 'ZeusChat', methods: ['mountChat'] },
     { name: 'ZeusProviderStatus', globalName: 'ZeusProviderStatus', methods: ['mountProviderStatus'] },
+    { name: 'ZeusSettingsPanel', globalName: 'ZeusSettingsPanel', methods: ['mountSettingsPanel'] },
     { name: 'ZeusShell', globalName: 'ZeusShell', methods: ['mountShell'] }
   ]);
 

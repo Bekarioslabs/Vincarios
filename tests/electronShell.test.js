@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -30,6 +30,9 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'PROVIDER_SET_ACTIVE',
     'PROVIDER_SET_MODEL',
     'PROVIDER_STATUS',
+    'SETTINGS_GET',
+    'SETTINGS_RESET_PROVIDER_URL',
+    'SETTINGS_SET_PROVIDER_URL',
     'VAULT_CREATE_NOTE',
     'VAULT_LIST_FOLDER',
     'VAULT_READ_MARKDOWN',
@@ -45,6 +48,9 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.PROVIDER_MODELS, 'provider:models');
   assert.equal(IPC_CHANNELS.PROVIDER_SET_ACTIVE, 'provider:set-active');
   assert.equal(IPC_CHANNELS.PROVIDER_SET_MODEL, 'provider:set-model');
+  assert.equal(IPC_CHANNELS.SETTINGS_GET, 'settings:get');
+  assert.equal(IPC_CHANNELS.SETTINGS_SET_PROVIDER_URL, 'settings:set-provider-url');
+  assert.equal(IPC_CHANNELS.SETTINGS_RESET_PROVIDER_URL, 'settings:reset-provider-url');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_NOTE, 'vault:create-note');
   assert.equal(IPC_CHANNELS.VAULT_UPDATE_NOTE, 'vault:update-note');
@@ -72,4 +78,17 @@ test('preload exposes provider model controls without filesystem access', () => 
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.PROVIDER_MODELS, payload\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.PROVIDER_SET_ACTIVE, payload\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.PROVIDER_SET_MODEL, payload\)/);
+});
+
+test('preload exposes chat cancel and settings without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /cancel\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.CHAT_CANCEL, payload\)/);
+  assert.match(preloadSource, /settings: Object\.freeze/);
+  assert.match(preloadSource, /setProviderUrl\(payload\)/);
+  assert.match(preloadSource, /resetProviderUrl\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_GET\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_SET_PROVIDER_URL, payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_RESET_PROVIDER_URL, payload\)/);
 });

@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
   'use strict';
 
   function mountShell(root, api) {
@@ -44,7 +44,7 @@
         '      </div>',
         '      <button type="button" class="left-button" data-future-slot="inbox-review">Inbox Review</button>',
         '      <button type="button" class="left-button" data-future-slot="review-basket-nav">Review Basket</button>',
-        '      <button type="button" class="left-button" data-future-slot="settings">Settings</button>',
+        '      <button type="button" class="left-button" data-open-settings>Settings</button>',
         '    </div>',
         '  </aside>',
         '  <section class="main-workspace">',
@@ -112,6 +112,7 @@
       const contextState = createContextState(app.querySelector('#context-value'), app);
       const reviewBasket = window.ZeusReviewBasket ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal) }) : null;
       if (window.ZeusProviderStatus) window.ZeusProviderStatus.mountProviderStatus({ api, app });
+      if (window.ZeusSettingsPanel) window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status });
       if (window.ZeusChat) window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState });
       wireVaultShell(api, app, contextState);
       if (window.ZeusPaneResize) window.ZeusPaneResize.mountPaneResize(app);

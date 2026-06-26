@@ -84,3 +84,17 @@ test('provider registry uses custom models path as health path when no health pa
   assert.equal(settings.providers[0].modelsPath, '/api/tags');
   assert.equal(settings.providers[0].healthPath, '/api/tags');
 });
+
+test('provider settings state can update and reset provider URL overrides', () => {
+  const state = createProviderSettingsState();
+
+  const update = state.setProviderUrlOverride('ollama', 'http://localhost:11435/');
+
+  assert.equal(update.ok, true);
+  assert.equal(state.getProviders().find((provider) => provider.id === 'ollama').baseUrl, 'http://localhost:11435');
+
+  const reset = state.resetProviderUrlOverride('ollama');
+
+  assert.equal(reset.ok, true);
+  assert.equal(state.getProviders().find((provider) => provider.id === 'ollama').baseUrl, 'http://127.0.0.1:11434');
+});

@@ -1,4 +1,4 @@
-# ZEUS V1 Implementation Plan
+﻿# ZEUS V1 Implementation Plan
 
 Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
 
@@ -70,12 +70,13 @@ Every remaining implementation phase must include focused tests for the behavior
 - [x] LM Studio chat baseline with provider registry, default URL, active model selection, and topbar provider/model dropdowns.
 - [x] Ollama chat baseline through the same registry, topbar provider/model controls, and native Ollama endpoints.
 - [x] Real chat abort: request id, `AbortController`, `chat:cancel` IPC, Send-to-Cancel UI state, and ignored late responses.
-- [ ] Provider settings foundation: URL override UI/persistence, timeout, token/context limits. Model selection foundation exists in the topbar.
+- [x] Provider settings foundation: settings store categories, URL override UI/persistence, active provider persistence, and selected model persistence.
+- [ ] Limits settings UI: timeout, token/context limits, and analysis caps. Store defaults exist; visible editing remains open.
 - [ ] Vault Profile settings bridge: expose existing folder-role foundation without replacing the Phase 2 core profile logic.
-- [ ] Local-provider URL validation.
+- [x] Local-provider URL validation.
 - [ ] Model/capability display. Model dropdown exists; capability display remains open.
-- [ ] Settings persistence in app/user-data storage.
-- [ ] Focused provider/settings tests for provider URL validation, model capability display, and persisted settings. Abort tests are in place.
+- [x] Settings persistence in app/user-data storage.
+- [x] Focused provider/settings tests for provider URL validation, URL persistence, active provider/model persistence, settings IPC/preload, and Settings renderer wiring. Abort tests are in place.
 
 ## Phase 5.5 - Reviewed Update Flow
 
