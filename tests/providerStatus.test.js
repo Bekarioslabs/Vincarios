@@ -109,3 +109,67 @@ test('provider status view updates the status chip without owning provider check
   assert.equal(nodes.providerName.textContent, 'LM Studio');
   assert.deepEqual(toggles, [{ name: 'ok', enabled: true }]);
 });
+test('provider IPC exposes model list and provider/model selection channels', async () => {
+  const handlers = new Map();
+  const ipcMain = {
+    handle(channel, handler) {
+      handlers.set(channel, handler);
+    }
+  };
+  const statusService = { async getStatus() { return { ok: true }; } };
+  const modelService = {
+    async listModels(payload) { return { ok: true, payload, models: [{ id: 'auto' }] }; },
+    setActiveProvider(providerId) { return { ok: true, providerId }; },
+    setSelectedModel(providerId, model) { return { ok: true, providerId, model }; }
+  };
+
+  registerProviderIpc(ipcMain, statusService, modelService);
+
+  assert.equal(handlers.has(IPC_CHANNELS.PROVIDER_MODELS), true);
+  assert.equal(handlers.has(IPC_CHANNELS.PROVIDER_SET_ACTIVE), true);
+  assert.equal(handlers.has(IPC_CHANNELS.PROVIDER_SET_MODEL), true);
+  assert.deepEqual(await handlers.get(IPC_CHANNELS.PROVIDER_MODELS)(null, { providerId: 'lm-studio' }), {
+    ok: true,
+    payload: { providerId: 'lm-studio' },
+    models: [{ id: 'auto' }]
+  });
+  assert.deepEqual(await handlers.get(IPC_CHANNELS.PROVIDER_SET_ACTIVE)(null, { providerId: 'lm-studio' }), {
+    ok: true,
+    providerId: 'lm-studio'
+  });
+  assert.deepEqual(await handlers.get(IPC_CHANNELS.PROVIDER_SET_MODEL)(null, { providerId: 'lm-studio', model: 'model-a' }), {
+    ok: true,
+    providerId: 'lm-studio',
+    model: 'model-a'
+  });
+});
+test('provider status view populates provider and model dropdown state', () => {
+  const providerSelect = {};
+  const modelSelect = {};
+  const nodes = {
+    statusPill: { dataset: {}, title: '' },
+    statusDot: { classList: { toggle() {} } },
+    statusLabel: { textContent: '' },
+    providerSelect,
+    modelSelect
+  };
+  const { setProviderModels } = require('../src/renderer/providers/mountProviderStatus');
+
+  setProviderStatus(nodes, {
+    id: 'lm-studio',
+    label: 'LM Studio',
+    available: true,
+    message: 'Provider online'
+  }, [
+    { id: 'lm-studio', label: 'LM Studio' }
+  ]);
+  setProviderModels(nodes, {
+    selectedModel: 'model-b',
+    models: [{ id: 'auto', label: 'Auto' }, { id: 'model-b', label: 'model-b' }]
+  });
+
+  assert.equal(providerSelect.value, 'lm-studio');
+  assert.deepEqual(providerSelect.optionsData, [{ id: 'lm-studio', label: 'LM Studio' }]);
+  assert.equal(modelSelect.value, 'model-b');
+  assert.deepEqual(modelSelect.optionsData, [{ id: 'auto', label: 'Auto' }, { id: 'model-b', label: 'model-b' }]);
+});

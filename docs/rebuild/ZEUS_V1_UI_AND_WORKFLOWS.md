@@ -114,6 +114,17 @@ File tree:      min 220 px height
 Preview:        min 240 px height
 ```
 
+## Provider Control Decisions
+
+The topbar shows provider state in three separate controls:
+
+- provider status: online/offline indicator only.
+- provider dropdown: active provider selection.
+- model dropdown: selected model for the active provider.
+
+Default provider URLs live in the provider registry. The topbar must not expose raw URLs. URL overrides belong to the future Settings screen and must update the same provider settings state instead of adding a parallel provider path.
+
+Provider controls never grant vault access. Providers only receive the context package prepared by app logic.
 ## Review Basket Decisions
 
 Review Basket is a standalone module, not part of chat rendering.

@@ -23,6 +23,7 @@
     { name: 'ZeusModelReadActionRunner', globalName: 'ZeusModelReadActionRunner', methods: ['runModelReadActions'] },
     { name: 'ZeusReadContextPreflight', globalName: 'ZeusReadContextPreflight', methods: ['runReadContextPreflight'] },
     { name: 'ZeusChat', globalName: 'ZeusChat', methods: ['mountChat'] },
+    { name: 'ZeusProviderStatus', globalName: 'ZeusProviderStatus', methods: ['mountProviderStatus'] },
     { name: 'ZeusShell', globalName: 'ZeusShell', methods: ['mountShell'] }
   ]);
 

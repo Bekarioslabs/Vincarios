@@ -8,6 +8,9 @@ const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
   CHAT_SEND: 'chat:send',
   PROVIDER_STATUS: 'provider:status',
+  PROVIDER_MODELS: 'provider:models',
+  PROVIDER_SET_ACTIVE: 'provider:set-active',
+  PROVIDER_SET_MODEL: 'provider:set-model',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',
@@ -29,6 +32,15 @@ const zeus = Object.freeze({
   provider: Object.freeze({
     status() {
       return ipcRenderer.invoke(IPC_CHANNELS.PROVIDER_STATUS);
+    },
+    models(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.PROVIDER_MODELS, payload);
+    },
+    setActive(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.PROVIDER_SET_ACTIVE, payload);
+    },
+    setModel(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.PROVIDER_SET_MODEL, payload);
     }
   }),
   vault: Object.freeze({

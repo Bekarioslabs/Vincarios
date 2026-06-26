@@ -77,7 +77,7 @@ button { cursor: pointer; }
 }
 
 .status-pill,
-.provider-pill {
+.provider-select {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -91,6 +91,16 @@ button { cursor: pointer; }
   white-space: nowrap;
 }
 
+.provider-select {
+  min-width: 116px;
+  max-width: 220px;
+  height: 24px;
+  outline: none;
+}
+
+.provider-model-select {
+  min-width: 150px;
+}
 .status-dot {
   width: 7px;
   height: 7px;

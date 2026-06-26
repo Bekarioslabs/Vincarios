@@ -1,26 +1,20 @@
 'use strict';
 
-const DEFAULT_PROVIDERS = Object.freeze([
-  Object.freeze({
-    id: 'lm-studio',
-    label: 'LM Studio',
-    baseUrl: 'http://127.0.0.1:1234',
-    healthPath: '/v1/models'
-  })
-]);
+const { createProviderSettingsState } = require('./providerRegistry');
 
 function createProviderStatusService(options) {
   options = options || {};
-  const providers = normalizeProviders(options.providers || DEFAULT_PROVIDERS);
-  const activeProviderId = options.activeProviderId || providers[0].id;
+  const settingsState = options.settingsState || createProviderSettingsState(options);
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 1200;
 
   async function getStatus() {
+    const providers = settingsState.getProviders();
     const checkedProviders = await Promise.all(
       providers.map((provider) => checkProvider(provider, fetchImpl, timeoutMs))
     );
-    const activeProvider = checkedProviders.find((provider) => provider.id === activeProviderId) || checkedProviders[0];
+    const active = settingsState.getActiveProvider();
+    const activeProvider = checkedProviders.find((provider) => provider.id === active.id) || checkedProviders[0];
 
     return {
       activeProvider,
@@ -31,30 +25,13 @@ function createProviderStatusService(options) {
   return Object.freeze({ getStatus });
 }
 
-function normalizeProviders(providers) {
-  const normalized = providers
-    .filter(Boolean)
-    .map((provider) => ({
-      id: String(provider.id || '').trim(),
-      label: String(provider.label || provider.id || '').trim(),
-      baseUrl: String(provider.baseUrl || '').trim().replace(/\/+$/g, ''),
-      healthPath: String(provider.healthPath || '/').trim() || '/'
-    }))
-    .filter((provider) => provider.id && provider.label && provider.baseUrl);
-
-  if (normalized.length === 0) {
-    throw new Error('At least one provider configuration is required.');
-  }
-
-  return normalized;
-}
-
 async function checkProvider(provider, fetchImpl, timeoutMs) {
-  const healthUrl = buildHealthUrl(provider.baseUrl, provider.healthPath);
+  const healthUrl = buildHealthUrl(provider.baseUrl, provider.healthPath || provider.modelsPath);
   const baseStatus = {
     id: provider.id,
     label: provider.label,
     baseUrl: provider.baseUrl,
+    selectedModel: provider.selectedModel,
     healthUrl
   };
 
@@ -111,7 +88,6 @@ async function fetchWithTimeout(fetchImpl, url, timeoutMs) {
 }
 
 module.exports = {
-  DEFAULT_PROVIDERS,
   createProviderStatusService,
   buildHealthUrl
 };

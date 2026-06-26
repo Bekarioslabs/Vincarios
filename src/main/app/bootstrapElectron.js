@@ -8,6 +8,8 @@ const { registerVaultIpc } = require('../ipc/registerVaultIpc');
 const { registerProviderIpc } = require('../ipc/registerProviderIpc');
 const { createProviderChatService } = require('../providers/providerChatService');
 const { createProviderStatusService } = require('../providers/providerStatusService');
+const { createProviderModelService } = require('../providers/providerModelService');
+const { createProviderSettingsState } = require('../providers/providerRegistry');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
 
@@ -17,8 +19,11 @@ function bootstrapElectron(electron, options) {
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
   const vaultReadService = options.vaultReadService || createVaultReadService();
   const vaultWriteService = options.vaultWriteService || createVaultWriteService();
-  const providerStatusService = options.providerStatusService || createProviderStatusService(options.providerOptions);
-  const chatService = options.chatService || createProviderChatService(options.providerOptions);
+  const providerSettingsState = options.providerSettingsState || createProviderSettingsState(options.providerOptions);
+  const providerOptions = Object.assign({}, options.providerOptions || {}, { settingsState: providerSettingsState });
+  const providerStatusService = options.providerStatusService || createProviderStatusService(providerOptions);
+  const providerModelService = options.providerModelService || createProviderModelService(providerOptions);
+  const chatService = options.chatService || createProviderChatService(providerOptions);
 
   registerChatIpc(ipcMain, chatService);
   registerAppIpc(ipcMain, {
@@ -26,7 +31,7 @@ function bootstrapElectron(electron, options) {
     version: app.getVersion ? app.getVersion() : '0.1.0'
   });
   registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService);
-  registerProviderIpc(ipcMain, providerStatusService);
+  registerProviderIpc(ipcMain, providerStatusService, providerModelService);
 
   app.whenReady().then(() => {
     createMainWindow(electron, { projectRoot });

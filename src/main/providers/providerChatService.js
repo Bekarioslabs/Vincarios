@@ -1,17 +1,17 @@
 'use strict';
 
-const { DEFAULT_PROVIDERS } = require('./providerStatusService');
+const { createProviderSettingsState } = require('./providerRegistry');
+const { buildModelsUrl } = require('./providerModelService');
 
 function createProviderChatService(options) {
   options = options || {};
-  const providers = normalizeProviders(options.providers || DEFAULT_PROVIDERS);
-  const activeProviderId = options.activeProviderId || providers[0].id;
+  const settingsState = options.settingsState || createProviderSettingsState(options);
   const fetchImpl = options.fetchImpl || globalThis.fetch;
   const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 60000;
   const temperature = Number.isFinite(options.temperature) ? options.temperature : 0.3;
 
   async function sendChat(payload) {
-    const provider = providers.find((item) => item.id === activeProviderId) || providers[0];
+    const provider = settingsState.getActiveProvider();
     const messages = normalizeMessages(payload && payload.messages);
 
     if (messages.length === 0) {
@@ -65,25 +65,6 @@ function createProviderChatService(options) {
   return Object.freeze({ sendChat });
 }
 
-function normalizeProviders(providers) {
-  const normalized = providers
-    .filter(Boolean)
-    .map((provider) => ({
-      id: String(provider.id || '').trim(),
-      label: String(provider.label || provider.id || '').trim(),
-      baseUrl: String(provider.baseUrl || '').trim().replace(/\/+$/g, ''),
-      chatPath: String(provider.chatPath || '/v1/chat/completions').trim() || '/v1/chat/completions',
-      model: String(provider.model || 'auto').trim() || 'auto'
-    }))
-    .filter((provider) => provider.id && provider.label && provider.baseUrl);
-
-  if (normalized.length === 0) {
-    throw new Error('At least one provider configuration is required.');
-  }
-
-  return normalized;
-}
-
 function normalizeMessages(messages) {
   if (!Array.isArray(messages)) return [];
   const allowedRoles = new Set(['system', 'user', 'assistant']);
@@ -96,7 +77,7 @@ function normalizeMessages(messages) {
 }
 
 async function resolveChatModel(provider, fetchImpl, timeoutMs) {
-  if (provider.model !== 'auto') return provider.model;
+  if (provider.selectedModel && provider.selectedModel !== 'auto') return provider.selectedModel;
 
   const response = await fetchWithTimeout(fetchImpl, buildModelsUrl(provider), {
     method: 'GET',
@@ -109,9 +90,6 @@ async function resolveChatModel(provider, fetchImpl, timeoutMs) {
   return firstModel && firstModel.id ? String(firstModel.id).trim() : '';
 }
 
-function buildModelsUrl(provider) {
-  return provider.baseUrl.replace(/\/+$/g, '') + '/v1/models';
-}
 function buildChatUrl(provider) {
   const path = provider.chatPath.startsWith('/') ? provider.chatPath : '/' + provider.chatPath;
   return provider.baseUrl.replace(/\/+$/g, '') + path;
@@ -135,7 +113,8 @@ function publicProvider(provider) {
   return {
     id: provider.id,
     label: provider.label,
-    baseUrl: provider.baseUrl
+    baseUrl: provider.baseUrl,
+    selectedModel: provider.selectedModel
   };
 }
 
