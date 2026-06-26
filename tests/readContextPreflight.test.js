@@ -194,6 +194,23 @@ test('read context preflight recursively lists selected folder descendants for p
   assert.match(result.message, /Only real folder-listing results are shown/);
   assert.doesNotMatch(result.message, /Agent_Definitions\.md/);
 });
+test('read context preflight blocks selected folder listing for deictic here-inside wording', async () => {
+  const blockedState = createBlockedActionStateForTest();
+  const result = await runReadContextPreflight({
+    userText: 'was liegt hier drin?',
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain/Core',
+      readAllowed: false,
+      selectionId: 18
+    },
+    blockedState
+  });
+
+  assert.equal(result.handled, true);
+  assert.equal(result.kind, 'blocked_action');
+  assert.match(result.message, /enable R/i);
+});
 test('read context preflight blocks selected folder listing with a transposed folder typo', async () => {
   const blockedState = createBlockedActionStateForTest();
   const result = await runReadContextPreflight({
@@ -392,6 +409,38 @@ test('read context preflight retries same selected folder after permission resyn
   assert.equal(result.handled, true);
   assert.match(result.message, /Core/);
   assert.equal(blockedState.snapshot(), null);
+});
+test('read context preflight retries a matching blocked folder action from a permission confirmation message', async () => {
+  const blockedState = createBlockedActionStateForTest();
+  const blocked = blockedState.set({
+    type: 'folder_list',
+    selectionId: 40,
+    targetPath: '90_AI_Brain/Core',
+    targetKind: 'folder',
+    requiredPermission: 'read',
+    userText: 'was ist in diesem ordner?'
+  });
+
+  const result = await runReadContextPreflight({
+    userText: 'es ist jetzt freigegeben',
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain/Core',
+      readAllowed: true,
+      selectionId: 41
+    },
+    api: {
+      vault: {
+        listFolder: async (path) => ({ ok: true, entries: [{ kind: 'markdown', name: 'Rules.md', path: path + '/Rules.md' }] })
+      }
+    },
+    blockedState
+  });
+
+  assert.equal(result.handled, true);
+  assert.match(result.message, /Rules\.md/);
+  assert.equal(blockedState.snapshot(), null);
+  assert.equal(blocked.id.startsWith('blocked-'), true);
 });
 function createBlockedActionStateForTest() {
   return require('../src/renderer/context/blockedActionState').createBlockedActionState();

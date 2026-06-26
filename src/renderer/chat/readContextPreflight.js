@@ -22,6 +22,15 @@
       });
     }
 
+    const textRetryResult = await retryMatchingBlockedActionFromText({
+      api: options.api,
+      selection,
+      blockedState,
+      userText: options.userText,
+      pendingState: options.pendingState || defaultPendingState
+    });
+    if (textRetryResult) return textRetryResult;
+
     const selectedFileBlocked = createSelectedFileReadBlock({
       selection,
       userText: options.userText,
@@ -36,6 +45,22 @@
       selection,
       pendingState: options.pendingState || defaultPendingState,
       blockedState
+    });
+  }
+
+  async function retryMatchingBlockedActionFromText(options) {
+    const blockedState = options.blockedState || defaultBlockedState;
+    const intent = getIntentApi();
+    const blocked = blockedState && typeof blockedState.snapshot === 'function' ? blockedState.snapshot() : null;
+    if (!blocked || !intent || typeof intent.hasBlockedActionRetrySignal !== 'function') return null;
+    if (!intent.hasBlockedActionRetrySignal(options.userText)) return null;
+    if (!selectionMatchesBlockedAction(options.selection, blocked)) return null;
+    return retryBlockedAction({
+      api: options.api,
+      selection: options.selection,
+      blockedState,
+      blockedActionId: blocked.id,
+      pendingState: options.pendingState || defaultPendingState
     });
   }
 

@@ -24,7 +24,7 @@
 
   function hasFolderWorkSignal(text) {
     const value = normalizePromptText(text);
-    return (mentionsFileCollection(value) && (asksForSimilarity(value) || asksToFindOrList(value))) || asksForFolderContents(value) || asksForRecursiveFolderListing(value);
+    return (mentionsFileCollection(value) && (asksForSimilarity(value) || asksToFindOrList(value) || asksToInspect(value))) || (mentionsFolder(value) && asksToInspect(value)) || asksForFolderContents(value) || asksForHereContents(value) || asksForRecursiveFolderListing(value);
   }
 
   function hasRecursiveFolderWorkSignal(text) {
@@ -41,6 +41,10 @@
 
   function asksForFolderContents(value) {
     return mentionsFolder(value) && /\b(was|what|whats|what's|liegt|drin|inhalt|inhalte|contents?|inside)\b/.test(value);
+  }
+
+  function asksForHereContents(value) {
+    return /\b(hier|here|this)\b/.test(value) && /\b(was|what|whats|what's|liegt|drin|inhalt|inhalte|contents?|inside)\b/.test(value);
   }
 
   function asksForRecursiveFolderListing(value) {
@@ -74,12 +78,21 @@
     return String(value || '').match(/[a-z0-9]+/g) || [];
   }
 
+  function hasBlockedActionRetrySignal(text) {
+    const value = normalizePromptText(text);
+    return /\b(versuch es nochmal|versuch nochmal|try again|try now|nochmal|erneut|retry|freigegeben|freigeschaltet|ist jetzt freigegeben|ist jetzt an|r ist an|read ist an)\b/.test(value);
+  }
+
   function asksForSimilarity(value) {
     return /\b(aehnlich|aehnliche|ahnlich|ahnliche|similar|vergleichbar|related)\b/.test(value);
   }
 
   function asksToFindOrList(value) {
     return /\b(find|finde|finden|suche|suchen|search|liste|listen|auflisten|zeige|zeig)\b/.test(value);
+  }
+
+  function asksToInspect(value) {
+    return /\b(check|schau|pruef|pruf|inspect|scan)\b/.test(value);
   }
 
   function normalizePromptText(text) {
@@ -90,7 +103,8 @@
     looksLikeSelectedTargetRequest,
     looksLikeFolderScopedRequest,
     hasFolderWorkSignal,
-    hasRecursiveFolderWorkSignal
+    hasRecursiveFolderWorkSignal,
+    hasBlockedActionRetrySignal
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
