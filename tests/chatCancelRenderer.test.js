@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createChatRequestId, isRequestActive, setChatBusy } = require('../src/renderer/chat/mountChat');
+const { createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest } = require('../src/renderer/chat/mountChat');
 
 test('chat request ids are unique and prefixed for cancel tracking', () => {
   const first = createChatRequestId();
@@ -37,4 +37,42 @@ test('chat busy state uses compact cancel symbol and keeps button clickable', ()
   assert.equal(button.disabled, false);
   assert.equal(button.textContent, '>');
   assert.equal(button.dataset.chatState, 'idle');
+});
+
+test('canceling active chat request releases UI immediately without waiting for IPC', () => {
+  const input = { readOnly: true, focused: false, attributes: {}, setAttribute(name, value) { this.attributes[name] = value; }, focus() { this.focused = true; } };
+  const button = { disabled: false, textContent: 'X', dataset: { chatState: 'running' } };
+  const status = { textContent: '' };
+  const pending = { removed: false, remove() { this.removed = true; } };
+  const activeRequest = { requestId: 'req-1', canceled: false, pending };
+  const cancelCalls = [];
+  const api = {
+    chat: {
+      cancel(payload) {
+        cancelCalls.push(payload);
+        return new Promise(() => {});
+      }
+    }
+  };
+  let storedRequest = activeRequest;
+
+  const result = cancelActiveChatRequest({
+    api,
+    activeRequest,
+    setActiveRequest(next) { storedRequest = next; },
+    input,
+    sendButton: button,
+    status
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(activeRequest.canceled, true);
+  assert.equal(pending.removed, true);
+  assert.equal(storedRequest, null);
+  assert.equal(input.readOnly, false);
+  assert.equal(input.focused, true);
+  assert.equal(button.disabled, false);
+  assert.equal(button.textContent, '>');
+  assert.equal(status.textContent, 'Request canceled.');
+  assert.deepEqual(cancelCalls, [{ requestId: 'req-1' }]);
 });

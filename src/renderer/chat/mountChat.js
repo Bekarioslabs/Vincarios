@@ -37,13 +37,14 @@
       if (!content) return;
 
       const requestId = createChatRequestId();
-      activeRequest = { requestId, canceled: false };
+      activeRequest = { requestId, canceled: false, pending: null };
       input.value = '';
       messages.push({ role: 'user', content });
       appendMessage(chatLog, 'user', content);
       setChatBusy(input, sendButton, true);
       setText(status, 'Waiting for provider...');
       const pending = appendMessage(chatLog, 'assistant', 'Thinking...', { allowSave: false });
+      activeRequest.pending = pending;
 
       try {
         const preflight = await runReadContextPreflight({ api, content, contextState });
@@ -91,15 +92,15 @@
       }
     }
 
-    async function cancelCurrentRequest() {
-      if (!activeRequest) return;
-      const request = activeRequest;
-      request.canceled = true;
-      setText(status, 'Canceling request...');
-      sendButton.disabled = true;
-      if (api.chat && typeof api.chat.cancel === 'function') {
-        await api.chat.cancel({ requestId: request.requestId });
-      }
+    function cancelCurrentRequest() {
+      cancelActiveChatRequest({
+        api,
+        activeRequest,
+        setActiveRequest(next) { activeRequest = next; },
+        input,
+        sendButton,
+        status
+      });
     }
 
     sendButton.addEventListener('click', sendCurrentMessage);
@@ -395,6 +396,26 @@
     sendButton.dataset.chatState = busy ? 'running' : 'idle';
   }
 
+  function cancelActiveChatRequest(options) {
+    options = options || {};
+    const request = options.activeRequest;
+    if (!request) return { ok: false, code: 'no_active_request' };
+
+    request.canceled = true;
+    if (request.pending && typeof request.pending.remove === 'function') request.pending.remove();
+    if (typeof options.setActiveRequest === 'function') options.setActiveRequest(null);
+    setChatBusy(options.input, options.sendButton, false);
+    if (options.input && typeof options.input.focus === 'function') options.input.focus();
+    setText(options.status, 'Request canceled.');
+
+    if (options.api && options.api.chat && typeof options.api.chat.cancel === 'function') {
+      try {
+        Promise.resolve(options.api.chat.cancel({ requestId: request.requestId })).catch(() => {});
+      } catch (error) {}
+    }
+
+    return { ok: true, requestId: request.requestId };
+  }
   function createChatRequestId() {
     return 'chat-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
   }
@@ -412,7 +433,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountChat, appendMessage, buildOutboundMessages, createChatRequestId, isRequestActive, setChatBusy };
+    module.exports = { mountChat, appendMessage, buildOutboundMessages, createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest };
   }
 
   if (typeof window !== 'undefined') {
