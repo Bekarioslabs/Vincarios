@@ -10,6 +10,7 @@
     { name: 'ZeusContextIntent', globalName: 'ZeusContextIntent' },
     { name: 'ZeusContextLimits', globalName: 'ZeusContextLimits', methods: ['normalizeContextLimits'] },
     { name: 'ZeusPendingActionState', globalName: 'ZeusPendingActionState', methods: ['createPendingActionState'] },
+    { name: 'ZeusBlockedActionState', globalName: 'ZeusBlockedActionState', methods: ['createBlockedActionState'] },
     { name: 'ZeusFolderContextController', globalName: 'ZeusFolderContextController', methods: ['runFolderContextFlow'] },
     { name: 'ZeusContextState', globalName: 'ZeusContextState', methods: ['createContextState', 'buildChatContextPackage'] },
     { name: 'ZeusContextPackageBuilder', globalName: 'ZeusContextPackageBuilder', methods: ['buildChatContextPackage'] },

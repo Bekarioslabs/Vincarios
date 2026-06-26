@@ -6,6 +6,7 @@
     const selection = options.selection || null;
     const userText = String(options.userText || '');
     const limits = getLimitsApi().normalizeContextLimits(options.limits || options);
+    const blockedState = options.blockedState || null;
     const pendingState = options.pendingState || createFallbackPendingState();
     const pending = typeof pendingState.snapshot === 'function' ? pendingState.snapshot() : null;
     const scopeChoice = normalizeScopeChoice(options.scopeChoice || userText);
@@ -38,12 +39,14 @@
     if (!target) return { handled: false };
 
     if (target.readAllowed !== true) {
-      return {
-        handled: true,
-        kind: 'message',
+      return createBlockedReadResult({
+        blockedState,
+        type: 'folder_list',
+        target,
+        userText,
         message: 'Please enable R for this folder before I list it: ' + target.path,
         historyContent: 'Read blocked for current selection ' + target.selectionId + ': ' + target.path
-      };
+      });
     }
 
     if (target.ambiguous === true) {
@@ -119,6 +122,28 @@
       kind: 'message',
       message,
       historyContent: message
+    };
+  }
+
+  function createBlockedReadResult(options) {
+    const target = options.target || {};
+    const blockedAction = options.blockedState && typeof options.blockedState.set === 'function'
+      ? options.blockedState.set({
+          type: options.type,
+          selectionId: target.selectionId || 0,
+          targetPath: target.path || '',
+          targetKind: target.kind || 'folder',
+          requiredPermission: 'read',
+          userText: options.userText || ''
+        })
+      : null;
+
+    return {
+      handled: true,
+      kind: blockedAction ? 'blocked_action' : 'message',
+      message: options.message,
+      historyContent: options.historyContent || options.message,
+      blockedActions: blockedAction ? [{ label: 'Retry after enabling R', blockedActionId: blockedAction.id }] : []
     };
   }
 

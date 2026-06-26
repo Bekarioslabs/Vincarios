@@ -194,3 +194,156 @@ test('read context preflight recursively lists selected folder descendants for p
   assert.match(result.message, /Only real folder-listing results are shown/);
   assert.doesNotMatch(result.message, /Agent_Definitions\.md/);
 });
+test('read context preflight creates a retry action for blocked selected-file reads', async () => {
+  const blockedState = createBlockedActionStateForTest();
+  const result = await runReadContextPreflight({
+    userText: 'Was ist der Inhalt dieser Datei?',
+    selection: {
+      kind: 'file',
+      path: '00_Inbox/Heroes.md',
+      readAllowed: false,
+      selectionId: 20
+    },
+    blockedState
+  });
+
+  assert.equal(result.handled, true);
+  assert.equal(result.kind, 'blocked_action');
+  assert.match(result.message, /enable R/i);
+  assert.equal(result.blockedActions.length, 1);
+  assert.equal(result.blockedActions[0].label, 'Retry after enabling R');
+  assert.equal(blockedState.snapshot().type, 'selected_file_read');
+});
+
+test('read context preflight retries selected-file reads after R is enabled', async () => {
+  const blockedState = createBlockedActionStateForTest();
+  const blocked = blockedState.set({
+    type: 'selected_file_read',
+    selectionId: 21,
+    targetPath: '00_Inbox/Heroes.md',
+    targetKind: 'file',
+    requiredPermission: 'read',
+    userText: 'Was ist der Inhalt dieser Datei?'
+  });
+
+  const result = await runReadContextPreflight({
+    blockedActionId: blocked.id,
+    selection: {
+      kind: 'file',
+      path: '00_Inbox/Heroes.md',
+      readAllowed: true,
+      content: '# Heroes\n\nSpider-Man',
+      selectionId: 21
+    },
+    blockedState
+  });
+
+  assert.equal(result.handled, true);
+  assert.equal(result.kind, 'retry_provider_request');
+  assert.equal(result.retryUserText, 'Was ist der Inhalt dieser Datei?');
+  assert.equal(blockedState.snapshot(), null);
+});
+
+test('read context preflight creates and retries blocked folder listings', async () => {
+  const blockedState = createBlockedActionStateForTest();
+  const calls = [];
+  const blockedResult = await runReadContextPreflight({
+    userText: 'Was liegt in diesem Ordner?',
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain/Core',
+      readAllowed: false,
+      selectionId: 22
+    },
+    api: {
+      vault: {
+        listFolder: async () => {
+          throw new Error('must not list while blocked');
+        }
+      }
+    },
+    blockedState
+  });
+
+  assert.equal(blockedResult.kind, 'blocked_action');
+  assert.equal(blockedResult.blockedActions[0].label, 'Retry after enabling R');
+  const blocked = blockedState.snapshot();
+  assert.equal(blocked.type, 'folder_list');
+
+  const retryResult = await runReadContextPreflight({
+    blockedActionId: blocked.id,
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain/Core',
+      readAllowed: true,
+      selectionId: 22
+    },
+    api: {
+      vault: {
+        listFolder: async (path) => {
+          calls.push(path);
+          return { ok: true, entries: [{ kind: 'markdown', name: 'Rules.md', path: '90_AI_Brain/Core/Rules.md' }] };
+        }
+      }
+    },
+    blockedState
+  });
+
+  assert.equal(retryResult.handled, true);
+  assert.match(retryResult.message, /Rules\.md/);
+  assert.deepEqual(calls, ['90_AI_Brain/Core']);
+  assert.equal(blockedState.snapshot(), null);
+});
+
+test('read context preflight retries a selected-file parent folder listing after parent R is enabled', async () => {
+  const blockedState = createBlockedActionStateForTest();
+  const blockedResult = await runReadContextPreflight({
+    userText: 'Was liegt in diesem Ordner?',
+    selection: {
+      kind: 'file',
+      path: '00_Inbox/AI Responses/Heroes.md',
+      readAllowed: true,
+      parentReadAllowed: false,
+      selectionId: 23
+    },
+    api: {
+      vault: {
+        listFolder: async () => {
+          throw new Error('must not list while blocked');
+        }
+      }
+    },
+    blockedState
+  });
+
+  assert.equal(blockedResult.kind, 'blocked_action');
+  const blocked = blockedState.snapshot();
+  assert.equal(blocked.targetPath, '00_Inbox/AI Responses');
+  assert.equal(blocked.targetKind, 'folder');
+
+  const retryResult = await runReadContextPreflight({
+    blockedActionId: blocked.id,
+    selection: {
+      kind: 'file',
+      path: '00_Inbox/AI Responses/Heroes.md',
+      readAllowed: true,
+      parentReadAllowed: true,
+      selectionId: 23
+    },
+    api: {
+      vault: {
+        listFolder: async (path) => {
+          return { ok: true, entries: [{ kind: 'markdown', name: 'More Heroes.md', path: path + '/More Heroes.md' }] };
+        }
+      }
+    },
+    blockedState
+  });
+
+  assert.equal(retryResult.handled, true);
+  assert.match(retryResult.message, /More Heroes\.md/);
+  assert.equal(blockedState.snapshot(), null);
+});
+function createBlockedActionStateForTest() {
+  return require('../src/renderer/context/blockedActionState').createBlockedActionState();
+}

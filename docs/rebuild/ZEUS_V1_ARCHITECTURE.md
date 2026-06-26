@@ -144,7 +144,7 @@ Run a focused audit after each block:
 - `chat` renders messages and sends model requests; it does not own vault writes.
 - `review` owns proposal state, selected items, statuses, and execution requests.
 - `files` owns file tree navigation and selected path state.
-- `context` is split by responsibility: `contextState` stores the active target, `pendingActionState` stores one open request-scoped clarification, `contextIntent` detects selected-file/folder intent from user prompts, `contextLimits` owns central request-size caps, `folderContextController` owns selected-folder scope decisions, and `contextPackageBuilder` builds request-scoped provider context from those inputs. Future dropped Markdown files, folder indexes, and embedding candidates should extend this module family instead of adding hidden rules to chat or file-tree code.
+- `context` is split by responsibility: `contextState` stores the active target, `pendingActionState` stores one open request-scoped clarification, `blockedActionState` stores retryable app actions that were blocked by missing permissions or stale target state, `contextIntent` detects selected-file/folder intent from user prompts, `contextLimits` owns central request-size caps, `folderContextController` owns selected-folder scope decisions, and `contextPackageBuilder` builds request-scoped provider context from those inputs. Future dropped Markdown files, folder indexes, and embedding candidates should extend this module family instead of adding hidden rules to chat or file-tree code.
 - `permissions` owns Read/Write state and inheritance display.
 - `providers` talk to LM Studio/Ollama; they never access files.
 - `vault` reads/writes/lists files only after safety validation.

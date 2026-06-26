@@ -54,28 +54,16 @@
           return;
         }
 
-        const outboundMessages = buildOutboundMessages(messages, content, contextState);
-        const result = await api.chat.send({ messages: outboundMessages });
-        pending.remove();
-        if (result && result.ok && result.message && result.message.content) {
-          const handled = await handleAssistantContent({
-            api,
-            chatLog,
-            content: result.message.content,
-            messages,
-            contextState,
-            reviewBasket,
-            status
-          });
-          if (!handled) {
-            messages.push({ role: 'assistant', content: result.message.content });
-            appendMessage(chatLog, 'assistant', result.message.content, { reviewBasket, status });
-          }
-          setText(status, 'Response received.');
-        } else {
-          appendMessage(chatLog, 'assistant', 'Provider error: ' + ((result && result.error) || 'No response.'), { allowSave: false });
-          setText(status, 'Provider error.');
-        }
+        await runProviderRequest({
+          api,
+          chatLog,
+          content,
+          messages,
+          contextState,
+          reviewBasket,
+          status,
+          pending
+        });
       } catch (error) {
         pending.remove();
         const message = error && error.message ? error.message : 'request failed';
@@ -108,18 +96,26 @@
       scopeChoice: options.scopeChoice,
       selection: options.contextState && typeof options.contextState.snapshot === 'function'
         ? options.contextState.snapshot()
-        : null
+        : null,
+      blockedActionId: options.blockedActionId
     });
   }
 
   function appendPreflightResult(options) {
     const preflight = options.preflight || {};
-    const actions = Array.isArray(preflight.scopeActions)
+    const scopeActions = Array.isArray(preflight.scopeActions)
       ? preflight.scopeActions.map((action) => ({
           label: action.label,
           onClick: () => runScopeAction(Object.assign({}, options, { scopeChoice: action.scopeChoice }))
         }))
       : [];
+    const blockedActions = Array.isArray(preflight.blockedActions)
+      ? preflight.blockedActions.map((action) => ({
+          label: action.label,
+          onClick: () => runBlockedAction(Object.assign({}, options, { blockedActionId: action.blockedActionId }))
+        }))
+      : [];
+    const actions = scopeActions.concat(blockedActions);
 
     options.messages.push({ role: 'assistant', content: preflight.historyContent || preflight.message });
     appendMessage(options.chatLog, 'assistant', preflight.message, { allowSave: false, actions });
@@ -151,6 +147,78 @@
     } finally {
       setInputEnabled(options.input, options.sendButton, true);
       options.input.focus();
+    }
+  }
+
+  async function runBlockedAction(options) {
+    setInputEnabled(options.input, options.sendButton, false);
+    setText(options.status, 'Retrying blocked action...');
+    const pending = appendMessage(options.chatLog, 'assistant', 'Retrying blocked action...', { allowSave: false });
+    try {
+      const result = await runReadContextPreflight({
+        api: options.api,
+        content: '',
+        blockedActionId: options.blockedActionId,
+        contextState: options.contextState
+      });
+
+      if (result && result.kind === 'retry_provider_request') {
+        await runProviderRequest({
+          api: options.api,
+          chatLog: options.chatLog,
+          content: result.retryUserText,
+          messages: options.messages,
+          contextState: options.contextState,
+          reviewBasket: options.reviewBasket,
+          status: options.status,
+          pending,
+          includeUserMessage: false
+        });
+        return;
+      }
+
+      pending.remove();
+      if (result && result.handled) {
+        appendPreflightResult(Object.assign({}, options, { preflight: result }));
+      } else {
+        appendMessage(options.chatLog, 'assistant', 'Blocked action is no longer available. Please run the request again.', { allowSave: false });
+        setText(options.status, 'Blocked action expired.');
+      }
+    } catch (error) {
+      pending.remove();
+      appendMessage(options.chatLog, 'assistant', 'Blocked action error: ' + ((error && error.message) || 'request failed'), { allowSave: false });
+      setText(options.status, 'Blocked action failed.');
+    } finally {
+      setInputEnabled(options.input, options.sendButton, true);
+      options.input.focus();
+    }
+  }
+
+  async function runProviderRequest(options) {
+    const providerMessages = options.includeUserMessage === false
+      ? options.messages.concat({ role: 'user', content: options.content })
+      : options.messages;
+    const outboundMessages = buildOutboundMessages(providerMessages, options.content, options.contextState);
+    const result = await options.api.chat.send({ messages: outboundMessages });
+    options.pending.remove();
+    if (result && result.ok && result.message && result.message.content) {
+      const handled = await handleAssistantContent({
+        api: options.api,
+        chatLog: options.chatLog,
+        content: result.message.content,
+        messages: options.messages,
+        contextState: options.contextState,
+        reviewBasket: options.reviewBasket,
+        status: options.status
+      });
+      if (!handled) {
+        options.messages.push({ role: 'assistant', content: result.message.content });
+        appendMessage(options.chatLog, 'assistant', result.message.content, { reviewBasket: options.reviewBasket, status: options.status });
+      }
+      setText(options.status, 'Response received.');
+    } else {
+      appendMessage(options.chatLog, 'assistant', 'Provider error: ' + ((result && result.error) || 'No response.'), { allowSave: false });
+      setText(options.status, 'Provider error.');
     }
   }
   function buildOutboundMessages(messages, userText, contextState) {

@@ -152,6 +152,7 @@ test('index loads context intent and folder controller before chat uses context 
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const intentIndex = source.indexOf('./src/renderer/context/contextIntent.js');
   const pendingIndex = source.indexOf('./src/renderer/context/pendingActionState.js');
+  const blockedIndex = source.indexOf('./src/renderer/context/blockedActionState.js');
   const folderControllerIndex = source.indexOf('./src/renderer/context/folderContextController.js');
   const stateIndex = source.indexOf('./src/renderer/context/contextState.js');
   const packageIndex = source.indexOf('./src/renderer/context/contextPackageBuilder.js');
@@ -161,7 +162,8 @@ test('index loads context intent and folder controller before chat uses context 
 
   assert.equal(intentIndex > -1, true);
   assert.equal(pendingIndex > intentIndex, true);
-  assert.equal(folderControllerIndex > pendingIndex, true);
+  assert.equal(blockedIndex > pendingIndex, true);
+  assert.equal(folderControllerIndex > blockedIndex, true);
   assert.equal(stateIndex > folderControllerIndex, true);
   assert.equal(packageIndex > stateIndex, true);
   assert.equal(runnerIndex > packageIndex, true);
@@ -186,10 +188,12 @@ test('renderer browser globals take priority over CommonJS fallbacks', () => {
     if (firstRequire > -1) assert.equal(firstWindow < firstRequire, true, file);
   });
 });
-test('chat renders folder scope actions as message actions', () => {
+test('chat renders folder scope and blocked retry actions as message actions', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
 
   assert.match(source, /scopeActions/);
+  assert.match(source, /blockedActions/);
+  assert.match(source, /runBlockedAction/);
   assert.match(source, /createMessageActions/);
   assert.match(source, /chat-message-action-button/);
   assert.match(source, /runScopeAction/);
