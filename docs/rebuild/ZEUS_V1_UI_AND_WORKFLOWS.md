@@ -158,9 +158,9 @@ Permission state has three visible levels:
 - inherited: permission comes from a parent folder.
 - blocked/off: permission is not active, or the path is protected.
 
-Folder permissions inherit to children. Child files/folders may override inherited permissions.
+Folder permissions inherit to children. Child files/folders may override inherited permissions. An explicit child off state must block inherited parent access instead of being treated as unset.
 
-The UI must make direct vs inherited state understandable without making inherited permissions look like an error.
+The UI must make direct vs inherited state understandable without making inherited permissions look like an error. Direct on is full accent, inherited on is lighter, and off remains visually inactive.
 
 Dot folders and runtime/private folders such as `.obsidian`, `.zeus`, and `.zeus_backups` remain blocked regardless of UI state.
 

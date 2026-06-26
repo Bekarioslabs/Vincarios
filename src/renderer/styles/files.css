@@ -1,4 +1,4 @@
-﻿.file-toolbar {
+.file-toolbar {
   min-height: 38px;
   display: flex;
   align-items: center;
@@ -190,4 +190,10 @@
   border-color: rgba(var(--interactive-accent-rgb), .95);
   background: rgba(var(--interactive-accent-rgb), .18);
   color: var(--text-accent);
+}
+
+.file-permission-button.is-inherited {
+  border-color: rgba(var(--interactive-accent-rgb), .55);
+  background: rgba(var(--interactive-accent-rgb), .08);
+  color: color-mix(in srgb, var(--text-accent) 72%, var(--text-muted));
 }

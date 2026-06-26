@@ -61,13 +61,14 @@ test('file panel gates selected Markdown chat context through read permission', 
 
   assert.match(source, /function createContextDetails/);
   assert.match(source, /function canUsePathAsContext/);
-  assert.match(source, /permissionState\.get\(candidate\)\.read === true/);
+  assert.match(source, /permissionState\.resolve\(path\)\.read === true/);
   assert.match(source, /contextState\.setFile\(read\.path, createContextDetails\(read\.path, read\.content\)\)/);
 });
 test('file panel keeps loaded preview content and resyncs read permission for active context', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
   assert.match(source, /readAllowed: canUsePathAsContext\(path\)/);
+  assert.match(source, /function updatePermissionButtonState/);
   assert.match(source, /function syncSelectedContextPermission/);
   assert.match(source, /syncSelectedContextPermission\(\)/);
 });

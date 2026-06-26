@@ -139,7 +139,6 @@
 
   function selectionMatchesBlockedAction(selection, blocked) {
     if (!selection || !blocked) return false;
-    if (blocked.selectionId && selection.selectionId && blocked.selectionId !== selection.selectionId) return false;
     const selectionPath = normalizePath(selection.path);
     const blockedPath = normalizePath(blocked.targetPath);
     const selectionKind = String(selection.kind || '');

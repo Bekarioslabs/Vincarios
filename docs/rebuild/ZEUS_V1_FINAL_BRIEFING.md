@@ -110,7 +110,7 @@ Reliable file updating is V1-critical. ZEUS must be able to turn chat or local E
 - Read means ZEUS may use the path as context.
 - Write means ZEUS may propose write actions.
 - Write never means silent execution.
-- Three states: direct, inherited, blocked/off.
+- Three states: direct, inherited, blocked/off. Explicit child off overrides inherited parent access.
 - Dot/runtime folders are blocked regardless of UI state.
 - Permission shortcuts: Click affects one path, Ctrl+Click affects visible/expanded descendants, Shift+Click recursively affects all descendants through folder listing only.
 
@@ -124,7 +124,7 @@ If Auto-context is off, ZEUS may know the selected path but must not claim to kn
 
 If Read is not active for the selected file/folder or one of its parent folders, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 
-Missing-Read blocks are retryable app actions. The chat shows a `Retry after enabling R` button tied to the exact selected file/folder and original request. After the user enables `R`, the retry runs through app logic. ZEUS must not rely on language triggers such as `try now`, `schau nochmal`, or `ok hab es aktiviert`. If the selected target changed before retry, the app must stop with a clear mismatch message instead of applying the old blocked action to the new target. If the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
+Missing-Read blocks are retryable app actions. The chat shows a `Retry after enabling R` button tied to the exact selected file/folder and original request. After the user enables `R`, the retry runs through app logic. ZEUS must not rely on language triggers such as `try now`, `schau nochmal`, or `ok hab es aktiviert`. If the selected target path/kind changed before retry, the app must stop with a clear mismatch message instead of applying the old blocked action to the new target. Selection ids may change during permission resync and must not invalidate a retry when the target path and kind still match. If the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
 
 Selected folders expose the folder path only. They are not blindly fully loaded. When `R` is active, direct folder-content prompts are handled by a request-scoped read-context preflight through the preload vault API. Folder scope is controlled by `PendingActionState` plus `FolderContextController`: ambiguous folder work creates explicit current-level, all-subfolders, and cancel choices; short replies such as `all` or `alle` only resolve an existing pending folder action; without a pending action they are intercepted with a short app-level clarification and do not reach the provider. Current-level and recursive folder listings are capped by central context limits and show explicit limit markers when a cap is reached. Supported `list_folder` model-action envelopes remain a fallback, are checked against the active selection, and are returned as a ZEUS message instead of raw tool-call text.
 

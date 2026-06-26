@@ -11,12 +11,25 @@
       return cloneEntry(entries.get(normalized) || createEntry(normalized));
     }
 
+    function resolve(path) {
+      const normalized = normalizePermissionPath(path);
+      const read = resolveFlag(normalized, 'read');
+      const write = resolveFlag(normalized, 'write');
+      return {
+        path: normalized,
+        read: read.value,
+        write: write.value,
+        readState: read.state,
+        writeState: write.state
+      };
+    }
+
     function toggleRead(path) {
-      return update(path, (entry) => ({ ...entry, read: !entry.read }));
+      return setFlag(path, 'read', !resolve(path).read);
     }
 
     function toggleWrite(path) {
-      return update(path, (entry) => ({ ...entry, write: !entry.write }));
+      return setFlag(path, 'write', !resolve(path).write);
     }
 
     function setReadForPaths(paths, value) {
@@ -40,12 +53,7 @@
         .map(normalizePermissionPath)
         .filter(Boolean)));
 
-      normalizedPaths.forEach((path) => {
-        const current = entries.get(path) || createEntry(path);
-        const next = { ...current, [flag]: !!value };
-        if (next.read || next.write) entries.set(path, next);
-        else entries.delete(path);
-      });
+      normalizedPaths.forEach((path) => setFlag(path, flag, value, { silent: true }));
 
       const result = snapshot().filter((entry) => normalizedPaths.includes(entry.path));
       if (onChange && result.length) onChange(cloneEntry(result[0]), snapshot());
@@ -58,30 +66,57 @@
         .sort((a, b) => a.path.localeCompare(b.path));
     }
 
-    function update(path, updater) {
+    function setFlag(path, flag, value, options) {
       const normalized = normalizePermissionPath(path);
       const current = entries.get(normalized) || createEntry(normalized);
-      const next = updater(current);
-
-      if (next.read || next.write) entries.set(normalized, next);
-      else entries.delete(normalized);
-
-      notify(next);
+      const next = Object.assign({}, current, {
+        [flag]: !!value,
+        [flag + 'Set']: true
+      });
+      entries.set(normalized, next);
+      if (!options || options.silent !== true) notify(next);
       return cloneEntry(next);
+    }
+
+    function resolveFlag(path, flag) {
+      const candidates = permissionCandidates(path);
+      for (let index = 0; index < candidates.length; index += 1) {
+        const entry = entries.get(candidates[index]);
+        if (!entry || entry[flag + 'Set'] !== true) continue;
+        if (entry[flag] === true) {
+          return { value: true, state: index === 0 ? 'direct' : 'inherited' };
+        }
+        return { value: false, state: 'off' };
+      }
+      return { value: false, state: 'off' };
     }
 
     function notify(entry) {
       if (onChange) onChange(cloneEntry(entry), snapshot());
     }
 
-    return Object.freeze({ get, toggleRead, toggleWrite, setReadForPaths, setWriteForPaths, clear, snapshot });
+    return Object.freeze({ get, resolve, toggleRead, toggleWrite, setReadForPaths, setWriteForPaths, clear, snapshot });
+  }
+
+  function permissionCandidates(path) {
+    const normalized = normalizePermissionPath(path);
+    if (!normalized) return [''];
+    const parts = normalized.split('/').filter(Boolean);
+    const candidates = [normalized];
+    for (let count = parts.length - 1; count > 0; count -= 1) {
+      candidates.push(parts.slice(0, count).join('/'));
+    }
+    candidates.push('');
+    return candidates;
   }
 
   function createEntry(path) {
     return {
       path,
       read: false,
-      write: false
+      write: false,
+      readSet: false,
+      writeSet: false
     };
   }
 

@@ -17,6 +17,7 @@ test('permission buttons have explicit inactive and active styling', () => {
   assert.match(css, /\.file-permission-controls\s*\{/);
   assert.match(css, /\.file-permission-button\s*\{/);
   assert.match(css, /\.file-permission-button\.is-active\s*\{/);
+  assert.match(css, /\.file-permission-button\.is-inherited\s*\{/);
 });
 
 test('permission controls sit before file icons in the tree grid', () => {

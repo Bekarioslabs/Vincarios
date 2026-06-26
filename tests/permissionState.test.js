@@ -87,3 +87,34 @@ test('permission state applies write recursively without changing read', () => {
     { path: '02_Projekte/StarLu/Tasks.md', read: true, write: true }
   ]);
 });
+test('permission state resolves inherited read from parent folders', () => {
+  const permissions = createPermissionState();
+  permissions.toggleRead('90_AI_Brain');
+
+  assert.deepEqual(permissions.resolve('90_AI_Brain/Core'), {
+    path: '90_AI_Brain/Core',
+    read: true,
+    write: false,
+    readState: 'inherited',
+    writeState: 'off'
+  });
+});
+
+test('permission state lets explicit child read off override inherited parent read on', () => {
+  const permissions = createPermissionState();
+  permissions.toggleRead('90_AI_Brain');
+  permissions.toggleRead('90_AI_Brain/Core');
+
+  assert.deepEqual(permissions.resolve('90_AI_Brain/Core'), {
+    path: '90_AI_Brain/Core',
+    read: false,
+    write: false,
+    readState: 'off',
+    writeState: 'off'
+  });
+  assert.deepEqual(permissions.get('90_AI_Brain/Core'), {
+    path: '90_AI_Brain/Core',
+    read: false,
+    write: false
+  });
+});

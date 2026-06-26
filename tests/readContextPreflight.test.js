@@ -344,6 +344,37 @@ test('read context preflight retries a selected-file parent folder listing after
   assert.match(retryResult.message, /More Heroes\.md/);
   assert.equal(blockedState.snapshot(), null);
 });
+test('read context preflight retries same selected folder after permission resync changes selection id', async () => {
+  const blockedState = createBlockedActionStateForTest();
+  const blocked = blockedState.set({
+    type: 'folder_list',
+    selectionId: 30,
+    targetPath: '90_AI_Brain',
+    targetKind: 'folder',
+    requiredPermission: 'read',
+    userText: 'Was liegt in diesem Ordner?'
+  });
+
+  const result = await runReadContextPreflight({
+    blockedActionId: blocked.id,
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain',
+      readAllowed: true,
+      selectionId: 31
+    },
+    api: {
+      vault: {
+        listFolder: async (path) => ({ ok: true, entries: [{ kind: 'folder', name: 'Core', path: path + '/Core' }] })
+      }
+    },
+    blockedState
+  });
+
+  assert.equal(result.handled, true);
+  assert.match(result.message, /Core/);
+  assert.equal(blockedState.snapshot(), null);
+});
 function createBlockedActionStateForTest() {
   return require('../src/renderer/context/blockedActionState').createBlockedActionState();
 }

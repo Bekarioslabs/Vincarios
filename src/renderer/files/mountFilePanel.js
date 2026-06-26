@@ -262,8 +262,8 @@
     }
 
     function canUsePathAsContext(path) {
-      if (!permissionState || typeof permissionState.get !== 'function') return false;
-      return permissionCandidates(path).some((candidate) => permissionState.get(candidate).read === true);
+      if (!permissionState || typeof permissionState.resolve !== 'function') return false;
+      return permissionState.resolve(path).read === true;
     }
 
     function permissionCandidates(path) {
@@ -283,14 +283,14 @@
 
       const readButton = createPermissionButton('R', 'Toggle read permission', async (event) => {
         if (!permissionState) return null;
-        const next = !permissionState.get(path).read;
+        const next = !permissionState.resolve(path).read;
         if (event.shiftKey) return setPermissionRecursively(path, 'read', next);
         if (event.ctrlKey) return permissionState.setReadForPaths(knownVisibleDescendantPaths(path), next);
         return permissionState.toggleRead(path);
       });
       const writeButton = createPermissionButton('W', 'Toggle write permission', async (event) => {
         if (!permissionState) return null;
-        const next = !permissionState.get(path).write;
+        const next = !permissionState.resolve(path).write;
         if (event.shiftKey) return setPermissionRecursively(path, 'write', next);
         if (event.ctrlKey) return permissionState.setWriteForPaths(knownVisibleDescendantPaths(path), next);
         return permissionState.toggleWrite(path);
@@ -370,12 +370,17 @@
     }
     function updatePermissionButtons(path, readButton, writeButton) {
       const permissions = permissionState
-        ? permissionState.get(path)
-        : { read: false, write: false };
-      readButton.classList.toggle('is-active', permissions.read);
-      writeButton.classList.toggle('is-active', permissions.write);
-      readButton.setAttribute('aria-pressed', String(permissions.read));
-      writeButton.setAttribute('aria-pressed', String(permissions.write));
+        ? permissionState.resolve(path)
+        : { read: false, write: false, readState: 'off', writeState: 'off' };
+      updatePermissionButtonState(readButton, permissions.read, permissions.readState);
+      updatePermissionButtonState(writeButton, permissions.write, permissions.writeState);
+    }
+
+    function updatePermissionButtonState(button, enabled, state) {
+      button.classList.toggle('is-active', enabled === true && state === 'direct');
+      button.classList.toggle('is-inherited', enabled === true && state === 'inherited');
+      button.setAttribute('aria-pressed', String(enabled === true));
+      button.dataset.permissionState = state || 'off';
     }
     function updateNavigation(state) {
       const parts = state.breadcrumb.length
