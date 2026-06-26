@@ -125,7 +125,7 @@ test('read context preflight ignores general questions for selected folders', as
   assert.equal(result.handled, false);
   assert.equal(called, false);
 });
-test('read context preflight ignores all-subfolders scope replies without a pending folder action', async () => {
+test('read context preflight blocks all-subfolders scope replies without a pending folder action', async () => {
   const calls = [];
   const result = await runReadContextPreflight({
     userText: 'alle',
@@ -145,7 +145,8 @@ test('read context preflight ignores all-subfolders scope replies without a pend
     }
   });
 
-  assert.equal(result.handled, false);
+  assert.equal(result.handled, true);
+  assert.match(result.message, /No open folder scope choice/);
   assert.deepEqual(calls, []);
 });
 

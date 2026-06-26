@@ -32,7 +32,7 @@
       return { handled: false };
     }
 
-    if (isStandaloneScopeReply(userText)) return { handled: false };
+    if (isStandaloneScopeReply(userText)) return createMissingScopeMessage(selection, scopeChoice);
 
     const target = resolveFolderReadTarget(selection, userText, limits);
     if (!target) return { handled: false };
@@ -119,6 +119,17 @@
       kind: 'message',
       message,
       historyContent: message
+    };
+  }
+
+  function createMissingScopeMessage(selection, scopeChoice) {
+    const path = selection && selection.path ? normalizePath(selection.path) : '';
+    const message = 'No open folder scope choice. Ask ZEUS to check or list a folder first, then choose current level or all subfolders.' + (path ? ' Current selection: ' + path : '');
+    return {
+      handled: true,
+      kind: 'message',
+      message,
+      historyContent: 'Ignored standalone folder scope reply without pending action: ' + (scopeChoice || 'unknown')
     };
   }
 

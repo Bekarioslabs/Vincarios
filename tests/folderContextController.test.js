@@ -33,7 +33,7 @@ test('folder context controller asks for scope on ambiguous folder work', async 
   assert.deepEqual(result.scopeActions.map((action) => action.scopeChoice), ['current', 'recursive', 'cancel']);
 });
 
-test('folder context controller does not treat all as recursive without a pending folder action', async () => {
+test('folder context controller blocks standalone scope replies without a pending folder action', async () => {
   const calls = [];
   const result = await runFolderContextFlow({
     api: createApi({}, calls),
@@ -42,7 +42,9 @@ test('folder context controller does not treat all as recursive without a pendin
     selection: { kind: 'folder', path: '90_AI_Brain', readAllowed: true, selectionId: 4 }
   });
 
-  assert.equal(result.handled, false);
+  assert.equal(result.handled, true);
+  assert.equal(result.kind, 'message');
+  assert.match(result.message, /No open folder scope choice/);
   assert.equal(calls.length, 0);
 });
 
