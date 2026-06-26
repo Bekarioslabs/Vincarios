@@ -391,7 +391,7 @@
     input.readOnly = busy;
     input.setAttribute('aria-disabled', String(busy));
     sendButton.disabled = false;
-    sendButton.textContent = busy ? 'Cancel' : '>';
+    sendButton.textContent = busy ? 'X' : '>';
     sendButton.dataset.chatState = busy ? 'running' : 'idle';
   }
 
@@ -412,7 +412,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountChat, appendMessage, buildOutboundMessages, createChatRequestId, isRequestActive };
+    module.exports = { mountChat, appendMessage, buildOutboundMessages, createChatRequestId, isRequestActive, setChatBusy };
   }
 
   if (typeof window !== 'undefined') {
