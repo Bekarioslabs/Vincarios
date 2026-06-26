@@ -36,9 +36,28 @@
       selectionId: Number.isInteger(item.selectionId) ? item.selectionId : 0,
       targetPath: normalizePath(item.targetPath || item.path || ''),
       targetKind: String(item.targetKind || item.kind || 'file').trim() || 'file',
-      requiredPermission: String(item.requiredPermission || 'read').trim() || 'read',
+      requiredPermission: normalizeRequiredPermission(item.requiredPermission),
       userText: String(item.userText || '').trim()
     });
+  }
+
+
+  function normalizeRequiredPermission(value) {
+    const permission = String(value || 'read').trim().toLowerCase();
+    return permission === 'write' ? 'write' : 'read';
+  }
+
+  function formatPermissionShortcut(permission) {
+    return normalizeRequiredPermission(permission) === 'write' ? 'W' : 'R';
+  }
+
+  function formatBlockedActionRetryLabel(permission) {
+    return 'Retry after enabling ' + formatPermissionShortcut(permission);
+  }
+
+  function formatMissingPermissionMessage(blockedAction) {
+    const blocked = blockedAction || {};
+    return formatPermissionShortcut(blocked.requiredPermission) + ' is still disabled for this target: ' + normalizePath(blocked.targetPath || blocked.path || '');
   }
 
   function normalizePath(value) {
@@ -51,7 +70,11 @@
 
   const api = {
     createBlockedActionState,
-    normalizeBlockedAction
+    normalizeBlockedAction,
+    normalizeRequiredPermission,
+    formatPermissionShortcut,
+    formatBlockedActionRetryLabel,
+    formatMissingPermissionMessage
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

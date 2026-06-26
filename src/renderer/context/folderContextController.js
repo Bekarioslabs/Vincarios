@@ -143,7 +143,7 @@
       kind: blockedAction ? 'blocked_action' : 'message',
       message: options.message,
       historyContent: options.historyContent || options.message,
-      blockedActions: blockedAction ? [{ label: 'Retry after enabling R', blockedActionId: blockedAction.id }] : []
+      blockedActions: blockedAction ? [{ label: formatBlockedActionRetryLabel(blockedAction.requiredPermission), blockedActionId: blockedAction.id }] : []
     };
   }
 
@@ -373,6 +373,13 @@
       : { set: () => null, clear: () => null, snapshot: () => null, hasPending: () => false };
   }
 
+
+  function formatBlockedActionRetryLabel(permission) {
+    const api = getBlockedActionStateApi();
+    return api && typeof api.formatBlockedActionRetryLabel === 'function'
+      ? api.formatBlockedActionRetryLabel(permission)
+      : 'Retry after enabling ' + (String(permission || 'read').toLowerCase() === 'write' ? 'W' : 'R');
+  }
   function getIntentApi() {
     if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');
@@ -385,6 +392,12 @@
     throw new Error('ZEUS context limits API is not available.');
   }
 
+
+  function getBlockedActionStateApi() {
+    if (typeof window !== 'undefined' && window.ZeusBlockedActionState) return window.ZeusBlockedActionState;
+    if (typeof module !== 'undefined' && module.exports) return require('./blockedActionState');
+    return null;
+  }
   function getPendingActionStateApi() {
     if (typeof window !== 'undefined' && window.ZeusPendingActionState) return window.ZeusPendingActionState;
     if (typeof module !== 'undefined' && module.exports) return require('./pendingActionState');

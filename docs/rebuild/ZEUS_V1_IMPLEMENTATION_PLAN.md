@@ -59,7 +59,7 @@ Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
 - [x] Ensure short replies such as `all` or `alle` only resolve an existing pending folder action.
 - [x] Keep selected-file, selected-folder, dropped-file, and future embedding context sources visibly separated.
 - [x] Add limits for max context size and max listed folders/files per request.
-- [x] Add app-level blocked-action retry buttons for missing `R` on selected files/folders.
+- [x] Add app-level blocked-action retry buttons for missing `R` on selected files/folders, backed by a shared missing-permission foundation for future `W` retries.
 
 ## Phase Rules For Remaining V1 Work
 
@@ -82,7 +82,7 @@ Every remaining implementation phase must include focused tests for the behavior
 This is a V1-critical workflow, not a later comfort feature. The prototype already proved the value of chat-driven file updates; the rebuild must make it reliable and review-safe before larger cleanup features.
 
 - [ ] Chat-generated `update_note` proposals reliably target the selected Markdown file when `R` and `W` allow it.
-- [ ] Missing `R` or `W` produces a clear app-level guidance message, not generic model text about lacking filesystem access.
+- [ ] Missing `R` or `W` produces a clear app-level guidance message, not generic model text about lacking filesystem access. `W` must use the shared blocked-action foundation when reviewed write execution is gated.
 - [ ] Edit Mode can create an `update_note` proposal from local source changes instead of writing directly.
 - [ ] V1 update scope stays whole-note replacement through reviewed diff; complex partial insert/replace is explicitly V1.1 work.
 - [ ] Diff preview remains mandatory before applying any update.

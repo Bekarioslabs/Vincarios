@@ -2,7 +2,12 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createBlockedActionState } = require('../src/renderer/context/blockedActionState');
+const {
+  createBlockedActionState,
+  formatBlockedActionRetryLabel,
+  formatMissingPermissionMessage,
+  normalizeRequiredPermission
+} = require('../src/renderer/context/blockedActionState');
 
 test('blocked action state stores one retryable blocked app action', () => {
   const state = createBlockedActionState();
@@ -32,4 +37,12 @@ test('blocked action state clears only the matching blocked action id', () => {
   assert.equal(state.hasBlocked(), true);
   assert.equal(state.clear(blocked.id), null);
   assert.equal(state.hasBlocked(), false);
+});
+test('blocked action permission helpers format read and write consistently', () => {
+  assert.equal(normalizeRequiredPermission('read'), 'read');
+  assert.equal(normalizeRequiredPermission('write'), 'write');
+  assert.equal(normalizeRequiredPermission('delete'), 'read');
+  assert.equal(formatBlockedActionRetryLabel('read'), 'Retry after enabling R');
+  assert.equal(formatBlockedActionRetryLabel('write'), 'Retry after enabling W');
+  assert.equal(formatMissingPermissionMessage({ requiredPermission: 'write', targetPath: '03_Wissen/Test.md' }), 'W is still disabled for this target: 03_Wissen/Test.md');
 });

@@ -79,7 +79,7 @@
 
     if (blocked.type === 'selected_file_read') return retrySelectedFileRead(blocked, selection, blockedState);
     if (blocked.type === 'folder_list') {
-      if (!isFolderReadAllowedForBlockedAction(selection, blocked)) return createBlockedStillNeedsRead(blocked);
+      if (!isBlockedActionPermissionAllowed(selection, blocked)) return createBlockedStillNeedsPermission(blocked);
       if (typeof blockedState.clear === 'function') blockedState.clear(blocked.id);
       const controller = getFolderContextControllerApi();
       return controller.runFolderContextFlow({
@@ -96,7 +96,7 @@
   }
 
   function retrySelectedFileRead(blocked, selection, blockedState) {
-    if (selection.readAllowed !== true) return createBlockedStillNeedsRead(blocked);
+    if (!isBlockedActionPermissionAllowed(selection, blocked)) return createBlockedStillNeedsPermission(blocked);
     if (!selection.content) {
       return {
         handled: true,
@@ -139,17 +139,17 @@
       kind: blockedAction ? 'blocked_action' : 'message',
       message: 'Please enable R for this file before I read it: ' + normalizePath(selection.path),
       historyContent: 'Read blocked for current selection ' + ((selection && selection.selectionId) || 0) + ': ' + normalizePath(selection.path),
-      blockedActions: blockedAction ? [{ label: 'Retry after enabling R', blockedActionId: blockedAction.id }] : []
+      blockedActions: blockedAction ? [{ label: formatBlockedActionRetryLabel(blockedAction.requiredPermission), blockedActionId: blockedAction.id }] : []
     };
   }
 
-  function createBlockedStillNeedsRead(blocked) {
+  function createBlockedStillNeedsPermission(blocked) {
     return {
       handled: true,
       kind: 'blocked_action',
-      message: 'R is still disabled for this target: ' + blocked.targetPath,
-      historyContent: 'Blocked action still missing R: ' + blocked.targetPath,
-      blockedActions: [{ label: 'Retry after enabling R', blockedActionId: blocked.id }]
+      message: formatMissingPermissionMessage(blocked),
+      historyContent: 'Blocked action still missing ' + formatPermissionShortcut(blocked.requiredPermission) + ': ' + blocked.targetPath,
+      blockedActions: [{ label: formatBlockedActionRetryLabel(blocked.requiredPermission), blockedActionId: blocked.id }]
     };
   }
 
@@ -175,8 +175,12 @@
       && parentFolderOf(selectionPath) === blockedPath;
   }
 
-  function isFolderReadAllowedForBlockedAction(selection, blocked) {
+  function isBlockedActionPermissionAllowed(selection, blocked) {
     if (!selection || !blocked) return false;
+    const permission = normalizeRequiredPermission(blocked.requiredPermission);
+    const targetKind = String(blocked.targetKind || 'file');
+    if (permission === 'write') return selection.writeAllowed === true;
+    if (targetKind === 'file') return selection.kind === 'file' && selection.readAllowed === true;
     if (selection.kind === 'folder') return selection.readAllowed === true;
     return selection.kind === 'file'
       && parentFolderOf(selection.path) === normalizePath(blocked.targetPath)
@@ -232,6 +236,34 @@
       .replace(/\/+/g, '/');
   }
 
+
+  function normalizeRequiredPermission(permission) {
+    const api = getBlockedActionStateApi();
+    return api && typeof api.normalizeRequiredPermission === 'function'
+      ? api.normalizeRequiredPermission(permission)
+      : (String(permission || 'read').toLowerCase() === 'write' ? 'write' : 'read');
+  }
+
+  function formatPermissionShortcut(permission) {
+    const api = getBlockedActionStateApi();
+    return api && typeof api.formatPermissionShortcut === 'function'
+      ? api.formatPermissionShortcut(permission)
+      : (normalizeRequiredPermission(permission) === 'write' ? 'W' : 'R');
+  }
+
+  function formatBlockedActionRetryLabel(permission) {
+    const api = getBlockedActionStateApi();
+    return api && typeof api.formatBlockedActionRetryLabel === 'function'
+      ? api.formatBlockedActionRetryLabel(permission)
+      : 'Retry after enabling ' + formatPermissionShortcut(permission);
+  }
+
+  function formatMissingPermissionMessage(blocked) {
+    const api = getBlockedActionStateApi();
+    return api && typeof api.formatMissingPermissionMessage === 'function'
+      ? api.formatMissingPermissionMessage(blocked)
+      : formatPermissionShortcut(blocked && blocked.requiredPermission) + ' is still disabled for this target: ' + normalizePath(blocked && blocked.targetPath);
+  }
   function getIntentApi() {
     if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('../context/contextIntent');
