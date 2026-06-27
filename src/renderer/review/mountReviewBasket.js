@@ -64,6 +64,7 @@
       const row = document.createElement('div');
       row.className = 'review-basket-item';
       row.dataset.status = item.status;
+      row.dataset.type = item.type || 'unknown';
 
       const check = document.createElement('input');
       check.type = 'checkbox';

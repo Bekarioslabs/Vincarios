@@ -14,6 +14,7 @@ test('context intent detects selected target requests without matching general q
   assert.equal(looksLikeSelectedTargetRequest('check mal diese datei'), true);
   assert.equal(looksLikeSelectedTargetRequest('was steht in dieser note?'), true);
   assert.equal(looksLikeSelectedTargetRequest('What is the biggest fish?'), false);
+  assert.equal(looksLikeSelectedTargetRequest('und jetzt was ueber haie'), false);
 });
 
 test('context intent detects explicit folder-scoped file work', () => {

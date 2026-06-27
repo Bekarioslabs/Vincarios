@@ -405,6 +405,7 @@
 
     return {
       openRoot,
+      refreshTree,
       renderTree,
       ensureFolderLoaded,
       setVaultName,

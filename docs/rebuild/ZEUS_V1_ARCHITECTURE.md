@@ -1,4 +1,4 @@
-﻿# ZEUS V1 Architecture
+# ZEUS V1 Architecture
 
 ## Core Shape
 
@@ -42,6 +42,8 @@ src/
     projects/
     settings/
     prompts/
+    selectionActions/
+    selection/
   shared/
     actions/
     schemas/
@@ -161,9 +163,11 @@ Run a focused audit after each block:
 - `chat` renders messages and sends model requests; it does not own vault writes.
 - `review` owns proposal state, selected items, statuses, and execution requests.
 - `files` owns file tree navigation and selected path state.
+- `selectionActions` owns deterministic actions shown for the currently selected file/folder. It must use app state and action registries, not broad prompt phrases.
+- `selection` owns scoped selection behavior such as region-aware `Ctrl+A` and right-click select/copy commands.
 - `context` is split by responsibility: `contextState` stores the active target, `pendingActionState` stores one open request-scoped clarification, `blockedActionState` stores retryable app actions that were blocked by missing permissions or stale target state, `contextIntent` detects selected-file/folder intent from user prompts, `contextLimits` owns central request-size caps, `folderContextController` owns selected-folder scope decisions, and `contextPackageBuilder` builds request-scoped provider context from those inputs. Future dropped Markdown files, folder indexes, and embedding candidates should extend this module family instead of adding hidden rules to chat or file-tree code.
 - `permissions` owns Read/Write state and inheritance display.
 - `providers` talk to LM Studio/Ollama; they never access files.
 - `vault` reads/writes/lists files only after safety validation.
 - `embeddings` indexes and searches; it only returns candidates.
-- settings owns app configuration categories, normalization, persistence, and Settings UI/IPC. Provider modules consume provider settings but do not own settings storage.
+- `settings` owns app configuration categories, normalization, persistence, and Settings UI/IPC. Settings UI should use a category menu plus active content pane instead of a single ever-growing modal body. Provider modules consume provider settings but do not own settings storage.

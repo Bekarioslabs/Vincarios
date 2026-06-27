@@ -1,4 +1,4 @@
-﻿# ZEUS V1 UI And Workflows
+# ZEUS V1 UI And Workflows
 
 ## Main Layout
 
@@ -197,7 +197,7 @@ User messages stay plain text to preserve exactly what the user typed.
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
 
-YAML frontmatter is shown as a visible Properties block by default. It is not editable in this renderer block. Future Properties editing belongs to action/review workflows, not direct preview editing.
+YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview. It is not directly editable in this renderer block. Future Properties actions belong to the Selection Actions and review workflows, so metadata suggestions can be proposed and reviewed instead of silently changing frontmatter.
 
 Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`.
 
@@ -367,24 +367,71 @@ The current "enter folder and replace list" behavior is acceptable only as tempo
 
 ### Vault Panel Layout
 
-The first scaffold places files above preview. This is not the desired V1 layout.
+V1 should make selected-file/folder actions visible without forcing the chat to infer intent from broad wording.
 
-V1 should use the full app height better:
+Target layout:
 
 ```text
 Vault Panel:
-File Tree | Preview
+Top row:    Files | Selection Actions
+Bottom row: Markdown Preview across both columns
 ```
 
-or an equivalent layout where file navigation and preview stay visible side by side.
+Files stays compact and navigational. Selection Actions is a deterministic action surface for the currently selected file or folder. Markdown Preview uses the full width below both, because reading Markdown benefits from width more than the file tree does.
 
-The whole app shell should not scroll during normal use. Scroll should be local to:
+Responsive rules:
 
-- file tree
-- Markdown preview
-- chat history
-- review basket when needed
+- Files and Selection Actions keep useful minimum widths.
+- Markdown Preview remains readable and should not disappear when the window narrows.
+- The whole app shell should not scroll during normal use.
+- Scroll should be local to file tree, selection actions, Markdown preview, chat history, and review basket.
+- Future detachable preview is a valid follow-up if the combined vault panel becomes too crowded, but it is not part of the first 5.4 cut.
 
+### Selection Actions Panel
+
+The Selection Actions panel replaces broad prompt guessing with explicit app-side actions.
+
+For selected folders, V1 should start with actions such as:
+
+- List folder
+- List with subfolders
+- Analyze folder
+- Find similar files
+- Inbox Review when the selected path matches the configured Inbox role
+
+For selected Markdown files, V1 should start with actions such as:
+
+- Summarize file
+- Use as context
+- Propose update
+- Find related notes
+- Reveal/Open preview
+
+These actions should be registered through a focused selection-actions module. Adding a future action should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
+
+### Left Navigation Cleanup
+
+The left navigation should be grouped and quiet:
+
+- `Open Vault` remains prominent.
+- `New Entry` is collapsed by default.
+- Entry presets expand below `New Entry` and push lower actions down.
+- Future large preset lists need scrolling or grouping instead of overflowing the left column.
+- Placeholder entries must remain explicit future slots and should not look like fake working features.
+
+### Settings Layout
+
+Settings should not become one long modal with every option stacked together.
+
+V1 target:
+
+```text
+Settings Modal:
+Left:  settings category menu
+Right: active settings category content
+```
+
+Initial categories remain Providers, Limits, Vault Profile, Safety, Templates, Theme, and About. Future categories should extend the same settings module and store shape.
 ### Selection UX
 
 The prototype's context-aware selection behavior should be recovered cleanly:

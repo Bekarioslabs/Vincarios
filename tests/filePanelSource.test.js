@@ -44,18 +44,18 @@ test('file panel refresh preserves navigator state instead of reopening root', (
 
   assert.match(source, /async function refreshTree\(\)/);
   assert.match(source, /refreshButton\.addEventListener\('click', refreshTree\)/);
+  assert.match(source, /refreshTree,/);
   assert.doesNotMatch(source, /refreshButton\.addEventListener\('click', async \(\) => \{\s*entriesByFolder\.clear\(\);\s*await openRoot\(\);\s*\}\);/);
 });
 
 test('file panel source avoids mojibake-prone inline icon glyphs', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
-  assert.doesNotMatch(source, /â/);
-  assert.doesNotMatch(source, /â†|â–|â€¢/);
+  assert.doesNotMatch(source, new RegExp(String.fromCharCode(65533)));
+  assert.doesNotMatch(source, /\u00e2|\u2022/);
   assert.match(source, /icon\.classList\.toggle\('is-expanded'/);
   assert.doesNotMatch(source, /icon\.textContent = entry\.kind === 'folder'/);
 });
-
 test('file panel gates selected Markdown chat context through read permission', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 

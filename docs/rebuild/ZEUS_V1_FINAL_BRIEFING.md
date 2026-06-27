@@ -1,4 +1,4 @@
-﻿# ZEUS V1 Final Briefing
+# ZEUS V1 Final Briefing
 
 Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
 
@@ -272,3 +272,5 @@ The prototype is reference material, not the new foundation.
 Do not copy old large orchestration files forward.
 
 Use the same lessons, not the same structure.
+
+Phase 5.4 UX Intent Foundation is now the required bridge before Phase 5.5. It exists to remove broad prompt-trigger dependency before reviewed updates. The target is a deterministic UI flow: Files top-left, Selection Actions top-right, Markdown Preview below both, grouped left navigation, two-pane Settings, Obsidian-like YAML Properties display, scoped selection behavior, and English default development vault roles.

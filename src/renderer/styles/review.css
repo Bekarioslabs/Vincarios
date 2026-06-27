@@ -77,8 +77,13 @@
 }
 
 .review-basket-item-status {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  padding: 2px 6px;
   color: var(--text-muted);
   font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .06em;
   text-transform: uppercase;
 }
 
@@ -218,4 +223,44 @@
 .review-diff-line-remove {
   color: #ff9b9b;
   background: rgba(220, 70, 70, .1);
+}
+.review-clear-button {
+  border-color: var(--background-modifier-border);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.review-clear-button:hover:not(:disabled) {
+  border-color: rgba(var(--interactive-accent-rgb), .35);
+  color: var(--text-normal);
+}
+
+.review-execute-button {
+  border-color: rgba(var(--interactive-accent-rgb), .5);
+  background: rgba(var(--interactive-accent-rgb), .1);
+  color: var(--text-accent);
+  font-weight: 800;
+}
+
+.review-basket-item[data-status="open"] .review-basket-item-status {
+  border-color: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.review-basket-item[data-type="create_note"] .review-basket-item-status {
+  border-color: rgba(22,163,74,.2);
+  background: rgba(22,163,74,.1);
+  color: #4ade80;
+}
+
+.review-basket-item[data-type="update_note"] .review-basket-item-status {
+  border-color: rgba(var(--interactive-accent-rgb), .2);
+  background: rgba(var(--interactive-accent-rgb), .1);
+  color: var(--text-accent);
+}
+
+.review-basket-item[data-status="failed"] .review-basket-item-status {
+  border-color: rgba(220,38,38,.2);
+  background: rgba(220,38,38,.1);
+  color: #f87171;
 }

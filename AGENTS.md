@@ -1,69 +1,46 @@
 # AGENTS.md — ZEUS Agent V1
 
 > **Quick Reference**
-> ZEUS is a local-first Markdown vault organizer. Safety and user control come first. All vault writes are explicit, reviewable, and backed up. Providers generate text only — they never touch files.
+> ZEUS is a local-first Markdown vault assistant. Safety first. All vault writes are explicit, reviewable, and backed up. Providers generate text only — they never touch files.
 
 ---
 
 ## 1. Identity & Scope
 
-### Product Boundary
+ZEUS is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian, it does not replace it.
 
-ZEUS is a local-first assistant for Obsidian-style Markdown vault organization.
+**Not ZEUS:** general-purpose agent, cloud AI client, standalone media manager, plugin ecosystem.
 
-Do not turn ZEUS into a general-purpose agent harness. Do not add features outside V1 without first updating the product brief and asking Beka.
+Do not add features outside V1 without updating the product brief and asking Beka.
 
-### Development Priorities
+**Priorities:** Safety → Reliable Markdown workflows → Review UX → Maintainable architecture → Local providers
 
-1. Safety and user control
-2. Reliable Markdown/vault workflows
-3. Clear review UX
-4. Maintainable architecture
-5. Local-first provider support
-
-### Language Rule
-
-Use English for all code-facing and product-facing artifacts:
-
-- UI labels and visible app text
-- Code identifiers, comments, TODO markers, and commit messages
-- Documentation intended for contributors or GitHub
-- Configuration keys, action names, provider names, and test names
-
-The user may chat with the assistant in German. Private vault notes may use any language.
+**Language:** English for all code, UI labels, docs, config keys, action names, commit messages, and tests. German is allowed in chat and private vault notes.
 
 ---
 
-## 2. Safety — Read This First
+## 2. Safety Laws
 
-These rules are non-negotiable and enforced in code, not just in prompts.
+These are enforced in code, not prompts. Non-negotiable.
 
-### Core Safety Laws
-
-- Providers never read or write files.
+- Providers never read or write vault files.
 - Renderer never gets direct filesystem access.
 - Main validates every path.
-- Writes need review.
-- Existing-file writes need backup.
-- Executed actions need audit logs.
+- Writes require visible review.
+- Existing-file writes require backup.
+- Executed actions require audit log entries.
+- Dot folders (`.obsidian`, `.zeus`, `.zeus_backups`) are always blocked.
+- Remote providers receive no private vault context by default.
 
-### Data Boundaries
+**Permission model:**
+- Read = ZEUS may use the path as context.
+- Write = ZEUS may propose write actions. Write never means silent execution.
+- V1 has no Trusted/Yolo mode.
 
-Keep these out of Git and normal app fixtures:
+**Code beats Brain:** Brain/Core Markdown may explain and configure behavior. It must not override code-side safety laws, permissions, vault profile validation, provider boundaries, or reviewed write flows.
 
-- Private user profiles such as `Oracle.md`
-- Private vault folders and personal projects
-- `.obsidian/`, `.zeus/`, `.zeus_backups/`
-- `node_modules/`
-- Local model caches, logs, and backup output
-
-The repository must remain usable without Beka's private vault data.
-
-### Action Model Rule
-
-Vault access must remain explicit and reviewable. Never silently broaden read/write scope.
-
-Risky future actions — batch edit, archive, link-safe rename, export, trusted writes — require stricter previews and approval flows before implementation.
+**Data boundaries — keep out of Git:**
+Private profiles (e.g. `Oracle.md`), vault data, `.obsidian/`, `.zeus/`, `.zeus_backups/`, `node_modules/`, model caches, backups. The repo must work without Beka's private vault.
 
 ---
 
@@ -71,36 +48,38 @@ Risky future actions — batch edit, archive, link-safe rename, export, trusted 
 
 ### Provider Design
 
-Providers generate model output only. They must not own vault access, permissions, backups, or safety decisions.
+Providers generate model output only.
 
-**Allowed:**
-- List models, stream responses, expose capabilities, generate embeddings.
+**Allowed:** list models, stream responses, expose capabilities, generate embeddings.
 
-**Not allowed:**
-- Directly read or write vault files.
-- Own vault access, review, backup, audit logging, or path checks.
-- Remote/cloud providers may not receive private vault context unless an explicit future approval flow exists.
+**Not allowed:** read or write vault files; own vault access, review, backup, audit logging, or path checks; receive private vault context without an explicit approval flow.
 
 Future provider UI slots are allowed only as named integration slots, not fake functionality.
 
 ### Module Ownership
 
-When adding behavior, identify the owner first. If the owner is unclear, update `docs/rebuild/ZEUS_V1_ARCHITECTURE.md` before coding.
+When adding behavior, identify the owner first. If unclear, update `docs/rebuild/ZEUS_V1_ARCHITECTURE.md` before coding.
 
 **Renderer modules:**
 
 | Module | Owns |
 |---|---|
 | `src/renderer/context/contextState.js` | Active target state only |
-| `src/renderer/context/contextIntent.js` | Generic intent groups only — no one-off typo or phrase lists |
+| `src/renderer/context/contextIntent.js` | Narrow intent groups only. No one-off phrase or typo lists. Prefer deterministic app-state actions over language guessing. |
+| `src/renderer/context/pendingActionState.js` | One open request-scoped scope clarification |
+| `src/renderer/context/blockedActionState.js` | Retryable blocked actions (missing R or W) |
+| `src/renderer/context/contextLimits.js` | Central request-size caps |
+| `src/renderer/context/folderContextController.js` | Selected-folder scope decisions |
 | `src/renderer/context/contextPackageBuilder.js` | Request-scoped provider context only |
 | `src/renderer/files/` | File tree navigation, selected path, reveal/open behavior |
 | `src/renderer/permissions/` | Read/Write state, inheritance display, recursive permission helpers |
+| `src/renderer/selectionActions/` | Deterministic actions for selected file/folder; app-state driven, not prompt-trigger driven |
+| `src/renderer/selection/` | Scoped selection: region-aware `Ctrl+A`, right-click select/copy |
 | `src/renderer/chat/` | Message rendering and provider request dispatch only |
 | `src/renderer/review/` | Proposal state, selection, status, previews, and execution handoff |
 | `src/renderer/markdown/` | Markdown rendering, preview, link resolution, preview history |
 | `src/renderer/shell/` | Layout composition and module wiring only |
-| `src/renderer/styles/` | Styling split by UI area with shared tokens in `tokens.css` |
+| `src/renderer/styles/` | Styling per UI area; shared tokens in `tokens.css` |
 
 **Main/shared modules:**
 
@@ -108,14 +87,35 @@ When adding behavior, identify the owner first. If the owner is unclear, update 
 |---|---|
 | `src/main/vault/` | Validated vault read/write/list services |
 | `src/main/providers/` | Provider health, model listing, chat/embedding calls only |
+| `src/main/safety/` | Path validation, dot-folder blocking |
+| `src/main/backup/` | Backup before existing-file changes |
+| `src/main/audit/` | Audit log entries |
+| `src/main/settings/` | Settings persistence and IPC |
 | `src/shared/actions/` | Action schema, proposal parsing, diff helpers |
 | `src/shared/vaultProfile/` | Folder roles and vault profile defaults |
+
+### Vault Folder Roles
+
+Use folder roles in code, not hard-coded names.
+Source of truth: `src/shared/vaultProfile/defaults.js` — always read the file before assuming role names.
+
+Phase 5.4 target (English defaults — may not yet be in code):
+```
+inbox     → 00_Inbox
+daily     → 01_Daily
+projects  → 02_Projects
+knowledge → 03_Knowledge
+brain     → 90_AI_Brain
+archive   → 99_Archive
+```
+
+If `defaults.js` still contains German names, that is the current canonical state. Do not change role names without Beka's explicit instruction.
 
 ### Code Rules
 
 - Keep provider logic separate from vault safety.
 - Keep prompt rules separate from UI rendering.
-- Renderer modules are browser-first: use loaded `window.Zeus...` APIs before any CommonJS `require(...)` fallback. `require(...)` in renderer modules is only for Node-based tests and must never be the primary browser path.
+- Renderer modules are browser-first: use `window.Zeus...` APIs before any `require(...)` fallback. `require(...)` exists only for Node tests.
 - Keep action schema shared and testable.
 - Add tests for safety-sensitive behavior.
 - Prefer small modules over large orchestration files.
@@ -127,82 +127,93 @@ When adding behavior, identify the owner first. If the owner is unclear, update 
 
 ### Architectural Principles
 
-- Do not solve architecture or model-behavior issues with narrow one-off patches.
 - Prefer structured app state over prompt-word guessing.
 - Do not accumulate phrase or typo lists unless Beka explicitly accepts them as temporary scaffolding.
+- Do not solve architecture or model-behavior issues with narrow one-off patches.
 - If a fix starts to look like a special case, stop and generalize through the owning module.
 - If no owning module exists, define the module boundary before implementing the behavior.
 - New behavior must be placed where future contributors would expect to find it.
-- Do not hide implemented behavior only in prompts, chat history, or undocumented assumptions.
+- Do not hide behavior only in prompts, chat history, or undocumented assumptions.
 
 ### Reasoning Mode
 
-Higher reasoning may be used for architecture, safety, and cross-module decisions. Implementation must stay conservative.
+Higher reasoning is for architecture, safety, and cross-module decisions. It is not permission to widen scope, add clever special cases, or perform larger edits than the current step needs.
 
-When working with high or extra-high reasoning:
+### Small Step Protocol
 
-- Do not add extra features beyond the current request.
-- Do not invent clever special cases.
-- Do not broaden scope because a larger idea seems attractive.
-- Prefer the smallest clean architectural cut over a quick local patch.
-- Explain when a task should be split before implementing it.
+For ordinary implementation work unless Beka asks for a larger batch:
 
-For small scoped implementation, use ordinary reasoning and follow existing module boundaries.
+1. State the goal in one sentence.
+2. Name the owning module(s).
+3. Touch the smallest practical file set — ideally one to three files.
+4. Do not combine unrelated UI, logic, documentation, and cleanup in one change.
+5. Run targeted tests for the changed behavior.
+6. Ask Beka to test visible UI behavior before moving to the next UI step.
+7. Run the full test suite before committing or before safety-sensitive claims.
+
+If a small task starts requiring many files or repeated fixes, stop and reframe it as an architecture step.
 
 ### Stop Conditions
 
-Pause and reassess before editing when any of these is true:
+Pause and reassess when any of these is true:
 
-- A fix would add a special-case word, phrase, typo, or prompt workaround.
+- A fix adds phrase/typo lists or hidden state instead of deterministic app logic.
 - A change touches more than two modules without a clear ownership reason.
 - A UI behavior requires hidden state that is not visible in the app flow.
-- A safety behavior exists only as prompt text rather than code enforcement.
+- A safety behavior exists only as prompt text, not code enforcement.
 - A test only protects an absurd single input instead of a general behavior.
 - A proposed shortcut would make future options, providers, vault profiles, or review flows harder.
 
-If a stop condition is hit: state the owning module and the general rule to implement before changing code.
+State the owning module and the general rule before changing code.
+
+### External Suggestions
+
+Treat suggestions from Claude, ChatGPT, audits, or other tools as design input only. Map each suggestion to ZEUS ownership boundaries, safety rules, and current V1 docs before implementing. If a suggestion does not fit the architecture, adapt the idea or decline it.
 
 ---
 
 ## 5. Workflow & Process
 
-### Context Loading
+### Context Loading — One-Doc Rule
 
-Load context intentionally. Do not read every V1 document for small or narrow changes.
+For a change touching one module, load exactly one doc.
+Load `FINAL_BRIEFING.md` only for cross-cutting changes spanning two or more doc areas.
 
-Read the most relevant active document before changing a related area:
+**Canonical source per area:**
 
-- Product scope or priorities → `docs/rebuild/ZEUS_V1_PRODUCT_BRIEF.md`
-- App structure or module boundaries → `docs/rebuild/ZEUS_V1_ARCHITECTURE.md`
-- Review basket, writes, diffs, or action execution → `docs/rebuild/ZEUS_V1_ACTION_MODEL.md`
-- Security, permissions, path handling, or provider boundaries → `docs/rebuild/ZEUS_V1_SAFETY_RULES.md`
-- Visible UI, workflows, shortcuts, Markdown preview, or layout → `docs/rebuild/ZEUS_V1_UI_AND_WORKFLOWS.md`
-- Tests, audits, release confidence, or validation strategy → `docs/rebuild/ZEUS_V1_TESTS_AND_AUDITS.md`
-- Rebuild process or repository hygiene → `docs/rebuild/ZEUS_V1_REBUILD_PROCESS.md`
+| Area | Canonical doc |
+|---|---|
+| Product scope or priorities | `docs/rebuild/ZEUS_V1_PRODUCT_BRIEF.md` |
+| Module boundaries, source structure, provider plan, folder roles | `docs/rebuild/ZEUS_V1_ARCHITECTURE.md` |
+| Review basket, writes, diffs, action execution | `docs/rebuild/ZEUS_V1_ACTION_MODEL.md` |
+| Security, permissions, path handling, provider boundaries | `docs/rebuild/ZEUS_V1_SAFETY_RULES.md` |
+| UI, workflows, shortcuts, Markdown preview, layout, context/permission UI | `docs/rebuild/ZEUS_V1_UI_AND_WORKFLOWS.md` |
+| Tests, audits, release confidence | `docs/rebuild/ZEUS_V1_TESTS_AND_AUDITS.md` |
+| Rebuild process, repository hygiene | `docs/rebuild/ZEUS_V1_REBUILD_PROCESS.md` |
+| Phase checklist and open tasks | `docs/rebuild/ZEUS_V1_IMPLEMENTATION_PLAN.md` |
+| Cross-cutting or freeze-gate decisions only | `docs/rebuild/ZEUS_V1_FINAL_BRIEFING.md` |
 
-For large cross-cutting changes, read all of the above plus `docs/rebuild/ZEUS_V1_FINAL_BRIEFING.md`.
-
-Avoid loading historical audit files unless the task explicitly asks for audit review or old decisions.
+Do not load historical audit files unless the task explicitly asks for audit review.
 
 ### Feature Evaluation
 
 Before adding a large feature, verify:
 
 - Does it improve Markdown/vault organization?
-- Does it make notes easier to maintain, connect, verify, or reuse?
 - Can it work through visible, reviewable actions?
 - Does it preserve local-first privacy?
-- Does it fit the current architecture, or does required groundwork need to happen first?
+- Does it fit the current architecture, or does groundwork need to happen first?
 
 If any answer is unclear, update the relevant V1 doc and ask Beka before implementing.
 
-### Before Committing
+### Verification Levels
 
-```bash
-npm test
-```
-
-Check Git status before committing. Do not commit private vault data, generated dependency folders, local backups, or unrelated user files.
+| Change type | Verification |
+|---|---|
+| Docs-only | Format/status check |
+| Small isolated code change | Targeted tests + syntax check |
+| UI shell, IPC, provider, context, permissions, or write flow | Targeted tests + full suite before claiming completion |
+| Before any commit | `npm test` |
 
 ---
 
@@ -210,83 +221,58 @@ Check Git status before committing. Do not commit private vault data, generated 
 
 ### UX Principle
 
-Important features must be visible in the app flow. Avoid hidden behavior where users must guess what ZEUS can do.
+Important features must be visible in the app flow. Prefer action cards, review baskets, previews, context bars, and status messages over hidden behavior.
 
-Prefer clear action cards, review baskets, previews, context bars, status messages, and settings. Recurring workflows should use custom app UI. Native dialogs are acceptable only as temporary scaffolding or OS file pickers.
+### CSS Rules
 
-### Theme & CSS Rules
+Use the CSS variable names established in `src/renderer/styles/tokens.css`. Keep naming Obsidian-compatible where possible:
 
-Keep styling centralized and theme-friendly. Use Obsidian-like CSS variable names:
+```
+--background-primary      --background-secondary
+--background-modifier-border
+--text-normal             --text-muted             --text-accent
+--interactive-accent
+--font-interface          --font-monospace
+```
 
-- `--background-primary`, `--background-secondary`, `--background-modifier-border`
-- `--text-normal`, `--text-muted`, `--text-accent`
-- `--interactive-accent`
-- `--font-interface`, `--font-monospace`
+Do not add short project-specific aliases (`--bg`, `--bg2`, `--amber`).
+Do not add inline CSS to `index.html`. Prefer focused files under `src/renderer/styles/`.
 
-Avoid short project-specific names like `--bg`, `--bg2`, `--amber`, or `--muted`.
+### Placeholder Rules
 
-Do not add inline CSS to `index.html` unless there is a narrow technical reason. Prefer focused files under `src/renderer/styles/`.
+A placeholder is allowed only for an intentional V1 scaffold near a near-future feature.
 
-### Placeholder & Future Slot Rules
+Every placeholder must be explicit:
+- UI: `data-future-slot="feature-name"`
+- Code: `TODO(V1:<feature-name>)` naming the future module
 
-Avoid placeholder code by default. A placeholder is allowed only when it is an intentional V1 scaffold for a near-future feature.
-
-Every placeholder must be explicit and searchable:
-
-- UI placeholders use clear DOM ids/classes and `data-future-slot="feature-name"` where useful.
-- Code placeholders include a `TODO(V1:<feature-name>)` comment naming the future module or owner.
-- Visual placeholders must be functional layout slots, not decorative filler.
-- Remove obsolete placeholders immediately when the real module is implemented.
+Remove obsolete placeholders immediately when the real module ships.
 
 ### UI Shell Verification
 
-After changing app shell, splash screen, layout mounting, script load order, or shared renderer wiring:
+After changing app shell, splash, layout mounting, script load order, or shared renderer wiring:
 
 1. Run `npm test`
-2. Verify the app starts
-3. Verify the splash `Open Vault` path is clickable
-4. Verify that the main visible panels still mount
-5. Add or update a regression test if the failure was caused by initialization order, missing handlers, or module load order
-
-Do not claim the UI shell is clean if these checks were not performed.
+2. Verify app starts
+3. Verify splash `Open Vault` path works
+4. Verify main panels still mount
+5. Add or update a regression test if the failure was caused by init order or module load order
 
 ---
 
-## 7. Operations
+## 7. Documentation Rule
 
-*These rules govern agent runtime behavior — not architecture.*
+When implementing or changing a visible feature, workflow, permission behavior, action type, provider behavior, or safety rule — update the relevant canonical doc in the same change.
 
-### Known Tool Friction
+**What to check:**
+- The specific V1 doc that owns the behavior (see canonical table in Section 5)
+- `README.md` only for user-facing feature, setup, release, or start command changes
+- `docs/rebuild/ZEUS_V1_FINAL_BRIEFING.md` only for cross-cutting or freeze-gate changes
 
-Handle recurring environment issues quietly and consistently:
-
-- If a read command fails because of a known Windows or sandbox issue, retry once with an equivalent approved command or a narrower read.
-- If a command fails because of sandboxing or restricted access, request escalation through the tool instead of inventing indirect workarounds.
-- If an optional external skill path is missing, note it briefly and continue with the closest manual process.
-- Do not over-explain repeated tool friction. Mention it only when it blocks the task or changes the result.
-- Prefer stable project-local checks (`npm test`, targeted `node --test`, `git diff --check`, `rg`) over exploratory command retries.
-
-### Execution Efficiency
-
-Reduce unnecessary token use without lowering safety:
-
-- For small changes, inspect only the owning module, its tests, and the relevant V1 doc.
-- Prefer targeted tests first, then full `npm test` before claiming completion.
-- Summarize repeated findings once — do not restate long historical context unless needed for a decision.
-- Keep user updates concise: what is being changed, what is intentionally not being changed, and what verification will run.
-- When a known issue already has a documented follow-up, reference the owning doc instead of re-discussing it.
+Docs should be short, active, and decision-oriented. Archive historical material instead of letting active docs grow into a diary.
 
 ---
 
-## 8. Documentation Rule
+## 8. Environment
 
-Docs should be short, active, and decision-oriented. Archive historical material instead of letting active docs become a long diary.
-
-When implementing or changing a visible feature, workflow, shortcut, permission behavior, action type, provider behavior, or safety rule — update the relevant active documentation in the same change.
-
-At minimum, check:
-- `README.md`
-- `docs/rebuild/ZEUS_V1_FINAL_BRIEFING.md`
-- The specific V1 doc that owns the behavior
-
-Do not leave implemented behavior only in code, chat history, or commit messages.
+See `docs/CODEX_SETUP.md` for tool friction, Windows/sandbox workarounds, and environment-specific commands.

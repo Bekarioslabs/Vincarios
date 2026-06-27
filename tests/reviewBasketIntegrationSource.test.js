@@ -126,6 +126,15 @@ test('review basket confirms update note proposals before execution', () => {
   assert.match(source, /proposal\.proposedContent/);
 });
 
+
+test('shell refreshes the file panel after a successful create note proposal', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /const vaultUi = \{ filePanel: null \}/);
+  assert.match(source, /executeReviewProposal\(api, proposal, vaultUi\)/);
+  assert.match(source, /vaultUi\.filePanel = filePanel/);
+  assert.match(source, /refreshFilePanelAfterWrite\(vaultUi\)/);
+});
 test('shell exposes auto-context toggle and passes context state into chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 

@@ -1,4 +1,4 @@
-﻿# ZEUS V1 Implementation Plan
+# ZEUS V1 Implementation Plan
 
 Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
 
@@ -77,6 +77,23 @@ Every remaining implementation phase must include focused tests for the behavior
 - [x] Model/capability display: model dropdown exists and Settings shows provider capability badges.
 - [x] Settings persistence in app/user-data storage.
 - [x] Focused provider/settings tests for provider URL validation, URL persistence, active provider/model persistence, limits persistence, vault role persistence, settings IPC/preload, capability display, and Settings renderer wiring. Abort tests are in place.
+
+## Phase 5.4 - UX Intent Foundation
+
+This phase is inserted before Reviewed Update Flow because V1 should not rely on broad language triggers for file/folder intent. The app should expose deterministic selection actions and clearer layout first, then let Phase 5.5 build reviewed updates on top of that foundation.
+
+- [ ] Rework the vault panel into a sustainable three-zone layout: top-left Files, top-right Selection Actions, and Markdown Preview below both columns at full vault-panel width.
+- [ ] Keep the layout responsive: files and actions must keep useful minimum widths; preview remains readable; scrolling stays local to Files, Actions, Preview, Chat, and Review Basket.
+- [ ] Add a focused Selection Actions module for selected folders/files. Actions are deterministic app flows, not guessed prompt intents.
+- [ ] Provide folder actions such as List folder, List with subfolders, Analyze folder, Find similar files, and role-aware Inbox Review where applicable.
+- [ ] Provide file actions such as Summarize file, Use as context, Propose update, Find related notes, and Reveal/Open preview.
+- [ ] Reduce `contextIntent` to narrow fallback detection only. Remove broad phrases and keep retry behavior tied to blocked app actions or explicit UI buttons.
+- [ ] Reorganize the left navigation into clean grouped actions. `Open Vault` stays prominent, `New Entry` stays collapsed by default, and future presets expand in a controlled list.
+- [ ] Rework Settings into a two-pane layout: left settings menu, right active settings category. Do not keep adding unrelated sections into one long modal body.
+- [ ] Improve YAML/frontmatter display in Markdown Preview as an Obsidian-like Properties area at the top, with later action hooks for metadata-related suggestions.
+- [ ] Create a clean English development test vault near the project folder and switch V1 default folder labels to English: `00_Inbox`, `01_Daily`, `02_Projects`, `03_Knowledge`, `90_AI_Brain`, `99_Archive`.
+- [ ] Restore scoped selection behavior: `Ctrl+A` selects only the active/hovered region, and right-click offers area-specific select/copy actions.
+- [ ] Track detachable preview as a near-future UX need, but do not implement it inside this phase unless the main layout still blocks V1 usability.
 
 ## Phase 5.5 - Reviewed Update Flow
 

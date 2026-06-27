@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   function mountShell(root, api) {
@@ -110,11 +110,12 @@
       root.appendChild(app);
       wireShellInteractions(app);
       const contextState = createContextState(app.querySelector('#context-value'), app);
-      const reviewBasket = window.ZeusReviewBasket ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal) }) : null;
+      const vaultUi = { filePanel: null };
+      const reviewBasket = window.ZeusReviewBasket ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) }) : null;
       if (window.ZeusProviderStatus) window.ZeusProviderStatus.mountProviderStatus({ api, app });
       if (window.ZeusSettingsPanel) window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status });
       if (window.ZeusChat) window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState });
-      wireVaultShell(api, app, contextState);
+      wireVaultShell(api, app, contextState, vaultUi);
       if (window.ZeusPaneResize) window.ZeusPaneResize.mountPaneResize(app);
     });
   }
@@ -163,7 +164,7 @@
   }
 
 
-  async function executeReviewProposal(api, proposal) {
+  async function executeReviewProposal(api, proposal, vaultUi) {
     if (!proposal) {
       return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
     }
@@ -174,11 +175,13 @@
       if (typeof api.vault.createNote !== 'function') {
         return { ok: false, code: 'write_unavailable', message: 'Vault create API unavailable.' };
       }
-      return api.vault.createNote({
+      const result = await api.vault.createNote({
         targetFolder: proposal.targetFolder,
         title: proposal.title,
         content: proposal.content
       });
+      if (result && result.ok) await refreshFilePanelAfterWrite(vaultUi);
+      return result;
     }
     if (proposal.type === 'update_note') {
       if (typeof api.vault.updateNote !== 'function') {
@@ -192,6 +195,16 @@
     }
     return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
   }
+
+  async function refreshFilePanelAfterWrite(vaultUi) {
+    const filePanel = vaultUi && vaultUi.filePanel;
+    if (!filePanel || typeof filePanel.refreshTree !== 'function') return;
+    try {
+      await filePanel.refreshTree();
+    } catch (error) {
+      // A refresh failure must not turn an already completed vault write into a failed write.
+    }
+  }
   async function getAppInfo(api) {
     if (api && typeof api.appInfo === 'function') {
       try {
@@ -203,7 +216,7 @@
     return { name: 'ZEUS Agent', version: '0.1.0' };
   }
 
-  function wireVaultShell(api, app, contextState) {
+  function wireVaultShell(api, app, contextState, vaultUi) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
     const contextValue = app.querySelector('#context-value');
@@ -241,6 +254,7 @@
       contextState,
       permissionState
     });
+    if (vaultUi) vaultUi.filePanel = filePanel;
 
     openButtons.forEach((openButton) => openButton.addEventListener('click', async () => {
       setText(statusBar, 'Opening vault...');

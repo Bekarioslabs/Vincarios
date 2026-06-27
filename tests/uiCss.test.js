@@ -71,3 +71,12 @@ test('diff review modal styles stay in the review stylesheet', () => {
   assert.match(source, /review-diff-line-add/);
   assert.match(source, /review-diff-line-remove/);
 });
+test('review basket polish stays isolated in review stylesheet', () => {
+  const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
+
+  assert.match(reviewCss, /\.review-clear-button\s*\{[\s\S]*background:\s*transparent;[\s\S]*color:\s*var\(--text-muted\);/);
+  assert.match(reviewCss, /\.review-execute-button\s*\{[\s\S]*background:\s*rgba\(var\(--interactive-accent-rgb\), \.1\);[\s\S]*color:\s*var\(--text-accent\);/);
+  assert.match(reviewCss, /\.review-basket-item-status\s*\{[\s\S]*border-radius:\s*999px;[\s\S]*letter-spacing:\s*\.06em;/);
+  assert.match(reviewCss, /\.review-basket-item\[data-status="failed"\] \.review-basket-item-status/);
+  assert.match(reviewCss, /\.review-basket-item\[data-type="create_note"\] \.review-basket-item-status/);
+});

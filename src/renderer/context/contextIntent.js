@@ -7,7 +7,7 @@
       /\b(diese|dieser|dieses|ausgewaehlte|ausgewahlte|aktuelle|current|selected)\b.*\b(datei|file|note|notiz|ordner|folder|bild|image)\b/,
       /\b(datei|file|note|notiz|ordner|folder|bild|image)\b.*\b(diese|dieser|dieses|ausgewaehlte|ausgewahlte|aktuelle|current|selected)\b/,
       /\b(check|schau|pruef|pruf|analysier|analyse|fasse|summarize|bearbeite|edit|ergaenze|erganze|fuege|fuge|update|verlinke)\b.*\b(datei|file|note|notiz|ordner|folder|bild|image|hier|this|it)\b/,
-      /\b(versuch es jetzt|und jetzt|jetzt nochmal|nochmal|try now|again)\b/,
+      /\b(versuch es jetzt|jetzt nochmal|nochmal|try now|again)\b/,
       /\b(hab(e)? es aktiviert|ist aktiviert|r ist an|read ist an|freigegeben|freigeschaltet)\b/,
       /\b(sie|datei|notiz|note|file)\b.*\b(selektiert|ausgewaehlt|ausgewahlt|selected)\b/,
       /\b(darauf|drauf)\b.*\b(zugreifen|zugriff|access)\b/,
