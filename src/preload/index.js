@@ -15,6 +15,9 @@ const IPC_CHANNELS = Object.freeze({
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET_PROVIDER_URL: 'settings:set-provider-url',
   SETTINGS_RESET_PROVIDER_URL: 'settings:reset-provider-url',
+  SETTINGS_SET_LIMITS: 'settings:set-limits',
+  SETTINGS_SET_VAULT_ROLE: 'settings:set-vault-role',
+  SETTINGS_RESET_VAULT_ROLE: 'settings:reset-vault-role',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',
@@ -59,6 +62,15 @@ const zeus = Object.freeze({
     },
     resetProviderUrl(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_RESET_PROVIDER_URL, payload);
+    },
+    setLimits(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_LIMITS, payload);
+    },
+    setVaultRole(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE, payload);
+    },
+    resetVaultRole(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE, payload);
     }
   }),
   vault: Object.freeze({

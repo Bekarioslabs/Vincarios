@@ -71,12 +71,12 @@ Every remaining implementation phase must include focused tests for the behavior
 - [x] Ollama chat baseline through the same registry, topbar provider/model controls, and native Ollama endpoints.
 - [x] Real chat abort: request id, `AbortController`, `chat:cancel` IPC, Send-to-Cancel UI state, and ignored late responses.
 - [x] Provider settings foundation: settings store categories, URL override UI/persistence, active provider persistence, and selected model persistence.
-- [ ] Limits settings UI: timeout, token/context limits, and analysis caps. Store defaults exist; visible editing remains open.
-- [ ] Vault Profile settings bridge: expose existing folder-role foundation without replacing the Phase 2 core profile logic.
+- [x] Limits settings UI: provider timeout, model-list timeout, selected-file context cap, folder/file listing caps, analysis file cap, and review suggestion cap.
+- [x] Vault Profile settings bridge: expose existing folder-role foundation without replacing the Phase 2 core profile logic.
 - [x] Local-provider URL validation.
-- [ ] Model/capability display. Model dropdown exists; capability display remains open.
+- [x] Model/capability display: model dropdown exists and Settings shows provider capability badges.
 - [x] Settings persistence in app/user-data storage.
-- [x] Focused provider/settings tests for provider URL validation, URL persistence, active provider/model persistence, settings IPC/preload, and Settings renderer wiring. Abort tests are in place.
+- [x] Focused provider/settings tests for provider URL validation, URL persistence, active provider/model persistence, limits persistence, vault role persistence, settings IPC/preload, capability display, and Settings renderer wiring. Abort tests are in place.
 
 ## Phase 5.5 - Reviewed Update Flow
 

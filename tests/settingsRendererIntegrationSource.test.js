@@ -42,6 +42,24 @@ test('settings panel owns provider URL override UI without vault access', () => 
   assert.doesNotMatch(source, /require\('node:fs'\)/);
 });
 
+test('settings panel exposes limits and vault profile sections through settings API', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+
+  assert.match(source, /Limits/);
+  assert.match(source, /Vault Profile/);
+  assert.match(source, /api\.settings\.setLimits/);
+  assert.match(source, /api\.settings\.setVaultRole/);
+  assert.match(source, /api\.settings\.resetVaultRole/);
+});
+
+test('settings panel displays provider capabilities without owning provider logic', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+
+  assert.match(source, /settings-capability-badges/);
+  assert.match(source, /formatCapabilities/);
+  assert.doesNotMatch(source, /buildChatRequestBody/);
+});
+
 test('settings styles stay in the settings stylesheet', () => {
   const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
@@ -49,4 +67,6 @@ test('settings styles stay in the settings stylesheet', () => {
   assert.match(index, /src\/renderer\/styles\/settings\.css/);
   assert.match(css, /\.settings-panel/);
   assert.match(css, /\.settings-provider-row/);
+  assert.match(css, /\.settings-limit-grid/);
+  assert.match(css, /\.settings-vault-role-row/);
 });

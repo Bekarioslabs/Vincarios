@@ -31,10 +31,25 @@ function createSettingsService(options) {
     return mergeProviderResult(storeResult, providerResult);
   }
 
+  function setLimits(payload) {
+    return settingsStore.setLimits(payload || {});
+  }
+
+  function setVaultProfileRole(role, folderPath) {
+    return settingsStore.setVaultProfileRole(role, folderPath);
+  }
+
+  function resetVaultProfileRole(role) {
+    return settingsStore.resetVaultProfileRole(role);
+  }
+
   return Object.freeze({
     getSettings,
     setProviderUrlOverride,
-    resetProviderUrlOverride
+    resetProviderUrlOverride,
+    setLimits,
+    setVaultProfileRole,
+    resetVaultProfileRole
   });
 }
 

@@ -1,6 +1,7 @@
-'use strict';
+﻿'use strict';
 
 const DEFAULT_PROVIDER_ID = 'lm-studio';
+const DEFAULT_PROVIDER_CAPABILITIES = Object.freeze({ chat: true, vision: false, embeddings: false });
 
 const PROVIDER_DEFINITIONS = Object.freeze([
   Object.freeze({
@@ -10,7 +11,8 @@ const PROVIDER_DEFINITIONS = Object.freeze([
     defaultBaseUrl: 'http://127.0.0.1:1234',
     modelsPath: '/v1/models',
     chatPath: '/v1/chat/completions',
-    defaultModel: 'auto'
+    defaultModel: 'auto',
+    capabilities: DEFAULT_PROVIDER_CAPABILITIES
   }),
   Object.freeze({
     id: 'ollama',
@@ -19,7 +21,8 @@ const PROVIDER_DEFINITIONS = Object.freeze([
     defaultBaseUrl: 'http://127.0.0.1:11434',
     modelsPath: '/api/tags',
     chatPath: '/api/chat',
-    defaultModel: 'auto'
+    defaultModel: 'auto',
+    capabilities: DEFAULT_PROVIDER_CAPABILITIES
   })
 ]);
 
@@ -41,7 +44,8 @@ function normalizeProviderSettings(options) {
       healthPath: definition.healthPath || definition.modelsPath,
       chatPath: definition.chatPath,
       defaultModel: definition.defaultModel,
-      selectedModel: normalizeModelName(selectedModels[definition.id] || definition.model || definition.defaultModel)
+      selectedModel: normalizeModelName(selectedModels[definition.id] || definition.model || definition.defaultModel),
+      capabilities: normalizeCapabilities(definition.capabilities)
     });
   });
   const activeProviderId = providers.some((provider) => provider.id === options.activeProviderId)
@@ -159,9 +163,20 @@ function normalizeProviderDefinition(provider) {
     modelsPath: String(provider && (provider.modelsPath || provider.healthPath) ? (provider.modelsPath || provider.healthPath) : '/v1/models').trim() || '/v1/models',
     healthPath: String(provider && (provider.healthPath || provider.modelsPath) ? (provider.healthPath || provider.modelsPath) : '/v1/models').trim() || '/v1/models',
     chatPath: String(provider && provider.chatPath ? provider.chatPath : '/v1/chat/completions').trim() || '/v1/chat/completions',
-    defaultModel: normalizeModelName(provider && (provider.defaultModel || provider.model))
+    defaultModel: normalizeModelName(provider && (provider.defaultModel || provider.model)),
+    capabilities: normalizeCapabilities(provider && provider.capabilities)
   });
 }
+
+function normalizeCapabilities(value) {
+  const input = value || {};
+  return Object.freeze({
+    chat: input.chat === false ? false : true,
+    vision: input.vision === true,
+    embeddings: input.embeddings === true
+  });
+}
+
 function normalizeBaseUrl(value) {
   return String(value || '').trim().replace(/\/+$/g, '');
 }
@@ -172,10 +187,12 @@ function normalizeModelName(value) {
 
 module.exports = {
   DEFAULT_PROVIDER_ID,
+  DEFAULT_PROVIDER_CAPABILITIES,
   PROVIDER_DEFINITIONS,
   createProviderSettingsState,
   normalizeProviderSettings,
   normalizeProviderDefinition,
+  normalizeCapabilities,
   normalizeBaseUrl,
   normalizeModelName
 };

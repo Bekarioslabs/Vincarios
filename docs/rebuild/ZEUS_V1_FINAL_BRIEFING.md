@@ -194,7 +194,7 @@ The default ships with V1 but must be implemented as a template/preset.
 
 ## Provider And Chat Request Control
 
-Current Phase 5 provider foundation: LM Studio uses default URL `http://127.0.0.1:1234` with OpenAI-compatible chat/model endpoints. Ollama uses default URL `http://127.0.0.1:11434` with native `/api/tags` and `/api/chat` endpoints. Both share the same provider registry, persisted active provider/model selection, and topbar provider/model dropdowns. Settings can override local provider URLs through a dedicated settings store, IPC bridge, and Settings panel without changing provider modules. Provider modules generate model output and model metadata only; they never read or write vault files.
+Current Phase 5 provider foundation: LM Studio uses default URL `http://127.0.0.1:1234` with OpenAI-compatible chat/model endpoints. Ollama uses default URL `http://127.0.0.1:11434` with native `/api/tags` and `/api/chat` endpoints. Both share the same provider registry, persisted active provider/model selection, provider capability display, and topbar provider/model dropdowns. Settings can override local provider URLs, edit V1 limits, and override vault folder roles through a dedicated settings store, IPC bridge, and Settings panel without changing provider modules. Provider modules generate model output and model metadata only; they never read or write vault files.
 
 Current chat cancellation: running provider requests use request ids, `AbortController`, `chat:cancel` IPC, Send-to-Cancel button state, and late-response protection. Cancel is a real provider abort, not only UI-side ignoring.
 
@@ -203,8 +203,8 @@ Current chat cancellation: running provider requests use request ids, `AbortCont
 V1 Options:
 
 - Vault Profile
-- Providers: persisted local URL overrides, active provider, selected model
-- Limits
+- Providers: persisted local URL overrides, active provider, selected model, capability display
+- Limits: provider timeout, model-list timeout, context/listing/analysis/review caps
 - Embeddings
 - Safety
 - Templates

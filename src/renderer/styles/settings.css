@@ -188,3 +188,84 @@
     justify-content: flex-end;
   }
 }
+.settings-limit-grid,
+.settings-vault-role-list {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-limit-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.settings-limit-field {
+  display: grid;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.settings-limit-field input,
+.settings-vault-role-path {
+  min-width: 0;
+  width: 100%;
+  height: 32px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  outline: none;
+  background: var(--background-modifier-form-field);
+  color: var(--text-normal);
+  padding: 6px 8px;
+  font-family: var(--font-monospace);
+  font-size: 11px;
+}
+
+.settings-limit-field input:focus,
+.settings-vault-role-path:focus {
+  border-color: rgba(var(--interactive-accent-rgb), .75);
+}
+
+.settings-section-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settings-vault-role-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 170px) minmax(180px, 1fr) auto;
+  align-items: end;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+}
+
+.settings-vault-role-meta {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.settings-vault-role-meta strong {
+  color: var(--text-normal);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.settings-vault-role-meta span,
+.settings-capability-badges {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.settings-capability-badges {
+  color: var(--text-accent);
+}
+
+@media (max-width: 960px) {
+  .settings-limit-grid,
+  .settings-vault-role-row {
+    grid-template-columns: 1fr;
+  }
+}

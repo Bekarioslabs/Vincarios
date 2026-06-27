@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -97,4 +97,15 @@ test('provider settings state can update and reset provider URL overrides', () =
 
   assert.equal(reset.ok, true);
   assert.equal(state.getProviders().find((provider) => provider.id === 'ollama').baseUrl, 'http://127.0.0.1:11434');
+});
+
+test('provider registry exposes provider capability flags for UI display', () => {
+  const settings = normalizeProviderSettings();
+
+  assert.deepEqual(settings.providers[0].capabilities, {
+    chat: true,
+    vision: false,
+    embeddings: false
+  });
+  assert.equal(settings.providers[1].capabilities.chat, true);
 });

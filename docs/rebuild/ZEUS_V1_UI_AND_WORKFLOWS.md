@@ -275,12 +275,14 @@ The Settings screen is a dedicated renderer module, not shell logic.
 
 Current V1 Settings implementation:
 
-- `Providers` exposes LM Studio/Ollama URL overrides.
+- `Providers` exposes LM Studio/Ollama URL overrides, provider capability badges, active provider persistence, and selected model persistence.
 - Provider URLs are validated and persisted through main-process settings services.
 - Active provider and selected model are persisted through the provider model service.
 - Saving or resetting a provider URL refreshes provider status through an app event, not through direct module coupling.
+- `Limits` exposes the V1 caps for provider timeout, model-list timeout, selected-file context, folder/file listing, analysis file count, and review suggestion count.
+- `Vault Profile` exposes folder-role overrides through the settings bridge while preserving the Phase 2 vault-profile defaults and helpers.
 
-Future sections such as Limits, Vault Profile, Embeddings, Safety, and Templates must extend the same settings store categories instead of creating parallel config files or provider-specific state.
+Future sections such as Embeddings, Safety, Templates, hotkeys, and themes must extend the same settings store categories instead of creating parallel config files or provider-specific state.
 
 ## Options Menu Decisions
 

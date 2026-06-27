@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -21,6 +21,7 @@ test('settings normalize into future-proof categories', () => {
   assert.equal(settings.providers.activeProviderId, 'ollama');
   assert.equal(settings.providers.urlOverrides.ollama, 'http://localhost:11435');
   assert.equal(typeof settings.limits.providerTimeoutMs, 'number');
+  assert.equal(typeof settings.limits.maxSelectedFileChars, 'number');
   assert.deepEqual(settings.vaultProfile.roles, {});
   assert.equal(settings.theme.mode, 'dark');
   assert.equal(settings.safety.reviewRequired, true);
@@ -59,6 +60,7 @@ test('settings store persists provider URL overrides', () => {
   const reloaded = createSettingsStore({ filePath });
   assert.equal(reloaded.getSettings().providers.urlOverrides.ollama, 'http://localhost:11435');
 });
+
 test('settings store persists active provider and selected model', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
   const filePath = path.join(dir, 'settings.json');
@@ -70,4 +72,41 @@ test('settings store persists active provider and selected model', () => {
   const reloaded = createSettingsStore({ filePath });
   assert.equal(reloaded.getSettings().providers.activeProviderId, 'ollama');
   assert.equal(reloaded.getSettings().providers.selectedModels.ollama, 'qwen2.5:7b');
+});
+
+test('settings store persists limits with normalized positive values', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const filePath = path.join(dir, 'settings.json');
+  const store = createSettingsStore({ filePath });
+
+  const result = store.setLimits({
+    providerTimeoutMs: 45000,
+    modelListTimeoutMs: 2500,
+    maxSelectedFileChars: 9000,
+    maxListedFolders: 80,
+    maxListedFiles: 300,
+    maxAnalysisFiles: 25,
+    maxSuggestionsPerReview: 12
+  });
+
+  assert.equal(result.ok, true);
+  const reloaded = createSettingsStore({ filePath });
+  assert.equal(reloaded.getSettings().limits.providerTimeoutMs, 45000);
+  assert.equal(reloaded.getSettings().limits.modelListTimeoutMs, 2500);
+  assert.equal(reloaded.getSettings().limits.maxSelectedFileChars, 9000);
+  assert.equal(reloaded.getSettings().limits.maxListedFolders, 80);
+  assert.equal(reloaded.getSettings().limits.maxListedFiles, 300);
+  assert.equal(reloaded.getSettings().limits.maxAnalysisFiles, 25);
+  assert.equal(reloaded.getSettings().limits.maxSuggestionsPerReview, 12);
+});
+
+test('settings store persists vault profile role overrides and can reset them', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const filePath = path.join(dir, 'settings.json');
+  const store = createSettingsStore({ filePath });
+
+  assert.equal(store.setVaultProfileRole('projects', 'Custom Projects/Active').ok, true);
+  assert.equal(store.getSettings().vaultProfile.roles.projects, 'Custom Projects/Active');
+  assert.equal(store.resetVaultProfileRole('projects').ok, true);
+  assert.equal(store.getSettings().vaultProfile.roles.projects, undefined);
 });

@@ -90,12 +90,12 @@ Settings are app configuration, not provider logic.
 V1 Settings categories:
 
 - `providers`: active provider, selected models, local URL overrides.
-- `limits`: provider timeout, model-list timeout, context and analysis caps.
-- `vaultProfile`: folder roles and profile overrides.
+- `limits`: provider timeout, model-list timeout, selected-file context cap, folder/file listing caps, analysis file cap, and review suggestion cap.
+- `vaultProfile`: folder role overrides for Inbox, Daily, Projects, Knowledge, Brain, and Archive.
 - `theme`: basic mode/accent readiness through CSS variables.
 - `safety`: review-required and future trusted-mode flags. Trusted mode is not V1 behavior.
 
-The settings store persists normalized JSON under Electron `userData`. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules.
+The settings store persists normalized JSON under Electron `userData`. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules. The Vault Profile settings bridge exposes role overrides for future consumers; it does not replace the Phase 2 folder-role helpers.
 
 ## Provider Plan
 
