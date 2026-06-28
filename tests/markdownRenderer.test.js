@@ -2,6 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
 const { renderMarkdown } = require('../src/renderer/markdown/markdownRenderer');
 
 test('renders YAML frontmatter as visible properties block', () => {
@@ -42,3 +43,33 @@ test('renders fenced code blocks without interpreting Markdown inside', () => {
   assert.match(html, /\*\*no bold\*\*/);
   assert.doesNotMatch(html, /<strong>no bold<\/strong>/);
 });
+
+test('renders tilde code fences without interpreting Markdown inside', () => {
+  const html = renderMarkdown('~~~md\n**no bold**\n~~~');
+
+  assert.match(html, /<pre><code class="language-md">/);
+  assert.match(html, /\*\*no bold\*\*/);
+  assert.doesNotMatch(html, /<strong>no bold<\/strong>/);
+});
+
+test('renders Obsidian-style four-backtick code fences without hanging', () => {
+  const script = [
+    "const { renderMarkdown } = require('./src/renderer/markdown/markdownRenderer');",
+    "const html = renderMarkdown('````markdown\\n# AI Briefing\\n````');",
+    "console.log(html);"
+  ].join(' ');
+  const result = spawnSync(process.execPath, ['-e', script], {
+    cwd: pathToProjectRoot(),
+    encoding: 'utf8',
+    timeout: 1000
+  });
+
+  assert.notEqual(result.error && result.error.code, 'ETIMEDOUT');
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /<pre><code class="language-markdown">/);
+  assert.match(result.stdout, /# AI Briefing/);
+});
+
+function pathToProjectRoot() {
+  return require('node:path').join(__dirname, '..');
+}

@@ -71,7 +71,9 @@ docs/
 
 App logic should use folder roles instead of hard-coded vault folder names.
 
-Default roles ship with the ZEUS starter structure:
+Current source of truth: `src/shared/vaultProfile/defaults.js`. Always read that file before assuming role names. If it still contains German folder names, those names are the current canonical implementation state.
+
+Current prototype-derived defaults may include:
 
 ```text
 inbox     -> 00_Inbox
@@ -82,9 +84,18 @@ brain     -> 90_AI_Brain
 archive   -> 99_Archiv
 ```
 
-Consumers should ask for roles such as `inbox`, `projects`, or `knowledge` through `src/shared/vaultProfile/defaults.js`. They should not hard-code these default folder names in workflow logic. Forks and future Options UI can add or override roles through the profile without rewriting consumers.
+Phase 5.4 target defaults are English:
 
+```text
+inbox     -> 00_Inbox
+daily     -> 01_Daily
+projects  -> 02_Projects
+knowledge -> 03_Knowledge
+brain     -> 90_AI_Brain
+archive   -> 99_Archive
+```
 
+Consumers should ask for roles such as `inbox`, `projects`, or `knowledge` through the vault profile helpers. They should not hard-code default folder names in workflow logic. Forks and future Options UI can add or override roles through the profile without rewriting consumers.
 ## Settings Plan
 
 Settings are app configuration, not provider logic.
@@ -163,9 +174,9 @@ Run a focused audit after each block:
 - `chat` renders messages and sends model requests; it does not own vault writes.
 - `review` owns proposal state, selected items, statuses, and execution requests.
 - `files` owns file tree navigation and selected path state.
-- `selectionActions` owns deterministic actions shown for the currently selected file/folder. It must use app state and action registries, not broad prompt phrases.
+- `selectionActions` owns deterministic actions shown for the currently selected file/folder. It must use app state and action registries, not broad prompt phrases. `actionCategories` owns behavior color categories, `actionRegistry` owns target-to-action mapping, and `mountSelectionActions` owns the visible panel.
 - `selection` owns scoped selection behavior such as region-aware `Ctrl+A` and right-click select/copy commands.
-- `context` is split by responsibility: `contextState` stores the active target, `pendingActionState` stores one open request-scoped clarification, `blockedActionState` stores retryable app actions that were blocked by missing permissions or stale target state, `contextIntent` detects selected-file/folder intent from user prompts, `contextLimits` owns central request-size caps, `folderContextController` owns selected-folder scope decisions, and `contextPackageBuilder` builds request-scoped provider context from those inputs. Future dropped Markdown files, folder indexes, and embedding candidates should extend this module family instead of adding hidden rules to chat or file-tree code.
+- `context` is split by responsibility: `contextState` stores the active target and explicit Context Basket items, `mountContextBasket` owns the visible basket UI, `pendingActionState` stores one open request-scoped clarification, `blockedActionState` stores retryable app actions that were blocked by missing permissions or stale target state, `contextIntent` remains a narrow fallback only, `contextLimits` owns central request-size caps, `folderContextController` owns selected-folder scope decisions, and `contextPackageBuilder` builds request-scoped provider context from explicit Context Basket items. Future dropped Markdown files, folder indexes, and embedding candidates should extend this module family instead of adding hidden rules to chat or file-tree code.
 - `permissions` owns Read/Write state and inheritance display.
 - `providers` talk to LM Studio/Ollama; they never access files.
 - `vault` reads/writes/lists files only after safety validation.

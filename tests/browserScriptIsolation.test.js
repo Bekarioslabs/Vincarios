@@ -32,3 +32,10 @@ test('index loads all isolated shared scripts before renderer script modules', (
     assert.equal(scriptIndex < firstRendererScript, true, htmlPath);
   });
 });
+test('index does not contain visible escaped newline literals', () => {
+  const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  assert.equal(index.includes('`r'), false);
+  assert.equal(index.includes('`n'), false);
+  assert.equal(index.includes('\\r\\n'), false);
+});

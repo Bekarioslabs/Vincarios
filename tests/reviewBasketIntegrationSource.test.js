@@ -135,12 +135,16 @@ test('shell refreshes the file panel after a successful create note proposal', (
   assert.match(source, /vaultUi\.filePanel = filePanel/);
   assert.match(source, /refreshFilePanelAfterWrite\(vaultUi\)/);
 });
-test('shell exposes auto-context toggle and passes context state into chat', () => {
+test('shell exposes context basket and passes context state into chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /id="active-context-toggle"/);
-  assert.match(source, /setAutoContextEnabled/);
+  assert.match(source, /id="context-basket"/);
+  assert.match(source, /id="context-basket-items"/);
+  assert.match(source, /id="context-clear-all"/);
+  assert.match(source, /ZeusContextBasket\.mountContextBasket/);
   assert.match(source, /mountChat\(\{ api, app, status, reviewBasket, contextState \}\)/);
+  assert.doesNotMatch(source, /active-context-toggle/);
+  assert.doesNotMatch(source, /setAutoContextEnabled/);
 });
 
 test('chat builds request-scoped context without storing it in chat history', () => {
@@ -165,6 +169,7 @@ test('index loads context intent and folder controller before chat uses context 
   const folderControllerIndex = source.indexOf('./src/renderer/context/folderContextController.js');
   const stateIndex = source.indexOf('./src/renderer/context/contextState.js');
   const packageIndex = source.indexOf('./src/renderer/context/contextPackageBuilder.js');
+  const basketIndex = source.indexOf('./src/renderer/context/mountContextBasket.js');
   const runnerIndex = source.indexOf('./src/renderer/chat/modelReadActionRunner.js');
   const preflightIndex = source.indexOf('./src/renderer/chat/readContextPreflight.js');
   const chatIndex = source.indexOf('./src/renderer/chat/mountChat.js');
@@ -175,7 +180,8 @@ test('index loads context intent and folder controller before chat uses context 
   assert.equal(folderControllerIndex > blockedIndex, true);
   assert.equal(stateIndex > folderControllerIndex, true);
   assert.equal(packageIndex > stateIndex, true);
-  assert.equal(runnerIndex > packageIndex, true);
+  assert.equal(basketIndex > packageIndex, true);
+  assert.equal(runnerIndex > basketIndex, true);
   assert.equal(preflightIndex > runnerIndex, true);
   assert.equal(chatIndex > preflightIndex, true);
 });

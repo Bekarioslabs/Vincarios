@@ -65,16 +65,16 @@
         continue;
       }
 
-      const fence = line.match(/^```([^`]*)\s*$/);
+      const fence = matchFenceStart(line);
       if (fence) {
         const codeLines = [];
         i += 1;
-        while (i < lines.length && !/^```\s*$/.test(lines[i])) {
+        while (i < lines.length && !isFenceEnd(lines[i], fence)) {
           codeLines.push(lines[i]);
           i += 1;
         }
         if (i < lines.length) i += 1;
-        const language = fence[1].trim();
+        const language = fence.info.trim();
         const className = language ? ' class="language-' + escapeAttribute(language) + '"' : '';
         output.push('<pre><code' + className + '>' + escapeHtml(codeLines.join('\n')) + '</code></pre>');
         continue;
@@ -144,13 +144,29 @@
 
   function isBlockStart(lines, index) {
     const line = lines[index] || '';
-    return /^```/.test(line) ||
+    return Boolean(matchFenceStart(line)) ||
       isTableStart(lines, index) ||
       /^(#{1,6})\s+/.test(line) ||
       /^\s*---+\s*$/.test(line) ||
       /^>\s?/.test(line) ||
       /^\s*[-*+]\s+/.test(line) ||
       /^\s*\d+\.\s+/.test(line);
+  }
+
+  function matchFenceStart(line) {
+    const match = String(line || '').match(/^\s*(`{3,}|~{3,})(.*)$/);
+    if (!match) return null;
+    const marker = match[1];
+    const info = match[2] || '';
+    if (marker[0] === '`' && info.includes('`')) return null;
+    return { char: marker[0], length: marker.length, info };
+  }
+
+  function isFenceEnd(line, fence) {
+    if (!fence) return false;
+    const escaped = fence.char === '`' ? '`' : '~';
+    const pattern = new RegExp('^\\s*' + escaped + '{' + fence.length + ',}\\s*$');
+    return pattern.test(String(line || ''));
   }
 
   function renderParagraphs(text) {

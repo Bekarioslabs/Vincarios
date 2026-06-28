@@ -64,12 +64,14 @@
         '          <div class="mini-panel-empty">No suggestions yet.</div>',
         '        </div>',
         '      </section>',
-        '      <section class="context-slot" aria-label="Active context" data-future-slot="context-bar">',
-        '        <label class="context-toggle" title="Include selected Markdown files as request-scoped context when relevant.">',
-        '          <input id="active-context-toggle" type="checkbox" checked>',
-        '          <span>Auto-context</span>',
-        '        </label>',
-        '        <span id="context-value" class="context-value">No vault open.</span>',
+        '      <section id="context-basket" class="context-slot" aria-label="Context Basket">',
+        '        <div class="context-basket-header">',
+        '          <div class="mini-panel-title">Context Basket</div>',
+        '          <button id="context-clear-all" class="context-clear-button" type="button" disabled>Clear all</button>',
+        '        </div>',
+        '        <div id="context-basket-items" class="context-basket-items">',
+        '          <div class="mini-panel-empty">No context items.</div>',
+        '        </div>',
         '      </section>',
         '      <section class="input-slot" aria-label="Chat input">',
         '        <textarea id="chat-input" class="chat-input-shell" rows="1" placeholder="Write something..." readonly aria-disabled="true"></textarea>',
@@ -82,7 +84,12 @@
         '    <section class="files-pane">',
         '      <div id="file-panel"></div>',
         '    </section>',
-        '    <div class="pane-resizer" data-resize="files" title="Resize files and preview"></div>',
+        '    <div class="pane-resizer" data-resize="files" title="Resize files and actions"></div>',
+        '    <aside class="selection-actions-pane" data-future-slot="selection-actions" aria-label="Selection actions">',
+        '      <div class="selection-actions-header">Selection Actions</div>',
+        '      <div class="selection-actions-empty">Select a file or folder.</div>',
+        '    </aside>',
+        '    <div class="pane-resizer pane-resizer-horizontal" data-resize="preview" title="Resize preview"></div>',
         '    <section class="preview-pane">',
         '      <div class="markdown-preview-shell">',
         '        <div class="markdown-preview-toolbar">',
@@ -109,33 +116,23 @@
       app.appendChild(status);
       root.appendChild(app);
       wireShellInteractions(app);
-      const contextState = createContextState(app.querySelector('#context-value'), app);
+      const contextState = createContextState();
       const vaultUi = { filePanel: null };
       const reviewBasket = window.ZeusReviewBasket ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) }) : null;
       if (window.ZeusProviderStatus) window.ZeusProviderStatus.mountProviderStatus({ api, app });
       if (window.ZeusSettingsPanel) window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status });
       if (window.ZeusChat) window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState });
+      if (window.ZeusContextBasket) window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) });
+      if (window.ZeusSelectionActions) window.ZeusSelectionActions.mountSelectionActions({ app, contextState, reviewBasket, status });
       wireVaultShell(api, app, contextState, vaultUi);
       if (window.ZeusPaneResize) window.ZeusPaneResize.mountPaneResize(app);
     });
   }
 
 
-  function createContextState(contextValue, app) {
+  function createContextState() {
     if (!window.ZeusContextState) return null;
-    const toggle = app ? app.querySelector('#active-context-toggle') : null;
-    const state = window.ZeusContextState.createContextState({
-      onChange(snapshot) {
-        setText(contextValue, snapshot.label);
-        if (toggle) toggle.checked = snapshot.autoContextEnabled === true;
-      }
-    });
-    if (toggle) {
-      toggle.addEventListener('change', () => {
-        state.setAutoContextEnabled(toggle.checked);
-      });
-    }
-    return state;
+    return window.ZeusContextState.createContextState();
   }
 
   function createPermissionState(statusBar) {
@@ -164,6 +161,13 @@
   }
 
 
+
+  function revealContextItem(vaultUi, item) {
+    const filePanel = vaultUi && vaultUi.filePanel;
+    if (!item || !filePanel) return;
+    if (item.kind === 'file' && typeof filePanel.revealPath === 'function') filePanel.revealPath(item.path);
+    if (item.kind === 'folder' && typeof filePanel.revealFolder === 'function') filePanel.revealFolder(item.path);
+  }
   async function executeReviewProposal(api, proposal, vaultUi) {
     if (!proposal) {
       return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
@@ -219,7 +223,6 @@
   function wireVaultShell(api, app, contextState, vaultUi) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
-    const contextValue = app.querySelector('#context-value');
     const statusBar = app.querySelector('#status-bar');
     let filePanel = null;
     const previewController = window.ZeusMarkdownPreview
@@ -250,7 +253,6 @@
       root: filePanelRoot,
       previewController,
       status: statusBar,
-      context: contextValue,
       contextState,
       permissionState
     });
@@ -265,7 +267,6 @@
       }
 
       const vaultName = baseName(selected.root);
-      setText(contextValue, 'Vault: ' + selected.root);
       setText(statusBar, 'Vault opened.');
       app.classList.remove('is-start');
       filePanel.setVaultName(vaultName || 'Vault');

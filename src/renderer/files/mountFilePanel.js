@@ -167,7 +167,7 @@
       if (entry.kind === 'folder') {
         navigator.toggleFolder(entry.path);
         if (contextState) contextState.setFolder(entry.path, { readAllowed: canUsePathAsContext(entry.path) });
-        else setText(context, 'Context folder: ' + entry.path + '/');
+        else setText(context, 'Selection folder: ' + entry.path + '/');
         if (navigator.isExpanded(entry.path)) {
           setStatus('Listing ' + entry.path + '...');
           await ensureFolderLoaded(entry.path);
@@ -189,7 +189,7 @@
       }
       setPreviewSource(read.content, read.path);
       if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
-      else setText(context, 'Context file: ' + read.path);
+      else setText(context, 'Selection file: ' + read.path);
       setStatus('Read: ' + read.path);
     }
     async function openLinkedMarkdown(target, currentPath) {
@@ -207,7 +207,7 @@
           navigator.selectFile(read.path);
           setPreviewSource(read.content, read.path);
           if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
-          else setText(context, 'Context file: ' + read.path);
+          else setText(context, 'Selection file: ' + read.path);
           setStatus('Opened linked note: ' + read.path);
           return { ok: true, path: read.path };
         }
@@ -228,6 +228,19 @@
       navigator.selectFile(normalizedPath);
       renderTree();
       setStatus('Revealed in Files: ' + normalizedPath);
+      return { ok: true, path: normalizedPath };
+    }
+    async function revealFolder(path) {
+      const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
+      const folders = ancestorFolders(normalizedPath + '/placeholder.md');
+      for (const folder of folders) {
+        navigator.expandFolder(folder);
+        await ensureFolderLoaded(folder);
+      }
+      navigator.selectFolder(normalizedPath);
+      if (contextState) contextState.setFolder(normalizedPath, { readAllowed: canUsePathAsContext(normalizedPath) });
+      renderTree();
+      setStatus('Revealed in Files: ' + (normalizedPath || 'Vault root'));
       return { ok: true, path: normalizedPath };
     }
 
@@ -411,6 +424,7 @@
       setVaultName,
       openLinkedMarkdown,
       revealPath,
+      revealFolder,
       navigator
     };
   }

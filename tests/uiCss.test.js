@@ -80,3 +80,27 @@ test('review basket polish stays isolated in review stylesheet', () => {
   assert.match(reviewCss, /\.review-basket-item\[data-status="failed"\] \.review-basket-item-status/);
   assert.match(reviewCss, /\.review-basket-item\[data-type="create_note"\] \.review-basket-item-status/);
 });
+test('vault panel layout places files and actions above full-width preview', () => {
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(shell, /class="selection-actions-pane"/);
+  assert.match(shell, /data-future-slot="selection-actions"/);
+  assert.match(layoutCss, /\.vault-panel\s*\{[\s\S]*display:\s*grid;/);
+  assert.match(layoutCss, /grid-template-columns:\s*minmax\(var\(--min-file-tree-width\), var\(--file-tree-width\)\)\s+7px\s+minmax\(220px, 1fr\);/);
+  assert.match(layoutCss, /grid-template-rows:\s*minmax\(180px, var\(--vault-top-height, 38%\)\)\s+7px\s+minmax\(var\(--min-preview-width\), 1fr\);/);
+  assert.match(layoutCss, /\.files-pane > #file-panel\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow:\s*hidden;/);
+  assert.match(layoutCss, /\.preview-pane\s*\{[\s\S]*grid-column:\s*1 \/ -1;/);
+});
+test('vault panel exposes horizontal and vertical resize handles', () => {
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const resizeSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'layout', 'paneResize.js'), 'utf8');
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+
+  assert.match(shell, /data-resize="files"/);
+  assert.match(shell, /data-resize="preview"/);
+  assert.match(resizeSource, /const previewHandle = app\.querySelector\('\[data-resize="preview"\]'\)/);
+  assert.match(resizeSource, /function resizePreview\(app, clientY\)/);
+  assert.match(resizeSource, /--vault-top-height/);
+  assert.match(tokensCss, /--vault-top-height:\s*38%;/);
+});

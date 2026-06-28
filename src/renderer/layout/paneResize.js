@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   function mountPaneResize(app) {
@@ -6,6 +6,7 @@
 
     const vaultHandle = app.querySelector('[data-resize="vault"]');
     const filesHandle = app.querySelector('[data-resize="files"]');
+    const previewHandle = app.querySelector('[data-resize="preview"]');
 
     const cleanup = [];
     if (vaultHandle) cleanup.push(bindHorizontalResize({
@@ -16,6 +17,11 @@
     if (filesHandle) cleanup.push(bindHorizontalResize({
       handle: filesHandle,
       onMove: (event) => resizeFiles(app, event.clientX)
+    }));
+
+    if (previewHandle) cleanup.push(bindHorizontalResize({
+      handle: previewHandle,
+      onMove: (event) => resizePreview(app, event.clientY)
     }));
 
     return {
@@ -76,15 +82,29 @@
 
     const rect = vaultPanel.getBoundingClientRect();
     const minFiles = readPx(app, '--min-file-tree-width', 170);
-    const minPreview = readPx(app, '--min-preview-width', 260);
+    const minActions = 220;
     const handleWidth = 7;
     const proposed = clientX - rect.left;
-    const maxFiles = rect.width - minPreview - handleWidth;
+    const maxFiles = rect.width - minActions - handleWidth;
     const next = clamp(proposed, minFiles, Math.max(minFiles, maxFiles));
 
     app.style.setProperty('--file-tree-width', Math.round(next) + 'px');
   }
 
+  function resizePreview(app, clientY) {
+    const vaultPanel = app.querySelector('.vault-panel');
+    if (!vaultPanel) return;
+
+    const rect = vaultPanel.getBoundingClientRect();
+    const minTop = 180;
+    const minPreview = readPx(app, '--min-preview-width', 260);
+    const handleHeight = 7;
+    const proposed = clientY - rect.top;
+    const maxTop = rect.height - minPreview - handleHeight;
+    const next = clamp(proposed, minTop, Math.max(minTop, maxTop));
+
+    app.style.setProperty('--vault-top-height', Math.round(next) + 'px');
+  }
   function readPx(node, name, fallback) {
     const value = getComputedStyle(node).getPropertyValue(name).trim();
     const parsed = Number.parseFloat(value);

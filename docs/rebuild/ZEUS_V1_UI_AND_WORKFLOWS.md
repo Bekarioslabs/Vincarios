@@ -217,26 +217,50 @@ Markdown rendering and Markdown navigation are separate blocks.
 
 This keeps Markdown rendering, vault path resolution, preview history, and file-tree reveal as separate modules instead of coupling them inside the renderer.
 
+
+## Selection Actions Decisions
+
+Selection Actions are deterministic app buttons for the currently selected file or folder. They are not prompt triggers.
+
+V1 action categories:
+
+- `Context`: adds explicit context or prepares a context source.
+- `Read`: lists, summarizes, or analyzes without writing.
+- `Write`: creates or updates only through reviewed write flows.
+- `Organize`: reserved for later move/rename/archive workflows.
+
+Initial V1 panel behavior:
+
+- selected Markdown file shows exactly three actions: `Summarize file`, `Use as context`, `Propose update`.
+- selected folder shows exactly three actions: `Use as context`, `List folder`, `Analyze folder`.
+- `Use as context` is active for readable folders and for readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content.
+- inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.
+- future custom actions belong behind Settings and must produce visible proposals or context items, not direct writes.
+
 ## Context System Decisions
 
-Auto-context is enabled by default and can be toggled in the context bar below the Review Basket.
+Selection and context are separate states.
 
-Selected Markdown context is request-scoped:
+Selected context is explicit, visible, request-scoped, and deterministic:
 
-- the selected file path is always visible in the context bar.
-- loaded Markdown content is attached to the provider request only when the user's prompt clearly refers to the selected/current file or note.
-- general questions must stay neutral and must not be forced into the selected file context.
-- attached selected-file content is not stored back into chat history.
-- if Auto-context is off, ZEUS may mention the selected path but must not claim to know the file content.
+- selecting a file or folder in Files only changes the active UI target; it does not add provider context.
+- the Context Basket below the Review Basket is the only selected-file/folder source attached to provider requests.
+- future Selection Actions add files or folders to the Context Basket through app logic, not through broad prompt interpretation.
+- Context Basket items can be clicked to reveal/select their target in Files.
+- Context Basket items can be removed individually with `x`, or cleared together with `Clear all`.
+- file context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time.
+- folder context items attach path context only. They do not include file names or file contents. Folder contents still require the existing app scope choice for current level or subfolders.
+- Context Basket target types are represented by neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`; action colors are reserved for action behavior categories.
+- Selection Actions use behavior categories with stable color slots: Context, Read, Write, and later Organize.
+- attached context is not stored back into chat history.
 - if Read is not active for the selected file/folder or one of its parent folders, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 - missing-Read blocks are retryable app actions. The chat should show a clear `Retry after enabling R` button tied to the exact selected file/folder and request. Missing-Write blocks must use the same shared blocked-action foundation with `Retry after enabling W`, but actual write execution gates belong to reviewed write flows. After the user enables the required permission, the button retries through app logic. If a matching blocked action is still open, narrow permission-confirmation text such as `es ist freigegeben` or `versuch es nochmal` may retry the same app action; without a matching blocked action, such text must not become a broad prompt trigger.
 - if the selected target changes before retry, the retry must stop with a clear mismatch message instead of applying the old blocked action to the new target.
 - if the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
 - folder-scoped follow-up prompts such as `find similar files in this folder` should map the selected file to its parent folder only when that parent folder has active `R`; ZEUS must not switch to generic local-file-upload language.
-- selected folder listing requests are handled by a request-scoped read-context preflight when `R` is active. Requests for all subfolders use recursive folder listing through repeated `listFolder` calls, but still read only folder/file names, not Markdown contents. Current-level and recursive listings use central context limits for maximum listed folders/files per request. Supported `list_folder` model-action envelopes remain a fallback and are executed through the preload vault API only when the requested folder is inside the active selected folder or selected-file parent folder. The raw tool-call text must not be displayed as the final answer. Context intent may tolerate simple adjacent-letter transpositions in central target words such as `folder` or `ordner`, but it must not grow into a one-off typo list or broad fuzzy prompt matcher.
+- selected folder listing requests are handled by a request-scoped read-context preflight when `R` is active. Requests for all subfolders use recursive folder listing through repeated `listFolder` calls, but still read only folder/file names, not Markdown contents. Current-level and recursive listings use central context limits for maximum listed folders/files per request. Supported `list_folder` model-action envelopes remain a fallback and are executed through the preload vault API only when the requested folder is inside the active selected folder or selected-file parent folder. The raw tool-call text must not be displayed as the final answer. Context intent must stay narrow and must not grow into one-off typo lists or broad fuzzy prompt matching.
 
 For selected folders:
-
 - ZEUS may use the folder path as the active target.
 - ZEUS must not blindly load every file in the folder without an explicit analysis workflow and limits.
 - Future Folder Context Index workflow: when a folder is selected, ZEUS may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
@@ -377,7 +401,7 @@ Top row:    Files | Selection Actions
 Bottom row: Markdown Preview across both columns
 ```
 
-Files stays compact and navigational. Selection Actions is a deterministic action surface for the currently selected file or folder. Markdown Preview uses the full width below both, because reading Markdown benefits from width more than the file tree does.
+Files stays compact and navigational. Selection Actions has the same top-row height as Files and owns its own scrolling. Markdown Preview spans the full vault-panel width below both top panes. Selection Actions is deterministic app UI for the currently selected file or folder, not another chat prompt surface.
 
 Responsive rules:
 
@@ -391,7 +415,7 @@ Responsive rules:
 
 The Selection Actions panel replaces broad prompt guessing with explicit app-side actions.
 
-For selected folders, V1 should start with actions such as:
+For selected folders, V1 starts with exactly three actions:
 
 - List folder
 - List with subfolders
@@ -399,7 +423,7 @@ For selected folders, V1 should start with actions such as:
 - Find similar files
 - Inbox Review when the selected path matches the configured Inbox role
 
-For selected Markdown files, V1 should start with actions such as:
+For selected Markdown files, V1 starts with exactly three actions:
 
 - Summarize file
 - Use as context
@@ -407,7 +431,7 @@ For selected Markdown files, V1 should start with actions such as:
 - Find related notes
 - Reveal/Open preview
 
-These actions should be registered through a focused selection-actions module. Adding a future action should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
+These actions should be registered through a focused selection-actions module. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
 
 ### Left Navigation Cleanup
 

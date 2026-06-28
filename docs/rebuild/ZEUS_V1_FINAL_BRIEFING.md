@@ -116,11 +116,13 @@ Reliable file updating is V1-critical. ZEUS must be able to turn chat or local E
 
 ## Context
 
-Auto-context is enabled by default and has a visible toggle in the context bar.
+Selection and provider context are separate states.
 
-Selected Markdown files are attached only for the current provider request, only when the user's prompt clearly targets the selected/current file or note. General questions stay neutral. Attached selected-file content is not stored in chat history.
+Selecting a file or folder in Files only changes the active UI target. It does not automatically attach content to provider requests.
 
-If Auto-context is off, ZEUS may know the selected path but must not claim to know the file content.
+The Context Basket is the explicit selected-file/folder context source. Items are added through app flows such as Selection Actions, shown below the Review Basket, removable individually, clearable together, and clickable to reveal/select their target in Files.
+
+File context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time. Folder context items attach path context only until the app asks for folder scope. Attached context is request-scoped and is not stored in chat history.
 
 If Read is not active for the selected file/folder or one of its parent folders, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 
@@ -130,8 +132,9 @@ Selected folders expose the folder path only. They are not blindly fully loaded.
 
 Future Folder Context Index: selected folders can be counted first, then listed and remembered only after user approval. Persistent folder indexes belong in `.zeus/` or a configured cache location, not blindly in normal vault notes. They should later combine with embeddings for folder candidates, similar-note lookup, and stale-index detection.
 
-Context package sources are visibly separated with source labels such as `selected_file` and `selected_folder`; future dropped Markdown and embedding candidate sources must use their own labels instead of blending into the active selection. Dropped `.md` files become temporary context immediately. They are not automatically imported into the vault. External dropped Markdown files get an `Import to Inbox` action.
+Context package sources are visibly separated with source labels such as `context_basket`; future dropped Markdown and embedding candidate sources must use their own labels instead of blending into the active selection. Dropped `.md` files become temporary context immediately. They are not automatically imported into the vault. External dropped Markdown files get an `Import to Inbox` action.
 
+Selection Actions are deterministic app buttons for selected targets. Action colors represent behavior categories (`Context`, `Read`, `Write`, later `Organize`); target types use neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`. The first active action is `Use as context` for readable folders and readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content. Other initial actions are visible V1 slots until their app flows are wired.
 ## Actions
 
 Read/search:

@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   const REQUIRED_RENDERER_MODULES = Object.freeze([
@@ -14,6 +14,10 @@
     { name: 'ZeusFolderContextController', globalName: 'ZeusFolderContextController', methods: ['runFolderContextFlow'] },
     { name: 'ZeusContextState', globalName: 'ZeusContextState', methods: ['createContextState', 'buildChatContextPackage'] },
     { name: 'ZeusContextPackageBuilder', globalName: 'ZeusContextPackageBuilder', methods: ['buildChatContextPackage'] },
+    { name: 'ZeusContextBasket', globalName: 'ZeusContextBasket', methods: ['mountContextBasket'] },
+    { name: 'ZeusSelectionActionCategories', globalName: 'ZeusSelectionActionCategories', methods: ['getActionCategory'] },
+    { name: 'ZeusSelectionActionRegistry', globalName: 'ZeusSelectionActionRegistry', methods: ['getSelectionActions', 'getTargetKind'] },
+    { name: 'ZeusSelectionActions', globalName: 'ZeusSelectionActions', methods: ['mountSelectionActions'] },
     { name: 'ZeusPermissionState', globalName: 'ZeusPermissionState' },
     { name: 'ZeusMarkdownRenderer', globalName: 'ZeusMarkdownRenderer', methods: ['renderMarkdown'] },
     { name: 'ZeusMarkdownPreview', globalName: 'ZeusMarkdownPreview' },

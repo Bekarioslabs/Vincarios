@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createContextState } = require('../src/renderer/context/contextState');
 
-test('context state starts empty and exposes a readable label', () => {
+test('context state starts with no selection and an empty context basket', () => {
   const context = createContextState();
 
   assert.deepEqual(context.snapshot(), {
@@ -14,59 +14,72 @@ test('context state starts empty and exposes a readable label', () => {
     content: '',
     readAllowed: false,
     parentReadAllowed: false,
-    autoContextEnabled: true,
-    label: 'No context target.'
+    contextItems: [],
+    label: 'No selection.'
   });
 });
 
-test('context state stores selected Markdown files as context targets', () => {
+test('context state stores selected Markdown files without adding them to context', () => {
   const context = createContextState();
-  const state = context.setFile('02_Projekte/StarLu/Tasks.md', { content: '# Tasks', parentReadAllowed: true });
+  const state = context.setFile('02_Projects/StarLu/Tasks.md', { content: '# Tasks', parentReadAllowed: true });
 
-  assert.deepEqual(state, {
-    kind: 'file',
-    selectionId: 1,
-    path: '02_Projekte/StarLu/Tasks.md',
-    content: '# Tasks',
-    readAllowed: true,
-    parentReadAllowed: true,
-    autoContextEnabled: true,
-    label: 'Context file: 02_Projekte/StarLu/Tasks.md'
-  });
-  assert.deepEqual(context.snapshot(), state);
+  assert.equal(state.kind, 'file');
+  assert.equal(state.path, '02_Projects/StarLu/Tasks.md');
+  assert.equal(state.content, '# Tasks');
+  assert.equal(state.parentReadAllowed, true);
+  assert.equal(state.label, 'Selected file: 02_Projects/StarLu/Tasks.md');
+  assert.deepEqual(state.contextItems, []);
 });
 
-test('context state stores selected folders as context targets', () => {
+test('context state stores selected folders without adding them to context', () => {
   const context = createContextState();
-  const state = context.setFolder('02_Projekte/StarLu');
+  const state = context.setFolder('02_Projects/StarLu');
 
-  assert.deepEqual(state, {
-    kind: 'folder',
-    selectionId: 1,
-    path: '02_Projekte/StarLu',
-    content: '',
-    readAllowed: true,
-    parentReadAllowed: false,
-    autoContextEnabled: true,
-    label: 'Context folder: 02_Projekte/StarLu/'
-  });
+  assert.equal(state.kind, 'folder');
+  assert.equal(state.path, '02_Projects/StarLu');
+  assert.equal(state.label, 'Selected folder: 02_Projects/StarLu/');
+  assert.deepEqual(state.contextItems, []);
 });
 
-test('context state can be cleared without leaking previous target', () => {
+test('context state can add, remove, and clear explicit context items', () => {
   const context = createContextState();
-  context.setFile('02_Projekte/StarLu/Tasks.md', { content: '# Tasks' });
 
-  assert.deepEqual(context.clear(), {
-    kind: 'none',
-    selectionId: 2,
-    path: '',
-    content: '',
-    readAllowed: false,
-    parentReadAllowed: false,
-    autoContextEnabled: true,
-    label: 'No context target.'
-  });
+  const withFile = context.addContextItem({ kind: 'file', path: 'A.md', content: '# A' });
+  assert.equal(withFile.contextItems.length, 1);
+  assert.equal(withFile.contextItems[0].path, 'A.md');
+
+  const withFolder = context.addContextItem({ kind: 'folder', path: 'Folder' });
+  assert.deepEqual(withFolder.contextItems.map((item) => item.path), ['A.md', 'Folder']);
+
+  const removed = context.removeContextItem(withFile.contextItems[0].id);
+  assert.deepEqual(removed.contextItems.map((item) => item.path), ['Folder']);
+
+  const cleared = context.clearContextItems();
+  assert.deepEqual(cleared.contextItems, []);
 });
+
+test('context state de-duplicates explicit context items by kind and path', () => {
+  const context = createContextState();
+
+  context.addContextItem({ kind: 'file', path: 'A.md', content: '# A1' });
+  const snapshot = context.addContextItem({ kind: 'file', path: 'A.md', content: '# A2' });
+
+  assert.equal(snapshot.contextItems.length, 1);
+  assert.equal(snapshot.contextItems[0].content, '# A2');
+});
+
+test('context state can clear selected target without clearing context basket', () => {
+  const context = createContextState();
+  context.setFile('A.md', { content: '# A' });
+  context.addContextItem({ kind: 'file', path: 'A.md', content: '# A' });
+
+  const cleared = context.clear();
+
+  assert.equal(cleared.kind, 'none');
+  assert.equal(cleared.selectionId, 2);
+  assert.deepEqual(cleared.contextItems.map((item) => item.path), ['A.md']);
+});
+
 test('context state assigns a new selection id for every selected target', () => {
   const context = createContextState();
 
@@ -75,22 +88,16 @@ test('context state assigns a new selection id for every selected target', () =>
   assert.equal(context.clear().selectionId, 3);
 });
 
-test('context state stores explicit folder read permission', () => {
+test('context state stores read permissions for selected targets', () => {
   const context = createContextState();
-  const state = context.setFolder('03_Wissen', { readAllowed: false });
-
-  assert.equal(state.readAllowed, false);
-  assert.equal(state.kind, 'folder');
-});
-
-test('context state stores selected file parent read permission separately', () => {
-  const context = createContextState();
-  const state = context.setFile('03_Wissen/Comics/A.md', {
+  const folder = context.setFolder('03_Knowledge', { readAllowed: false });
+  const file = context.setFile('03_Knowledge/Comics/A.md', {
     content: '# A',
     readAllowed: true,
     parentReadAllowed: true
   });
 
-  assert.equal(state.readAllowed, true);
-  assert.equal(state.parentReadAllowed, true);
+  assert.equal(folder.readAllowed, false);
+  assert.equal(file.readAllowed, true);
+  assert.equal(file.parentReadAllowed, true);
 });
