@@ -1,4 +1,4 @@
-﻿.settings-backdrop {
+.settings-backdrop {
   position: absolute;
   inset: 0;
   z-index: 30;
@@ -268,4 +268,9 @@
   .settings-vault-role-row {
     grid-template-columns: 1fr;
   }
+}
+
+.settings-close-icon {
+  width: 14px;
+  height: 14px;
 }

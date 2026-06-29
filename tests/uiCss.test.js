@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -23,7 +23,7 @@ test('permission buttons have explicit inactive and active styling', () => {
 test('permission controls sit before file icons in the tree grid', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
 
-  assert.match(css, /grid-template-columns:\s*auto\s+14px\s+minmax\(0, 1fr\);/);
+  assert.match(css, /grid-template-columns:\s*auto\s+30px\s+minmax\(0, 1fr\);/);
   assert.match(css, /\.file-permission-controls\s*\{[\s\S]*margin-left:\s*0;/);
 });
 test('review basket styles stay in the review stylesheet', () => {
@@ -103,4 +103,26 @@ test('vault panel exposes horizontal and vertical resize handles', () => {
   assert.match(resizeSource, /function resizePreview\(app, clientY\)/);
   assert.match(resizeSource, /--vault-top-height/);
   assert.match(tokensCss, /--vault-top-height:\s*38%;/);
+});
+
+test('chat pending messages expose a lightweight spinner animation', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.chat-message-pending \.chat-message-body::before/);
+  assert.match(css, /@keyframes zeus-pending-spin/);
+});
+test('chat message metadata appears on hover with copy affordance', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.chat-message-meta/);
+  assert.match(css, /\.chat-message:hover \.chat-message-meta/);
+  assert.match(css, /\.chat-message-copy/);
+});
+test('file tree uses local SVG icon sizing instead of unicode pseudo icons', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+
+  assert.match(css, /\.zeus-icon/);
+  assert.match(css, /\.file-row-chevron-icon/);
+  assert.match(css, /grid-template-columns:\s*auto 30px minmax\(0, 1fr\)/);
+  assert.doesNotMatch(css, /file-row-icon::before/);
 });

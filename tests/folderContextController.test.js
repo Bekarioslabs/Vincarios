@@ -22,6 +22,7 @@ test('folder context controller asks for scope on ambiguous folder work', async 
   const result = await runFolderContextFlow({
     api: createApi({}, calls),
     pendingState,
+    allowPromptTarget: true,
     userText: 'check this folder',
     selection: { kind: 'folder', path: '90_AI_Brain', readAllowed: true, selectionId: 4 }
   });
@@ -104,6 +105,7 @@ test('folder context controller applies file limits to current-level listings', 
       ]
     }, calls),
     pendingState: createPendingActionState(),
+    allowPromptTarget: true,
     userText: 'liste die dateien in diesem ordner',
     limits: { maxListedFiles: 1 },
     selection: { kind: 'folder', path: '03_Wissen', readAllowed: true, selectionId: 8 }
@@ -114,6 +116,9 @@ test('folder context controller applies file limits to current-level listings', 
   assert.match(result.message, /Nested\//);
   assert.doesNotMatch(result.message, /Two\.md/);
   assert.match(result.message, /file limit was reached/);
+  assert.match(result.historyContent, /Folder listing displayed for current selection 8: 03_Wissen/);
+  assert.doesNotMatch(result.historyContent, /One\.md/);
+  assert.doesNotMatch(result.historyContent, /Nested/);
 });
 
 test('folder context controller applies folder and file limits to recursive listings', async () => {

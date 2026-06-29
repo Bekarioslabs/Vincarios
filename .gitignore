@@ -27,3 +27,6 @@ Thumbs.db
 dist/
 build/
 out/
+
+# local development vault
+dev-vault/

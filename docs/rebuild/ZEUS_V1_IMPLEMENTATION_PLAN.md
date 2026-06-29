@@ -70,6 +70,7 @@ Every remaining implementation phase must include focused tests for the behavior
 - [x] LM Studio chat baseline with provider registry, default URL, active model selection, and topbar provider/model dropdowns.
 - [x] Ollama chat baseline through the same registry, topbar provider/model controls, and native Ollama endpoints.
 - [x] Real chat abort: request id, `AbortController`, `chat:cancel` IPC, Send-to-Cancel UI state, and ignored late responses.
+- [x] Follow-up regression: normal chat messages use the same visible pending/cancel lifecycle as provider-backed Selection Actions. Pressing Cancel removes the pending message and prevents late assistant responses from being appended.
 - [x] Provider settings foundation: settings store categories, URL override UI/persistence, active provider persistence, and selected model persistence.
 - [x] Limits settings UI: provider timeout, model-list timeout, selected-file context cap, folder/file listing caps, analysis file cap, and review suggestion cap.
 - [x] Vault Profile settings bridge: expose existing folder-role foundation without replacing the Phase 2 core profile logic.
@@ -86,7 +87,7 @@ This phase is inserted before Reviewed Update Flow because V1 should not rely on
 
 - [x] Rework the right-side vault panel around selected targets: top row contains Files and Selection Actions; Markdown Preview sits below them and spans the full vault-panel width.
 - [x] Keep Files and Selection Actions the same top-row height, both with local scrolling. Markdown Preview owns the lower row and can be resized vertically.
-- [ ] Keep future detachable preview as a near-future UX need, but do not implement it inside this phase unless the main layout still blocks V1 usability.
+- [x] Keep detachable preview out of 5.4. Track it as a future UX/backlog item unless the main layout blocks V1 usability.
 
 ### 5.4.2 Explicit Context Basket
 
@@ -101,49 +102,54 @@ This phase is inserted before Reviewed Update Flow because V1 should not rely on
 
 - [x] Create a focused Selection Actions module for selected folders/files. Actions are deterministic app flows, not guessed prompt intents.
 - [x] Initial module shape implemented as `actionCategories.js`, `actionRegistry.js`, and `mountSelectionActions.js`. No separate state file yet because `contextState` already owns active selection.
-- [x] Folder actions start with exactly three V1 actions: Use as context, List folder, Analyze folder. `Use as context` is active when `R` is enabled and adds path-only folder context; the others are visible V1 slots.
-- [x] Markdown file actions start with exactly three V1 actions: Summarize file, Use as context, Propose update. `Use as context` is active; the others are visible V1 slots.
+- [x] Current Selection Action foundation for folders starts with three actions: Use as context, List folder, Analyze folder. `Use as context` is active when `R` is enabled and adds path-only folder context. `List folder` is active when `R` is enabled, lists the current folder level through app logic, and offers `Check whole tree` as a recursive follow-up. `Analyze folder` remains a visible V1 slot.
+- [x] Current Selection Action foundation for Markdown files starts with three actions: Summarize file, Use as context, Propose update. `Use as context` is active; the others are visible V1 slots.
 - [x] Registry shape supports target kinds separately from shell/chat code; future images, PDFs, and unknown files can be added through the registry.
 
 ### 5.4.4 Language Trigger Reduction
 
-- [ ] Reduce `contextIntent` to narrow fallback detection only. Remove broad phrases and general prompt guessing.
-- [ ] Keep only explicit selected-target references such as "this file" or "this folder", and retry behavior tied to blocked app actions or explicit UI buttons.
-- [ ] UI state and Selection Actions must win over prompt interpretation.
+- [x] Reduce `contextIntent` to narrow fallback detection only. Remove broad phrases and general prompt guessing.
+- [x] Remove selected-target and folder-content prompt execution. Keep only pending scope replies, existing blocked-action retry text, structured model-action fallback, and help-only guidance that points users to Selection Actions.
+- [x] UI state and Selection Actions must win over prompt interpretation. Natural-language folder requests show `Use "List folder" in Selection Actions to inspect the selected folder.` instead of executing reads. App-generated folder listings stay visible but do not re-enter provider history as reusable file-list context.
 
 ### 5.4.5 English Default Vault
 
-- [ ] Create a clean English development test vault near the project folder, for example `D:\ZEUS_AGENT\dev-vault`.
-- [ ] Keep development vault data out of Git unless a deliberately tiny fixture vault is created under `tests/fixtures/`.
-- [ ] Switch target V1 default folder labels to English: `00_Inbox`, `01_Daily`, `02_Projects`, `03_Knowledge`, `90_AI_Brain`, `99_Archive`.
+- [x] Create a clean English development test vault near the project folder: `D:\ZEUS_AGENT\dev-vault`.
+- [x] Keep development vault data out of Git unless a deliberately tiny fixture vault is created under `tests/fixtures/`.
+- [x] Switch target V1 default folder labels to English: `00_Inbox`, `01_Daily`, `02_Projects`, `03_Knowledge`, `90_AI_Brain`, `99_Archive`.
 
 ### 5.4.6 Context UX
 
 - [x] Keep explicit context visible below the chat through the Context Basket.
-- [ ] Add explicit clear/context source controls if Selection Actions do not make state clear enough.
+- [x] Add explicit clear/context source controls if Selection Actions do not make state clear enough. Current Context Basket UX is acceptable for V1; visual polish can happen later.
 - [x] General questions stay neutral unless explicit Context Basket items are present.
 
 ### 5.4.7 Selection Behavior
 
-- [ ] Restore scoped selection behavior before Phase 5.5.
-- [ ] `Ctrl+A` selects only the active or hovered region: chat message, Markdown Preview, File Tree, input, or Review Basket.
-- [ ] Right-click should offer area-specific select/copy actions where useful.
-- [ ] Prefer a focused module such as `src/renderer/selection/scopedSelection.js`.
+- [x] Restore scoped selection behavior before Phase 5.5.
+- [x] `Ctrl+A` selects only the active or hovered region: chat message, Markdown Preview, File Tree, input, Review Basket, or Context Basket. Empty panel background does not trigger scoped selection.
+- [x] Right-click offers safe select/copy actions for concrete content regions.
+- [x] Scoped selection lives in `src/renderer/selection/scopedSelection.js`; file-tree navigation lives in `src/renderer/files/fileTreeKeyboard.js`.
+- [ ] Follow-up: when focus is on a File Tree row, `R` and `W` may toggle read/write permission for that selected row only. This must ignore text inputs/editors and must not conflict with future rename/edit shortcuts.
 
 ### 5.4.8 Docs And Tests
 
-- [ ] Keep this plan, `ZEUS_V1_UI_AND_WORKFLOWS.md`, and `ZEUS_V1_ARCHITECTURE.md` aligned while implementing 5.4.
-- [ ] Add tests that Selection Actions depend on selected app state, not chat text.
+- [x] Keep this plan, `ZEUS_V1_UI_AND_WORKFLOWS.md`, and `ZEUS_V1_ARCHITECTURE.md` aligned while implementing 5.4.
+- [x] Add tests that Selection Actions depend on selected app state, not chat text.
 - [x] Add tests that selection alone does not attach context and explicit Context Basket items do attach context.
-- [ ] Add tests for English default vault roles once the default profile is changed.
-- [ ] Add tests for scoped `Ctrl+A`.
+- [x] Add tests for English default vault roles once the default profile is changed.
+- [x] Add tests for scoped `Ctrl+A` and file-tree keyboard navigation.
 
-Recommended execution order: finish 5.4.1 through 5.4.4 first and test them together. Then do English vault/profile work, then scoped selection. Phase 5.5 starts only after this foundation is stable.
+Recommended execution order: finish 5.4.1 through 5.4.7 first and test them together. Phase 5.5 starts only after this foundation is stable.
 
 ## Phase 5.5 - Reviewed Update Flow
 
 This is a V1-critical workflow, not a later comfort feature. The prototype already proved the value of chat-driven file updates; the rebuild must make it reliable and review-safe before larger cleanup features.
 
+- [x] Read-only action foundation before writes: make `Summarize file` functional for one selected readable Markdown file.
+- [ ] Keep `Analyze folder` V1-light as structure/name/type analysis first. It must clearly label results as structure-based until file contents are explicitly read.
+- [ ] Add later `Summarize Markdown files` on top of the same read-only action path: only `.md`, no images/PDF/attachments in V1, with max file count, max chars per file, and max total chars coming from Settings/Limits.
+- [ ] Keep `Copy path` as a later secondary utility action. Keep `Reveal in Explorer` later because it needs main-process IPC.
 - [ ] Chat-generated `update_note` proposals reliably target the selected Markdown file when `R` and `W` allow it.
 - [ ] Missing `R` or `W` produces a clear app-level guidance message, not generic model text about lacking filesystem access. `W` must use the shared blocked-action foundation when reviewed write execution is gated.
 - [ ] Edit Mode can create an `update_note` proposal from local source changes instead of writing directly.
@@ -152,6 +158,10 @@ This is a V1-critical workflow, not a later comfort feature. The prototype alrea
 - [ ] Backup, stale-content validation, and audit logging stay on the existing `update_note` service path.
 
 ## Phase 6 - V1 Release Hardening
+
+- [x] Bundle Inter variable font locally and include its license notice.
+- [ ] Test Noto Sans Variable as a closer bundled alternative to the current Segoe UI/systemfont look.
+- [x] Bundle first Lucide SVG icon set locally with semantic icon registry and license notice.
 
 - [ ] Add renderer Content Security Policy.
 - [ ] Add max-size guards for create/update note content and provider/context payloads.
@@ -210,7 +220,12 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Batch AI actions over multiple notes with grouped diffs.
 - [ ] Plugin-style extension points for community contributions.
 - [ ] More complete settings UI, including hotkeys and theme presets.
+- [ ] Chat action display setting: allow hover actions such as `Save as Note`, `Copy`, and future message actions to render as text, Lucide SVG icons, or icon+text without changing chat action logic.
+- [ ] Context Basket type badge polish: optional distinct badge/border colors for `MD`, `DIR`, future `IMG`, `PDF`, `FILE`, and unknown targets. These colors must remain separate from Selection Action behavior colors.
+- [ ] Detachable/undocked Markdown preview window for multi-monitor workflows.
 - [ ] Vision analysis and image tagging gated by model capability.
+- [ ] Natural Action Control (V2.1 candidate): optional toggle that lets the model map natural language to existing registered Selection Actions. It must only execute predefined app actions through the same permission, review, backup, and audit boundaries. The recognition layer may use prompts or trigger rules, but it must live in its own module and never create new hidden capabilities.
+- [ ] Chat Sessions / conversation history as a later V2 feature: session list, resume, delete, privacy rules, and per-vault/global storage decisions.
 
 ## Parking Lot
 

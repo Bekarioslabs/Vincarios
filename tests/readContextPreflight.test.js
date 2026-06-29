@@ -2,14 +2,11 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {
-  runReadContextPreflight,
-  resolveReadTarget
-} = require('../src/renderer/chat/readContextPreflight');
+const { runReadContextPreflight } = require('../src/renderer/chat/readContextPreflight');
 const { createPendingActionState } = require('../src/renderer/context/pendingActionState');
 const intent = require('../src/renderer/context/contextIntent');
 
-test('read context preflight lists the selected folder when read is enabled', async () => {
+test('read context preflight shows folder action guidance instead of listing selected folder from text', async () => {
   const calls = [];
   const result = await runReadContextPreflight({
     userText: 'what is in this folder?',
@@ -23,26 +20,19 @@ test('read context preflight lists the selected folder when read is enabled', as
       vault: {
         listFolder: async (path) => {
           calls.push(path);
-          return {
-            ok: true,
-            entries: [
-              { kind: 'markdown', name: 'A.md', path: '00_Inbox/AI Responses/A.md' },
-              { kind: 'folder', name: 'Nested', path: '00_Inbox/AI Responses/Nested' }
-            ]
-          };
+          return { ok: true, entries: [] };
         }
       }
     }
   });
 
   assert.equal(result.handled, true);
-  assert.deepEqual(calls, ['00_Inbox/AI Responses']);
-  assert.match(result.message, /current selection 4/);
-  assert.match(result.message, /A\.md/);
-  assert.match(result.message, /Nested\//);
+  assert.equal(result.kind, 'message');
+  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.deepEqual(calls, []);
 });
 
-test('read context preflight blocks selected folder listing when read is disabled', async () => {
+test('read context preflight shows folder action guidance even when selected folder read is disabled', async () => {
   let called = false;
   const result = await runReadContextPreflight({
     userText: 'was liegt in diesem ordner?',
@@ -64,42 +54,7 @@ test('read context preflight blocks selected folder listing when read is disable
 
   assert.equal(result.handled, true);
   assert.equal(called, false);
-  assert.match(result.message, /enable R/i);
-  assert.match(result.message, /03_Wissen/);
-});
-
-test('read context preflight maps selected-file folder questions to parent only when parent read is enabled', () => {
-  const blocked = resolveReadTarget({
-    kind: 'file',
-    path: '03_Wissen/Comics/A.md',
-    readAllowed: true,
-    parentReadAllowed: false,
-    selectionId: 8
-  }, 'kannst du aehnliche dateien in diesem ordner finden?', intent);
-
-  assert.deepEqual(blocked, {
-    kind: 'folder',
-    path: '03_Wissen/Comics',
-    readAllowed: false,
-    selectionId: 8,
-    recursive: false
-  });
-
-  const allowed = resolveReadTarget({
-    kind: 'file',
-    path: '03_Wissen/Comics/A.md',
-    readAllowed: true,
-    parentReadAllowed: true,
-    selectionId: 9
-  }, 'liste die dateien in diesem ordner', intent);
-
-  assert.deepEqual(allowed, {
-    kind: 'folder',
-    path: '03_Wissen/Comics',
-    readAllowed: true,
-    selectionId: 9,
-    recursive: false
-  });
+  assert.match(result.message, /Use "List folder" in Selection Actions/);
 });
 
 test('read context preflight ignores general questions for selected folders', async () => {
@@ -194,7 +149,7 @@ test('read context preflight recursively lists selected folder descendants for p
   assert.match(result.message, /Only real folder-listing results are shown/);
   assert.doesNotMatch(result.message, /Agent_Definitions\.md/);
 });
-test('read context preflight blocks selected folder listing for deictic here-inside wording', async () => {
+test('read context preflight shows selection-action guidance for folder wording without executing', async () => {
   const blockedState = createBlockedActionStateForTest();
   const result = await runReadContextPreflight({
     userText: 'was liegt hier drin?',
@@ -208,10 +163,12 @@ test('read context preflight blocks selected folder listing for deictic here-ins
   });
 
   assert.equal(result.handled, true);
-  assert.equal(result.kind, 'blocked_action');
-  assert.match(result.message, /enable R/i);
+  assert.equal(result.kind, 'message');
+  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.equal(blockedState.snapshot(), null);
 });
-test('read context preflight blocks selected folder listing with a transposed folder typo', async () => {
+
+test('read context preflight ignores transposed folder typos instead of adding typo rules', async () => {
   const blockedState = createBlockedActionStateForTest();
   const result = await runReadContextPreflight({
     userText: 'was ist in diesem ordenr?',
@@ -224,12 +181,10 @@ test('read context preflight blocks selected folder listing with a transposed fo
     blockedState
   });
 
-  assert.equal(result.handled, true);
-  assert.equal(result.kind, 'blocked_action');
-  assert.match(result.message, /enable R/i);
-  assert.equal(result.blockedActions[0].label, 'Retry after enabling R');
+  assert.equal(result.handled, false);
+  assert.equal(blockedState.snapshot(), null);
 });
-test('read context preflight creates a retry action for blocked selected-file reads', async () => {
+test('read context preflight does not create selected-file reads from natural language', async () => {
   const blockedState = createBlockedActionStateForTest();
   const result = await runReadContextPreflight({
     userText: 'Was ist der Inhalt dieser Datei?',
@@ -242,12 +197,8 @@ test('read context preflight creates a retry action for blocked selected-file re
     blockedState
   });
 
-  assert.equal(result.handled, true);
-  assert.equal(result.kind, 'blocked_action');
-  assert.match(result.message, /enable R/i);
-  assert.equal(result.blockedActions.length, 1);
-  assert.equal(result.blockedActions[0].label, 'Retry after enabling R');
-  assert.equal(blockedState.snapshot().type, 'selected_file_read');
+  assert.equal(result.handled, false);
+  assert.equal(blockedState.snapshot(), null);
 });
 
 test('read context preflight retries selected-file reads after R is enabled', async () => {
@@ -279,31 +230,17 @@ test('read context preflight retries selected-file reads after R is enabled', as
   assert.equal(blockedState.snapshot(), null);
 });
 
-test('read context preflight creates and retries blocked folder listings', async () => {
+test('read context preflight retries an existing blocked folder listing', async () => {
   const blockedState = createBlockedActionStateForTest();
   const calls = [];
-  const blockedResult = await runReadContextPreflight({
-    userText: 'Was liegt in diesem Ordner?',
-    selection: {
-      kind: 'folder',
-      path: '90_AI_Brain/Core',
-      readAllowed: false,
-      selectionId: 22
-    },
-    api: {
-      vault: {
-        listFolder: async () => {
-          throw new Error('must not list while blocked');
-        }
-      }
-    },
-    blockedState
+  const blocked = blockedState.set({
+    type: 'folder_list',
+    selectionId: 22,
+    targetPath: '90_AI_Brain/Core',
+    targetKind: 'folder',
+    requiredPermission: 'read',
+    userText: 'Was liegt in diesem Ordner?'
   });
-
-  assert.equal(blockedResult.kind, 'blocked_action');
-  assert.equal(blockedResult.blockedActions[0].label, 'Retry after enabling R');
-  const blocked = blockedState.snapshot();
-  assert.equal(blocked.type, 'folder_list');
 
   const retryResult = await runReadContextPreflight({
     blockedActionId: blocked.id,
@@ -330,9 +267,9 @@ test('read context preflight creates and retries blocked folder listings', async
   assert.equal(blockedState.snapshot(), null);
 });
 
-test('read context preflight retries a selected-file parent folder listing after parent R is enabled', async () => {
+test('read context preflight does not infer parent folder listings from selected files', async () => {
   const blockedState = createBlockedActionStateForTest();
-  const blockedResult = await runReadContextPreflight({
+  const result = await runReadContextPreflight({
     userText: 'Was liegt in diesem Ordner?',
     selection: {
       kind: 'file',
@@ -344,39 +281,14 @@ test('read context preflight retries a selected-file parent folder listing after
     api: {
       vault: {
         listFolder: async () => {
-          throw new Error('must not list while blocked');
+          throw new Error('must not list from file selection');
         }
       }
     },
     blockedState
   });
 
-  assert.equal(blockedResult.kind, 'blocked_action');
-  const blocked = blockedState.snapshot();
-  assert.equal(blocked.targetPath, '00_Inbox/AI Responses');
-  assert.equal(blocked.targetKind, 'folder');
-
-  const retryResult = await runReadContextPreflight({
-    blockedActionId: blocked.id,
-    selection: {
-      kind: 'file',
-      path: '00_Inbox/AI Responses/Heroes.md',
-      readAllowed: true,
-      parentReadAllowed: true,
-      selectionId: 23
-    },
-    api: {
-      vault: {
-        listFolder: async (path) => {
-          return { ok: true, entries: [{ kind: 'markdown', name: 'More Heroes.md', path: path + '/More Heroes.md' }] };
-        }
-      }
-    },
-    blockedState
-  });
-
-  assert.equal(retryResult.handled, true);
-  assert.match(retryResult.message, /More Heroes\.md/);
+  assert.equal(result.handled, false);
   assert.equal(blockedState.snapshot(), null);
 });
 test('read context preflight retries same selected folder after permission resync changes selection id', async () => {
@@ -445,3 +357,57 @@ test('read context preflight retries a matching blocked folder action from a per
 function createBlockedActionStateForTest() {
   return require('../src/renderer/context/blockedActionState').createBlockedActionState();
 }
+
+test('read context preflight does not list explicit context folders from natural language', async () => {
+  const calls = [];
+  const result = await runReadContextPreflight({
+    userText: 'was liegt hier drin?',
+    selection: {
+      kind: 'none',
+      path: '',
+      selectionId: 22,
+      contextItems: [{ kind: 'folder', path: '90_AI_Brain/Core' }]
+    },
+    api: {
+      vault: {
+        async listFolder(path) {
+          calls.push(path);
+          return { ok: true, entries: [{ kind: 'markdown', name: 'Rules.md', path: path + '/Rules.md' }] };
+        }
+      }
+    }
+  });
+
+  assert.equal(result.handled, true);
+  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.deepEqual(calls, []);
+});
+
+test('read context preflight does not choose between multiple context folders from natural language', async () => {
+  const calls = [];
+  const result = await runReadContextPreflight({
+    userText: 'was liegt hier drin?',
+    selection: {
+      kind: 'folder',
+      path: '90_AI_Brain',
+      readAllowed: true,
+      selectionId: 23,
+      contextItems: [
+        { kind: 'folder', path: '90_AI_Brain/Core' },
+        { kind: 'folder', path: '90_AI_Brain' }
+      ]
+    },
+    api: {
+      vault: {
+        async listFolder(path) {
+          calls.push(path);
+          return { ok: true, entries: [{ kind: 'folder', name: 'Core', path: path + '/Core' }] };
+        }
+      }
+    }
+  });
+
+  assert.equal(result.handled, true);
+  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.deepEqual(calls, []);
+});

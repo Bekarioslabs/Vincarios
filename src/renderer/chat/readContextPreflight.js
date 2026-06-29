@@ -6,11 +6,9 @@
 
   async function runReadContextPreflight(options) {
     options = options || {};
-    const controller = getFolderContextControllerApi();
-    if (!controller || typeof controller.runFolderContextFlow !== 'function') return { handled: false };
-
-    const blockedState = options.blockedState || defaultBlockedState;
     const selection = options.selection || null;
+    const blockedState = options.blockedState || defaultBlockedState;
+    const pendingState = options.pendingState || defaultPendingState;
 
     if (options.blockedActionId) {
       return retryBlockedAction({
@@ -18,34 +16,70 @@
         selection,
         blockedState,
         blockedActionId: options.blockedActionId,
-        pendingState: options.pendingState || defaultPendingState
+        pendingState
       });
     }
 
-    const textRetryResult = await retryMatchingBlockedActionFromText({
+    const retryResult = await retryMatchingBlockedActionFromText({
       api: options.api,
       selection,
       blockedState,
       userText: options.userText,
-      pendingState: options.pendingState || defaultPendingState
+      pendingState
     });
-    if (textRetryResult) return textRetryResult;
+    if (retryResult) return retryResult;
 
-    const selectedFileBlocked = createSelectedFileReadBlock({
-      selection,
-      userText: options.userText,
-      blockedState
-    });
-    if (selectedFileBlocked) return selectedFileBlocked;
-
-    return controller.runFolderContextFlow({
+    const scopeResult = await runPendingScopeReply({
       api: options.api,
       userText: options.userText,
       scopeChoice: options.scopeChoice,
       selection,
-      pendingState: options.pendingState || defaultPendingState,
+      pendingState,
       blockedState
     });
+    if (scopeResult && scopeResult.handled) return scopeResult;
+
+    const guidance = createSelectionActionGuidance({ userText: options.userText, selection });
+    if (guidance) return guidance;
+
+    return { handled: false };
+  }
+
+  async function runPendingScopeReply(options) {
+    const controller = getFolderContextControllerApi();
+    if (!controller || typeof controller.runFolderContextFlow !== 'function') return { handled: false };
+    const pending = options.pendingState && typeof options.pendingState.snapshot === 'function'
+      ? options.pendingState.snapshot()
+      : null;
+    const hasScopeChoice = options.scopeChoice || (controller.isStandaloneScopeReply && controller.isStandaloneScopeReply(options.userText));
+    if (!pending && !hasScopeChoice) return { handled: false };
+    return controller.runFolderContextFlow({
+      api: options.api,
+      userText: options.userText,
+      scopeChoice: options.scopeChoice,
+      selection: options.selection,
+      pendingState: options.pendingState,
+      blockedState: options.blockedState
+    });
+  }
+
+  function createSelectionActionGuidance(options) {
+    const intent = getIntentApi();
+    if (!intent || typeof intent.hasSelectionActionGuidanceSignal !== 'function') return null;
+    if (!intent.hasSelectionActionGuidanceSignal(options.userText)) return null;
+
+    const selection = options.selection || null;
+    const contextItems = selection && Array.isArray(selection.contextItems) ? selection.contextItems : [];
+    const hasFolderTarget = Boolean(selection && selection.kind === 'folder')
+      || contextItems.some((item) => item && item.kind === 'folder');
+    if (!hasFolderTarget) return null;
+
+    return {
+      handled: true,
+      kind: 'message',
+      message: 'Use "List folder" in Selection Actions to inspect the selected folder.',
+      historyContent: 'Selection action guidance shown for folder listing request.'
+    };
   }
 
   async function retryMatchingBlockedActionFromText(options) {
@@ -78,18 +112,7 @@
     }
 
     if (blocked.type === 'selected_file_read') return retrySelectedFileRead(blocked, selection, blockedState);
-    if (blocked.type === 'folder_list') {
-      if (!isBlockedActionPermissionAllowed(selection, blocked)) return createBlockedStillNeedsPermission(blocked);
-      if (typeof blockedState.clear === 'function') blockedState.clear(blocked.id);
-      const controller = getFolderContextControllerApi();
-      return controller.runFolderContextFlow({
-        api: options.api,
-        userText: blocked.userText,
-        selection,
-        pendingState: options.pendingState || defaultPendingState,
-        blockedState
-      });
-    }
+    if (blocked.type === 'folder_list') return retryFolderList(blocked, selection, blockedState, options);
 
     if (typeof blockedState.clear === 'function') blockedState.clear(blocked.id);
     return createBlockedUnavailableMessage('Blocked action type is no longer supported. Please run the request again.');
@@ -115,34 +138,35 @@
     };
   }
 
-  function createSelectedFileReadBlock(options) {
-    const selection = options.selection || null;
-    const userText = String(options.userText || '');
-    const intent = getIntentApi();
-    if (!selection || selection.kind !== 'file' || selection.readAllowed !== false) return null;
-    if (!intent || typeof intent.looksLikeSelectedTargetRequest !== 'function') return null;
-    if (!intent.looksLikeSelectedTargetRequest(userText)) return null;
-
-    const blockedAction = options.blockedState && typeof options.blockedState.set === 'function'
-      ? options.blockedState.set({
-          type: 'selected_file_read',
-          selectionId: selection.selectionId || 0,
-          targetPath: selection.path || '',
-          targetKind: 'file',
-          requiredPermission: 'read',
-          userText
-        })
-      : null;
-
+  async function retryFolderList(blocked, selection, blockedState, options) {
+    if (!isBlockedActionPermissionAllowed(selection, blocked)) return createBlockedStillNeedsPermission(blocked);
+    const vault = options.api && options.api.vault;
+    if (!vault || typeof vault.listFolder !== 'function') {
+      return createBlockedUnavailableMessage('Folder listing failed: vault API unavailable.');
+    }
+    if (typeof blockedState.clear === 'function') blockedState.clear(blocked.id);
+    const result = await vault.listFolder(blocked.targetPath);
     return {
       handled: true,
-      kind: blockedAction ? 'blocked_action' : 'message',
-      message: 'Please enable R for this file before I read it: ' + normalizePath(selection.path),
-      historyContent: 'Read blocked for current selection ' + ((selection && selection.selectionId) || 0) + ': ' + normalizePath(selection.path),
-      blockedActions: blockedAction ? [{ label: formatBlockedActionRetryLabel(blockedAction.requiredPermission), blockedActionId: blockedAction.id }] : []
+      kind: 'message',
+      message: formatFolderListing(blocked.targetPath, result),
+      historyContent: 'Folder listing displayed for blocked action: ' + normalizePath(blocked.targetPath)
     };
   }
 
+
+  function formatFolderListing(folderPath, result) {
+    const path = normalizePath(folderPath);
+    if (!result || result.ok !== true) {
+      return 'Folder listing failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
+    }
+    const entries = Array.isArray(result.entries) ? result.entries : [];
+    if (!entries.length) return 'Folder listed: ' + path + '\n\nNo supported Markdown folders or files found.';
+    return 'Folder listed: ' + path + '\n\n' + entries.map((entry) => {
+      const name = entry && (entry.name || entry.path) ? (entry.name || entry.path) : 'Unnamed';
+      return name + (entry && entry.kind === 'folder' ? '/' : '');
+    }).join('\n');
+  }
   function createBlockedStillNeedsPermission(blocked) {
     return {
       handled: true,
@@ -166,22 +190,21 @@
     if (!selection || !blocked) return false;
     const selectionPath = normalizePath(selection.path);
     const blockedPath = normalizePath(blocked.targetPath);
-    const selectionKind = String(selection.kind || '');
-    const blockedKind = String(blocked.targetKind || '');
-    if (selectionPath === blockedPath && selectionKind === blockedKind) return true;
-    return blocked.type === 'folder_list'
-      && blockedKind === 'folder'
-      && selectionKind === 'file'
-      && parentFolderOf(selectionPath) === blockedPath;
+    if (!selectionPath || !blockedPath) return false;
+    if (blocked.targetKind === 'folder') return selection.kind === 'folder' && selectionPath === blockedPath;
+    if (blocked.targetKind === 'file') return selection.kind === 'file' && selectionPath === blockedPath;
+    return selectionPath === blockedPath
+      || parentFolderOf(selectionPath) === blockedPath;
   }
 
   function isBlockedActionPermissionAllowed(selection, blocked) {
     if (!selection || !blocked) return false;
-    const permission = normalizeRequiredPermission(blocked.requiredPermission);
-    const targetKind = String(blocked.targetKind || 'file');
-    if (permission === 'write') return selection.writeAllowed === true;
-    if (targetKind === 'file') return selection.kind === 'file' && selection.readAllowed === true;
-    if (selection.kind === 'folder') return selection.readAllowed === true;
+    if (blocked.targetKind === 'folder') return selection.kind === 'folder'
+      && normalizePath(selection.path) === normalizePath(blocked.targetPath)
+      && selection.readAllowed === true;
+    if (blocked.targetKind === 'file') return selection.kind === 'file'
+      && normalizePath(selection.path) === normalizePath(blocked.targetPath)
+      && selection.readAllowed === true;
     return selection.kind === 'file'
       && parentFolderOf(selection.path) === normalizePath(blocked.targetPath)
       && selection.parentReadAllowed === true;
@@ -193,62 +216,32 @@
     return index > 0 ? value.slice(0, index) : '';
   }
 
-  function resolveReadTarget(selection, userText, intent) {
-    const controller = getFolderContextControllerApi();
-    if (!controller || typeof controller.resolveFolderReadTarget !== 'function') return null;
-    return controller.resolveFolderReadTarget(selection, userText, intent);
-  }
-
-  async function listFolderTree(vaultApi, target) {
-    const controller = getFolderContextControllerApi();
-    return controller.listFolderTree(vaultApi, target);
-  }
-
-  function formatRecursiveFolderListing(target, result) {
-    const controller = getFolderContextControllerApi();
-    return controller.formatRecursiveFolderListing(target, result);
-  }
-
-  function formatFolderListing(target, result) {
-    const controller = getFolderContextControllerApi();
-    return controller.formatFolderListing(target, result);
-  }
-
   function createDefaultPendingState() {
-    const pendingApi = getPendingActionStateApi();
-    return pendingApi && typeof pendingApi.createPendingActionState === 'function'
-      ? pendingApi.createPendingActionState()
+    const api = getPendingActionStateApi();
+    return api && typeof api.createPendingActionState === 'function'
+      ? api.createPendingActionState()
       : { set: () => null, clear: () => null, snapshot: () => null, hasPending: () => false };
   }
 
   function createDefaultBlockedState() {
-    const blockedApi = getBlockedActionStateApi();
-    return blockedApi && typeof blockedApi.createBlockedActionState === 'function'
-      ? blockedApi.createBlockedActionState()
-      : { set: () => null, clear: () => null, snapshot: () => null, hasBlocked: () => false };
+    const api = getBlockedActionStateApi();
+    return api && typeof api.createBlockedActionState === 'function'
+      ? api.createBlockedActionState()
+      : { set: () => null, clear: () => null, snapshot: () => null };
   }
 
   function normalizePath(value) {
     return String(value || '')
-      .trim()
       .replace(/\\/g, '/')
       .replace(/^\/+|\/+$/g, '')
-      .replace(/\/+/g, '/');
-  }
-
-
-  function normalizeRequiredPermission(permission) {
-    const api = getBlockedActionStateApi();
-    return api && typeof api.normalizeRequiredPermission === 'function'
-      ? api.normalizeRequiredPermission(permission)
-      : (String(permission || 'read').toLowerCase() === 'write' ? 'write' : 'read');
+      .trim();
   }
 
   function formatPermissionShortcut(permission) {
     const api = getBlockedActionStateApi();
     return api && typeof api.formatPermissionShortcut === 'function'
       ? api.formatPermissionShortcut(permission)
-      : (normalizeRequiredPermission(permission) === 'write' ? 'W' : 'R');
+      : String(permission || 'read').toLowerCase() === 'write' ? 'W' : 'R';
   }
 
   function formatBlockedActionRetryLabel(permission) {
@@ -264,6 +257,7 @@
       ? api.formatMissingPermissionMessage(blocked)
       : formatPermissionShortcut(blocked && blocked.requiredPermission) + ' is still disabled for this target: ' + normalizePath(blocked && blocked.targetPath);
   }
+
   function getIntentApi() {
     if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('../context/contextIntent');
@@ -290,10 +284,11 @@
 
   const api = {
     runReadContextPreflight,
-    resolveReadTarget,
-    formatFolderListing,
-    formatRecursiveFolderListing,
-    listFolderTree
+    createSelectionActionGuidance,
+    retryMatchingBlockedActionFromText,
+    retryBlockedAction,
+    selectionMatchesBlockedAction,
+    isBlockedActionPermissionAllowed
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

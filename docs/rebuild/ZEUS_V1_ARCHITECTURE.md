@@ -71,20 +71,9 @@ docs/
 
 App logic should use folder roles instead of hard-coded vault folder names.
 
-Current source of truth: `src/shared/vaultProfile/defaults.js`. Always read that file before assuming role names. If it still contains German folder names, those names are the current canonical implementation state.
+Current source of truth: `src/shared/vaultProfile/defaults.js`. Always read that file before assuming role names.
 
-Current prototype-derived defaults may include:
-
-```text
-inbox     -> 00_Inbox
-daily     -> 01_Tagesnotizen
-projects  -> 02_Projekte
-knowledge -> 03_Wissen
-brain     -> 90_AI_Brain
-archive   -> 99_Archiv
-```
-
-Phase 5.4 target defaults are English:
+Phase 5.4 defaults are English:
 
 ```text
 inbox     -> 00_Inbox
@@ -173,7 +162,7 @@ Run a focused audit after each block:
 
 - `chat` renders messages and sends model requests; it does not own vault writes.
 - `review` owns proposal state, selected items, statuses, and execution requests.
-- `files` owns file tree navigation and selected path state.
+- `files` owns file tree navigation, file-tree keyboard navigation, and selected path state.
 - `selectionActions` owns deterministic actions shown for the currently selected file/folder. It must use app state and action registries, not broad prompt phrases. `actionCategories` owns behavior color categories, `actionRegistry` owns target-to-action mapping, and `mountSelectionActions` owns the visible panel.
 - `selection` owns scoped selection behavior such as region-aware `Ctrl+A` and right-click select/copy commands.
 - `context` is split by responsibility: `contextState` stores the active target and explicit Context Basket items, `mountContextBasket` owns the visible basket UI, `pendingActionState` stores one open request-scoped clarification, `blockedActionState` stores retryable app actions that were blocked by missing permissions or stale target state, `contextIntent` remains a narrow fallback only, `contextLimits` owns central request-size caps, `folderContextController` owns selected-folder scope decisions, and `contextPackageBuilder` builds request-scoped provider context from explicit Context Basket items. Future dropped Markdown files, folder indexes, and embedding candidates should extend this module family instead of adding hidden rules to chat or file-tree code.

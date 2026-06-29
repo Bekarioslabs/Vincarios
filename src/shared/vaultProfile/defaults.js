@@ -12,11 +12,11 @@
 
   const DEFAULT_FOLDERS = Object.freeze({
     [FOLDER_ROLES.inbox]: '00_Inbox',
-    [FOLDER_ROLES.daily]: '01_Tagesnotizen',
-    [FOLDER_ROLES.projects]: '02_Projekte',
-    [FOLDER_ROLES.knowledge]: '03_Wissen',
+    [FOLDER_ROLES.daily]: '01_Daily',
+    [FOLDER_ROLES.projects]: '02_Projects',
+    [FOLDER_ROLES.knowledge]: '03_Knowledge',
     [FOLDER_ROLES.brain]: '90_AI_Brain',
-    [FOLDER_ROLES.archive]: '99_Archiv'
+    [FOLDER_ROLES.archive]: '99_Archive'
   });
 
   const DEFAULT_VAULT_PROFILE = Object.freeze(Object.assign(createLegacyFolderAliases(DEFAULT_FOLDERS), {

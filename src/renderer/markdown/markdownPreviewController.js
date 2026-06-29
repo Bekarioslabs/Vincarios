@@ -27,6 +27,8 @@
     if (!preview || !editor || !editButton) return null;
 
     preview.addEventListener('click', handlePreviewClick);
+    setButtonIcon(backButton, 'chevronLeft');
+    setButtonIcon(forwardButton, 'chevronRight');
     if (revealButton) revealButton.addEventListener('click', handleRevealClick);
     if (backButton) backButton.addEventListener('click', () => moveHistory(-1));
     if (forwardButton) forwardButton.addEventListener('click', () => moveHistory(1));
@@ -190,7 +192,20 @@
       getCurrentPath: () => currentPath
     };
   }
+  function setButtonIcon(button, iconName) {
+    if (!button) return;
+    const renderer = getIconRenderer();
+    button.textContent = '';
+    if (renderer && typeof renderer.createIconElement === 'function' && typeof button.appendChild === 'function') {
+      button.appendChild(renderer.createIconElement(iconName, 'markdown-history-icon'));
+      return;
+    }
+    button.textContent = iconName === 'chevronLeft' ? '<' : '>';
+  }
 
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
   const api = { mountMarkdownPreview };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

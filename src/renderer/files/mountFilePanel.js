@@ -11,6 +11,7 @@
     const contextState = options.contextState || null;
     const permissionState = options.permissionState || null;
     const navigator = options.navigator || window.ZeusFileNavigator.createFileNavigator();
+    const keyboard = options.keyboard || window.ZeusFileTreeKeyboard || null;
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
 
@@ -33,6 +34,7 @@
     const tree = root.querySelector('#file-tree');
     const vaultName = root.querySelector('#file-vault-name');
 
+    attachRefreshIcon();
     refreshButton.addEventListener('click', refreshTree);
 
     function setVaultName(name) {
@@ -106,6 +108,32 @@
       renderEntries(rootData.entries, 0, tree);
     }
 
+    function attachRefreshIcon() {
+      const renderer = getIconRenderer();
+      if (!renderer || typeof renderer.createIconElement !== 'function') return;
+      refreshButton.textContent = '';
+      refreshButton.appendChild(renderer.createIconElement('refresh', 'file-refresh-icon'));
+    }
+
+    function createFileRowIcon(entry) {
+      const wrapper = document.createElement('span');
+      wrapper.className = 'file-row-icon';
+      wrapper.classList.toggle('is-folder', entry.kind === 'folder');
+      wrapper.classList.toggle('is-file', entry.kind !== 'folder');
+      wrapper.classList.toggle('is-expanded', entry.kind === 'folder' && navigator.isExpanded(entry.path));
+
+      const renderer = getIconRenderer();
+      if (!renderer || typeof renderer.createIconElement !== 'function') return wrapper;
+
+      if (entry.kind === 'folder') {
+        wrapper.appendChild(renderer.createIconElement(navigator.isExpanded(entry.path) ? 'chevronDown' : 'chevronRight', 'file-row-chevron-icon'));
+        wrapper.appendChild(renderer.createIconElement('folder', 'file-row-type-icon'));
+        return wrapper;
+      }
+
+      wrapper.appendChild(renderer.createIconElement(isMarkdownPath(entry.path) ? 'markdownFile' : 'file', 'file-row-type-icon'));
+      return wrapper;
+    }
     function renderEntries(entries, depth, parentNode) {
       entries.forEach((entry) => {
         const row = document.createElement('div');
@@ -115,11 +143,7 @@
         row.dataset.path = entry.path;
         row.style.setProperty('--tree-depth', String(depth));
 
-        const icon = document.createElement('span');
-        icon.className = 'file-row-icon';
-        icon.classList.toggle('is-folder', entry.kind === 'folder');
-        icon.classList.toggle('is-file', entry.kind !== 'folder');
-        icon.classList.toggle('is-expanded', entry.kind === 'folder' && navigator.isExpanded(entry.path));
+        const icon = createFileRowIcon(entry);
 
         const label = document.createElement('span');
         label.className = 'file-row-label';
@@ -132,12 +156,18 @@
         const selected = navigator.snapshot().selectedPath === entry.path;
         if (selected) row.classList.add('is-selected');
 
-        row.addEventListener('click', () => activateEntry(entry));
+        row.addEventListener('click', () => {
+          focusTreeRow(row);
+          activateEntry(entry);
+        });
         row.addEventListener('keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
+            focusTreeRow(row);
             activateEntry(entry);
+            return;
           }
+          handleTreeKeydown(event, row, entry);
         });
 
         parentNode.appendChild(row);
@@ -174,12 +204,14 @@
           setStatus('Folder listed: ' + entry.path);
         }
         renderTree();
+        focusRenderedPath(entry.path);
         return;
       }
 
       navigator.selectFile(entry.path);
       updateNavigation(navigator.snapshot());
       renderTree();
+      focusRenderedPath(entry.path);
       setStatus('Reading ' + entry.path + '...');
       const read = await api.vault.readMarkdown(entry.path);
       if (!read.ok) {
@@ -191,6 +223,61 @@
       if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
       else setText(context, 'Selection file: ' + read.path);
       setStatus('Read: ' + read.path);
+    }
+    async function handleTreeKeydown(event, row, entry) {
+      if (!keyboard || !keyboard.isFileTreeNavigationKey(event.key)) return;
+
+      const rows = Array.from(tree.querySelectorAll('.file-row'));
+      if (!rows.length) return;
+
+      const currentIndex = Math.max(0, rows.indexOf(row));
+      const pageSize = Math.max(1, Math.floor(tree.clientHeight / Math.max(1, row.offsetHeight || 23)));
+      const command = keyboard.getFileTreeNavigation({
+        key: event.key,
+        rows,
+        currentIndex,
+        pageSize
+      });
+
+      if (!command || command.type === 'none') return;
+      event.preventDefault();
+
+      if (command.type === 'focus') {
+        focusTreeRow(rows[command.nextIndex]);
+        return;
+      }
+
+      if (entry.kind !== 'folder') return;
+
+      if (command.type === 'expand') {
+        if (!navigator.isExpanded(entry.path)) {
+          navigator.expandFolder(entry.path);
+          if (contextState) contextState.setFolder(entry.path, { readAllowed: canUsePathAsContext(entry.path) });
+          setStatus('Listing ' + entry.path + '...');
+          await ensureFolderLoaded(entry.path);
+          setStatus('Folder listed: ' + entry.path);
+          renderTree();
+          focusRenderedPath(entry.path);
+        }
+        return;
+      }
+
+      if (command.type === 'collapse' && navigator.isExpanded(entry.path)) {
+        navigator.collapseFolder(entry.path);
+        renderTree();
+        focusRenderedPath(entry.path);
+      }
+    }
+
+    function focusTreeRow(row) {
+      if (!row) return;
+      row.focus({ preventScroll: true });
+      row.scrollIntoView({ block: 'nearest' });
+    }
+
+    function focusRenderedPath(path) {
+      const rows = Array.from(tree.querySelectorAll('.file-row'));
+      focusTreeRow(rows.find((item) => item.dataset.path === path));
     }
     async function openLinkedMarkdown(target, currentPath) {
       const resolver = window.ZeusMarkdownLinkResolver;
@@ -253,6 +340,14 @@
         folders.push(parts.slice(0, index + 1).join('/'));
       }
       return folders;
+    }
+
+    function getIconRenderer() {
+      return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    }
+
+    function isMarkdownPath(path) {
+      return /\.md$/i.test(String(path || ''));
     }
     function createContextDetails(path, content) {
       const parentFolder = window.ZeusFileNavigator.parentFolder(path);

@@ -118,14 +118,18 @@
       wireShellInteractions(app);
       const contextState = createContextState();
       const vaultUi = { filePanel: null };
-      const reviewBasket = window.ZeusReviewBasket ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) }) : null;
-      if (window.ZeusProviderStatus) window.ZeusProviderStatus.mountProviderStatus({ api, app });
-      if (window.ZeusSettingsPanel) window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status });
-      if (window.ZeusChat) window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState });
-      if (window.ZeusContextBasket) window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) });
-      if (window.ZeusSelectionActions) window.ZeusSelectionActions.mountSelectionActions({ app, contextState, reviewBasket, status });
       wireVaultShell(api, app, contextState, vaultUi);
-      if (window.ZeusPaneResize) window.ZeusPaneResize.mountPaneResize(app);
+
+      const reviewBasket = mountOptional('review basket', status, () => window.ZeusReviewBasket
+        ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) })
+        : null);
+      mountOptional('provider status', status, () => window.ZeusProviderStatus && window.ZeusProviderStatus.mountProviderStatus({ api, app }));
+      mountOptional('settings panel', status, () => window.ZeusSettingsPanel && window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status }));
+      mountOptional('chat', status, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState }));
+      mountOptional('context basket', status, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
+      mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status }));
+      mountOptional('pane resize', status, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
+      mountOptional('scoped selection', status, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));
     });
   }
 
@@ -135,6 +139,14 @@
     return window.ZeusContextState.createContextState();
   }
 
+  function mountOptional(name, status, mount) {
+    try {
+      return mount();
+    } catch (error) {
+      setText(status, 'Startup warning: ' + name + ' unavailable.');
+      return null;
+    }
+  }
   function createPermissionState(statusBar) {
     if (!window.ZeusPermissionState) return null;
     return window.ZeusPermissionState.createPermissionState({
@@ -243,22 +255,32 @@
       : null;
     const permissionState = createPermissionState(statusBar);
 
-    if (!api || !api.vault || !window.ZeusFilePanel) {
+    if (!api || !api.vault) {
       setText(statusBar, 'Vault API unavailable.');
-      return;
+    } else if (!window.ZeusFilePanel) {
+      setText(statusBar, 'File panel unavailable.');
+    } else {
+      filePanel = window.ZeusFilePanel.mountFilePanel({
+        api,
+        root: filePanelRoot,
+        previewController,
+        status: statusBar,
+        contextState,
+        permissionState
+      });
+      if (vaultUi) vaultUi.filePanel = filePanel;
     }
 
-    filePanel = window.ZeusFilePanel.mountFilePanel({
-      api,
-      root: filePanelRoot,
-      previewController,
-      status: statusBar,
-      contextState,
-      permissionState
-    });
-    if (vaultUi) vaultUi.filePanel = filePanel;
-
     openButtons.forEach((openButton) => openButton.addEventListener('click', async () => {
+      if (!api || !api.vault) {
+        setText(statusBar, 'Vault API unavailable.');
+        return;
+      }
+      if (!filePanel) {
+        setText(statusBar, 'File panel unavailable.');
+        return;
+      }
+
       setText(statusBar, 'Opening vault...');
       const selected = await api.vault.selectFolder();
       if (!selected.ok) {

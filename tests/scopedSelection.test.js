@@ -1,0 +1,44 @@
+'use strict';
+
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const {
+  getContextMenuActionsForRegion,
+  getCopyTextForRegion,
+  getScopedSelectionRegionForClassNames,
+  isCopyShortcut,
+  isSelectAllShortcut
+} = require('../src/renderer/selection/scopedSelection');
+
+test('scoped selection recognizes concrete content regions only', () => {
+  assert.equal(getScopedSelectionRegionForClassNames(['chat-message-body']).id, 'chat-message');
+  assert.equal(getScopedSelectionRegionForClassNames(['markdown-preview']).id, 'markdown-preview');
+  assert.equal(getScopedSelectionRegionForClassNames(['file-row']).id, 'file-tree');
+  assert.equal(getScopedSelectionRegionForClassNames(['review-basket-item']).id, 'review-basket');
+  assert.equal(getScopedSelectionRegionForClassNames(['context-basket-item']).id, 'context-basket');
+});
+
+test('scoped selection ignores empty panel background regions', () => {
+  assert.equal(getScopedSelectionRegionForClassNames(['chat-log']), null);
+  assert.equal(getScopedSelectionRegionForClassNames(['workspace']), null);
+  assert.equal(getScopedSelectionRegionForClassNames(['file-tree']), null);
+  assert.equal(getScopedSelectionRegionForClassNames(['review-basket-items']), null);
+});
+
+test('scoped selection recognizes platform select and copy shortcuts', () => {
+  assert.equal(isSelectAllShortcut({ key: 'a', ctrlKey: true, metaKey: false }), true);
+  assert.equal(isSelectAllShortcut({ key: 'A', ctrlKey: false, metaKey: true }), true);
+  assert.equal(isSelectAllShortcut({ key: 'a', ctrlKey: false, metaKey: false }), false);
+  assert.equal(isCopyShortcut({ key: 'c', ctrlKey: true, metaKey: false }), true);
+  assert.equal(isCopyShortcut({ key: 'x', ctrlKey: true, metaKey: false }), false);
+});
+
+test('scoped selection does not offer area menu actions for the file tree', () => {
+  assert.deepEqual(getContextMenuActionsForRegion({ id: 'file-tree' }), []);
+  assert.deepEqual(getContextMenuActionsForRegion({ id: 'chat-message' }), ['copy', 'select-area']);
+});
+
+test('copy prefers an existing partial selection before falling back to region text', () => {
+  assert.equal(getCopyTextForRegion({ selectedText: 'partial text', regionText: 'whole message' }), 'partial text');
+  assert.equal(getCopyTextForRegion({ selectedText: '   ', regionText: 'whole message' }), 'whole message');
+});

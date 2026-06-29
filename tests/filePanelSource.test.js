@@ -53,7 +53,7 @@ test('file panel source avoids mojibake-prone inline icon glyphs', () => {
 
   assert.doesNotMatch(source, new RegExp(String.fromCharCode(65533)));
   assert.doesNotMatch(source, /\u00e2|\u2022/);
-  assert.match(source, /icon\.classList\.toggle\('is-expanded'/);
+  assert.match(source, /wrapper\.classList\.toggle\('is-expanded'/);
   assert.doesNotMatch(source, /icon\.textContent = entry\.kind === 'folder'/);
 });
 test('file panel gates selected Markdown chat context through read permission', () => {
@@ -71,4 +71,22 @@ test('file panel keeps loaded preview content and resyncs read permission for ac
   assert.match(source, /function updatePermissionButtonState/);
   assert.match(source, /function syncSelectedContextPermission/);
   assert.match(source, /syncSelectedContextPermission\(\)/);
+});
+test('file panel focuses rows before activation so keyboard navigation can continue', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /focusTreeRow\(row\);\s*activateEntry\(entry\)/);
+  assert.match(source, /focusRenderedPath\(entry\.path\)/);
+});
+test('file panel uses semantic icon renderer for tree and refresh icons', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /attachRefreshIcon/);
+  assert.match(source, /createFileRowIcon/);
+  assert.match(source, /function getIconRenderer/);
+  assert.match(source, /function isMarkdownPath/);
+  assert.match(source, /createIconElement\('folder'/);
+  assert.match(source, /'markdownFile'/);
+  assert.match(source, /'chevronRight'/);
+  assert.match(source, /'chevronDown'/);
 });

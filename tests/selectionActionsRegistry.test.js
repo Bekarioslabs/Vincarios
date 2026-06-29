@@ -29,15 +29,17 @@ test('registry returns three V1 actions for selected Markdown files', () => {
   ]);
   assert.deepEqual(actions.map((action) => action.category), ['read', 'context', 'write']);
   assert.equal(actions.find((action) => action.id === 'file.useAsContext').enabled, true);
-  assert.equal(actions.find((action) => action.id === 'file.summarize').enabled, false);
+  assert.equal(actions.find((action) => action.id === 'file.summarize').enabled, true);
 });
 
-test('use-as-context requires readable loaded Markdown content', () => {
+test('Markdown read actions require readable loaded Markdown content', () => {
   const withoutRead = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: false });
   const withoutContent = getSelectionActions({ kind: 'file', path: 'A.md', content: '', readAllowed: true });
 
   assert.equal(withoutRead.find((action) => action.id === 'file.useAsContext').enabled, false);
   assert.equal(withoutContent.find((action) => action.id === 'file.useAsContext').enabled, false);
+  assert.equal(withoutRead.find((action) => action.id === 'file.summarize').enabled, false);
+  assert.equal(withoutContent.find((action) => action.id === 'file.summarize').enabled, false);
 });
 
 test('registry returns three V1 actions for selected folders', () => {
@@ -51,7 +53,7 @@ test('registry returns three V1 actions for selected folders', () => {
   assert.deepEqual(actions.map((action) => action.category), ['context', 'read', 'read']);
   assert.equal(actions.find((action) => action.id === 'folder.useAsContext').enabled, true);
 });
-test('folder use-as-context requires read permission and adds path context only', () => {
+test('folder read actions require read permission', () => {
   const withoutRead = getSelectionActions({ kind: 'folder', path: '03_Knowledge', readAllowed: false });
   const action = withoutRead.find((item) => item.id === 'folder.useAsContext');
 

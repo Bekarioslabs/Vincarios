@@ -29,7 +29,7 @@ ZEUS V1 is not:
 1. Vault open and vault profile.
 2. Local providers: LM Studio and Ollama.
 3. File tree and Markdown preview.
-4. Context control with visible context bar.
+4. Context control with visible Context Basket.
 5. Read/Write permissions with direct, inherited, and blocked/off states.
 6. Review Basket for grouped, selectable proposals.
 7. Diff and safe Markdown actions.
@@ -67,11 +67,11 @@ Main workspace order:
 ```text
 Chat history
 Review Basket
-Context bar
+Context Basket
 Input field
 ```
 
-Vault panel keeps file tree and preview visible at the same time.
+Vault panel keeps Files, Selection Actions, and Markdown Preview visible in the same workspace.
 
 Markdown preview renders sanitized HTML and displays YAML frontmatter as a visible Properties block. Assistant chat messages use the same shared Markdown renderer; user messages remain plain text, and `Save as Note` stores raw Markdown rather than rendered HTML.
 
@@ -122,19 +122,19 @@ Selecting a file or folder in Files only changes the active UI target. It does n
 
 The Context Basket is the explicit selected-file/folder context source. Items are added through app flows such as Selection Actions, shown below the Review Basket, removable individually, clearable together, and clickable to reveal/select their target in Files.
 
-File context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time. Folder context items attach path context only until the app asks for folder scope. Attached context is request-scoped and is not stored in chat history.
+File context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time. Folder context items attach path context only. Natural-language folder questions may show inline help, but they must not list folder contents. Folder contents are listed through deterministic app actions such as `List folder`, with `R` checked first. Attached context is request-scoped and is not stored in chat history.
 
 If Read is not active for the selected file/folder or one of its parent folders, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 
 Missing-Read blocks are retryable app actions. The chat shows a `Retry after enabling R` button tied to the exact selected file/folder and original request. Missing-Write blocks use the same shared blocked-action foundation with `Retry after enabling W`, while actual write execution gates remain part of reviewed write flows. After the user enables the required permission, the retry runs through app logic. If a matching blocked action is still open, narrow permission-confirmation text such as `es ist freigegeben` or `versuch es nochmal` may retry the same app action; without a matching blocked action, such text must not become a broad prompt trigger. If the selected target path/kind changed before retry, the app must stop with a clear mismatch message instead of applying the old blocked action to the new target. Selection ids may change during permission resync and must not invalidate a retry when the target path and kind still match. If the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
 
-Selected folders expose the folder path only. They are not blindly fully loaded. Folder intent may tolerate simple adjacent-letter transpositions in central target words such as `folder` or `ordner`, but must not become a broad typo list or prompt workaround. When `R` is active, direct folder-content prompts are handled by a request-scoped read-context preflight through the preload vault API. Folder scope is controlled by `PendingActionState` plus `FolderContextController`: ambiguous folder work creates explicit current-level, all-subfolders, and cancel choices; short replies such as `all` or `alle` only resolve an existing pending folder action; without a pending action they are intercepted with a short app-level clarification and do not reach the provider. Current-level and recursive folder listings are capped by central context limits and show explicit limit markers when a cap is reached. Supported `list_folder` model-action envelopes remain a fallback, are checked against the active selection, and are returned as a ZEUS message instead of raw tool-call text.
+Selected folders expose the folder path only. They are not blindly fully loaded. Folder intent handles pending-action replies, existing blocked-action retries, help-only Selection Action guidance, and model-action fallback checks. Typo/fuzzy matching, deictic "here/it" guesses, and broad prompt workarounds are not part of the intent layer. Natural-language folder-content prompts show the inline help `Use "List folder" in Selection Actions to inspect the selected folder.` They do not list, read, or create blocked actions by themselves. Current-level folder listing is owned by the `List folder` Selection Action. Folder scope is controlled by `PendingActionState` plus `FolderContextController` only for open app flows; short replies such as `all` or `alle` only resolve an existing pending folder action. Supported folder-list model-action envelopes remain a fallback, are checked against the active selection, and are returned as a ZEUS message instead of raw tool-call text. `list_directory` is normalized to `list_folder` as a structured action alias. Visible app-generated folder listings are not stored in provider history with file names; only a short app-result marker is stored to prevent stale folder-list reuse.
 
 Future Folder Context Index: selected folders can be counted first, then listed and remembered only after user approval. Persistent folder indexes belong in `.zeus/` or a configured cache location, not blindly in normal vault notes. They should later combine with embeddings for folder candidates, similar-note lookup, and stale-index detection.
 
 Context package sources are visibly separated with source labels such as `context_basket`; future dropped Markdown and embedding candidate sources must use their own labels instead of blending into the active selection. Dropped `.md` files become temporary context immediately. They are not automatically imported into the vault. External dropped Markdown files get an `Import to Inbox` action.
 
-Selection Actions are deterministic app buttons for selected targets. Action colors represent behavior categories (`Context`, `Read`, `Write`, later `Organize`); target types use neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`. The first active action is `Use as context` for readable folders and readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content. Other initial actions are visible V1 slots until their app flows are wired.
+Selection Actions are deterministic app buttons for selected targets. Action colors represent behavior categories (`Context`, `Read`, `Write`, later `Organize`); target types use neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`. The first active actions are `Use as context` for readable folders/readable loaded Markdown files and `List folder` for readable folders. Folder context is path-only; Markdown file context includes loaded note content. Other initial actions remain visible V1 slots until their app flows are wired.
 ## Actions
 
 Read/search:
@@ -182,7 +182,7 @@ Project creation is deterministic app logic, not LLM improvisation.
 Default structure:
 
 ```text
-02_Projekte/Project_Name/
+02_Projects/Project_Name/
   Project_Name.md
   Instructions.md
   References.md
@@ -276,4 +276,4 @@ Do not copy old large orchestration files forward.
 
 Use the same lessons, not the same structure.
 
-Phase 5.4 UX Intent Foundation is now the required bridge before Phase 5.5. It exists to remove broad prompt-trigger dependency before reviewed updates. The target is a deterministic UI flow: Files top-left, Selection Actions top-right, Markdown Preview below both, grouped left navigation, two-pane Settings, Obsidian-like YAML Properties display, scoped selection behavior, and English default development vault roles.
+Phase 5.4 UX Intent Foundation is now the required bridge before Phase 5.5. It exists to remove broad prompt-trigger dependency before reviewed updates. The target is a deterministic UI flow: Files top-left, Selection Actions top-right, Markdown Preview below both, grouped left navigation, two-pane Settings, Obsidian-like YAML Properties display, scoped selection behavior, file-tree keyboard navigation, and English default development vault roles.

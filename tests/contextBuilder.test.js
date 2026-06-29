@@ -2,10 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const {
-  buildChatContextPackage,
-  looksLikeSelectedTargetRequest
-} = require('../src/renderer/context/contextState');
+const { buildChatContextPackage } = require('../src/renderer/context/contextState');
 
 test('context builder does not attach selected files unless they are explicit context items', () => {
   const context = buildChatContextPackage({
@@ -86,10 +83,4 @@ test('context builder truncates long explicit Markdown context items with an exp
   assert.match(context.content, /123456789012/);
   assert.match(context.content, /truncated/);
   assert.doesNotMatch(context.content, /34567890\n```/);
-});
-
-test('selected target request detection remains narrow fallback behavior only', () => {
-  assert.equal(looksLikeSelectedTargetRequest('check mal diese datei'), true);
-  assert.equal(looksLikeSelectedTargetRequest('was steht in dieser note?'), true);
-  assert.equal(looksLikeSelectedTargetRequest('What is the biggest fish?'), false);
 });

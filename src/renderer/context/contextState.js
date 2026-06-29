@@ -150,15 +150,7 @@
     return getPackageBuilderApi().buildChatContextPackage(options);
   }
 
-  function looksLikeSelectedTargetRequest(text) {
-    return getIntentApi().looksLikeSelectedTargetRequest(text);
-  }
-
-  function looksLikeFolderScopedRequest(text) {
-    return getIntentApi().looksLikeFolderScopedRequest(text);
-  }
-
-  function getIntentApi() {
+function getIntentApi() {
     if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');
     throw new Error('ZEUS context intent API is not available.');
@@ -173,8 +165,6 @@
   const api = {
     createContextState,
     buildChatContextPackage,
-    looksLikeSelectedTargetRequest,
-    looksLikeFolderScopedRequest,
     normalizeContextPath
   };
 

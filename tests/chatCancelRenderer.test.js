@@ -2,7 +2,9 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest } = require('../src/renderer/chat/mountChat');
+const fs = require('node:fs');
+const path = require('node:path');
+const { createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest, runProviderRequest } = require('../src/renderer/chat/mountChat');
 
 test('chat request ids are unique and prefixed for cancel tracking', () => {
   const first = createChatRequestId();
@@ -75,4 +77,41 @@ test('canceling active chat request releases UI immediately without waiting for 
   assert.equal(button.textContent, '>');
   assert.equal(status.textContent, 'Request canceled.');
   assert.deepEqual(cancelCalls, [{ requestId: 'req-1' }]);
+});
+
+test('late provider responses after cancel remove pending without appending assistant text', async () => {
+  const pending = { removed: false, remove() { this.removed = true; } };
+  const messages = [{ role: 'user', content: 'hello' }];
+  const status = { textContent: '' };
+  const chatLog = { appended: false, querySelector() { return null; }, appendChild() { this.appended = true; } };
+
+  await runProviderRequest({
+    api: {
+      chat: {
+        send() {
+          return Promise.resolve({ ok: true, message: { content: 'late answer' } });
+        }
+      }
+    },
+    chatLog,
+    content: 'hello',
+    messages,
+    contextState: null,
+    reviewBasket: null,
+    status,
+    pending,
+    requestId: 'req-late',
+    isRequestActive() { return false; }
+  });
+
+  assert.equal(pending.removed, true);
+  assert.equal(chatLog.appended, false);
+  assert.deepEqual(messages, [{ role: 'user', content: 'hello' }]);
+  assert.equal(status.textContent, 'Request canceled.');
+});
+test('normal chat pending messages use the shared pending spinner class', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
+
+  assert.match(source, /appendMessage\(chatLog, 'assistant', 'Thinking\.\.\.', \{ allowSave: false, pending: true \}\)/);
+  assert.match(source, /if \(options\.pending\) message\.classList\.add\('chat-message-pending'\)/);
 });

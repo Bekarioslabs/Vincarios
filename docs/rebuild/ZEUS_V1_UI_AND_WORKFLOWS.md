@@ -1,13 +1,18 @@
 # ZEUS V1 UI And Workflows
 
+## Typography And Assets
+
+- V1 bundles Inter locally from `src/renderer/assets/fonts/InterVariable.woff2`; third-party font licenses live under `third_party/inter/` and must ship with release builds.
+- Lucide SVG icons are bundled locally under `src/renderer/assets/icons/lucide/`; semantic mappings live in `src/renderer/icons/iconRegistry.js`, so individual icons can be replaced without touching UI components. License notices live under `third_party/lucide/`.
+
 ## Main Layout
 
 V1 should stay simple:
 
 ```text
 Left: app navigation and actions
-Middle: chat, review basket, context bar, and input
-Right: vault file tree and selected-file preview
+Middle: chat, Review Basket, Context Basket, and input
+Right: Files, Selection Actions, and Markdown Preview
 ```
 
 The exact layout can change, but these concepts must remain visible:
@@ -33,7 +38,7 @@ Fields:
 Creates:
 
 ```text
-02_Projekte/Project_Name/
+02_Projects/Project_Name/
   Project_Name.md
   Instructions.md
   References.md
@@ -96,7 +101,7 @@ Main workspace order:
 ```text
 Chat history
 Review Basket
-Context bar
+Context Basket
 Input field
 ```
 
@@ -180,12 +185,17 @@ Permission shortcuts:
 - Click `R` or `W`: toggle only the current file or folder.
 - Ctrl+Click `R` or `W`: apply to currently visible/expanded descendants only.
 - Shift+Click `R` or `W`: recursively apply to all descendants by listing folder structure only.
+- Focused File Tree row, `R` or `W`: planned follow-up shortcut to toggle read/write on that row only. It must be disabled while focus is in text inputs, editors, rename fields, or any future inline edit state.
 
 Recursive permission application must not read Markdown contents. It only needs folder/file paths from the vault listing API. Context remains a separate workflow based on the selected file/folder and explicit context rules.
 
 ## Chat Request Control Decisions
 
 While a provider request is running, the Send button becomes `Cancel`. Cancel uses the request id and `chat:cancel` IPC to abort the active provider request through `AbortController`. The renderer also checks the active request id before applying a response so late canceled responses cannot appear in chat.
+## Chat Message Metadata
+
+- ZEUS chat messages show hover metadata below the bubble: `Save as Note` and `Copy` on the left, local time on the right. Persistent follow-up actions such as `Check whole tree` stay in the visible action row below the message. Chat session persistence is not V1 and belongs to the future backlog.
+
 ## Chat Markdown Rendering Decisions
 
 Assistant chat messages render through the shared Markdown renderer so chat and note preview improve together over time.
@@ -229,12 +239,13 @@ V1 action categories:
 - `Write`: creates or updates only through reviewed write flows.
 - `Organize`: reserved for later move/rename/archive workflows.
 
-Initial V1 panel behavior:
+Current V1 foundation actions:
 
-- selected Markdown file shows exactly three actions: `Summarize file`, `Use as context`, `Propose update`.
-- selected folder shows exactly three actions: `Use as context`, `List folder`, `Analyze folder`.
+- selected Markdown file currently shows `Summarize file`, `Use as context`, and `Propose update`.
+- selected folder currently shows `Use as context`, `List folder`, and `Analyze folder`.
 - `Use as context` is active for readable folders and for readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content.
 - inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.
+- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working.
 - future custom actions belong behind Settings and must produce visible proposals or context items, not direct writes.
 
 ## Context System Decisions
@@ -249,16 +260,16 @@ Selected context is explicit, visible, request-scoped, and deterministic:
 - Context Basket items can be clicked to reveal/select their target in Files.
 - Context Basket items can be removed individually with `x`, or cleared together with `Clear all`.
 - file context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time.
-- folder context items attach path context only. They do not include file names or file contents. Folder contents still require the existing app scope choice for current level or subfolders.
-- Context Basket target types are represented by neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`; action colors are reserved for action behavior categories.
+- folder context items attach path context only. They do not include file names or file contents. Natural-language folder questions must not list folder contents. Use the `List folder` Selection Action for current-level folder listing. The resulting app message offers `Check whole tree`, which runs the existing recursive folder listing flow and still reads only folder/file names, not Markdown contents.
+- Context Basket target types are represented by badges such as `DIR`, `MD`, `IMG`, `PDF`, `FILE`, and unknown. V1 may keep them visually neutral. Later polish may use target-type badge or border colors, but those colors must remain separate from Selection Action behavior colors.
 - Selection Actions use behavior categories with stable color slots: Context, Read, Write, and later Organize.
 - attached context is not stored back into chat history.
-- if Read is not active for the selected file/folder or one of its parent folders, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
+- if Read is not active for an explicit app action, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 - missing-Read blocks are retryable app actions. The chat should show a clear `Retry after enabling R` button tied to the exact selected file/folder and request. Missing-Write blocks must use the same shared blocked-action foundation with `Retry after enabling W`, but actual write execution gates belong to reviewed write flows. After the user enables the required permission, the button retries through app logic. If a matching blocked action is still open, narrow permission-confirmation text such as `es ist freigegeben` or `versuch es nochmal` may retry the same app action; without a matching blocked action, such text must not become a broad prompt trigger.
 - if the selected target changes before retry, the retry must stop with a clear mismatch message instead of applying the old blocked action to the new target.
 - if the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
-- folder-scoped follow-up prompts such as `find similar files in this folder` should map the selected file to its parent folder only when that parent folder has active `R`; ZEUS must not switch to generic local-file-upload language.
-- selected folder listing requests are handled by a request-scoped read-context preflight when `R` is active. Requests for all subfolders use recursive folder listing through repeated `listFolder` calls, but still read only folder/file names, not Markdown contents. Current-level and recursive listings use central context limits for maximum listed folders/files per request. Supported `list_folder` model-action envelopes remain a fallback and are executed through the preload vault API only when the requested folder is inside the active selected folder or selected-file parent folder. The raw tool-call text must not be displayed as the final answer. Context intent must stay narrow and must not grow into one-off typo lists or broad fuzzy prompt matching.
+- folder-scoped follow-up prompts are guidance-only in V1. The app should point the user to Selection Actions instead of inferring a parent folder from wording.
+- selected folder listing is executed by the deterministic `List folder` Selection Action when `R` is active. Natural-language folder wording may show only this inline help: `Use "List folder" in Selection Actions to inspect the selected folder.` It must not list, read, or create blocked actions by itself. The `List folder` message may offer `Check whole tree` as a follow-up app button for recursive structure listing. Pending scope replies and existing blocked-action retries remain app-state driven. Supported `list_folder` model-action envelopes remain a fallback and are checked against active app state before execution. Visible app-generated folder listings must not be stored back into provider chat history with their file names; history receives only a short app-result marker so old listings cannot become stale model context. Context intent stays narrow: pending-action replies, existing blocked-action retries, and help-only selection-action guidance. It must not grow into one-off typo lists, deictic "here/it" guesses, or broad fuzzy prompt matching.
 
 For selected folders:
 - ZEUS may use the folder path as the active target.
@@ -266,7 +277,7 @@ For selected folders:
 - Future Folder Context Index workflow: when a folder is selected, ZEUS may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
 - Persistent Folder Context Indexes must be stored in `.zeus/` or a configured cache location, not blindly as normal vault notes.
 
-- Current folder controller: selected-folder preflight now runs through `PendingActionState` plus `FolderContextController`. Ambiguous folder work creates explicit scope buttons for current level, all subfolders, or cancel. Short replies like 'all' or 'alle' only resolve an existing pending folder action; without a pending action they are intercepted with a short app-level clarification and do not reach the provider. Folder listings are capped by `contextLimits` and show explicit limit markers when the cap is reached.
+- Current folder controller: `PendingActionState` plus `FolderContextController` resolves only open scope choices and explicit app flows. Short replies like 'all' or 'alle' only resolve an existing pending folder action; without a pending action they are intercepted with a short app-level clarification and do not reach the provider. Folder listings are capped by `contextLimits` and show explicit limit markers when the cap is reached.
 
 Context sources must remain visible and separated:
 
@@ -415,23 +426,19 @@ Responsive rules:
 
 The Selection Actions panel replaces broad prompt guessing with explicit app-side actions.
 
-For selected folders, V1 starts with exactly three actions:
+Current V1 foundation actions for selected folders:
 
+- Use as context
 - List folder
-- List with subfolders
 - Analyze folder
-- Find similar files
-- Inbox Review when the selected path matches the configured Inbox role
 
-For selected Markdown files, V1 starts with exactly three actions:
+Current V1 foundation actions for selected Markdown files:
 
 - Summarize file
 - Use as context
 - Propose update
-- Find related notes
-- Reveal/Open preview
 
-These actions should be registered through a focused selection-actions module. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
+Future actions can be added through the same registry and handler structure, for example `Find similar files`, `Find related notes`, `Inbox Review`, move/rename, image actions, or later custom actions. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
 
 ### Left Navigation Cleanup
 
@@ -455,14 +462,21 @@ Left:  settings category menu
 Right: active settings category content
 ```
 
-Initial categories remain Providers, Limits, Vault Profile, Safety, Templates, Theme, and About. Future categories should extend the same settings module and store shape.
+Current implemented Settings categories are Providers, Limits, and Vault Profile.
+
+V1 target categories are Providers, Limits, Vault Profile, Embeddings, Safety, and Templates.
+
+Later categories such as Theme, About, and hotkeys should extend the same settings module and store shape instead of creating parallel configuration paths.
+
+Later Settings should include a Chat Appearance option for assistant-message hover actions: text labels, Lucide SVG icons, or icon+text. The setting must only affect presentation; message actions remain semantic in chat code.
 ### Selection UX
 
 The prototype's context-aware selection behavior should be recovered cleanly:
 
-- `Ctrl+A` selects within the relevant hovered/focused region, not the whole app.
-- right-click can offer region-specific selection/copy actions.
-- selection behavior belongs in a focused shortcuts/selection module, not scattered across shell, chat, and preview code.
+- `Ctrl+A` selects within the relevant hovered/focused concrete content region, not the whole app. Empty panel background must not trigger scoped selection.
+- right-click offers safe region-specific selection/copy actions for content regions. File Tree does not expose `Select area` in V1. No write actions belong in this menu for V1.
+- selection behavior belongs in `renderer/selection`; file-tree keyboard navigation belongs in `renderer/files`. Do not scatter shortcut logic across shell, chat, and preview code.
+- file tree keyboard navigation uses `ArrowUp` / `ArrowDown` for visible rows, `ArrowRight` / `ArrowLeft` for folder expand/collapse, and `PageUp` / `PageDown` / `Home` / `End` for larger navigation. These keys do not trigger write actions.
 
 ### Implementation Note
 

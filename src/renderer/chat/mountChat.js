@@ -43,7 +43,7 @@
       appendMessage(chatLog, 'user', content);
       setChatBusy(input, sendButton, true);
       setText(status, 'Waiting for provider...');
-      const pending = appendMessage(chatLog, 'assistant', 'Thinking...', { allowSave: false });
+      const pending = appendMessage(chatLog, 'assistant', 'Thinking...', { allowSave: false, pending: true });
       activeRequest.pending = pending;
 
       try {
@@ -228,6 +228,11 @@
       : options.messages;
     const outboundMessages = buildOutboundMessages(providerMessages, options.content, options.contextState);
     const result = await options.api.chat.send({ messages: outboundMessages });
+    if (typeof options.isRequestActive === 'function' && !options.isRequestActive()) {
+      options.pending.remove();
+      setText(options.status, 'Request canceled.');
+      return;
+    }
     options.pending.remove();
     if (result && result.ok && result.message && result.message.content) {
       const handled = await handleAssistantContent({
@@ -304,8 +309,11 @@
     const emptyState = chatLog.querySelector('.chat-empty-state');
     if (emptyState) emptyState.remove();
 
+    const createdAt = normalizeMessageDate(options.createdAt);
     const message = document.createElement('article');
     message.className = 'chat-message chat-message-' + role;
+    if (options.pending) message.classList.add('chat-message-pending');
+    message.dataset.createdAt = createdAt.toISOString();
 
     const label = document.createElement('div');
     label.className = 'chat-message-label';
@@ -317,11 +325,9 @@
 
     message.appendChild(label);
     message.appendChild(body);
+    message.appendChild(createMessageMeta(content, createdAt, role, options));
     if (Array.isArray(options.actions) && options.actions.length > 0) {
       message.appendChild(createMessageActions(options.actions));
-    }
-    if (role === 'assistant' && options.allowSave !== false) {
-      message.appendChild(createSaveAsNoteButton(content, options));
     }
     chatLog.appendChild(message);
 
@@ -344,6 +350,65 @@
     body.textContent = content;
   }
 
+  function createMessageMeta(content, createdAt, role, options) {
+    const meta = document.createElement('div');
+    meta.className = 'chat-message-meta';
+
+    const left = document.createElement('div');
+    left.className = 'chat-message-meta-left';
+    if (role === 'assistant' && options.allowSave !== false) {
+      left.appendChild(createSaveAsNoteButton(content, options));
+    }
+    left.appendChild(createCopyMessageButton(content));
+    meta.appendChild(left);
+
+    const time = document.createElement('time');
+    time.className = 'chat-message-time';
+    time.dateTime = createdAt.toISOString();
+    time.textContent = formatMessageTime(createdAt);
+    meta.appendChild(time);
+
+
+    return meta;
+  }
+
+  function createCopyMessageButton(content) {
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.className = 'chat-message-copy';
+    copy.textContent = 'Copy';
+    copy.title = 'Copy message';
+    copy.addEventListener('click', () => copyMessageContent(content, copy));
+    return copy;
+  }
+
+  function copyMessageContent(content, button) {
+    const value = String(content || '');
+    const clipboard = typeof navigator !== 'undefined' ? navigator.clipboard : null;
+    if (clipboard && typeof clipboard.writeText === 'function') {
+      clipboard.writeText(value).then(() => flashCopyButton(button, 'Copied')).catch(() => flashCopyButton(button, 'Copy failed'));
+      return;
+    }
+    flashCopyButton(button, 'Copy unavailable');
+  }
+
+  function flashCopyButton(button, label) {
+    if (!button) return;
+    const previous = button.textContent;
+    button.textContent = label;
+    setTimeout(() => { button.textContent = previous; }, 1200);
+  }
+
+  function normalizeMessageDate(value) {
+    const date = value instanceof Date ? value : new Date(value || Date.now());
+    return Number.isNaN(date.getTime()) ? new Date() : date;
+  }
+
+  function formatMessageTime(value) {
+    const date = normalizeMessageDate(value);
+    return String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0');
+  }
+
   function createMessageActions(actions) {
     const wrapper = document.createElement('div');
     wrapper.className = 'chat-message-actions';
@@ -364,7 +429,7 @@
   function createSaveAsNoteButton(content, options) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'chat-save-note-button';
+    button.className = 'chat-save-note-button chat-message-save';
     button.textContent = 'Save as Note';
     button.addEventListener('click', () => {
       const factory = window.ZeusReviewBasketState && window.ZeusReviewBasketState.createSaveAssistantResponseProposal;
@@ -382,8 +447,8 @@
     input.readOnly = !enabled;
     input.setAttribute('aria-disabled', String(!enabled));
     sendButton.disabled = !enabled;
+    renderSendButtonIcon(sendButton, 'send');
     if (enabled) {
-      sendButton.textContent = '>';
       delete sendButton.dataset.chatState;
     }
   }
@@ -392,10 +457,28 @@
     input.readOnly = busy;
     input.setAttribute('aria-disabled', String(busy));
     sendButton.disabled = false;
-    sendButton.textContent = busy ? 'X' : '>';
+    renderSendButtonIcon(sendButton, busy ? 'close' : 'send');
     sendButton.dataset.chatState = busy ? 'running' : 'idle';
   }
 
+
+  function renderSendButtonIcon(sendButton, iconName) {
+    if (!sendButton) return;
+    const renderer = getIconRenderer();
+    sendButton.textContent = '';
+    const label = iconName === 'close' ? 'Cancel response' : 'Send message';
+    if (typeof sendButton.setAttribute === 'function') sendButton.setAttribute('aria-label', label);
+    sendButton.title = label;
+    if (renderer && typeof renderer.createIconElement === 'function' && typeof sendButton.appendChild === 'function') {
+      sendButton.appendChild(renderer.createIconElement(iconName, 'send-button-icon'));
+      return;
+    }
+    sendButton.textContent = iconName === 'close' ? 'X' : '>';
+  }
+
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
   function cancelActiveChatRequest(options) {
     options = options || {};
     const request = options.activeRequest;
@@ -433,10 +516,10 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountChat, appendMessage, buildOutboundMessages, createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest };
+    module.exports = { mountChat, appendMessage, buildOutboundMessages, runProviderRequest, createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest, formatMessageTime };
   }
 
   if (typeof window !== 'undefined') {
-    window.ZeusChat = Object.freeze({ mountChat });
+    window.ZeusChat = Object.freeze({ mountChat, appendMessage });
   }
 })();

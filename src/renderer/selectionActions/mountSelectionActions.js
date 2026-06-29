@@ -3,6 +3,7 @@
 
   function mountSelectionActions(options) {
     options = options || {};
+    const api = options.api || {};
     const app = options.app;
     const contextState = options.contextState;
     const status = options.status || null;
@@ -76,6 +77,10 @@
 
     function runAction(action, snapshot) {
       if (!action || action.enabled !== true) return;
+      if (action.id === 'file.summarize') {
+        summarizeFile(snapshot);
+        return;
+      }
       if (action.id === 'file.useAsContext') {
         contextState.addContextItem({ kind: 'file', path: snapshot.path, content: snapshot.content });
         setText(status, 'Added to Context Basket: ' + snapshot.path);
@@ -84,7 +89,141 @@
       if (action.id === 'folder.useAsContext') {
         contextState.addContextItem({ kind: 'folder', path: snapshot.path });
         setText(status, 'Added folder to Context Basket: ' + snapshot.path);
+        return;
       }
+      if (action.id === 'folder.listCurrent') {
+        listFolder(snapshot);
+      }
+    }
+
+    async function summarizeFile(snapshot) {
+      const summary = getFileSummaryAction();
+      if (!summary || typeof summary.buildFileSummaryMessages !== 'function') {
+        appendActionMessage('File summary failed: summary action module unavailable.');
+        setText(status, 'File summary failed.');
+        return;
+      }
+      if (!api.chat || typeof api.chat.send !== 'function') {
+        appendActionMessage('File summary failed: chat provider API unavailable.');
+        setText(status, 'File summary failed.');
+        return;
+      }
+
+      const request = summary.buildFileSummaryMessages(snapshot);
+      if (!request.ok) {
+        appendActionMessage('File summary unavailable: ' + (request.message || 'Unsupported selection.'));
+        setText(status, 'File summary unavailable.');
+        return;
+      }
+
+      setText(status, 'Summarizing file: ' + request.path);
+      const pending = appendActionMessage('Summarizing file: ' + request.path, [], { pending: true });
+      try {
+        const result = await api.chat.send({ messages: request.messages });
+        if (result && result.ok && result.message && result.message.content) {
+          removeNode(pending);
+          appendActionMessage(result.message.content);
+          setText(status, 'File summarized: ' + request.path);
+          return;
+        }
+        removeNode(pending);
+        appendActionMessage('File summary failed: ' + ((result && result.error) || 'No response.'));
+        setText(status, 'File summary failed.');
+      } catch (error) {
+        removeNode(pending);
+        appendActionMessage('File summary failed: ' + ((error && error.message) || 'request failed'));
+        setText(status, 'File summary failed.');
+      }
+    }
+
+    async function listFolder(snapshot) {
+      if (!api.vault || typeof api.vault.listFolder !== 'function') {
+        appendActionMessage('Folder listing failed: vault API unavailable.');
+        setText(status, 'Folder listing failed.');
+        return;
+      }
+      setText(status, 'Listing folder: ' + snapshot.path);
+      const result = await api.vault.listFolder(snapshot.path);
+      appendActionMessage(formatFolderListing(snapshot.path, result), [{
+        label: 'Check whole tree',
+        onClick: () => listFolderTree(snapshot)
+      }]);
+      setText(status, result && result.ok ? 'Folder listed: ' + snapshot.path : 'Folder listing failed.');
+    }
+
+    async function listFolderTree(snapshot) {
+      const controller = getFolderController();
+      if (!api.vault || !controller || typeof controller.listFolderTree !== 'function' || typeof controller.formatRecursiveFolderListing !== 'function') {
+        appendActionMessage('Recursive folder listing failed: folder controller unavailable.');
+        setText(status, 'Recursive folder listing failed.');
+        return;
+      }
+      setText(status, 'Listing whole tree: ' + snapshot.path);
+      const target = {
+        kind: 'folder',
+        path: snapshot.path,
+        readAllowed: true,
+        selectionId: snapshot.selectionId || 0,
+        recursive: true
+      };
+      const result = await controller.listFolderTree(api.vault, target);
+      appendActionMessage(controller.formatRecursiveFolderListing(target, result));
+      setText(status, 'Whole tree listed: ' + snapshot.path);
+    }
+
+    function appendActionMessage(content, actions, options) {
+      options = options || {};
+      const chatLog = app.querySelector('#chat-log');
+      if (!chatLog) return;
+      if (typeof window !== 'undefined' && window.ZeusChat && typeof window.ZeusChat.appendMessage === 'function') {
+        const message = window.ZeusChat.appendMessage(chatLog, 'assistant', content, { allowSave: false, actions: actions || [] });
+        if (options.pending && message) {
+          message.classList.add('chat-message-pending');
+          message.setAttribute('aria-busy', 'true');
+        }
+        return message;
+      }
+      const message = document.createElement('article');
+      message.className = 'chat-message chat-message-assistant';
+      if (options.pending) {
+        message.classList.add('chat-message-pending');
+        message.setAttribute('aria-busy', 'true');
+      }
+      const label = document.createElement('div');
+      label.className = 'chat-message-label';
+      label.textContent = 'ZEUS';
+      const body = document.createElement('div');
+      body.className = 'chat-message-body';
+      body.textContent = content;
+      message.appendChild(label);
+      message.appendChild(body);
+      const actionList = actions || [];
+      if (actionList.length) {
+        const actionWrapper = document.createElement('div');
+        actionWrapper.className = 'chat-message-actions';
+        actionList.forEach((action) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'chat-message-action-button';
+          button.textContent = action.label;
+          button.addEventListener('click', action.onClick);
+          actionWrapper.appendChild(button);
+        });
+        message.appendChild(actionWrapper);
+      }
+      chatLog.appendChild(message);
+      chatLog.scrollTop = chatLog.scrollHeight;
+      return message;
+    }
+
+    function removeNode(node) {
+      if (node && typeof node.remove === 'function') node.remove();
+    }
+    function formatFolderListing(folderPath, result) {
+      if (!result || !result.ok) return 'Folder listing failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
+      const entries = Array.isArray(result.entries) ? result.entries : [];
+      if (!entries.length) return 'Folder listed: ' + folderPath + '\n\nNo supported Markdown folders or files found.';
+      return 'Folder listed: ' + folderPath + '\n\n' + entries.map((entry) => (entry.name || entry.path || 'Unnamed') + (entry.kind === 'folder' ? '/' : '')).join('\n');
     }
 
     return Object.freeze({
@@ -104,6 +243,17 @@
     if (typeof window !== 'undefined' && window.ZeusSelectionActionCategories) return window.ZeusSelectionActionCategories;
     if (typeof module !== 'undefined' && module.exports) return require('./actionCategories');
     throw new Error('ZEUS selection action categories are not available.');
+  }
+
+  function getFileSummaryAction() {
+    if (typeof window !== 'undefined' && window.ZeusFileSummaryAction) return window.ZeusFileSummaryAction;
+    if (typeof module !== 'undefined' && module.exports) return require('./fileSummaryAction');
+    return null;
+  }
+  function getFolderController() {
+    if (typeof window !== 'undefined' && window.ZeusFolderContextController) return window.ZeusFolderContextController;
+    if (typeof module !== 'undefined' && module.exports) return require('../context/folderContextController');
+    return null;
   }
 
   function setText(node, value) {

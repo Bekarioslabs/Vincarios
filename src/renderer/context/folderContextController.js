@@ -35,6 +35,8 @@
 
     if (isStandaloneScopeReply(userText)) return createMissingScopeMessage(selection, scopeChoice);
 
+    if (options.allowPromptTarget !== true) return { handled: false };
+
     const target = resolveFolderReadTarget(selection, userText, limits);
     if (!target) return { handled: false };
 
@@ -65,39 +67,19 @@
   function resolveFolderReadTarget(selection, userText, limits) {
     limits = normalizeOptionalLimits(limits);
     const intent = getIntentApi();
-    if (!selection || !selection.path || !intent) return null;
+    if (!selection || selection.kind !== 'folder' || !selection.path || !intent) return null;
     const recursive = typeof intent.hasRecursiveFolderWorkSignal === 'function' && intent.hasRecursiveFolderWorkSignal(userText);
     const ambiguous = isAmbiguousFolderRequest(userText);
-
-    if (selection.kind === 'folder' && (intent.hasFolderWorkSignal(userText) || ambiguous)) {
-      const target = {
-        kind: 'folder',
-        path: normalizePath(selection.path),
-        readAllowed: selection.readAllowed === true,
-        selectionId: selection.selectionId || 0,
-        recursive
-      };
-      if (limits) target.limits = limits;
-      if (ambiguous && !recursive) target.ambiguous = true;
-      return target;
-    }
-
-    if (selection.kind === 'file' && intent.looksLikeFolderScopedRequest(userText)) {
-      const parent = parentFolderOf(selection.path);
-      if (!parent) return null;
-      const target = {
-        kind: 'folder',
-        path: parent,
-        readAllowed: selection.parentReadAllowed === true,
-        selectionId: selection.selectionId || 0,
-        recursive
-      };
-      if (limits) target.limits = limits;
-      if (ambiguous && !recursive) target.ambiguous = true;
-      return target;
-    }
-
-    return null;
+    const target = {
+      kind: 'folder',
+      path: normalizePath(selection.path),
+      readAllowed: selection.readAllowed === true,
+      selectionId: selection.selectionId || 0,
+      recursive
+    };
+    if (limits) target.limits = limits;
+    if (ambiguous && !recursive) target.ambiguous = true;
+    return target;
   }
 
   async function listTarget(api, target) {
@@ -121,7 +103,7 @@
       handled: true,
       kind: 'message',
       message,
-      historyContent: message
+      historyContent: formatFolderListingHistory(target, result)
     };
   }
 
@@ -295,6 +277,10 @@
     return lines.join('\n').trim();
   }
 
+  function formatFolderListingHistory(target, result) {
+    const status = result && result.ok ? 'displayed' : 'failed';
+    return 'Folder listing ' + status + ' for current selection ' + target.selectionId + ': ' + target.path;
+  }
   function formatFolderListing(target, result) {
     if (!result || !result.ok) {
       return 'Folder listing failed for current selection ' + target.selectionId + ': ' + ((result && (result.message || result.code)) || 'Unknown error.');

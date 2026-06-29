@@ -27,3 +27,10 @@ test('model action parser also accepts pipe-closed opening tokens', () => {
   assert.equal(calls.length, 1);
   assert.equal(calls[0].path, '03_Wissen');
 });
+test('model action parser normalizes list_directory alias to list_folder', () => {
+  const calls = parseModelActionCalls('<|tool_call>call:list_directory(path="90_AI_Brain/Core")<tool_call|>');
+
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].type, 'list_folder');
+  assert.equal(calls[0].path, '90_AI_Brain/Core');
+});

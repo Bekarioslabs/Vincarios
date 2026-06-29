@@ -12,6 +12,13 @@ const BROWSER_SHARED_SCRIPTS = [
   'src/shared/actions/proposalPlan.js',
   'src/shared/actions/diffPreview.js'
 ];
+const BROWSER_RENDERER_SCRIPTS = [
+  'src/renderer/files/mountFilePanel.js',
+  'src/renderer/shell/mountShell.js',
+  'src/renderer/icons/iconRegistry.js',
+  'src/renderer/icons/iconRenderer.js'
+];
+
 
 test('browser-loaded shared scripts are isolated in IIFEs', () => {
   BROWSER_SHARED_SCRIPTS.forEach((relativePath) => {
@@ -38,4 +45,12 @@ test('index does not contain visible escaped newline literals', () => {
   assert.equal(index.includes('`r'), false);
   assert.equal(index.includes('`n'), false);
   assert.equal(index.includes('\\r\\n'), false);
+});
+
+
+test('browser-loaded renderer scripts do not start with a UTF-8 BOM', () => {
+  BROWSER_RENDERER_SCRIPTS.forEach((relativePath) => {
+    const buffer = fs.readFileSync(path.join(__dirname, '..', relativePath));
+    assert.equal(buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf, false, relativePath);
+  });
 });

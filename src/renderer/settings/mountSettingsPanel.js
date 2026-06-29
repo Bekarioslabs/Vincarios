@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   const LIMIT_FIELDS = Object.freeze([
@@ -44,7 +44,7 @@
       '      <div class="settings-kicker">Settings</div>',
       '      <h2>ZEUS Settings</h2>',
       '    </div>',
-      '    <button type="button" class="settings-icon-button" data-settings-close aria-label="Close settings">×</button>',
+      '    <button type="button" class="settings-icon-button" data-settings-close aria-label="Close settings"></button>',
       '  </header>',
       '  <div class="settings-body">',
       '    <section class="settings-section">',
@@ -80,6 +80,7 @@
       '  </footer>',
       '</div>'
     ].join('');
+    renderSettingsCloseIcon(backdrop.querySelector('.settings-icon-button[data-settings-close]'));
 
     return {
       backdrop,
@@ -92,6 +93,19 @@
     };
   }
 
+
+  function renderSettingsCloseIcon(button) {
+    if (!button) return;
+    const renderer = getIconRenderer();
+    button.textContent = '';
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      button.appendChild(renderer.createIconElement('close', 'settings-close-icon'));
+    }
+  }
+
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
   async function openPanel(panel, api, statusBar) {
     panel.backdrop.hidden = false;
     setText(panel.status, 'Loading...');
@@ -315,7 +329,7 @@
   function getDefaultVaultRoles() {
     const defaults = window.ZeusVaultProfile && window.ZeusVaultProfile.DEFAULT_FOLDERS
       ? window.ZeusVaultProfile.DEFAULT_FOLDERS
-      : { inbox: '00_Inbox', daily: '01_Tagesnotizen', projects: '02_Projekte', knowledge: '03_Wissen', brain: '90_AI_Brain', archive: '99_Archiv' };
+      : { inbox: '00_Inbox', daily: '01_Daily', projects: '02_Projects', knowledge: '03_Knowledge', brain: '90_AI_Brain', archive: '99_Archive' };
     return Object.keys(defaults).map((id) => ({
       id,
       label: id,

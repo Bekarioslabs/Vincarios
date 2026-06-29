@@ -67,7 +67,7 @@
       remove.type = 'button';
       remove.className = 'context-basket-remove';
       remove.title = 'Remove from context';
-      remove.textContent = 'x';
+      renderRemoveIcon(remove);
       remove.addEventListener('click', () => {
         if (typeof contextState.removeContextItem === 'function') contextState.removeContextItem(item.id);
       });
@@ -84,6 +84,21 @@
     });
   }
 
+
+  function renderRemoveIcon(button) {
+    if (!button) return;
+    const renderer = getIconRenderer();
+    button.textContent = '';
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      button.appendChild(renderer.createIconElement('close', 'context-remove-icon'));
+      return;
+    }
+    button.textContent = 'x';
+  }
+
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
   function formatItemLabel(item) {
     return baseName((item && item.path) || '') || formatItemTitle(item);
   }
