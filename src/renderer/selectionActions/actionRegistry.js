@@ -37,7 +37,7 @@
     return [
       action({ id: 'folder.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' }),
       action({ id: 'folder.listCurrent', label: 'List folder', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' }),
-      action({ id: 'folder.analyze', label: 'Analyze folder', category: 'read', targetKinds: ['folder'], enabled: false, future: true })
+      action({ id: 'folder.analyze', label: 'Analyze folder', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' })
     ];
   }
 

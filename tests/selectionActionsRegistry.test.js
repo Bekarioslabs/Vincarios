@@ -52,6 +52,8 @@ test('registry returns three V1 actions for selected folders', () => {
   ]);
   assert.deepEqual(actions.map((action) => action.category), ['context', 'read', 'read']);
   assert.equal(actions.find((action) => action.id === 'folder.useAsContext').enabled, true);
+  assert.equal(actions.find((action) => action.id === 'folder.listCurrent').enabled, true);
+  assert.equal(actions.find((action) => action.id === 'folder.analyze').enabled, true);
 });
 test('folder read actions require read permission', () => {
   const withoutRead = getSelectionActions({ kind: 'folder', path: '03_Knowledge', readAllowed: false });

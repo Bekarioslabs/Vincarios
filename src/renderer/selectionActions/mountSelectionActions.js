@@ -233,6 +233,29 @@
     });
   }
 
+  function formatFolderAnalysis(folderPath, result) {
+    if (!result || !result.ok) return 'Folder analysis failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
+    const entries = Array.isArray(result.entries) ? result.entries : [];
+    const folders = entries.filter((entry) => entry.kind === 'folder');
+    const markdownFiles = entries.filter((entry) => entry.kind === 'file' && /\.md$/i.test(String(entry.name || entry.path || '')));
+    const otherEntries = entries.filter((entry) => !folders.includes(entry) && !markdownFiles.includes(entry));
+    const names = entries.map((entry) => String(entry.name || entry.path || 'Unnamed'));
+    const samples = names.slice(0, 8);
+
+    return [
+      'Folder analysis (structure only): ' + folderPath,
+      '',
+      'This is based on names and entry types only. No Markdown file contents were read.',
+      '',
+      '- Folders: ' + folders.length,
+      '- Markdown files: ' + markdownFiles.length,
+      '- Other supported entries: ' + otherEntries.length,
+      '',
+      samples.length ? 'Name samples:\n' + samples.map((name) => '- ' + name).join('\n') : 'Name samples: none',
+      '',
+      'Use a file-specific action or add files to context before asking for content-level analysis.'
+    ].join('\n');
+  }
   function getRegistry() {
     if (typeof window !== 'undefined' && window.ZeusSelectionActionRegistry) return window.ZeusSelectionActionRegistry;
     if (typeof module !== 'undefined' && module.exports) return require('./actionRegistry');
@@ -260,7 +283,7 @@
     if (node) node.textContent = value;
   }
 
-  const api = { mountSelectionActions };
+  const api = { mountSelectionActions, formatFolderAnalysis };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZeusSelectionActions = Object.freeze(api);

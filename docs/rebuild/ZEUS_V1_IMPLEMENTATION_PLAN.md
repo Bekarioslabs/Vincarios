@@ -147,7 +147,7 @@ Recommended execution order: finish 5.4.1 through 5.4.7 first and test them toge
 This is a V1-critical workflow, not a later comfort feature. The prototype already proved the value of chat-driven file updates; the rebuild must make it reliable and review-safe before larger cleanup features.
 
 - [x] Read-only action foundation before writes: make `Summarize file` functional for one selected readable Markdown file.
-- [ ] Keep `Analyze folder` V1-light as structure/name/type analysis first. It must clearly label results as structure-based until file contents are explicitly read.
+- [x] Keep `Analyze folder` V1-light as structure/name/type analysis first. It clearly labels results as structure-based and does not read Markdown contents.
 - [ ] Add later `Summarize Markdown files` on top of the same read-only action path: only `.md`, no images/PDF/attachments in V1, with max file count, max chars per file, and max total chars coming from Settings/Limits.
 - [ ] Keep `Copy path` as a later secondary utility action. Keep `Reveal in Explorer` later because it needs main-process IPC.
 - [ ] Chat-generated `update_note` proposals reliably target the selected Markdown file when `R` and `W` allow it.
