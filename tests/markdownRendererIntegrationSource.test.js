@@ -10,6 +10,8 @@ test('renderer shell provides preview and source editor controls', () => {
 
   assert.match(source, /<article id="markdown-preview"/);
   assert.match(source, /id="markdown-edit-toggle"/);
+  assert.match(source, /id="markdown-propose-update"/);
+  assert.match(source, /disabled>Update<\/button>/);
   assert.match(source, /id="markdown-source-editor"/);
   assert.doesNotMatch(source, /<pre id="markdown-preview"/);
 });
@@ -28,7 +30,10 @@ test('preview controller owns rendered/source mode switching', () => {
   assert.match(source, /ZeusMarkdownRenderer\.renderMarkdown/);
   assert.match(source, /preview\.textContent = String\(source \|\| ''\)/);
   assert.match(source, /editButton\.textContent = sourceMode \? 'Preview' : 'Edit'/);
-  assert.match(source, /Saving will use Review\/Write later/);
+  assert.match(source, /Use Update to send changes to Review Basket/);
+  assert.match(source, /type: 'update_note'/);
+  assert.match(source, /currentContent: loadedSource/);
+  assert.match(source, /proposedContent/);
 });
 
 test('index loads Markdown preview controller before the file panel and shell', () => {

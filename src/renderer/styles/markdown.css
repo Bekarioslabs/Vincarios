@@ -42,6 +42,7 @@
   display: none;
 }
 .markdown-edit-toggle,
+.markdown-propose-update,
 .markdown-reveal-current,
 .markdown-history-button {
   flex: 0 0 auto;
@@ -55,6 +56,7 @@
 }
 
 .markdown-edit-toggle:hover:not(:disabled),
+.markdown-propose-update:hover:not(:disabled),
 .markdown-reveal-current:hover:not(:disabled),
 .markdown-history-button:hover:not(:disabled) {
   border-color: var(--interactive-accent);
@@ -62,6 +64,7 @@
 }
 
 .markdown-edit-toggle:disabled,
+.markdown-propose-update:disabled,
 .markdown-reveal-current:disabled,
 .markdown-history-button:disabled {
   opacity: .45;

@@ -59,6 +59,10 @@
       button.dataset.actionCategory = action.category;
       if (action.future) button.dataset.futureSlot = action.id;
       button.disabled = action.enabled !== true;
+      if (action.softDisabled) {
+        button.classList.add('is-soft-disabled');
+        button.setAttribute('aria-disabled', 'true');
+      }
       button.title = action.reason || (action.future ? 'Planned V1 action.' : action.label);
 
       const category = getCategories().getActionCategory(action.category);
@@ -78,6 +82,11 @@
 
     function runAction(action, snapshot) {
       if (!action || action.enabled !== true) return;
+      if (action.softDisabled) {
+        const gate = createSoftDisabledActionGate(action, snapshot);
+        appendMissingPermissionMessage(gate, action.id);
+        return;
+      }
       if (action.id === 'file.summarize') {
         summarizeFile(snapshot);
         return;
@@ -88,6 +97,11 @@
         return;
       }
       if (action.id === 'file.proposeUpdate') {
+        const gate = validateFileUpdatePermissions(snapshot);
+        if (!gate.ok) {
+          appendMissingPermissionMessage(gate, 'file.proposeUpdate');
+          return;
+        }
         renderUpdateInstructionForm(snapshot);
         return;
       }
@@ -107,6 +121,57 @@
       if (action.id === 'folder.summarizeMarkdown') {
         summarizeFolderMarkdown(snapshot);
       }
+    }
+
+    function validateFileUpdatePermissions(snapshot) {
+      if (!snapshot || snapshot.kind !== 'file') {
+        return { ok: false, message: 'Select a Markdown file before proposing an update.' };
+      }
+      if (snapshot.readAllowed !== true) {
+        return createMissingPermissionAction(snapshot, 'read', 'file.proposeUpdate');
+      }
+      if (typeof snapshot.content !== 'string' || snapshot.content.length === 0) {
+        return { ok: false, message: 'Read is enabled, but the selected file content is not loaded yet. Click or reselect the file, then retry.' };
+      }
+      if (snapshot.writeAllowed !== true) {
+        return createMissingPermissionAction(snapshot, 'write', 'file.proposeUpdate');
+      }
+      return { ok: true };
+    }
+
+    function createSoftDisabledActionGate(action, snapshot) {
+      if (action && action.id === 'file.proposeUpdate') return createMissingPermissionAction(snapshot, 'read_write', action.id);
+      return createMissingPermissionAction(snapshot, action && action.requiredPermission ? action.requiredPermission : 'read', action && action.id);
+    }
+
+    function createMissingPermissionAction(snapshot, requiredPermission, actionId) {
+      const path = normalizePath(snapshot && snapshot.path);
+      return {
+        ok: false,
+        missingPermission: requiredPermission,
+        actionId,
+        targetPath: path,
+        targetKind: snapshot && snapshot.kind === 'folder' ? 'folder' : 'file',
+        message: getPermissionText().missingPermissionMessage({ actionId, requiredPermission, targetKind: snapshot && snapshot.kind === 'folder' ? 'folder' : 'file', path })
+      };
+    }
+
+    function appendMissingPermissionMessage(gate, actionId) {
+      const action = gate && gate.missingPermission
+        ? [{ label: formatBlockedActionRetryLabel(gate.missingPermission), onClick: () => retrySelectionAction(actionId, gate) }]
+        : [];
+      appendActionMessage((gate && gate.message) || 'Action unavailable.', action);
+      setText(status, (gate && gate.message) || 'Action unavailable.');
+    }
+
+    function retrySelectionAction(actionId, blocked) {
+      const current = contextState && typeof contextState.snapshot === 'function' ? contextState.snapshot() : null;
+      if (!current || normalizePath(current.path) !== normalizePath(blocked && blocked.targetPath)) {
+        appendActionMessage('Blocked action no longer matches the current selection. Please select the target again.');
+        setText(status, 'Blocked action target changed.');
+        return;
+      }
+      runAction({ id: actionId, enabled: true }, current);
     }
 
     async function summarizeFile(snapshot) {
@@ -449,6 +514,38 @@
         '- Context truncated: ' + (diagnostics.truncated ? 'yes' : 'no')
       ].join('\n');
     }
+
+    function getPermissionText() {
+      if (typeof window !== 'undefined' && window.ZeusSelectionActionPermissionText) return window.ZeusSelectionActionPermissionText;
+      if (typeof require === 'function') return require('./permissionText');
+      return {
+        missingPermissionMessage(options) {
+          const path = options && options.path ? options.path : '';
+          if (options && options.actionId === 'file.proposeUpdate') return 'Please enable R and W for this file before proposing a content update: ' + path;
+          const shortcut = options && options.requiredPermission === 'read_write' ? 'R and W' : options && options.requiredPermission === 'write' ? 'W' : 'R';
+          const targetKind = options && options.targetKind === 'folder' ? 'folder' : 'file';
+          return 'Please enable ' + shortcut + ' for this ' + targetKind + ': ' + path;
+        }
+      };
+    }
+    function formatPermissionShortcut(permission) {
+      const api = getBlockedActionApi();
+      return api && typeof api.formatPermissionShortcut === 'function'
+        ? api.formatPermissionShortcut(permission)
+        : String(permission || 'read').toLowerCase() === 'read_write' ? 'R and W' : String(permission || 'read').toLowerCase() === 'write' ? 'W' : 'R';
+    }
+
+    function formatBlockedActionRetryLabel(permission) {
+      const api = getBlockedActionApi();
+      return api && typeof api.formatBlockedActionRetryLabel === 'function'
+        ? api.formatBlockedActionRetryLabel(permission)
+        : 'Retry after enabling ' + formatPermissionShortcut(permission);
+    }
+
+    function normalizePath(value) {
+      return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
+    }
+
     function formatFolderListing(folderPath, result) {
       if (!result || !result.ok) return 'Folder listing failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
       const entries = Array.isArray(result.entries) ? result.entries : [];
@@ -516,6 +613,12 @@
     if (entry.kind === 'markdown') return true;
     if (entry.kind !== 'file') return false;
     return /\.(md|markdown)$/i.test(String(entry.name || entry.path || ''));
+  }
+
+  function getBlockedActionApi() {
+    if (typeof window !== 'undefined' && window.ZeusBlockedActionState) return window.ZeusBlockedActionState;
+    if (typeof module !== 'undefined' && module.exports) return require('../context/blockedActionState');
+    return null;
   }
 
   function getRegistry() {

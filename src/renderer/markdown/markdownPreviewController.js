@@ -10,6 +10,7 @@
     const preview = app.querySelector('#markdown-preview');
     const editor = app.querySelector('#markdown-source-editor');
     const editButton = app.querySelector('#markdown-edit-toggle');
+    const proposeButton = app.querySelector('#markdown-propose-update');
     const revealButton = app.querySelector('#markdown-reveal-current');
     const backButton = app.querySelector('#markdown-history-back');
     const forwardButton = app.querySelector('#markdown-history-forward');
@@ -18,7 +19,9 @@
     const onOpenLink = typeof options.onOpenLink === 'function' ? options.onOpenLink : null;
     const onRevealCurrentPath = typeof options.onRevealCurrentPath === 'function' ? options.onRevealCurrentPath : null;
     const onOpenHistoryPath = typeof options.onOpenHistoryPath === 'function' ? options.onOpenHistoryPath : null;
+    const onProposeUpdate = typeof options.onProposeUpdate === 'function' ? options.onProposeUpdate : null;
     let currentSource = '';
+    let loadedSource = '';
     let currentPath = '';
     let mode = 'preview';
     let history = [];
@@ -32,6 +35,8 @@
     if (revealButton) revealButton.addEventListener('click', handleRevealClick);
     if (backButton) backButton.addEventListener('click', () => moveHistory(-1));
     if (forwardButton) forwardButton.addEventListener('click', () => moveHistory(1));
+    if (proposeButton) proposeButton.addEventListener('click', handleProposeUpdate);
+    if (editor) editor.addEventListener('input', updateProposeButton);
 
     editButton.addEventListener('click', () => {
       if (!currentSource) return;
@@ -51,12 +56,14 @@
 
     function setMessage(message) {
       currentSource = '';
+      loadedSource = '';
       currentPath = '';
       history = [];
       historyIndex = -1;
       if (title) title.textContent = 'Markdown Preview';
       editButton.disabled = true;
       if (revealButton) revealButton.disabled = true;
+      if (proposeButton) proposeButton.disabled = true;
       mode = 'preview';
       editor.value = '';
       preview.textContent = String(message || 'No file selected.');
@@ -91,7 +98,7 @@
       editButton.textContent = 'Preview';
       setVisibleMode();
       editor.focus();
-      setStatus('Source editor is local only. Saving will use Review/Write later.');
+      setStatus('Source editor is local only. Use Update to send changes to Review Basket.');
     }
 
     function showPreviewFromEditor() {
@@ -101,21 +108,61 @@
       renderPreview(currentSource);
       editButton.textContent = 'Edit';
       setVisibleMode();
+      updateProposeButton();
       setStatus('Preview updated from local source editor. Not saved to vault.');
     }
 
     function setSourceInternal(source, path) {
       currentSource = source;
+      loadedSource = source;
       currentPath = path;
       if (title) title.textContent = currentPath || 'Markdown Preview';
       editButton.disabled = false;
       if (revealButton) revealButton.disabled = !currentPath;
+      updateProposeButton();
       mode = 'preview';
       editor.value = currentSource;
       renderPreview(currentSource);
       setVisibleMode();
     }
 
+    function handleProposeUpdate() {
+      if (!currentPath || !hasLocalChanges()) return;
+      if (!onProposeUpdate) {
+        showLinkFeedback('Review Basket unavailable.');
+        return;
+      }
+      clearLinkFeedback();
+      const proposedContent = getEditorSource();
+      const result = onProposeUpdate({
+        type: 'update_note',
+        title: 'Manual source edit',
+        targetPath: currentPath,
+        currentContent: loadedSource,
+        proposedContent,
+        reason: 'Manual Markdown source edit from preview editor.',
+        risk: 'medium',
+        updateMode: 'whole_note'
+      });
+      if (result && result.ok === false) {
+        showLinkFeedback(result.message || 'Could not add update proposal.');
+        return;
+      }
+      clearLinkFeedback();
+      setStatus('Manual edit proposal added to Review Basket.');
+    }
+
+    function hasLocalChanges() {
+      return Boolean(currentPath && getEditorSource() !== loadedSource);
+    }
+
+    function getEditorSource() {
+      return mode === 'source' ? String(editor.value || '') : currentSource;
+    }
+
+    function updateProposeButton() {
+      if (proposeButton) proposeButton.disabled = !hasLocalChanges();
+    }
     function recordHistory(source, path) {
       if (!path) return;
       const currentEntry = history[historyIndex];
@@ -177,6 +224,7 @@
       preview.hidden = sourceMode;
       editor.hidden = !sourceMode;
       editButton.textContent = sourceMode ? 'Preview' : 'Edit';
+      updateProposeButton();
     }
 
     function setStatus(value) {
@@ -189,7 +237,8 @@
       setSource,
       setMessage,
       getMode: () => mode,
-      getCurrentPath: () => currentPath
+      getCurrentPath: () => currentPath,
+      getCurrentSource: () => currentSource
     };
   }
   function setButtonIcon(button, iconName) {

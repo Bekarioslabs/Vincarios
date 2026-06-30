@@ -100,6 +100,7 @@
         '          <button id="markdown-history-forward" class="markdown-history-button" type="button" title="Forward" disabled>&gt;</button>',
         '          <button id="markdown-reveal-current" class="markdown-reveal-current" type="button" disabled>Reveal in Files</button>',
         '          <button id="markdown-edit-toggle" class="markdown-edit-toggle" type="button" disabled>Edit</button>',
+        '          <button id="markdown-propose-update" class="markdown-propose-update" type="button" disabled>Update</button>',
         '        </div>',
         '        <article id="markdown-preview" class="markdown-preview">No file selected.</article>',
         '        <textarea id="markdown-source-editor" class="markdown-source-editor" spellcheck="false" hidden></textarea>',
@@ -119,11 +120,11 @@
       wireShellInteractions(app);
       const contextState = createContextState();
       const vaultUi = { filePanel: null };
-      wireVaultShell(api, app, contextState, vaultUi);
-
       const reviewBasket = mountOptional('review basket', status, () => window.ZeusReviewBasket
         ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) })
         : null);
+      wireVaultShell(api, app, contextState, vaultUi, reviewBasket);
+
       mountOptional('provider status', status, () => window.ZeusProviderStatus && window.ZeusProviderStatus.mountProviderStatus({ api, app }));
       mountOptional('settings panel', status, () => window.ZeusSettingsPanel && window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status }));
       mountOptional('chat', status, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState }));
@@ -175,6 +176,35 @@
 
 
 
+  function addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState) {
+    const permission = validatePreviewUpdatePermission(proposal, contextState);
+    if (!permission.ok) {
+      setText(statusBar, permission.message);
+      return permission;
+    }
+    if (!reviewBasket || typeof reviewBasket.addProposal !== 'function') {
+      return { ok: false, message: 'Review Basket unavailable.' };
+    }
+    reviewBasket.addProposal(proposal);
+    setText(statusBar, 'Update proposal added to Review Basket.');
+    return { ok: true };
+  }
+  function validatePreviewUpdatePermission(proposal, contextState) {
+    const targetPath = normalizePath(proposal && proposal.targetPath);
+    const selection = contextState && typeof contextState.snapshot === 'function' ? contextState.snapshot() : null;
+    if (!targetPath) return { ok: false, message: 'Update target unavailable.' };
+    if (!selection || selection.kind !== 'file' || normalizePath(selection.path) !== targetPath) {
+      return { ok: false, message: 'Select this file before updating: ' + targetPath };
+    }
+    if (selection.writeAllowed !== true) {
+      return { ok: false, message: 'Please enable W for this file before updating: ' + targetPath };
+    }
+    return { ok: true };
+  }
+
+  function normalizePath(value) {
+    return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
+  }
   function revealContextItem(vaultUi, item) {
     const filePanel = vaultUi && vaultUi.filePanel;
     if (!item || !filePanel) return;
@@ -245,7 +275,7 @@
     return { name: 'ZEUS Agent', version: '0.1.0' };
   }
 
-  function wireVaultShell(api, app, contextState, vaultUi) {
+  function wireVaultShell(api, app, contextState, vaultUi, reviewBasket) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
     const statusBar = app.querySelector('#status-bar');
@@ -263,7 +293,8 @@
         onOpenHistoryPath: (path) => {
           setText(statusBar, 'Preview history: ' + path);
           return { ok: true, path };
-        }
+        },
+        onProposeUpdate: (proposal) => addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState)
       })
       : null;
     const permissionState = createPermissionState(statusBar);

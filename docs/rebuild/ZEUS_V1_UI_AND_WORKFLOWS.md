@@ -207,11 +207,11 @@ User messages stay plain text to preserve exactly what the user typed.
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
 
-YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview, including simple inline arrays and block-list values such as `tags:\n  - item`. It is not directly editable in this renderer block. Future Properties actions belong to the Selection Actions and review workflows, so metadata suggestions can be proposed and reviewed instead of silently changing frontmatter.
+YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview, including simple inline arrays and block-list values such as `tags:\n  - item`. It is not directly editable in this renderer block. The source editor can stage manual full-note updates through the `Update` button; blocked update attempts show visible preview feedback instead of silently failing. Future Properties actions belong to the Selection Actions and review workflows, so metadata suggestions can be proposed and reviewed instead of silently changing frontmatter.
 
 Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`.
 
-The preview toolbar includes an `Edit` button that switches to local Markdown source mode. In this block, source mode is for inspection and local preview edits only. Saving to the vault must wait for the Review/Write core because persisted writes require review, backup, and audit logging.
+The preview toolbar includes an `Edit` button that switches to local Markdown source mode. Local source edits do not write directly to the vault. When the edited source differs from the loaded source, `Propose update` creates an `update_note` proposal in the Review Basket. Persisted writes still require the existing diff, backup, stale-content validation, and audit logging path.
 
 ## Markdown Link Navigation Decisions
 
@@ -239,9 +239,11 @@ V1 action categories:
 - `Write`: creates or updates only through reviewed write flows.
 - `Organize`: reserved for later move/rename/archive workflows.
 
+Missing permissions for Selection Actions are handled by app logic before provider calls. Permission-blocked actions stay visible as muted, clickable soft-disabled buttons. Hover shows the reason; clicking shows a ZEUS chat bubble with the same guidance and a retry action where applicable. Read/context actions explain that `R` is required. Write actions explain that both `R` and `W` are required when they need loaded content plus write permission. These messages come from the shared Selection Action permission text helper, not from duplicated per-action strings. ZEUS does not send these blocked requests to the model and does not silently do nothing.
+
 Current V1 foundation actions:
 
-- selected Markdown file currently shows `Summarize file`, `Use as context`, and `Propose content update`. `Propose content update` asks for an explicit content-change instruction, then adds a reviewed whole-note `update_note` proposal to the Review Basket. Rename, move, archive, and delete remain separate future actions.
+- selected Markdown file currently shows `Summarize file`, `Use as context`, and `Propose content update`. `Propose content update` stays visible and clickable for Markdown files; when R/W or loaded content are missing it appears visually muted and clicks show app-side guidance. When ready, it asks for an explicit content-change instruction, then adds a reviewed whole-note `update_note` proposal to the Review Basket. Rename, move, archive, and delete remain separate future actions.
 - selected folder currently shows `Use as context`, `List folder`, `Analyze folder`, and `Summarize MD files`.
 - `Use as context` is active for readable folders and for readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content.
 - inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.

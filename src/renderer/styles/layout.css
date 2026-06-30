@@ -738,6 +738,15 @@ body.is-resizing .pane-resizer::after {
   cursor: default;
 }
 
+.selection-action-button.is-soft-disabled {
+  opacity: .48;
+  cursor: help;
+}
+
+.selection-action-button.is-soft-disabled:hover {
+  opacity: .68;
+}
+
 .selection-action-button.is-context { border-left-color: var(--action-context, #38bdf8); }
 .selection-action-button.is-read { border-left-color: var(--action-read, var(--interactive-accent)); }
 .selection-action-button.is-write { border-left-color: var(--action-write, var(--status-danger)); }

@@ -32,14 +32,16 @@ test('registry returns three V1 actions for selected Markdown files', () => {
   assert.equal(actions.find((action) => action.id === 'file.summarize').enabled, true);
 });
 
-test('Markdown read actions require readable loaded Markdown content', () => {
+test('Markdown read actions stay clickable and soft-disabled without readable loaded content', () => {
   const withoutRead = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: false });
   const withoutContent = getSelectionActions({ kind: 'file', path: 'A.md', content: '', readAllowed: true });
 
-  assert.equal(withoutRead.find((action) => action.id === 'file.useAsContext').enabled, false);
-  assert.equal(withoutContent.find((action) => action.id === 'file.useAsContext').enabled, false);
-  assert.equal(withoutRead.find((action) => action.id === 'file.summarize').enabled, false);
-  assert.equal(withoutContent.find((action) => action.id === 'file.summarize').enabled, false);
+  assert.equal(withoutRead.find((action) => action.id === 'file.useAsContext').enabled, true);
+  assert.equal(withoutContent.find((action) => action.id === 'file.useAsContext').enabled, true);
+  assert.equal(withoutRead.find((action) => action.id === 'file.summarize').enabled, true);
+  assert.equal(withoutContent.find((action) => action.id === 'file.summarize').enabled, true);
+  assert.equal(withoutRead.find((action) => action.id === 'file.useAsContext').softDisabled, true);
+  assert.equal(withoutContent.find((action) => action.id === 'file.summarize').softDisabled, true);
 });
 
 test('registry returns V1 read actions for selected folders', () => {
@@ -57,14 +59,15 @@ test('registry returns V1 read actions for selected folders', () => {
   assert.equal(actions.find((action) => action.id === 'folder.analyze').enabled, true);
   assert.equal(actions.find((action) => action.id === 'folder.summarizeMarkdown').enabled, true);
 });
-test('folder read actions require read permission', () => {
+test('folder read actions stay clickable and soft-disabled without read permission', () => {
   const withoutRead = getSelectionActions({ kind: 'folder', path: '03_Knowledge', readAllowed: false });
   const action = withoutRead.find((item) => item.id === 'folder.useAsContext');
 
-  assert.equal(action.enabled, false);
+  assert.equal(action.enabled, true);
+  assert.equal(action.softDisabled, true);
   assert.equal(action.reason, 'Requires R on this folder.');
 });
-test('Markdown update action requires readable, writable loaded Markdown content', () => {
+test('Markdown update action stays clickable while permission gate lives in the runner', () => {
   const ready = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: true, writeAllowed: true });
   const withoutWrite = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: true, writeAllowed: false });
   const withoutRead = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: false, writeAllowed: true });
@@ -72,7 +75,24 @@ test('Markdown update action requires readable, writable loaded Markdown content
   const propose = ready.find((action) => action.id === 'file.proposeUpdate');
   assert.equal(propose.enabled, true);
   assert.equal(propose.label, 'Propose content update');
-  assert.match(propose.reason, /Content changes only/);
-  assert.equal(withoutWrite.find((action) => action.id === 'file.proposeUpdate').enabled, false);
-  assert.equal(withoutRead.find((action) => action.id === 'file.proposeUpdate').enabled, false);
+  assert.equal(propose.requiredPermission, 'write');
+  assert.equal(propose.reason, '');
+  assert.equal(withoutWrite.find((action) => action.id === 'file.proposeUpdate').enabled, true);
+  assert.equal(withoutRead.find((action) => action.id === 'file.proposeUpdate').enabled, true);
+  assert.match(withoutWrite.find((action) => action.id === 'file.proposeUpdate').reason, /Requires R, W/);
+  assert.equal(propose.softDisabled, false);
+  assert.equal(withoutWrite.find((action) => action.id === 'file.proposeUpdate').softDisabled, true);
+  assert.equal(withoutRead.find((action) => action.id === 'file.proposeUpdate').softDisabled, true);
+});
+
+test('permission text helper keeps read and write guidance centralized', () => {
+  const text = require('../src/renderer/selectionActions/permissionText');
+
+  assert.equal(text.fileReadReason(), 'Requires R and loaded Markdown content.');
+  assert.equal(text.folderReadReason(), 'Requires R on this folder.');
+  assert.equal(text.fileWriteReason(), 'Requires R, W, and loaded Markdown content.');
+  assert.equal(
+    text.missingPermissionMessage({ actionId: 'file.proposeUpdate', requiredPermission: 'write', targetKind: 'file', path: 'A.md' }),
+    'Please enable R and W for this file before proposing a content update: A.md'
+  );
 });

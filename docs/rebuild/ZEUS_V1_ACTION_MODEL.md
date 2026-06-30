@@ -54,7 +54,11 @@ Current implemented slice: assistant `Save as Note` creates a selected `create_n
 Phase 3 is complete at this core foundation boundary. `insert_into_note`, `move_note`, `rename_note`, and `archive_note` remain known schema types so model output can be classified safely, but they are deliberately non-executable until their own reviewed services exist. This prevents accidental execution while keeping the future action vocabulary stable.
 ## Selection Action Update Proposals
 
-V1 supports update proposals through the selected Markdown file action `Propose content update`. The app supplies the selected `targetPath` and `currentContent`; the provider returns a structured proposal with full `proposedContent`. The proposal is added to the Review Basket as `update_note` with `updateMode: whole_note` and is never written directly from chat or by the provider. Proposal failures are reported by stage (`provider`, `parser`, `review_basket`, or `provider_exception`) with target path, content length, sent context length, instruction length, and truncation status so model, parser, and review failures can be diagnosed before fixing.
+V1 supports update proposals through the selected Markdown file action `Propose content update`. The action is visually muted but still clickable when R/W or loaded content are missing, so the app can explain the missing permission without calling the provider. The app supplies the selected `targetPath` and `currentContent`; the provider returns a structured proposal with full `proposedContent`. The proposal is added to the Review Basket as `update_note` with `updateMode: whole_note` and is never written directly from chat or by the provider. Proposal failures are reported by stage (`provider`, `parser`, `review_basket`, or `provider_exception`) with target path, content length, sent context length, instruction length, and truncation status so model, parser, and review failures can be diagnosed before fixing.
+
+Manual source edits from the Markdown preview use the same reviewed update path. The editor keeps the originally loaded source as `currentContent`, uses the local edited source as `proposedContent`, and adds an `update_note` proposal to the Review Basket. The preview editor never writes directly to the vault.
+
+If `R` or `W` is missing, the app blocks proposal generation before any provider call and presents an app-level permission message. Permission-blocked Selection Actions are soft-disabled: visually muted, still clickable, and routed to the same retryable guidance path. Selection Action permission wording is centralized so later write actions such as rename/move can reuse the same R/W guidance. The model must not generate generic filesystem-access explanations for these cases.
 
 Required gates before proposal generation:
 
@@ -112,4 +116,3 @@ The user should not need to know action names. The UI and model choose the corre
 ## Non-Goal For V1
 
 Do not build a broad autonomous batch executor. Build a controlled review basket.
-

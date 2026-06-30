@@ -18,6 +18,7 @@
     { name: 'ZeusFileTreeKeyboard', globalName: 'ZeusFileTreeKeyboard', methods: ['getFileTreeNavigation', 'isFileTreeNavigationKey'] },
     { name: 'ZeusScopedSelection', globalName: 'ZeusScopedSelection', methods: ['mountScopedSelection'] },
     { name: 'ZeusSelectionActionCategories', globalName: 'ZeusSelectionActionCategories', methods: ['getActionCategory'] },
+    { name: 'ZeusSelectionActionPermissionText', globalName: 'ZeusSelectionActionPermissionText', methods: ['fileReadReason', 'folderReadReason', 'fileWriteReason', 'missingPermissionMessage'] },
     { name: 'ZeusSelectionActionRegistry', globalName: 'ZeusSelectionActionRegistry', methods: ['getSelectionActions', 'getTargetKind'] },
     { name: 'ZeusFileSummaryAction', globalName: 'ZeusFileSummaryAction', methods: ['buildFileSummaryMessages'] },
     { name: 'ZeusSelectionActions', globalName: 'ZeusSelectionActions', methods: ['mountSelectionActions'] },

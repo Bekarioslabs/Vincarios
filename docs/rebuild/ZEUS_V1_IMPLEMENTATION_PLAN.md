@@ -151,8 +151,8 @@ This is a V1-critical workflow, not a later comfort feature. The prototype alrea
 - [x] Add `Summarize Markdown files` on top of the same read-only action path: only direct `.md`/`.markdown` files, no images/PDF/attachments in V1, with max file count and max chars per file coming from Settings/Limits.
 - [ ] Keep `Copy path` as a later secondary utility action. Keep `Reveal in Explorer` later because it needs main-process IPC.
 - [x] Selection Action generated `update_note` proposals reliably target the selected Markdown file when `R` and `W` allow it. V1 generates whole-note proposals only and routes them into the Review Basket. Chat does not auto-trigger write proposals in V1.
-- [ ] Missing `R` or `W` produces a clear app-level guidance message, not generic model text about lacking filesystem access. `W` must use the shared blocked-action foundation when reviewed write execution is gated.
-- [ ] Edit Mode can create an `update_note` proposal from local source changes instead of writing directly.
+- [x] Missing `R` or `W` produces a clear app-level guidance message, not generic model text about lacking filesystem access. `W` uses the shared missing-permission guidance for reviewed update proposal entry points.
+- [x] Edit Mode can create an `update_note` proposal from local source changes instead of writing directly.
 - [x] V1 update scope stays whole-note replacement through reviewed diff; complex partial insert/replace is explicitly V1.1 work.
 - [x] Diff preview remains mandatory before applying any update through the existing Review Basket update service.
 - [x] Backup, stale-content validation, and audit logging stay on the existing `update_note` service path.

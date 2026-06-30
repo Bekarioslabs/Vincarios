@@ -2,6 +2,7 @@
   'use strict';
 
   const MARKDOWN_RE = /\.md$/i;
+  const permissionText = getPermissionText();
 
   function getTargetKind(selection) {
     if (!selection || selection.kind === 'none') return 'none';
@@ -19,6 +20,7 @@
   }
 
   function markdownActions(selection) {
+    const isMarkdownFile = selection && selection.kind === 'file' && MARKDOWN_RE.test(String(selection.path || ''));
     const canUseAsContext = selection
       && selection.readAllowed === true
       && typeof selection.content === 'string'
@@ -27,19 +29,19 @@
     const canProposeUpdate = canUseAsContext && selection.writeAllowed === true;
 
     return [
-      action({ id: 'file.summarize', label: 'Summarize file', category: 'read', targetKinds: ['markdown'], enabled: canSummarize, reason: canSummarize ? '' : 'Requires R and loaded Markdown content.' }),
-      action({ id: 'file.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['markdown'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R and loaded Markdown content.' }),
-      action({ id: 'file.proposeUpdate', label: 'Propose content update', category: 'write', targetKinds: ['markdown'], enabled: canProposeUpdate, reason: canProposeUpdate ? 'Content changes only. Rename and move are separate future actions.' : 'Requires R, W, and loaded Markdown content.' })
+      action({ id: 'file.summarize', label: 'Summarize file', category: 'read', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canSummarize, requiredPermission: 'read', reason: canSummarize ? '' : permissionText.fileReadReason() }),
+      action({ id: 'file.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.fileReadReason() }),
+      action({ id: 'file.proposeUpdate', label: 'Propose content update', category: 'write', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canProposeUpdate, requiredPermission: 'write', reason: canProposeUpdate ? permissionText.fileUpdateReadyReason() : permissionText.fileWriteReason() })
     ];
   }
 
   function folderActions(selection) {
     const canUseAsContext = selection && selection.readAllowed === true;
     return [
-      action({ id: 'folder.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' }),
-      action({ id: 'folder.listCurrent', label: 'List folder', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' }),
-      action({ id: 'folder.analyze', label: 'Analyze folder', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' }),
-      action({ id: 'folder.summarizeMarkdown', label: 'Summarize MD files', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' })
+      action({ id: 'folder.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
+      action({ id: 'folder.listCurrent', label: 'List folder', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
+      action({ id: 'folder.analyze', label: 'Analyze folder', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
+      action({ id: 'folder.summarizeMarkdown', label: 'Summarize MD files', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() })
     ];
   }
 
@@ -51,10 +53,23 @@
       targetKinds: Object.freeze((config.targetKinds || []).slice()),
       enabled: config.enabled === true,
       future: config.future === true,
-      reason: config.reason || ''
+      reason: config.reason || '',
+      requiredPermission: config.requiredPermission || '',
+      softDisabled: config.softDisabled === true
     });
   }
 
+
+  function getPermissionText() {
+    if (typeof window !== 'undefined' && window.ZeusSelectionActionPermissionText) return window.ZeusSelectionActionPermissionText;
+    if (typeof require === 'function') return require('./permissionText');
+    return {
+      fileReadReason: () => 'Requires R and loaded Markdown content.',
+      folderReadReason: () => 'Requires R on this folder.',
+      fileWriteReason: () => 'Requires R, W, and loaded Markdown content.',
+      fileUpdateReadyReason: () => ''
+    };
+  }
   const api = { getSelectionActions, getTargetKind };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

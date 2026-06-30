@@ -8,13 +8,15 @@ const path = require('node:path');
 test('index loads selection action modules before shell', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const categoriesIndex = source.indexOf('./src/renderer/selectionActions/actionCategories.js');
+  const permissionIndex = source.indexOf('./src/renderer/selectionActions/permissionText.js');
   const registryIndex = source.indexOf('./src/renderer/selectionActions/actionRegistry.js');
   const summaryIndex = source.indexOf('./src/renderer/selectionActions/fileSummaryAction.js');
   const mountIndex = source.indexOf('./src/renderer/selectionActions/mountSelectionActions.js');
   const shellIndex = source.indexOf('./src/renderer/shell/mountShell.js');
 
   assert.equal(categoriesIndex > -1, true);
-  assert.equal(registryIndex > categoriesIndex, true);
+  assert.equal(permissionIndex > categoriesIndex, true);
+  assert.equal(registryIndex > permissionIndex, true);
   assert.equal(summaryIndex > registryIndex, true);
   assert.equal(mountIndex > summaryIndex, true);
   assert.equal(shellIndex > mountIndex, true);
@@ -24,6 +26,7 @@ test('bootstrap requires selection action renderer modules', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'bootstrap.js'), 'utf8');
 
   assert.match(source, /ZeusSelectionActionCategories/);
+  assert.match(source, /ZeusSelectionActionPermissionText/);
   assert.match(source, /ZeusSelectionActionRegistry/);
   assert.match(source, /ZeusSelectionActions/);
   assert.match(source, /ZeusFileSummaryAction/);
@@ -151,3 +154,45 @@ test('propose update reports provider parser and review basket diagnostics', () 
   assert.match(source, /Context truncated:/);
 });
 
+
+test('propose update stays clickable so missing permissions can show app guidance', () => {
+  const registry = require('../src/renderer/selectionActions/actionRegistry');
+  const actions = registry.getSelectionActions({
+    kind: 'file',
+    path: 'Notes/Test.md',
+    content: '# Test',
+    readAllowed: true,
+    writeAllowed: false
+  });
+  const update = actions.find((action) => action.id === 'file.proposeUpdate');
+
+  assert.equal(update.enabled, true);
+  assert.equal(update.requiredPermission, 'write');
+  assert.equal(update.softDisabled, true);
+});
+test('propose update routes missing W through blocked action guidance', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /createMissingPermissionAction/);
+  assert.match(source, /missingPermissionMessage/);
+  assert.match(source, /createMissingPermissionAction\(snapshot, 'write', 'file.proposeUpdate'\)/);
+  assert.match(source, /formatBlockedActionRetryLabel\(gate\.missingPermission\)/);
+  assert.match(source, /retrySelectionAction/);
+});
+
+test('propose update soft-disabled state is visual only', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(source, /action\.softDisabled/);
+  assert.match(source, /is-soft-disabled/);
+  assert.match(source, /aria-disabled/);
+  assert.match(css, /\.selection-action-button\.is-soft-disabled/);
+});
+test('soft-disabled actions route through missing permission guidance', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /if \(action\.softDisabled\)/);
+  assert.match(source, /createSoftDisabledActionGate\(action, snapshot\)/);
+  assert.match(source, /appendMissingPermissionMessage\(gate, action\.id\)/);
+});

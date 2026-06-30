@@ -5,10 +5,10 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-test('open vault buttons are wired before optional renderer modules mount', () => {
+test('open vault buttons are wired after review basket and before provider modules mount', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
   const mountStart = source.indexOf('const contextState = createContextState();');
-  const vaultWire = source.indexOf('wireVaultShell(api, app, contextState, vaultUi);', mountStart);
+  const vaultWire = source.indexOf('wireVaultShell(api, app, contextState, vaultUi, reviewBasket);', mountStart);
   const reviewMount = source.indexOf("mountOptional('review basket'", mountStart);
   const providerMount = source.indexOf("mountOptional('provider status'", mountStart);
 
@@ -16,7 +16,7 @@ test('open vault buttons are wired before optional renderer modules mount', () =
   assert.equal(vaultWire > -1, true);
   assert.equal(reviewMount > -1, true);
   assert.equal(providerMount > -1, true);
-  assert.equal(vaultWire < reviewMount, true);
+  assert.equal(reviewMount < vaultWire, true);
   assert.equal(vaultWire < providerMount, true);
 });
 

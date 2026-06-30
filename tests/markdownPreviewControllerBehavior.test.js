@@ -17,6 +17,9 @@ function createNode() {
     contains() {
       return true;
     },
+    appendChild(child) {
+      this.child = child;
+    },
     focus() {}
   };
 }
@@ -188,5 +191,95 @@ test('preview controller shows missing link feedback near the preview toolbar', 
 
   assert.equal(feedback.hidden, false);
   assert.equal(feedback.textContent, 'Linked note not found: Missing_Target');
+  delete global.window;
+});
+test('preview controller turns local source edits into update proposals', async () => {
+  global.window = {
+    ZeusMarkdownRenderer: {
+      renderMarkdown(source) { return '<p>' + source + '</p>'; }
+    }
+  };
+  delete require.cache[require.resolve('../src/renderer/markdown/markdownPreviewController')];
+  const { mountMarkdownPreview } = require('../src/renderer/markdown/markdownPreviewController');
+  const editor = createNode();
+  const editButton = createNode();
+  const proposeButton = createNode();
+  const status = createNode();
+  const nodes = {
+    '#markdown-preview': createNode(),
+    '#markdown-source-editor': editor,
+    '#markdown-edit-toggle': editButton,
+    '#markdown-propose-update': proposeButton,
+    '#markdown-reveal-current': createNode(),
+    '#markdown-preview-title': createNode()
+  };
+  let proposal = null;
+  const controller = mountMarkdownPreview({
+    app: createApp(nodes),
+    status,
+    onProposeUpdate(nextProposal) {
+      proposal = nextProposal;
+      return { ok: true };
+    }
+  });
+
+  controller.setSource('# Old', 'Folder/Note.md');
+  assert.equal(proposeButton.disabled, true);
+
+  editButton.listeners.click();
+  editor.value = '# New';
+  editor.listeners.input();
+
+  assert.equal(proposeButton.disabled, false);
+  proposeButton.listeners.click();
+
+  assert.equal(proposal.type, 'update_note');
+  assert.equal(proposal.targetPath, 'Folder/Note.md');
+  assert.equal(proposal.currentContent, '# Old');
+  assert.equal(proposal.proposedContent, '# New');
+  assert.equal(proposal.updateMode, 'whole_note');
+  assert.match(status.textContent, /Review Basket/);
+  delete global.window;
+});
+
+test('preview controller shows update proposal failures near the preview toolbar', async () => {
+  global.window = {
+    ZeusMarkdownRenderer: {
+      renderMarkdown(source) { return '<p>' + source + '</p>'; }
+    }
+  };
+  delete require.cache[require.resolve('../src/renderer/markdown/markdownPreviewController')];
+  const { mountMarkdownPreview } = require('../src/renderer/markdown/markdownPreviewController');
+  const editor = createNode();
+  const editButton = createNode();
+  const proposeButton = createNode();
+  const feedback = createNode();
+  const status = createNode();
+  const nodes = {
+    '#markdown-preview': createNode(),
+    '#markdown-source-editor': editor,
+    '#markdown-edit-toggle': editButton,
+    '#markdown-propose-update': proposeButton,
+    '#markdown-reveal-current': createNode(),
+    '#markdown-link-feedback': feedback,
+    '#markdown-preview-title': createNode()
+  };
+  const controller = mountMarkdownPreview({
+    app: createApp(nodes),
+    status,
+    onProposeUpdate() {
+      return { ok: false, message: 'Please enable W for this file before updating: Folder/Note.md' };
+    }
+  });
+
+  controller.setSource('# Old', 'Folder/Note.md');
+  editButton.listeners.click();
+  editor.value = '# New';
+  editor.listeners.input();
+  proposeButton.listeners.click();
+
+  assert.equal(feedback.hidden, false);
+  assert.equal(feedback.textContent, 'Please enable W for this file before updating: Folder/Note.md');
+  assert.equal(status.textContent, 'Please enable W for this file before updating: Folder/Note.md');
   delete global.window;
 });
