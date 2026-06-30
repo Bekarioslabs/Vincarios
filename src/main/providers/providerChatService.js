@@ -2,6 +2,10 @@
 
 const { createProviderSettingsState } = require('./providerRegistry');
 const {
+  normalizePayloadLimits,
+  validateProviderMessagesPayload
+} = require('../../shared/security/payloadLimits');
+const {
   buildChatRequestBody,
   buildChatUrl,
   buildModelsUrl,
@@ -29,6 +33,11 @@ function createProviderChatService(options) {
 
     if (messages.length === 0) {
       return createErrorResult(provider, 'Message is required.');
+    }
+
+    const payloadValidation = validateProviderMessagesPayload(messages, getPayloadLimits(settingsStore, options.payloadLimits));
+    if (!payloadValidation.ok) {
+      return createErrorResult(provider, payloadValidation.message);
     }
     if (typeof fetchImpl !== 'function') {
       return createErrorResult(provider, 'Provider request unavailable.');
@@ -74,6 +83,11 @@ function createProviderChatService(options) {
   }
 
   return Object.freeze({ sendChat });
+}
+
+function getPayloadLimits(settingsStore, fallback) {
+  const settings = settingsStore && typeof settingsStore.getSettings === 'function' ? settingsStore.getSettings() : null;
+  return normalizePayloadLimits(settings && settings.limits ? settings.limits : fallback);
 }
 
 function getProviderTimeoutMs(settingsStore, fallback) {

@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: file:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>ZEUS Agent</title>
   <link rel="stylesheet" href="./src/renderer/styles/tokens.css">
   <link rel="stylesheet" href="./src/renderer/styles/layout.css">
@@ -14,6 +15,7 @@
 <body>
   <div id="app"></div>
   <script src="./src/shared/vaultProfile/defaults.js"></script>
+  <script src="./src/shared/security/payloadLimits.js"></script>
   <script src="./src/shared/actions/actionSchema.js"></script>
   <script src="./src/shared/actions/modelActionParser.js"></script>
   <script src="./src/shared/actions/proposalPlan.js"></script>

@@ -4,6 +4,9 @@
   "private": true,
   "description": "Local review-first assistant for Obsidian-style Markdown vaults.",
   "main": "src/main/index.js",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
@@ -20,7 +23,7 @@
   "author": "Bekarios Labs",
   "license": "UNLICENSED",
   "devDependencies": {
-    "electron": "^42.4.1"
+    "electron": "42.4.1"
   },
   "dependencies": {}
 }

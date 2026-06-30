@@ -81,3 +81,32 @@ Rebuild sequence:
 2. Define Brain/Core files only after the app laws are clear.
 3. Keep Brain/Core concise and non-duplicative.
 4. If a Brain rule conflicts with code behavior, fix the Brain rule instead of weakening code safety.
+
+
+## Payload Size Guards
+
+Main-process services enforce hard payload limits before provider calls or vault writes happen.
+
+V1 defaults:
+
+- create note content: 200000 characters
+- update note proposed content: 300000 characters
+- provider message payload: 120000 aggregate message characters
+
+These limits live in `src/shared/security/payloadLimits.js` and can be adjusted through Settings limits. Oversized create/update requests fail before writing, backing up, or auditing. Oversized provider requests fail before contacting LM Studio, Ollama, or future providers.
+
+## Renderer Content Security Policy
+
+The renderer declares a static Content Security Policy in `index.html`.
+
+V1 policy goals:
+
+- local scripts only via `script-src 'self'`
+- local styles only via `style-src 'self'`
+- no `unsafe-inline`
+- no `unsafe-eval`
+- no renderer network fetches by default via `connect-src 'none'`
+- local/data/file images are allowed for UI and vault previews
+- object/embed/form targets are blocked
+
+Provider calls stay in the main process through IPC, not in renderer fetches. If a future renderer feature needs network access, update this policy deliberately and add a focused test.

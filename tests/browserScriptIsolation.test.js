@@ -7,6 +7,7 @@ const path = require('node:path');
 
 const BROWSER_SHARED_SCRIPTS = [
   'src/shared/vaultProfile/defaults.js',
+  'src/shared/security/payloadLimits.js',
   'src/shared/actions/actionSchema.js',
   'src/shared/actions/modelActionParser.js',
   'src/shared/actions/proposalPlan.js',
@@ -53,4 +54,18 @@ test('browser-loaded renderer scripts do not start with a UTF-8 BOM', () => {
     const buffer = fs.readFileSync(path.join(__dirname, '..', relativePath));
     assert.equal(buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf, false, relativePath);
   });
+});
+
+test('index declares a strict renderer content security policy', () => {
+  const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+  assert.match(index, /http-equiv="Content-Security-Policy"/);
+  assert.match(index, /default-src 'self'/);
+  assert.match(index, /script-src 'self'/);
+  assert.match(index, /style-src 'self'/);
+  assert.match(index, /img-src 'self' data: file:/);
+  assert.match(index, /font-src 'self'/);
+  assert.match(index, /connect-src 'none'/);
+  assert.equal(index.includes("'unsafe-inline'"), false);
+  assert.equal(index.includes("'unsafe-eval'"), false);
 });

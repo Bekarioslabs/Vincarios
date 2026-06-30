@@ -7,6 +7,9 @@ const SETTINGS_VERSION = 1;
 const DEFAULT_LIMITS = Object.freeze({
   providerTimeoutMs: 120000,
   modelListTimeoutMs: 3000,
+  maxCreateNoteChars: 200000,
+  maxUpdateNoteChars: 300000,
+  maxProviderMessageChars: 120000,
   maxSelectedFileChars: 8000,
   maxListedFolders: 100,
   maxListedFiles: 500,
@@ -150,6 +153,9 @@ function normalizeLimits(value) {
   return {
     providerTimeoutMs: normalizePositiveNumber(input.providerTimeoutMs, DEFAULT_LIMITS.providerTimeoutMs),
     modelListTimeoutMs: normalizePositiveNumber(input.modelListTimeoutMs, DEFAULT_LIMITS.modelListTimeoutMs),
+    maxCreateNoteChars: normalizePositiveNumber(input.maxCreateNoteChars, DEFAULT_LIMITS.maxCreateNoteChars),
+    maxUpdateNoteChars: normalizePositiveNumber(input.maxUpdateNoteChars, DEFAULT_LIMITS.maxUpdateNoteChars),
+    maxProviderMessageChars: normalizePositiveNumber(input.maxProviderMessageChars, DEFAULT_LIMITS.maxProviderMessageChars),
     maxSelectedFileChars: normalizePositiveNumber(input.maxSelectedFileChars, selectedFileFallback),
     maxListedFolders: normalizePositiveNumber(input.maxListedFolders, DEFAULT_LIMITS.maxListedFolders),
     maxListedFiles: normalizePositiveNumber(input.maxListedFiles, DEFAULT_LIMITS.maxListedFiles),

@@ -163,13 +163,13 @@ This is a V1-critical workflow, not a later comfort feature. The prototype alrea
 - [ ] Test Noto Sans Variable as a closer bundled alternative to the current Segoe UI/systemfont look.
 - [x] Bundle first Lucide SVG icon set locally with semantic icon registry and license notice.
 
-- [ ] Add renderer Content Security Policy.
-- [ ] Add max-size guards for create/update note content and provider/context payloads.
-- [ ] Add GitHub Actions CI for JS checks and Node tests.
-- [ ] Add `CONTRIBUTING.md`.
-- [ ] Add `CHANGELOG.md`.
-- [ ] Add `SECURITY.md`.
-- [ ] Run dependency/security audit.
+- [x] Add renderer Content Security Policy.
+- [x] Add max-size guards for create/update note content and provider/context payloads.
+- [x] Add GitHub Actions CI for JS checks and Node tests.
+- [x] Add `CONTRIBUTING.md`.
+- [x] Add `CHANGELOG.md`.
+- [x] Add `SECURITY.md`.
+- [x] Run dependency/security audit.
 - [ ] Run accessibility pass for custom controls, keyboard operation, contrast, and ARIA labels.
 - [ ] Add IPC wrapper/helper only if duplicated validation/error mapping becomes evident.
 

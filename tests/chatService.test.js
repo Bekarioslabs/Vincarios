@@ -119,6 +119,36 @@ test('provider chat service returns a safe error result when provider request fa
   assert.match(result.error, /unavailable/i);
 });
 
+
+test('provider chat service rejects oversized message payloads before contacting provider', async () => {
+  let requestCount = 0;
+  const service = createProviderChatService({
+    payloadLimits: {
+      maxProviderMessageChars: 3
+    },
+    providers: [
+      {
+        id: 'lm-studio',
+        label: 'LM Studio',
+        baseUrl: 'http://127.0.0.1:1234',
+        chatPath: '/v1/chat/completions',
+        model: 'local-model'
+      }
+    ],
+    fetchImpl: async () => {
+      requestCount += 1;
+      return { ok: true, status: 200, async json() { return {}; } };
+    }
+  });
+
+  const result = await service.sendChat({
+    messages: [{ role: 'user', content: 'abcd' }]
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.error, /too large/i);
+  assert.equal(requestCount, 0);
+});
 test('chat IPC exposes chat sending through a chat-specific channel', async () => {
   const handlers = new Map();
   const ipcMain = {

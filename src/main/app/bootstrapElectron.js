@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const path = require('node:path');
 const { createMainWindow } = require('./createMainWindow');
@@ -21,12 +21,12 @@ function bootstrapElectron(electron, options) {
   const { app, ipcMain, dialog, BrowserWindow } = electron;
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
   const vaultReadService = options.vaultReadService || createVaultReadService();
-  const vaultWriteService = options.vaultWriteService || createVaultWriteService();
   const settingsFilePath = options.settingsFilePath || getDefaultSettingsPath(app);
   const settingsStore = options.settingsStore || createSettingsStore({
     filePath: settingsFilePath,
     initialSettings: options.initialSettings
   });
+  const vaultWriteService = options.vaultWriteService || createVaultWriteService({ settingsStore });
   const providerSettingsOptions = Object.assign(
     {},
     options.providerOptions || {},

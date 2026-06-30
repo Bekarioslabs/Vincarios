@@ -82,6 +82,9 @@ test('settings store persists limits with normalized positive values', () => {
   const result = store.setLimits({
     providerTimeoutMs: 45000,
     modelListTimeoutMs: 2500,
+    maxCreateNoteChars: 10000,
+    maxUpdateNoteChars: 20000,
+    maxProviderMessageChars: 50000,
     maxSelectedFileChars: 9000,
     maxListedFolders: 80,
     maxListedFiles: 300,
@@ -93,6 +96,9 @@ test('settings store persists limits with normalized positive values', () => {
   const reloaded = createSettingsStore({ filePath });
   assert.equal(reloaded.getSettings().limits.providerTimeoutMs, 45000);
   assert.equal(reloaded.getSettings().limits.modelListTimeoutMs, 2500);
+  assert.equal(reloaded.getSettings().limits.maxCreateNoteChars, 10000);
+  assert.equal(reloaded.getSettings().limits.maxUpdateNoteChars, 20000);
+  assert.equal(reloaded.getSettings().limits.maxProviderMessageChars, 50000);
   assert.equal(reloaded.getSettings().limits.maxSelectedFileChars, 9000);
   assert.equal(reloaded.getSettings().limits.maxListedFolders, 80);
   assert.equal(reloaded.getSettings().limits.maxListedFiles, 300);

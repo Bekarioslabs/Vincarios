@@ -3,6 +3,7 @@
 
   const REQUIRED_RENDERER_MODULES = Object.freeze([
     { name: 'ZeusVaultProfile', globalName: 'ZeusVaultProfile' },
+    { name: 'ZeusPayloadLimits', globalName: 'ZeusPayloadLimits', methods: ['normalizePayloadLimits', 'validateProviderMessagesPayload'] },
     { name: 'ZeusActionSchema', globalName: 'ZeusActionSchema' },
     { name: 'ZeusModelActionParser', globalName: 'ZeusModelActionParser', methods: ['parseModelActionCalls', 'stripModelActionCalls', 'normalizePathLike'] },
     { name: 'ZeusProposalPlan', globalName: 'ZeusProposalPlan' },

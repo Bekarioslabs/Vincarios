@@ -4,6 +4,9 @@
   const LIMIT_FIELDS = Object.freeze([
     { key: 'providerTimeoutMs', label: 'Provider timeout seconds', unit: 'seconds' },
     { key: 'modelListTimeoutMs', label: 'Model list timeout ms' },
+    { key: 'maxCreateNoteChars', label: 'Create note chars' },
+    { key: 'maxUpdateNoteChars', label: 'Update note chars' },
+    { key: 'maxProviderMessageChars', label: 'Provider message chars' },
     { key: 'maxSelectedFileChars', label: 'Selected file chars' },
     { key: 'maxListedFolders', label: 'Listed folders' },
     { key: 'maxListedFiles', label: 'Listed files' },

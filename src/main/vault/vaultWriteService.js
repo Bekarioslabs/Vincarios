@@ -5,12 +5,18 @@ const path = require('node:path');
 const { createVaultContext } = require('./vaultContext');
 const { createVaultBackupService } = require('./vaultBackupService');
 const { DEFAULT_VAULT_PROFILE } = require('../../shared/vaultProfile/defaults');
+const {
+  normalizePayloadLimits,
+  validateCreateNotePayload,
+  validateUpdateNotePayload
+} = require('../../shared/security/payloadLimits');
 
 function createVaultWriteService(options) {
   options = options || {};
   const fileSystem = options.fs || fs;
   const profile = Object.freeze(Object.assign({}, DEFAULT_VAULT_PROFILE, options.profile || {}));
   const backupService = createVaultBackupService({ fs: fileSystem, now: options.now });
+  const settingsStore = options.settingsStore || null;
   let vault = null;
 
   function setRoot(vaultRoot) {
@@ -41,6 +47,9 @@ function createVaultWriteService(options) {
 
     const payload = normalizeCreateNoteInput(input);
     if (!payload.ok) return payload;
+
+    const contentValidation = validateCreateNotePayload(payload.content, getPayloadLimits(settingsStore, options.payloadLimits));
+    if (!contentValidation.ok) return contentValidation;
 
     const targetPath = payload.targetFolder
       ? payload.targetFolder + '/' + payload.fileName
@@ -76,6 +85,9 @@ function createVaultWriteService(options) {
 
     const payload = normalizeUpdateNoteInput(input);
     if (!payload.ok) return payload;
+
+    const contentValidation = validateUpdateNotePayload(payload.proposedContent, getPayloadLimits(settingsStore, options.payloadLimits));
+    if (!contentValidation.ok) return contentValidation;
 
     const resolved = currentVault.vault.resolve(payload.targetPath, { allowRoot: false });
     if (!resolved.ok) return resolved;
@@ -131,6 +143,11 @@ function createVaultWriteService(options) {
     createNote,
     updateNote
   });
+}
+
+function getPayloadLimits(settingsStore, fallback) {
+  const settings = settingsStore && typeof settingsStore.getSettings === 'function' ? settingsStore.getSettings() : null;
+  return normalizePayloadLimits(settings && settings.limits ? settings.limits : fallback);
 }
 
 function normalizeCreateNoteInput(input) {

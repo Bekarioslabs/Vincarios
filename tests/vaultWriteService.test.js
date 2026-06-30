@@ -57,6 +57,38 @@ test('vault write service rejects unsafe or non-markdown create targets', () => 
   assert.equal(service.createNote({ targetFolder: '00_Inbox', title: 'Bad.exe', content: 'x' }).path, '00_Inbox/Bad.exe.md');
 });
 
+
+test('vault write service rejects oversized create and update note payloads before writing', () => {
+  const root = createTempVault();
+  fs.mkdirSync(path.join(root, '03_Knowledge'), { recursive: true });
+  fs.writeFileSync(path.join(root, '03_Knowledge', 'Topic.md'), 'old');
+  const service = createVaultWriteService({
+    payloadLimits: {
+      maxCreateNoteChars: 3,
+      maxUpdateNoteChars: 4
+    }
+  });
+  service.setRoot(root);
+
+  const createResult = service.createNote({
+    targetFolder: '00_Inbox',
+    title: 'Too Large',
+    content: 'abcd'
+  });
+  const updateResult = service.updateNote({
+    targetPath: '03_Knowledge/Topic.md',
+    currentContent: 'old',
+    proposedContent: 'abcde'
+  });
+
+  assert.equal(createResult.ok, false);
+  assert.equal(createResult.code, 'payload_too_large');
+  assert.equal(updateResult.ok, false);
+  assert.equal(updateResult.code, 'payload_too_large');
+  assert.equal(fs.existsSync(path.join(root, '00_Inbox', 'Too Large.md')), false);
+  assert.equal(fs.readFileSync(path.join(root, '03_Knowledge', 'Topic.md'), 'utf8'), 'old');
+  assert.equal(fs.existsSync(path.join(root, '.zeus', 'backups')), false);
+});
 test('vault write service requires an opened vault', () => {
   const service = createVaultWriteService();
   const result = service.createNote({ targetFolder: '00_Inbox', title: 'A', content: 'x' });
