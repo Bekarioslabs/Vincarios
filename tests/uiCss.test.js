@@ -138,3 +138,14 @@ test('review basket failed item errors use review stylesheet', () => {
   assert.match(css, /review-basket-error-summary/);
   assert.match(css, /--status-danger/);
 });
+test('readability tokens activate bundled Inter and avoid ultra-heavy UI weights', () => {
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+  const filesCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(tokensCss, /--font-interface:\s*'Inter', 'Segoe UI'/);
+  assert.match(tokensCss, /--text-muted:\s*#8a8a8a;/);
+  assert.match(tokensCss, /--font-weight-ui-strong:\s*700;/);
+  assert.doesNotMatch(filesCss, /font-weight:\s*900;/);
+  assert.doesNotMatch(layoutCss, /font-size:\s*9px;/);
+});

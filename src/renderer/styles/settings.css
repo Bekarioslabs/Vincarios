@@ -46,8 +46,8 @@
 
 .settings-kicker {
   color: var(--text-accent);
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: .1em;
   text-transform: uppercase;
 }
@@ -166,7 +166,7 @@
   border-color: rgba(var(--interactive-accent-rgb), .8);
   background: var(--interactive-accent);
   color: var(--text-on-accent);
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
 }
 
 .settings-secondary-button {

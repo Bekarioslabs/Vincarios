@@ -19,7 +19,7 @@
   background: rgba(var(--text-accent-rgb), .08);
   color: var(--text-accent);
   padding: 4px 8px;
-  font: 700 10px var(--font-interface);
+  font: var(--font-weight-ui-semibold) 11px var(--font-interface);
   cursor: pointer;
 }
 
@@ -38,7 +38,7 @@
   background: transparent;
   color: var(--text-muted);
   padding: 4px 8px;
-  font: 700 10px var(--font-interface);
+  font: var(--font-weight-ui-semibold) 11px var(--font-interface);
   cursor: pointer;
 }
 
@@ -81,8 +81,8 @@
   border-radius: 999px;
   padding: 2px 6px;
   color: var(--text-muted);
-  font-size: 10px;
-  font-weight: 800;
+  font-size: 11px;
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: .06em;
   text-transform: uppercase;
 }
@@ -128,7 +128,7 @@
   display: grid;
   gap: 5px;
   color: var(--text-muted);
-  font: 700 10px var(--font-interface);
+  font: var(--font-weight-ui-semibold) 11px var(--font-interface);
   text-transform: uppercase;
 }
 
@@ -139,7 +139,7 @@
   background: var(--background-primary);
   color: var(--text-normal);
   padding: 8px 10px;
-  font: 700 12px var(--font-interface);
+  font: var(--font-weight-ui-semibold) 12px var(--font-interface);
 }
 
 .review-modal-title-input:focus {
@@ -175,7 +175,7 @@
   background: transparent;
   color: var(--text-normal);
   padding: 7px 10px;
-  font: 700 11px var(--font-interface);
+  font: var(--font-weight-ui-semibold) 11px var(--font-interface);
   cursor: pointer;
 }
 
@@ -190,7 +190,7 @@
   background: transparent;
   color: var(--text-muted);
   padding: 4px 8px;
-  font: 700 10px var(--font-interface);
+  font: var(--font-weight-ui-semibold) 11px var(--font-interface);
   cursor: pointer;
 }
 
@@ -239,7 +239,7 @@
   border-color: rgba(var(--interactive-accent-rgb), .5);
   background: rgba(var(--interactive-accent-rgb), .1);
   color: var(--text-accent);
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
 }
 
 .review-basket-item[data-status="open"] .review-basket-item-status {

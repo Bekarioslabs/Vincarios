@@ -15,8 +15,8 @@
   --background-subtle-strong: rgba(255,255,255,.035);
 
   --text-normal: #e8e8e8;
-  --text-muted: #686868;
-  --text-faint: #4f4f4f;
+  --text-muted: #8a8a8a;
+  --text-faint: #666666;
   --text-strong: #ffffff;
   --text-readable: #dddddd;
   --text-on-accent: #050505;
@@ -30,8 +30,11 @@
   --status-danger: #dc2626;
   --status-error: #f08a8a;
 
-  --font-interface: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-interface: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-monospace: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  --font-weight-ui-strong: 700;
+  --font-weight-ui-semibold: 650;
+  --font-weight-ui-medium: 600;
 
   --titlebar-height: 39px;
   --statusbar-height: 24px;
@@ -44,5 +47,3 @@
   --min-file-tree-width: 170px;
   --min-preview-width: 260px;
 }
-
-

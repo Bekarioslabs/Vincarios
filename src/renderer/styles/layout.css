@@ -62,7 +62,7 @@ button { cursor: pointer; }
 .titlebar-brand {
   color: var(--interactive-accent);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -135,8 +135,8 @@ button { cursor: pointer; }
 .left-section-title {
   padding: 2px 4px 4px;
   color: var(--text-muted);
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: .12em;
   text-transform: uppercase;
 }
@@ -175,7 +175,7 @@ button { cursor: pointer; }
   border-color: rgba(var(--interactive-accent-rgb), .85);
   background: var(--interactive-accent);
   color: var(--text-on-accent);
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
 }
 
 .left-button-accent:hover {
@@ -252,7 +252,7 @@ button { cursor: pointer; }
 .chat-message-label {
   color: var(--text-muted);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: var(--font-weight-ui-semibold);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -329,7 +329,7 @@ button { cursor: pointer; }
   border-radius: 6px;
   background: var(--background-secondary);
   color: var(--text-muted);
-  font: 700 10px var(--font-interface);
+  font: var(--font-weight-ui-semibold) 11px var(--font-interface);
   padding: 2px 6px;
   cursor: pointer;
 }
@@ -353,7 +353,7 @@ button { cursor: pointer; }
   border-radius: 7px;
   background: rgba(var(--text-accent-rgb), .08);
   color: var(--text-normal);
-  font: 700 11px var(--font-interface);
+  font: var(--font-weight-ui-semibold) 11px var(--font-interface);
   cursor: pointer;
 }
 
@@ -464,7 +464,7 @@ button { cursor: pointer; }
 .mini-panel-title {
   color: var(--text-normal);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
 }
 
 .mini-panel-empty {
@@ -533,8 +533,8 @@ button { cursor: pointer; }
   border: 1px solid var(--background-modifier-border);
   border-radius: 4px;
   color: var(--text-muted);
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: var(--font-weight-ui-strong);
   line-height: 16px;
   text-align: center;
 }
@@ -613,7 +613,7 @@ button { cursor: pointer; }
   border-radius: 8px;
   background: var(--interactive-accent);
   color: var(--text-on-accent);
-  font-weight: 900;
+  font-weight: var(--font-weight-ui-strong);
   opacity: .82;
 }
 
@@ -695,7 +695,7 @@ body.is-resizing .pane-resizer::after {
 .selection-actions-header {
   color: var(--text-accent);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -756,8 +756,8 @@ body.is-resizing .pane-resizer::after {
   flex: 0 0 auto;
   min-width: 54px;
   color: var(--text-muted);
-  font-size: 9px;
-  font-weight: 800;
+  font-size: 10px;
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: .06em;
   text-transform: uppercase;
 }
@@ -823,7 +823,7 @@ body.is-resizing .pane-resizer::after {
 .start-kicker {
   color: var(--text-accent);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -848,7 +848,7 @@ body.is-resizing .pane-resizer::after {
   padding: 12px 24px;
   background: var(--interactive-accent);
   color: var(--text-on-accent);
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
 }
 
 @media (max-width: 1100px) {
@@ -908,7 +908,7 @@ body.is-resizing .pane-resizer::after {
 .selection-action-form-label {
   color: var(--text-muted);
   font-size: 10px;
-  font-weight: 800;
+  font-weight: var(--font-weight-ui-strong);
   letter-spacing: .08em;
   text-transform: uppercase;
 }
@@ -943,7 +943,7 @@ body.is-resizing .pane-resizer::after {
   color: var(--text-normal);
   padding: 0 10px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: var(--font-weight-ui-semibold);
 }
 
 .selection-action-form-actions button[type="submit"] {

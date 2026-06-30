@@ -15,10 +15,10 @@ test('Inter variable font is bundled locally with license notice', () => {
   assert.match(fs.readFileSync(licensePath, 'utf8'), /SIL OPEN FONT LICENSE/);
 });
 
-test('tokens css bundles Inter but keeps system font active by default', () => {
+test('tokens css activates bundled Inter with system font fallback', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
 
   assert.match(css, /@font-face/);
   assert.match(css, /InterVariable\.woff2/);
-  assert.match(css, /--font-interface:\s*'Segoe UI'/);
+  assert.match(css, /--font-interface:\s*'Inter', 'Segoe UI'/);
 });
