@@ -27,6 +27,10 @@ Permission shortcuts:
 - Ctrl+Click `R` or `W`: apply to currently visible/expanded descendants only.
 - Shift+Click `R` or `W`: recursively apply to all descendants by listing folder structure only. It does not read Markdown contents or change chat context.
 
+
+## Starting On Windows
+
+Use `start.bat` for the local Electron app when `npm` is not available in the shell. The launcher stores Electron user data and disk cache under `%LOCALAPPDATA%\ZEUS_AGENT\` to avoid Chromium cache permission errors in the project folder.
 ## Planning Docs
 
 Start here:

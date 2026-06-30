@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -20,7 +20,7 @@ test('settings normalize into future-proof categories', () => {
   assert.equal(settings.version, 1);
   assert.equal(settings.providers.activeProviderId, 'ollama');
   assert.equal(settings.providers.urlOverrides.ollama, 'http://localhost:11435');
-  assert.equal(typeof settings.limits.providerTimeoutMs, 'number');
+  assert.equal(settings.limits.providerTimeoutMs, 120000);
   assert.equal(typeof settings.limits.maxSelectedFileChars, 'number');
   assert.deepEqual(settings.vaultProfile.roles, {});
   assert.equal(settings.theme.mode, 'dark');

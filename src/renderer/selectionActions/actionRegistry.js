@@ -24,11 +24,12 @@
       && typeof selection.content === 'string'
       && selection.content.length > 0;
     const canSummarize = canUseAsContext;
+    const canProposeUpdate = canUseAsContext && selection.writeAllowed === true;
 
     return [
       action({ id: 'file.summarize', label: 'Summarize file', category: 'read', targetKinds: ['markdown'], enabled: canSummarize, reason: canSummarize ? '' : 'Requires R and loaded Markdown content.' }),
       action({ id: 'file.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['markdown'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R and loaded Markdown content.' }),
-      action({ id: 'file.proposeUpdate', label: 'Propose update', category: 'write', targetKinds: ['markdown'], enabled: false, future: true })
+      action({ id: 'file.proposeUpdate', label: 'Propose content update', category: 'write', targetKinds: ['markdown'], enabled: canProposeUpdate, reason: canProposeUpdate ? 'Content changes only. Rename and move are separate future actions.' : 'Requires R, W, and loaded Markdown content.' })
     ];
   }
 
@@ -37,7 +38,8 @@
     return [
       action({ id: 'folder.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' }),
       action({ id: 'folder.listCurrent', label: 'List folder', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' }),
-      action({ id: 'folder.analyze', label: 'Analyze folder', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' })
+      action({ id: 'folder.analyze', label: 'Analyze folder', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' }),
+      action({ id: 'folder.summarizeMarkdown', label: 'Summarize MD files', category: 'read', targetKinds: ['folder'], enabled: canUseAsContext, reason: canUseAsContext ? '' : 'Requires R on this folder.' })
     ];
   }
 

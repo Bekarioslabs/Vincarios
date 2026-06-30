@@ -57,6 +57,7 @@
         '          <div class="mini-panel-title">Review Basket</div>',
         '          <div class="review-basket-actions">',
         '            <button id="review-clear" class="review-clear-button" type="button" disabled>Clear pending</button>',
+        '            <button id="review-clear-done" class="review-clear-button" type="button" disabled>Clear executed</button>',
         '            <button id="review-execute" class="review-execute-button" type="button" disabled>Execute selected</button>',
         '          </div>',
         '        </div>',
@@ -203,11 +204,13 @@
       if (typeof api.vault.updateNote !== 'function') {
         return { ok: false, code: 'write_unavailable', message: 'Vault update API unavailable.' };
       }
-      return api.vault.updateNote({
+      const result = await api.vault.updateNote({
         targetPath: proposal.targetPath,
         currentContent: proposal.currentContent,
         proposedContent: proposal.proposedContent
       });
+      if (result && result.ok) await refreshCurrentPreviewAfterUpdate(vaultUi, proposal.targetPath);
+      return result;
     }
     return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
   }
@@ -219,6 +222,16 @@
       await filePanel.refreshTree();
     } catch (error) {
       // A refresh failure must not turn an already completed vault write into a failed write.
+    }
+  }
+
+  async function refreshCurrentPreviewAfterUpdate(vaultUi, targetPath) {
+    const filePanel = vaultUi && vaultUi.filePanel;
+    if (!filePanel || typeof filePanel.refreshLoadedMarkdown !== 'function') return;
+    try {
+      await filePanel.refreshLoadedMarkdown(targetPath);
+    } catch (error) {
+      // A preview refresh failure must not turn an already completed vault write into a failed write.
     }
   }
   async function getAppInfo(api) {

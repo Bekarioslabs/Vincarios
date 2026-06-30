@@ -59,6 +59,7 @@ If `npm` is unavailable in the shell:
 npm test          # full test suite - run before every commit
 npm run check     # JS syntax/lint check
 npm start         # start Electron app
+start.bat         # Windows launcher; uses %LOCALAPPDATA%\ZEUS_AGENT for Electron user-data/cache
 ```
 
 Run targeted tests first for small changes. Reserve `npm test` for commits, safety-sensitive changes, and broad shell/IPC/provider/context changes.

@@ -87,3 +87,67 @@ test('provider-backed selection actions use removable pending action messages', 
   assert.match(source, /chat-message-pending/);
   assert.match(source, /removeNode\(pending\)/);
 });
+test('folder analyze action is wired to the folder analysis handler', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /action\.id === 'folder\.analyze'/);
+  assert.match(source, /analyzeFolder\(snapshot\)/);
+  assert.match(source, /formatFolderAnalysis\(snapshot\.path, result\)/);
+});
+test('folder markdown summary action is loaded and wired through the selection action panel', () => {
+  const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.equal(index.includes('./src/renderer/selectionActions/folderSummaryAction.js'), true);
+  assert.match(source, /folder\.summarizeMarkdown/);
+  assert.match(source, /summarizeFolderMarkdown\(snapshot\)/);
+  assert.match(source, /buildFolderMarkdownSummaryMessages/);
+  assert.match(source, /api\.vault\.readMarkdown/);
+});
+test('summary title builder uses target type tokens for files and folders', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /Summary - ' \+ normalizeSummaryKind\(kind\) \+ ' - /);
+  assert.match(source, /if \(value === 'md'\) return 'MD'/);
+  assert.match(source, /if \(value === 'dir'\) return 'DIR'/);
+});
+test('provider-backed selection summary results pass review basket into saveable chat messages', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /const reviewBasket = options\.reviewBasket/);
+  assert.match(source, /reviewBasket: reviewBasket/);
+  assert.match(source, /suggestedTitle: buildSummaryTitle\('md', request\.path\)/);
+  assert.match(source, /suggestedTitle: buildSummaryTitle\('dir', snapshot\.path\)/);
+  assert.match(source, /responseSubfolder: 'Summaries'/);
+});
+test('propose update uses the selected update proposal builder from selection actions', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /file\.proposeUpdate/);
+  assert.match(source, /proposeFileUpdate\(snapshot, instruction\)/);
+  assert.match(source, /buildSelectedFileUpdateMessages/);
+  assert.match(source, /parseSelectedFileUpdateProposal/);
+  assert.match(source, /reviewBasket\.addProposal\(proposal\.proposal\)/);
+});
+test('propose update uses an inline instruction form instead of browser prompt', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /renderUpdateInstructionForm\(snapshot\)/);
+  assert.match(source, /selection-action-form/);
+  assert.match(source, /textarea/);
+  assert.match(source, /Create proposal/);
+  assert.match(source, /Content update instruction/);
+  assert.match(source, /Rename\/move are not part of this action/);
+  assert.doesNotMatch(source, /window\.prompt/);
+});
+
+test('propose update reports provider parser and review basket diagnostics', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /formatUpdateProposalDiagnostics\(request, 'provider'/);
+  assert.match(source, /formatUpdateProposalDiagnostics\(request, 'parser'/);
+  assert.match(source, /formatUpdateProposalDiagnostics\(request, 'review_basket'/);
+  assert.match(source, /Current chars:/);
+  assert.match(source, /Context truncated:/);
+});
+

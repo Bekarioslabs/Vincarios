@@ -38,3 +38,9 @@ test('context basket remove action uses the shared close icon', () => {
   assert.match(source, /createIconElement\('close'/);
   assert.doesNotMatch(source, /remove\.textContent\s*=\s*['"]x['"]/);
 });
+
+test('send semantic icon maps to local arrow-up asset', () => {
+  const source = read('src/renderer/icons/iconRegistry.js');
+
+  assert.match(source, /send:\s*'arrow-up\.svg'/);
+});

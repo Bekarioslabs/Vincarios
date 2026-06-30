@@ -6,6 +6,7 @@
     const api = options.api || {};
     const app = options.app;
     const contextState = options.contextState;
+    const reviewBasket = options.reviewBasket || null;
     const status = options.status || null;
     if (!app || !contextState || typeof contextState.snapshot !== 'function') return null;
 
@@ -86,6 +87,10 @@
         setText(status, 'Added to Context Basket: ' + snapshot.path);
         return;
       }
+      if (action.id === 'file.proposeUpdate') {
+        renderUpdateInstructionForm(snapshot);
+        return;
+      }
       if (action.id === 'folder.useAsContext') {
         contextState.addContextItem({ kind: 'folder', path: snapshot.path });
         setText(status, 'Added folder to Context Basket: ' + snapshot.path);
@@ -93,6 +98,14 @@
       }
       if (action.id === 'folder.listCurrent') {
         listFolder(snapshot);
+        return;
+      }
+      if (action.id === 'folder.analyze') {
+        analyzeFolder(snapshot);
+        return;
+      }
+      if (action.id === 'folder.summarizeMarkdown') {
+        summarizeFolderMarkdown(snapshot);
       }
     }
 
@@ -122,7 +135,7 @@
         const result = await api.chat.send({ messages: request.messages });
         if (result && result.ok && result.message && result.message.content) {
           removeNode(pending);
-          appendActionMessage(result.message.content);
+          appendActionMessage(result.message.content, [], { allowSave: true, suggestedTitle: buildSummaryTitle('md', request.path), responseSubfolder: 'Summaries' });
           setText(status, 'File summarized: ' + request.path);
           return;
         }
@@ -134,6 +147,185 @@
         appendActionMessage('File summary failed: ' + ((error && error.message) || 'request failed'));
         setText(status, 'File summary failed.');
       }
+    }
+
+    function renderUpdateInstructionForm(snapshot) {
+      const existing = root.querySelector('.selection-action-form');
+      if (existing) existing.remove();
+
+      const form = document.createElement('form');
+      form.className = 'selection-action-form';
+      form.dataset.actionId = 'file.proposeUpdate';
+
+      const label = document.createElement('label');
+      label.className = 'selection-action-form-label';
+      label.textContent = 'Content update instruction';
+
+      const textarea = document.createElement('textarea');
+      textarea.rows = 4;
+      textarea.placeholder = 'Describe the content change for this note. Rename/move are not part of this action...';
+
+      const actions = document.createElement('div');
+      actions.className = 'selection-action-form-actions';
+
+      const submit = document.createElement('button');
+      submit.type = 'submit';
+      submit.textContent = 'Create proposal';
+
+      const cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.textContent = 'Cancel';
+      cancel.addEventListener('click', () => form.remove());
+
+      actions.appendChild(submit);
+      actions.appendChild(cancel);
+      form.appendChild(label);
+      form.appendChild(textarea);
+      form.appendChild(actions);
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const instruction = textarea.value.trim();
+        if (!instruction) {
+          setText(status, 'Update proposal needs an instruction.');
+          textarea.focus();
+          return;
+        }
+        form.remove();
+        proposeFileUpdate(snapshot, instruction);
+      });
+
+      root.appendChild(form);
+      textarea.focus();
+      setText(status, 'Describe update for: ' + snapshot.path);
+    }
+
+    async function proposeFileUpdate(snapshot, instruction) {
+      const updater = getSelectedUpdateProposalAction();
+      if (!updater || typeof updater.buildSelectedFileUpdateMessages !== 'function' || typeof updater.parseSelectedFileUpdateProposal !== 'function') {
+        appendActionMessage('Update proposal failed: update proposal module unavailable.');
+        setText(status, 'Update proposal failed.');
+        return;
+      }
+      if (!api.chat || typeof api.chat.send !== 'function') {
+        appendActionMessage('Update proposal failed: chat provider API unavailable.');
+        setText(status, 'Update proposal failed.');
+        return;
+      }
+      if (!reviewBasket || typeof reviewBasket.addProposal !== 'function') {
+        appendActionMessage('Update proposal failed: Review Basket unavailable.');
+        setText(status, 'Update proposal failed.');
+        return;
+      }
+
+      const request = updater.buildSelectedFileUpdateMessages(snapshot, instruction);
+      if (!request.ok) {
+        appendActionMessage('Update proposal unavailable: ' + (request.message || 'Unsupported selection.'));
+        setText(status, 'Update proposal unavailable.');
+        return;
+      }
+
+      setText(status, 'Preparing update proposal: ' + request.path);
+      const pending = appendActionMessage('Preparing update proposal: ' + request.path, [], { pending: true });
+      try {
+        const result = await api.chat.send({ messages: request.messages });
+        removeNode(pending);
+        if (!result || !result.ok || !result.message || !result.message.content) {
+          appendActionMessage(formatUpdateProposalDiagnostics(request, 'provider', classifyProviderFailure(result)));
+          setText(status, 'Update proposal failed: provider.');
+          return;
+        }
+
+        const proposal = updater.parseSelectedFileUpdateProposal(result.message.content, {
+          path: request.path,
+          currentContent: request.currentContent
+        });
+        if (!proposal.ok) {
+          appendActionMessage(formatUpdateProposalDiagnostics(request, 'parser', (proposal.message || 'Invalid proposal.') + ' [' + (proposal.code || 'unknown') + ']'));
+          setText(status, 'Update proposal failed: parser.');
+          return;
+        }
+
+        try {
+          reviewBasket.addProposal(proposal.proposal);
+        } catch (basketError) {
+          appendActionMessage(formatUpdateProposalDiagnostics(request, 'review_basket', (basketError && basketError.message) || 'Could not add proposal to Review Basket.'));
+          setText(status, 'Update proposal failed: Review Basket.');
+          return;
+        }
+        appendActionMessage('Update proposal added to Review Basket.');
+        setText(status, 'Update proposal added to Review Basket.');
+      } catch (error) {
+        removeNode(pending);
+        appendActionMessage(formatUpdateProposalDiagnostics(request, 'provider_exception', classifyThrownProviderError(error)));
+        setText(status, 'Update proposal failed: provider.');
+      }
+    }
+    async function summarizeFolderMarkdown(snapshot) {
+      const summary = getFolderSummaryAction();
+      if (!summary || typeof summary.buildFolderMarkdownSummaryMessages !== 'function') {
+        appendActionMessage('Folder Markdown summary failed: summary action module unavailable.');
+        setText(status, 'Folder Markdown summary failed.');
+        return;
+      }
+      if (!api.vault || typeof api.vault.listFolder !== 'function' || typeof api.vault.readMarkdown !== 'function') {
+        appendActionMessage('Folder Markdown summary failed: vault API unavailable.');
+        setText(status, 'Folder Markdown summary failed.');
+        return;
+      }
+      if (!api.chat || typeof api.chat.send !== 'function') {
+        appendActionMessage('Folder Markdown summary failed: chat provider API unavailable.');
+        setText(status, 'Folder Markdown summary failed.');
+        return;
+      }
+
+      setText(status, 'Preparing folder Markdown summary: ' + snapshot.path);
+      const pending = appendActionMessage('Summarizing Markdown files in: ' + snapshot.path, [], { pending: true });
+      try {
+        const folderResult = await api.vault.listFolder(snapshot.path);
+        if (!folderResult || !folderResult.ok) {
+          removeNode(pending);
+          appendActionMessage('Folder Markdown summary failed: ' + ((folderResult && (folderResult.message || folderResult.code)) || 'Could not list folder.'));
+          setText(status, 'Folder Markdown summary failed.');
+          return;
+        }
+
+        const limits = await getCurrentLimits();
+        const entries = Array.isArray(folderResult.entries) ? folderResult.entries : [];
+        const markdownEntries = entries.filter(isMarkdownEntry).slice(0, positiveIntegerOrDefault(limits.maxAnalysisFiles, 30));
+        const files = [];
+        for (const entry of markdownEntries) {
+          const read = await api.vault.readMarkdown(entry.path);
+          if (read && read.ok) files.push({ path: read.path, content: read.content });
+        }
+
+        const request = summary.buildFolderMarkdownSummaryMessages({ folderPath: snapshot.path, files, limits });
+        if (!request.ok) {
+          removeNode(pending);
+          appendActionMessage('Folder Markdown summary unavailable: ' + (request.message || 'No direct Markdown files.'));
+          setText(status, 'Folder Markdown summary unavailable.');
+          return;
+        }
+
+        const result = await api.chat.send({ messages: request.messages });
+        removeNode(pending);
+        if (result && result.ok && result.message && result.message.content) {
+          appendActionMessage(result.message.content, [], { allowSave: true, suggestedTitle: buildSummaryTitle('dir', snapshot.path), responseSubfolder: 'Summaries' });
+          setText(status, 'Folder Markdown summarized: ' + snapshot.path);
+          return;
+        }
+        appendActionMessage('Folder Markdown summary failed: ' + ((result && result.error) || 'No response.'));
+        setText(status, 'Folder Markdown summary failed.');
+      } catch (error) {
+        removeNode(pending);
+        appendActionMessage('Folder Markdown summary failed: ' + ((error && error.message) || 'request failed'));
+        setText(status, 'Folder Markdown summary failed.');
+      }
+    }
+
+    async function getCurrentLimits() {
+      if (!api.settings || typeof api.settings.get !== 'function') return {};
+      const result = await api.settings.get();
+      return result && result.limits ? result.limits : {};
     }
 
     async function listFolder(snapshot) {
@@ -149,6 +341,18 @@
         onClick: () => listFolderTree(snapshot)
       }]);
       setText(status, result && result.ok ? 'Folder listed: ' + snapshot.path : 'Folder listing failed.');
+    }
+
+    async function analyzeFolder(snapshot) {
+      if (!api.vault || typeof api.vault.listFolder !== 'function') {
+        appendActionMessage('Folder analysis failed: vault API unavailable.');
+        setText(status, 'Folder analysis failed.');
+        return;
+      }
+      setText(status, 'Analyzing folder structure: ' + snapshot.path);
+      const result = await api.vault.listFolder(snapshot.path);
+      appendActionMessage(formatFolderAnalysis(snapshot.path, result));
+      setText(status, result && result.ok ? 'Folder analyzed: ' + snapshot.path : 'Folder analysis failed.');
     }
 
     async function listFolderTree(snapshot) {
@@ -176,7 +380,7 @@
       const chatLog = app.querySelector('#chat-log');
       if (!chatLog) return;
       if (typeof window !== 'undefined' && window.ZeusChat && typeof window.ZeusChat.appendMessage === 'function') {
-        const message = window.ZeusChat.appendMessage(chatLog, 'assistant', content, { allowSave: false, actions: actions || [] });
+        const message = window.ZeusChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder });
         if (options.pending && message) {
           message.classList.add('chat-message-pending');
           message.setAttribute('aria-busy', 'true');
@@ -219,6 +423,32 @@
     function removeNode(node) {
       if (node && typeof node.remove === 'function') node.remove();
     }
+
+    function classifyProviderFailure(result) {
+      if (!result) return 'Provider returned no result.';
+      if (result.canceled === true || /cancell?ed/i.test(String(result.error || ''))) return 'Provider canceled the request.';
+      if (result.ok !== true) return 'Provider failed: ' + String(result.error || 'Unknown provider error.');
+      return 'Provider returned an empty response.';
+    }
+
+    function classifyThrownProviderError(error) {
+      const message = String((error && error.message) || 'request failed');
+      return /cancell?ed/i.test(message) ? 'Provider canceled the request.' : 'Provider request threw: ' + message;
+    }
+
+    function formatUpdateProposalDiagnostics(request, stage, detail) {
+      const diagnostics = request && request.diagnostics ? request.diagnostics : {};
+      return [
+        'Update proposal failed [' + stage + ']: ' + detail,
+        '',
+        'Diagnostics:',
+        '- Target: ' + String(diagnostics.path || (request && request.path) || 'unknown'),
+        '- Current chars: ' + String(diagnostics.currentContentChars ?? 'unknown'),
+        '- Sent chars: ' + String(diagnostics.sentContentChars ?? 'unknown'),
+        '- Instruction chars: ' + String(diagnostics.instructionChars ?? 'unknown'),
+        '- Context truncated: ' + (diagnostics.truncated ? 'yes' : 'no')
+      ].join('\n');
+    }
     function formatFolderListing(folderPath, result) {
       if (!result || !result.ok) return 'Folder listing failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
       const entries = Array.isArray(result.entries) ? result.entries : [];
@@ -237,7 +467,7 @@
     if (!result || !result.ok) return 'Folder analysis failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
     const entries = Array.isArray(result.entries) ? result.entries : [];
     const folders = entries.filter((entry) => entry.kind === 'folder');
-    const markdownFiles = entries.filter((entry) => entry.kind === 'file' && /\.md$/i.test(String(entry.name || entry.path || '')));
+    const markdownFiles = entries.filter(isMarkdownEntry);
     const otherEntries = entries.filter((entry) => !folders.includes(entry) && !markdownFiles.includes(entry));
     const names = entries.map((entry) => String(entry.name || entry.path || 'Unnamed'));
     const samples = names.slice(0, 8);
@@ -256,6 +486,38 @@
       'Use a file-specific action or add files to context before asking for content-level analysis.'
     ].join('\n');
   }
+  function buildSummaryTitle(kind, path) {
+    return 'Summary - ' + normalizeSummaryKind(kind) + ' - ' + deriveTargetName(kind, path) + ' - ' + formatDateForTitle(new Date());
+  }
+
+  function normalizeSummaryKind(kind) {
+    const value = String(kind || '').toLowerCase();
+    if (value === 'md') return 'MD';
+    if (value === 'dir') return 'DIR';
+    return value.toUpperCase() || 'ITEM';
+  }
+
+  function deriveTargetName(kind, path) {
+    const parts = String(path || '').split(/[\\/]+/).filter(Boolean);
+    const base = parts.length ? parts[parts.length - 1] : 'Selection';
+    if (kind === 'file') return base.replace(/\.(md|markdown)$/i, '') || 'File';
+    return base || 'Folder';
+  }
+
+  function formatDateForTitle(date) {
+    const safeDate = date instanceof Date && !Number.isNaN(date.getTime()) ? date : new Date();
+    const year = safeDate.getFullYear();
+    const month = String(safeDate.getMonth() + 1).padStart(2, '0');
+    const day = String(safeDate.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
+  }
+  function isMarkdownEntry(entry) {
+    if (!entry) return false;
+    if (entry.kind === 'markdown') return true;
+    if (entry.kind !== 'file') return false;
+    return /\.(md|markdown)$/i.test(String(entry.name || entry.path || ''));
+  }
+
   function getRegistry() {
     if (typeof window !== 'undefined' && window.ZeusSelectionActionRegistry) return window.ZeusSelectionActionRegistry;
     if (typeof module !== 'undefined' && module.exports) return require('./actionRegistry');
@@ -273,6 +535,25 @@
     if (typeof module !== 'undefined' && module.exports) return require('./fileSummaryAction');
     return null;
   }
+
+  function getSelectedUpdateProposalAction() {
+    if (typeof window !== 'undefined' && window.ZeusSelectedUpdateProposalAction) return window.ZeusSelectedUpdateProposalAction;
+    if (typeof module !== 'undefined' && module.exports) return require('../chat/selectedUpdateProposalAction');
+    return null;
+  }
+
+  function getFolderSummaryAction() {
+    if (typeof window !== 'undefined' && window.ZeusFolderSummaryAction) return window.ZeusFolderSummaryAction;
+    if (typeof module !== 'undefined' && module.exports) return require('./folderSummaryAction');
+    return null;
+  }
+
+  function positiveIntegerOrDefault(value, fallback) {
+    const number = Number(value);
+    if (Number.isFinite(number) && number > 0) return Math.floor(number);
+    return fallback;
+  }
+
   function getFolderController() {
     if (typeof window !== 'undefined' && window.ZeusFolderContextController) return window.ZeusFolderContextController;
     if (typeof module !== 'undefined' && module.exports) return require('../context/folderContextController');
@@ -288,3 +569,4 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZeusSelectionActions = Object.freeze(api);
 })();
+

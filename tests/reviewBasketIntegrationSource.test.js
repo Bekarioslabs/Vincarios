@@ -213,6 +213,22 @@ test('chat renders folder scope and blocked retry actions as message actions', (
   assert.match(source, /chat-message-action-button/);
   assert.match(source, /runScopeAction/);
 });
+
+test('index loads selected update proposal action before chat', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const updateIndex = source.indexOf('./src/renderer/chat/selectedUpdateProposalAction.js');
+  const chatIndex = source.indexOf('./src/renderer/chat/mountChat.js');
+
+  assert.equal(updateIndex > -1, true);
+  assert.equal(updateIndex < chatIndex, true);
+});
+
+test('chat does not auto-route selected Markdown update text into write proposals', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
+
+  assert.doesNotMatch(source, /runSelectedUpdateProposalRequest/);
+  assert.doesNotMatch(source, /ZeusSelectedUpdateProposalAction/);
+});
 test('index loads model action parser before model read action runner and chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const parserIndex = source.indexOf('./src/shared/actions/modelActionParser.js');
@@ -224,4 +240,29 @@ test('index loads model action parser before model read action runner and chat',
   assert.equal(runnerIndex > parserIndex, true);
   assert.equal(preflightIndex > runnerIndex, true);
   assert.equal(chatIndex > preflightIndex, true);
+});
+test('review basket exposes clear executed and compact dismiss controls', () => {
+  const shellSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const viewSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(shellSource, /id="review-clear-done"/);
+  assert.match(viewSource, /clearDone/);
+  assert.match(viewSource, /review-basket-item-actions/);
+  assert.match(viewSource, /renderDismissButton/);
+  assert.match(viewSource, /review-remove-icon/);
+});
+
+test('shell refreshes the active preview after a successful update note proposal', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /const result = await api.vault.updateNote/);
+  assert.equal(source.includes('refreshCurrentPreviewAfterUpdate(vaultUi, proposal.targetPath)'), true);
+  assert.equal(source.includes('filePanel.refreshLoadedMarkdown(targetPath)'), true);
+});
+
+test('review basket source disables and labels no-change proposals', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(source, /item\.executable === false/);
+  assert.match(source, /No content changes proposed/);
 });

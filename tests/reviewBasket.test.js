@@ -34,7 +34,23 @@ test('save-as-note proposal creates a safe fallback title from plain text', () =
 
   assert.equal(proposal.title, 'This is a useful but headingless answer');
   assert.equal(proposal.targetFolder, '00_Inbox/AI Responses');
-});test('save-as-note proposal uses the configured inbox folder role', () => {
+});
+
+test('save-as-note proposal uses an explicit suggested title when provided', () => {
+  const proposal = createSaveAssistantResponseProposal('Generated summary body.', {
+    suggestedTitle: 'Summary - Core - 2026-06-29'
+  });
+
+  assert.equal(proposal.title, 'Summary - Core - 2026-06-29');
+});
+test('save-as-note proposal can target a response subfolder under AI Responses', () => {
+  const proposal = createSaveAssistantResponseProposal('Generated summary body.', {
+    responseSubfolder: 'Summaries'
+  });
+
+  assert.equal(proposal.targetFolder, '00_Inbox/AI Responses/Summaries');
+});
+test('save-as-note proposal uses the configured inbox folder role', () => {
   const proposal = createSaveAssistantResponseProposal('Profiled answer.', {
     profile: { folders: { inbox: 'Incoming' } }
   });
@@ -192,4 +208,37 @@ test('review basket keeps diff proposals unselected until explicit approval', ()
   const selected = basket.getSelectedOpenItems();
   assert.equal(selected.length, 1);
   assert.equal(selected[0].type, 'update_note');
+});
+
+test('review basket clears completed proposals while keeping open and failed items', () => {
+  const basket = createReviewBasketState();
+  const done = basket.addProposal(createSaveAssistantResponseProposal('Done answer.'));
+  const failed = basket.addProposal(createSaveAssistantResponseProposal('Failed answer.'));
+  basket.addProposal(createSaveAssistantResponseProposal('Open answer.'));
+  basket.updateStatus(done.id, 'done', { path: '00_Inbox/Done.md' });
+  basket.updateStatus(failed.id, 'failed', { error: 'Nope.' });
+
+  const cleared = basket.clearDone();
+
+  assert.equal(cleared.length, 1);
+  assert.equal(cleared[0].id, done.id);
+  assert.deepEqual(basket.getSnapshot().items.map((item) => item.status), ['failed', 'open']);
+});
+
+test('review basket makes no-change update proposals non-executable', () => {
+  const basket = createReviewBasketState();
+  const item = basket.addProposal({
+    type: 'update_note',
+    title: 'Rename request',
+    targetPath: '03_Knowledge/Topic.md',
+    currentContent: '# Topic\n\nSame body.',
+    proposedContent: '# Topic\n\nSame body.',
+    reason: 'Rename is not part of content update.'
+  });
+
+  assert.equal(item.diffPreview.changed, false);
+  assert.equal(item.noChange, true);
+  assert.equal(item.executable, false);
+  assert.equal(item.selected, false);
+  assert.equal(basket.getSelectedOpenItems().length, 0);
 });

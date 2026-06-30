@@ -1,9 +1,10 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { formatLimitValue, parseLimitInput } = require('../src/renderer/settings/mountSettingsPanel');
 
 test('index loads settings styles and renderer module before shell bootstrap', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -69,4 +70,11 @@ test('settings styles stay in the settings stylesheet', () => {
   assert.match(css, /\.settings-provider-row/);
   assert.match(css, /\.settings-limit-grid/);
   assert.match(css, /\.settings-vault-role-row/);
+});
+
+test('settings panel shows provider timeout in seconds while storing milliseconds', () => {
+  const field = { key: 'providerTimeoutMs', unit: 'seconds' };
+
+  assert.equal(formatLimitValue(field, 120000), 120);
+  assert.equal(parseLimitInput(field, '180'), 180000);
 });

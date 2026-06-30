@@ -17,7 +17,7 @@ test('renderer shell provides preview and source editor controls', () => {
 test('file panel passes Markdown content to the preview controller', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
-  assert.match(source, /previewController\.setSource\(content, path\)/);
+  assert.match(source, /previewController\.setSource\(content, path, behavior\)/);
   assert.match(source, /setPreviewSource\(read\.content, read\.path\)/);
   assert.match(source, /previewController\.setMessage\(message\)/);
 });

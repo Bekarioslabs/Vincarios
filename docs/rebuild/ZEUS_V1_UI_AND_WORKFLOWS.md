@@ -127,7 +127,7 @@ The topbar shows provider state in three separate controls:
 - provider dropdown: active provider selection.
 - model dropdown: selected model for the active provider.
 
-Default provider URLs live in the provider registry. The topbar must not expose raw URLs. URL overrides belong to the Settings screen and update the same provider settings state instead of adding a parallel provider path.
+Default provider URLs live in the provider registry. The topbar must not expose raw URLs. URL overrides belong to the Settings screen and update the same provider settings state instead of adding a parallel provider path. Provider timeout is shown in Settings as seconds and stored internally as milliseconds; local model users can raise it for slower requests without changing provider code.
 
 Provider controls never grant vault access. Providers only receive the context package prepared by app logic.
 ## Review Basket Decisions
@@ -191,7 +191,7 @@ Recursive permission application must not read Markdown contents. It only needs 
 
 ## Chat Request Control Decisions
 
-While a provider request is running, the Send button becomes `Cancel`. Cancel uses the request id and `chat:cancel` IPC to abort the active provider request through `AbortController`. The renderer also checks the active request id before applying a response so late canceled responses cannot appear in chat.
+While a provider request is running, the Send button becomes `Cancel`. Cancel uses the request id and `chat:cancel` IPC to abort the active provider request through `AbortController`. The renderer also checks the active request id before applying a response so late canceled responses cannot appear in chat. Internal provider timeouts are reported as provider errors, not as user-canceled requests.
 ## Chat Message Metadata
 
 - ZEUS chat messages show hover metadata below the bubble: `Save as Note` and `Copy` on the left, local time on the right. Persistent follow-up actions such as `Check whole tree` stay in the visible action row below the message. Chat session persistence is not V1 and belongs to the future backlog.
@@ -241,11 +241,11 @@ V1 action categories:
 
 Current V1 foundation actions:
 
-- selected Markdown file currently shows `Summarize file`, `Use as context`, and `Propose update`.
-- selected folder currently shows `Use as context`, `List folder`, and `Analyze folder`.
+- selected Markdown file currently shows `Summarize file`, `Use as context`, and `Propose content update`. `Propose content update` asks for an explicit content-change instruction, then adds a reviewed whole-note `update_note` proposal to the Review Basket. Rename, move, archive, and delete remain separate future actions.
+- selected folder currently shows `Use as context`, `List folder`, `Analyze folder`, and `Summarize MD files`.
 - `Use as context` is active for readable folders and for readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content.
 - inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.
-- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working.
+- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working. `Summarize MD files` reads only direct Markdown files from the selected folder, applies Settings/Limits caps, ignores images/PDFs/attachments, and returns a normal saveable ZEUS answer. Summary answers suggest editable Save-as-Note titles in the form `Summary - MD - <file name> - YYYY-MM-DD` for Markdown files and `Summary - DIR - <folder name> - YYYY-MM-DD` for folders. They default to `AI Responses/Summaries` under the configured Inbox role.
 - future custom actions belong behind Settings and must produce visible proposals or context items, not direct writes.
 
 ## Context System Decisions
@@ -431,6 +431,7 @@ Current V1 foundation actions for selected folders:
 - Use as context
 - List folder
 - Analyze folder
+- Summarize MD files
 
 Current V1 foundation actions for selected Markdown files:
 

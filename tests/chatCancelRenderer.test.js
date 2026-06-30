@@ -115,3 +115,29 @@ test('normal chat pending messages use the shared pending spinner class', () => 
   assert.match(source, /appendMessage\(chatLog, 'assistant', 'Thinking\.\.\.', \{ allowSave: false, pending: true \}\)/);
   assert.match(source, /if \(options\.pending\) message\.classList\.add\('chat-message-pending'\)/);
 });
+test('provider request includes requestId so main can abort the provider fetch', async () => {
+  const sentPayloads = [];
+  const pending = { remove() {} };
+
+  await runProviderRequest({
+    api: {
+      chat: {
+        send(payload) {
+          sentPayloads.push(payload);
+          return Promise.resolve({ ok: true, message: { content: 'ignored after abort' } });
+        }
+      }
+    },
+    chatLog: { querySelector() { return null; }, appendChild() {} },
+    content: 'hello',
+    messages: [{ role: 'user', content: 'hello' }],
+    contextState: null,
+    reviewBasket: null,
+    status: { textContent: '' },
+    pending,
+    requestId: 'req-provider-abort',
+    isRequestActive() { return false; }
+  });
+
+  assert.equal(sentPayloads[0].requestId, 'req-provider-abort');
+});

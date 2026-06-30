@@ -31,6 +31,7 @@
     { name: 'ZeusReviewBasket', globalName: 'ZeusReviewBasket' },
     { name: 'ZeusModelReadActionRunner', globalName: 'ZeusModelReadActionRunner', methods: ['runModelReadActions'] },
     { name: 'ZeusReadContextPreflight', globalName: 'ZeusReadContextPreflight', methods: ['runReadContextPreflight'] },
+    { name: 'ZeusSelectedUpdateProposalAction', globalName: 'ZeusSelectedUpdateProposalAction', methods: ['isSelectedFileUpdateRequest', 'buildSelectedFileUpdateMessages', 'parseSelectedFileUpdateProposal'] },
     { name: 'ZeusChat', globalName: 'ZeusChat', methods: ['mountChat', 'appendMessage'] },
     { name: 'ZeusProviderStatus', globalName: 'ZeusProviderStatus', methods: ['mountProviderStatus'] },
     { name: 'ZeusSettingsPanel', globalName: 'ZeusSettingsPanel', methods: ['mountSettingsPanel'] },

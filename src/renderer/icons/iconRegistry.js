@@ -17,7 +17,7 @@
     check: 'check.svg',
     warning: 'triangle-alert.svg',
     search: 'search.svg',
-    send: 'send.svg',
+    send: 'arrow-up.svg',
     edit: 'square-pen.svg'
   });
 

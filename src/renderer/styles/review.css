@@ -264,3 +264,30 @@
   background: rgba(220,38,38,.1);
   color: #f87171;
 }
+
+.review-basket-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.review-basket-remove {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border-color: var(--background-modifier-border);
+  background: transparent;
+  color: var(--text-muted);
+  padding: 0;
+}
+
+.review-basket-remove:hover {
+  border-color: rgba(var(--interactive-accent-rgb), .35);
+  color: var(--text-normal);
+}
+
+.review-remove-icon {
+  width: 13px;
+  height: 13px;
+}

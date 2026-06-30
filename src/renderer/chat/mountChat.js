@@ -223,11 +223,12 @@
   }
 
   async function runProviderRequest(options) {
+
     const providerMessages = options.includeUserMessage === false
       ? options.messages.concat({ role: 'user', content: options.content })
       : options.messages;
     const outboundMessages = buildOutboundMessages(providerMessages, options.content, options.contextState);
-    const result = await options.api.chat.send({ messages: outboundMessages });
+    const result = await options.api.chat.send({ requestId: options.requestId, messages: outboundMessages });
     if (typeof options.isRequestActive === 'function' && !options.isRequestActive()) {
       options.pending.remove();
       setText(options.status, 'Request canceled.');
@@ -437,7 +438,7 @@
         setText(options.status, 'Review Basket unavailable.');
         return;
       }
-      const proposal = factory(content);
+      const proposal = factory(content, { suggestedTitle: options.suggestedTitle });
       options.reviewBasket.addProposal(proposal);
       setText(options.status, 'Added to Review Basket.');
     });

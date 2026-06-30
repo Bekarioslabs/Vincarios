@@ -260,4 +260,6 @@
 .markdown-history-icon {
   width: 13px;
   height: 13px;
+  filter: brightness(0) invert(1);
+  opacity: .8;
 }

@@ -13,6 +13,7 @@ test('context state starts with no selection and an empty context basket', () =>
     path: '',
     content: '',
     readAllowed: false,
+    writeAllowed: false,
     parentReadAllowed: false,
     contextItems: [],
     label: 'No selection.'
@@ -88,16 +89,19 @@ test('context state assigns a new selection id for every selected target', () =>
   assert.equal(context.clear().selectionId, 3);
 });
 
-test('context state stores read permissions for selected targets', () => {
+test('context state stores read and write permissions for selected targets', () => {
   const context = createContextState();
-  const folder = context.setFolder('03_Knowledge', { readAllowed: false });
+  const folder = context.setFolder('03_Knowledge', { readAllowed: false, writeAllowed: true });
   const file = context.setFile('03_Knowledge/Comics/A.md', {
     content: '# A',
     readAllowed: true,
+    writeAllowed: true,
     parentReadAllowed: true
   });
 
   assert.equal(folder.readAllowed, false);
+  assert.equal(folder.writeAllowed, true);
   assert.equal(file.readAllowed, true);
+  assert.equal(file.writeAllowed, true);
   assert.equal(file.parentReadAllowed, true);
 });

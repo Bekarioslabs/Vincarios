@@ -9,6 +9,7 @@
     const root = app ? app.querySelector('#review-basket-items') : null;
     const executeButton = app ? app.querySelector('#review-execute') : null;
     const clearButton = app ? app.querySelector('#review-clear') : null;
+    const clearDoneButton = app ? app.querySelector('#review-clear-done') : null;
     let isExecuting = false;
 
     if (!window.ZeusReviewBasketState || !root) return null;
@@ -18,6 +19,7 @@
         renderReviewBasket(root, snapshot, state);
         updateExecuteButton(executeButton, state, isExecuting);
         updateClearButton(clearButton, state, isExecuting);
+        updateClearDoneButton(clearDoneButton, state, isExecuting);
       }
     });
 
@@ -27,6 +29,14 @@
         state.clearOpen();
       });
       updateClearButton(clearButton, state, isExecuting);
+      updateClearDoneButton(clearDoneButton, state, isExecuting);
+    }
+    if (clearDoneButton) {
+      clearDoneButton.addEventListener('click', () => {
+        if (isExecuting || !state || typeof state.clearDone !== 'function') return;
+        state.clearDone();
+      });
+      updateClearDoneButton(clearDoneButton, state, isExecuting);
     }
     if (executeButton) {
       executeButton.addEventListener('click', async () => {
@@ -39,6 +49,7 @@
           isExecuting = false;
           updateExecuteButton(executeButton, state, isExecuting);
           updateClearButton(clearButton, state, isExecuting);
+          updateClearDoneButton(clearDoneButton, state, isExecuting);
         }
       });
       updateExecuteButton(executeButton, state, isExecuting);
@@ -69,7 +80,7 @@
       const check = document.createElement('input');
       check.type = 'checkbox';
       check.checked = item.selected !== false;
-      check.disabled = item.status !== 'open';
+      check.disabled = item.status !== 'open' || item.executable === false;
       check.addEventListener('change', () => {
         if (state && typeof state.setSelected === 'function') {
           state.setSelected(item.id, check.checked);
@@ -82,28 +93,45 @@
       const diffSummary = renderDiffSummary(item);
       if (diffSummary) text.appendChild(diffSummary);
 
+      const itemActions = document.createElement('div');
+      itemActions.className = 'review-basket-item-actions';
       const diffButton = renderDiffButton(item);
+      if (diffButton) itemActions.appendChild(diffButton);
+      itemActions.appendChild(renderDismissButton(item, state));
 
       const status = document.createElement('span');
       status.className = 'review-basket-item-status';
       status.textContent = item.status;
 
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'review-basket-remove';
-      remove.textContent = 'Dismiss';
-      remove.disabled = false;
-      remove.addEventListener('click', () => {
-        if (state && typeof state.remove === 'function') state.remove(item.id);
-      });
-
       row.appendChild(check);
       row.appendChild(text);
-      if (diffButton) row.appendChild(diffButton);
+      row.appendChild(itemActions);
       row.appendChild(status);
-      row.appendChild(remove);
       root.appendChild(row);
     });
+  }
+
+  function renderDismissButton(item, state) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'review-basket-remove';
+    button.title = 'Dismiss';
+    button.setAttribute('aria-label', 'Dismiss review item');
+    renderRemoveIcon(button);
+    button.addEventListener('click', () => {
+      if (state && typeof state.remove === 'function') state.remove(item.id);
+    });
+    return button;
+  }
+
+  function renderRemoveIcon(button) {
+    const renderer = getIconRenderer();
+    button.textContent = '';
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      button.appendChild(renderer.createIconElement('close', 'review-remove-icon'));
+      return;
+    }
+    button.textContent = 'x';
   }
 
   function renderDiffButton(item) {
@@ -182,6 +210,10 @@
     if (!item || !item.requiresDiff) return null;
     const summary = document.createElement('div');
     summary.className = 'review-basket-diff-summary';
+    if (item.noChange === true) {
+      summary.textContent = 'No content changes proposed.';
+      return summary;
+    }
     summary.textContent = item.diffPreview && item.diffPreview.summary
       ? 'Diff required: ' + item.diffPreview.summary
       : 'Diff required';
@@ -245,6 +277,12 @@
     if (!button || !state || typeof state.getSnapshot !== 'function') return;
     const hasOpenItems = state.getSnapshot().items.some((item) => item.status === 'open');
     button.disabled = busy || !hasOpenItems;
+  }
+
+  function updateClearDoneButton(button, state, busy) {
+    if (!button || !state || typeof state.getSnapshot !== 'function') return;
+    const hasDoneItems = state.getSnapshot().items.some((item) => item.status === 'done');
+    button.disabled = busy || !hasDoneItems;
   }
 
   function setButtonBusy(button, busy) {
@@ -379,6 +417,10 @@
   }
   function setText(node, value) {
     if (node) node.textContent = value;
+  }
+
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
   }
 
   if (typeof module !== 'undefined' && module.exports) {

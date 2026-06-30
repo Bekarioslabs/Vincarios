@@ -42,18 +42,20 @@ test('Markdown read actions require readable loaded Markdown content', () => {
   assert.equal(withoutContent.find((action) => action.id === 'file.summarize').enabled, false);
 });
 
-test('registry returns three V1 actions for selected folders', () => {
+test('registry returns V1 read actions for selected folders', () => {
   const actions = getSelectionActions({ kind: 'folder', path: '03_Knowledge', readAllowed: true });
 
   assert.deepEqual(actions.map((action) => action.id), [
     'folder.useAsContext',
     'folder.listCurrent',
-    'folder.analyze'
+    'folder.analyze',
+    'folder.summarizeMarkdown'
   ]);
-  assert.deepEqual(actions.map((action) => action.category), ['context', 'read', 'read']);
+  assert.deepEqual(actions.map((action) => action.category), ['context', 'read', 'read', 'read']);
   assert.equal(actions.find((action) => action.id === 'folder.useAsContext').enabled, true);
   assert.equal(actions.find((action) => action.id === 'folder.listCurrent').enabled, true);
   assert.equal(actions.find((action) => action.id === 'folder.analyze').enabled, true);
+  assert.equal(actions.find((action) => action.id === 'folder.summarizeMarkdown').enabled, true);
 });
 test('folder read actions require read permission', () => {
   const withoutRead = getSelectionActions({ kind: 'folder', path: '03_Knowledge', readAllowed: false });
@@ -61,4 +63,16 @@ test('folder read actions require read permission', () => {
 
   assert.equal(action.enabled, false);
   assert.equal(action.reason, 'Requires R on this folder.');
+});
+test('Markdown update action requires readable, writable loaded Markdown content', () => {
+  const ready = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: true, writeAllowed: true });
+  const withoutWrite = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: true, writeAllowed: false });
+  const withoutRead = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: false, writeAllowed: true });
+
+  const propose = ready.find((action) => action.id === 'file.proposeUpdate');
+  assert.equal(propose.enabled, true);
+  assert.equal(propose.label, 'Propose content update');
+  assert.match(propose.reason, /Content changes only/);
+  assert.equal(withoutWrite.find((action) => action.id === 'file.proposeUpdate').enabled, false);
+  assert.equal(withoutRead.find((action) => action.id === 'file.proposeUpdate').enabled, false);
 });

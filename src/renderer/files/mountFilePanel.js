@@ -167,6 +167,7 @@
             activateEntry(entry);
             return;
           }
+          if (handlePermissionHotkey(event, entry)) return;
           handleTreeKeydown(event, row, entry);
         });
 
@@ -223,6 +224,18 @@
       if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
       else setText(context, 'Selection file: ' + read.path);
       setStatus('Read: ' + read.path);
+    }
+
+    async function refreshLoadedMarkdown(path) {
+      const targetPath = window.ZeusFileNavigator.normalizePath(path || '');
+      if (!targetPath || !previewController || typeof previewController.getCurrentPath !== 'function') return { ok: false, message: 'No preview file to refresh.' };
+      if (window.ZeusFileNavigator.normalizePath(previewController.getCurrentPath()) !== targetPath) return { ok: true, skipped: true };
+      const read = await api.vault.readMarkdown(targetPath);
+      if (!read.ok) return read;
+      setPreviewSource(read.content, read.path, { recordHistory: false });
+      if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
+      setStatus('Preview refreshed: ' + read.path);
+      return { ok: true, path: read.path };
     }
     async function handleTreeKeydown(event, row, entry) {
       if (!keyboard || !keyboard.isFileTreeNavigationKey(event.key)) return;
@@ -354,6 +367,7 @@
       return {
         content,
         readAllowed: canUsePathAsContext(path),
+        writeAllowed: canUsePathAsUpdateTarget(path),
         parentReadAllowed: parentFolder ? canUsePathAsContext(parentFolder) : canUsePathAsContext('')
       };
     }
@@ -374,6 +388,11 @@
       return permissionState.resolve(path).read === true;
     }
 
+    function canUsePathAsUpdateTarget(path) {
+      if (!permissionState || typeof permissionState.resolve !== 'function') return false;
+      return permissionState.resolve(path).write === true;
+    }
+
     function permissionCandidates(path) {
       const normalized = window.ZeusFileNavigator.normalizePath(path || '');
       if (!normalized) return [''];
@@ -389,25 +408,53 @@
       const controls = document.createElement('span');
       controls.className = 'file-permission-controls';
 
-      const readButton = createPermissionButton('R', 'Toggle read permission', async (event) => {
-        if (!permissionState) return null;
-        const next = !permissionState.resolve(path).read;
-        if (event.shiftKey) return setPermissionRecursively(path, 'read', next);
-        if (event.ctrlKey) return permissionState.setReadForPaths(knownVisibleDescendantPaths(path), next);
-        return permissionState.toggleRead(path);
-      });
-      const writeButton = createPermissionButton('W', 'Toggle write permission', async (event) => {
-        if (!permissionState) return null;
-        const next = !permissionState.resolve(path).write;
-        if (event.shiftKey) return setPermissionRecursively(path, 'write', next);
-        if (event.ctrlKey) return permissionState.setWriteForPaths(knownVisibleDescendantPaths(path), next);
-        return permissionState.toggleWrite(path);
-      });
+      const readButton = createPermissionButton('R', 'Toggle read permission', (event) => togglePermission(path, 'read', event));
+      const writeButton = createPermissionButton('W', 'Toggle write permission', (event) => togglePermission(path, 'write', event));
 
       controls.appendChild(readButton);
       controls.appendChild(writeButton);
       updatePermissionButtons(path, readButton, writeButton);
       return controls;
+    }
+
+    function handlePermissionHotkey(event, entry) {
+      if (!permissionState || !event || !entry) return false;
+      if (event.ctrlKey || event.metaKey || event.altKey) return false;
+      if (isInteractiveTarget(event.target)) return false;
+      const row = event.target && event.target.closest ? event.target.closest('.file-row') : null;
+      if (!row || row.dataset.path !== entry.path) return false;
+
+      const key = event.key.toLowerCase();
+      if (key !== 'r' && key !== 'w') return false;
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (key === 'r') togglePermission(entry.path, 'read').then(() => finishPermissionHotkey(entry.path));
+      else togglePermission(entry.path, 'write').then(() => finishPermissionHotkey(entry.path));
+      return true;
+    }
+
+    function finishPermissionHotkey(path) {
+      syncSelectedContextPermission();
+      renderTree();
+      focusRenderedPath(path);
+    }
+
+    function isInteractiveTarget(target) {
+      return !!(target && target.closest && target.closest('button,input,textarea,select,[contenteditable="true"]'));
+    }
+
+    async function togglePermission(path, flag, event) {
+      if (!permissionState) return null;
+      const current = permissionState.resolve(path);
+      const next = flag === 'read' ? !current.read : !current.write;
+      if (event && event.shiftKey) return setPermissionRecursively(path, flag, next);
+      if (event && event.ctrlKey) {
+        if (flag === 'read') return permissionState.setReadForPaths(knownVisibleDescendantPaths(path), next);
+        return permissionState.setWriteForPaths(knownVisibleDescendantPaths(path), next);
+      }
+      if (flag === 'read') return permissionState.toggleRead(path);
+      return permissionState.toggleWrite(path);
     }
 
     async function setPermissionRecursively(path, flag, enabled) {
@@ -499,8 +546,8 @@
         : parts;
     }
 
-    function setPreviewSource(content, path) {
-      if (previewController && previewController.setSource) previewController.setSource(content, path);
+    function setPreviewSource(content, path, behavior) {
+      if (previewController && previewController.setSource) previewController.setSource(content, path, behavior);
     }
 
     function setPreviewMessage(message) {
@@ -514,6 +561,7 @@
     return {
       openRoot,
       refreshTree,
+      refreshLoadedMarkdown,
       renderTree,
       ensureFolderLoaded,
       setVaultName,

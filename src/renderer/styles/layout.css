@@ -887,3 +887,58 @@ body.is-resizing .pane-resizer::after {
 .send-button-shell[data-chat-state="running"] .send-button-icon {
   filter: brightness(0) saturate(100%) invert(69%) sepia(92%) saturate(1400%) hue-rotate(355deg) brightness(98%) contrast(97%);
 }
+.selection-action-form {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.selection-action-form-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.selection-action-form textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 8px;
+  outline: none;
+}
+
+.selection-action-form textarea:focus {
+  border-color: rgba(var(--interactive-accent-rgb), .55);
+}
+
+.selection-action-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.selection-action-form-actions button {
+  min-height: 28px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.selection-action-form-actions button[type="submit"] {
+  border-color: rgba(var(--interactive-accent-rgb), .55);
+  background: rgba(var(--interactive-accent-rgb), .14);
+  color: var(--text-accent);
+}

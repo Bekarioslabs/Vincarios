@@ -97,6 +97,7 @@
       path,
       content: details && typeof details.content === 'string' ? details.content : '',
       readAllowed: details && Object.prototype.hasOwnProperty.call(details, 'readAllowed') ? details.readAllowed === true : true,
+      writeAllowed: details && Object.prototype.hasOwnProperty.call(details, 'writeAllowed') ? details.writeAllowed === true : false,
       parentReadAllowed: details && Object.prototype.hasOwnProperty.call(details, 'parentReadAllowed') ? details.parentReadAllowed === true : false,
       contextItems: cloneContextItems(contextItems),
       label: labelForState(kind, path)
@@ -110,6 +111,7 @@
       path: '',
       content: '',
       readAllowed: false,
+      writeAllowed: false,
       parentReadAllowed: false,
       contextItems: cloneContextItems(contextItems),
       label: 'No selection.'

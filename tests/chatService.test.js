@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createProviderChatService } = require('../src/main/providers/providerChatService');
+const { createProviderChatService, getProviderTimeoutMs } = require('../src/main/providers/providerChatService');
 const { registerChatIpc } = require('../src/main/ipc/registerChatIpc');
 const { IPC_CHANNELS } = require('../src/shared/ipc/channels');
 
@@ -339,4 +339,43 @@ test('provider chat service returns canceled result when aborted before request'
   assert.equal(result.ok, false);
   assert.equal(result.canceled, true);
   assert.match(result.error, /cancel/i);
+});
+
+test('provider chat service reports internal timeout separately from user cancel', async () => {
+  const service = createProviderChatService({
+    timeoutMs: 1,
+    providers: [
+      {
+        id: 'lm-studio',
+        label: 'LM Studio',
+        baseUrl: 'http://127.0.0.1:1234',
+        chatPath: '/v1/chat/completions',
+        model: 'local-model'
+      }
+    ],
+    fetchImpl: async (url, options) => new Promise((resolve, reject) => {
+      options.signal.addEventListener('abort', () => {
+        const error = new Error('aborted');
+        error.name = 'AbortError';
+        reject(error);
+      }, { once: true });
+    })
+  });
+
+  const result = await service.sendChat({ messages: [{ role: 'user', content: 'Hi' }] });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.canceled, undefined);
+  assert.match(result.error, /timed out/i);
+});
+
+test('provider chat service reads provider timeout from settings store', () => {
+  const settingsStore = {
+    getSettings() {
+      return { limits: { providerTimeoutMs: 180000 } };
+    }
+  };
+
+  assert.equal(getProviderTimeoutMs(settingsStore, 120000), 180000);
+  assert.equal(getProviderTimeoutMs(null, 120000), 120000);
 });

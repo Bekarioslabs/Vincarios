@@ -126,3 +126,8 @@ test('file tree uses local SVG icon sizing instead of unicode pseudo icons', () 
   assert.match(css, /grid-template-columns:\s*auto 30px minmax\(0, 1fr\)/);
   assert.doesNotMatch(css, /file-row-icon::before/);
 });
+test('Markdown history icons are filtered for dark UI visibility', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
+
+  assert.match(css, /\.markdown-history-icon\s*\{[\s\S]*filter:\s*brightness\(0\) invert\(1\)/);
+});

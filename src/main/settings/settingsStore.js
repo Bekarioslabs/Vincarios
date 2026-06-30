@@ -1,11 +1,11 @@
-﻿'use strict';
+'use strict';
 
 const fs = require('node:fs');
 const path = require('node:path');
 
 const SETTINGS_VERSION = 1;
 const DEFAULT_LIMITS = Object.freeze({
-  providerTimeoutMs: 60000,
+  providerTimeoutMs: 120000,
   modelListTimeoutMs: 3000,
   maxSelectedFileChars: 8000,
   maxListedFolders: 100,

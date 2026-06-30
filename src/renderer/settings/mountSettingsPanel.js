@@ -2,7 +2,7 @@
   'use strict';
 
   const LIMIT_FIELDS = Object.freeze([
-    { key: 'providerTimeoutMs', label: 'Provider timeout ms' },
+    { key: 'providerTimeoutMs', label: 'Provider timeout seconds', unit: 'seconds' },
     { key: 'modelListTimeoutMs', label: 'Model list timeout ms' },
     { key: 'maxSelectedFileChars', label: 'Selected file chars' },
     { key: 'maxListedFolders', label: 'Listed folders' },
@@ -193,7 +193,7 @@
       label.querySelector('span').textContent = field.label;
       const input = label.querySelector('input');
       input.setAttribute('data-limit-key', field.key);
-      input.value = String(limits[field.key] || '');
+      input.value = String(formatLimitValue(field, limits[field.key]));
       panel.limitsGrid.appendChild(label);
     });
 
@@ -202,7 +202,9 @@
       panel.saveLimitsButton.addEventListener('click', async () => {
         const payload = {};
         panel.limitsGrid.querySelectorAll('[data-settings-limit]').forEach((input) => {
-          payload[input.getAttribute('data-limit-key')] = Number(input.value);
+          const key = input.getAttribute('data-limit-key');
+          const field = LIMIT_FIELDS.find((item) => item.key === key);
+          payload[key] = parseLimitInput(field, input.value);
         });
         setText(panel.status, 'Saving limits...');
         const result = await api.settings.setLimits(payload);
@@ -215,6 +217,17 @@
         await renderSettings(panel, api, statusBar);
       });
     }
+  }
+
+  function formatLimitValue(field, value) {
+    if (field && field.unit === 'seconds') return Math.round(Number(value || 0) / 1000);
+    return value || '';
+  }
+
+  function parseLimitInput(field, value) {
+    const number = Number(value);
+    if (field && field.unit === 'seconds') return Number.isFinite(number) ? Math.floor(number * 1000) : number;
+    return number;
   }
 
   function renderVaultProfileSettings(panel, api, statusBar, settings) {
@@ -356,7 +369,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountSettingsPanel, normalizeProviders, formatCapabilities };
+    module.exports = { mountSettingsPanel, normalizeProviders, formatCapabilities, formatLimitValue, parseLimitInput };
   }
 
   if (typeof window !== 'undefined') {

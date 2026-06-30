@@ -72,6 +72,14 @@ test('file panel keeps loaded preview content and resyncs read permission for ac
   assert.match(source, /function syncSelectedContextPermission/);
   assert.match(source, /syncSelectedContextPermission\(\)/);
 });
+
+test('file panel passes write permission into selected context details', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /writeAllowed: canUsePathAsUpdateTarget\(path\)/);
+  assert.match(source, /function canUsePathAsUpdateTarget/);
+  assert.match(source, /permissionState\.resolve\(path\)\.write === true/);
+});
 test('file panel focuses rows before activation so keyboard navigation can continue', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
@@ -89,4 +97,23 @@ test('file panel uses semantic icon renderer for tree and refresh icons', () => 
   assert.match(source, /'markdownFile'/);
   assert.match(source, /'chevronRight'/);
   assert.match(source, /'chevronDown'/);
+});
+test('file panel supports focused-row R and W permission hotkeys only through file tree rows', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /handlePermissionHotkey\(event, entry\)/);
+  assert.match(source, /event\.key\.toLowerCase\(\)/);
+  assert.match(source, /event\.target\.closest\('\.file-row'\)/);
+  assert.match(source, /togglePermission\(entry\.path, 'read'/);
+  assert.match(source, /togglePermission\(entry\.path, 'write'/);
+  assert.doesNotMatch(source, /document\.addEventListener\('keydown'.*togglePermission/s);
+});
+test('file panel exposes a targeted refresh for the currently loaded Markdown preview', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.equal(source.includes('async function refreshLoadedMarkdown(path)'), true);
+  assert.equal(source.includes('previewController.getCurrentPath()'), true);
+  assert.equal(source.includes('previewController.setSource(content, path, behavior)'), true);
+  assert.match(source, /recordHistory: false/);
+  assert.match(source, /refreshLoadedMarkdown,/);
 });

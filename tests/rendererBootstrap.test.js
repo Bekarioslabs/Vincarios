@@ -36,3 +36,10 @@ test('renderer bootstrap validates required parser methods', () => {
   assert.equal(result.ok, false);
   assert.match(result.message, /ZeusModelActionParser\.parseModelActionCalls/);
 });
+test('renderer bootstrap requires the selected update proposal module', () => {
+  const runtime = createRuntime({ ZeusSelectedUpdateProposalAction: undefined });
+  const result = validateRendererModules(runtime);
+
+  assert.equal(result.ok, false);
+  assert.match(result.message, /ZeusSelectedUpdateProposalAction/);
+});

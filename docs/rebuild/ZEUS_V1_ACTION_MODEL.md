@@ -49,9 +49,22 @@ Each proposal item should show:
 
 The user can select multiple items and click one execute button.
 
-Current implemented slice: assistant `Save as Note` creates a selected `create_note` proposal. The Review Basket can select, dismiss visible entries, clear pending suggestions, show compact diff summaries, and open dedicated preview modals. Selected `create_note` proposals execute after an in-app Create Note preview with an editable title field. After a successful create, the app refreshes the Files tree through the file panel refresh path so the new note becomes visible without manual refresh. Selected `update_note` proposals are executable only when they carry `targetPath`, `currentContent`, and `proposedContent`; they are unselected by default, require an Apply Update diff preview, write through the preload vault API, create a backup in `.zeus/backups/YYYY-MM-DD/...`, reject stale content if the file changed since proposal creation, update the Markdown file, and append audit entries in `.zeus/audit.jsonl`.
+Current implemented slice: assistant `Save as Note` creates a selected `create_note` proposal. The Review Basket can select, dismiss any visible entry, clear pending suggestions, clear executed suggestions, show compact diff summaries, and open dedicated preview modals. Selected `create_note` proposals execute after an in-app Create Note preview with an editable title field. After a successful create, the app refreshes the Files tree through the file panel refresh path so the new note becomes visible without manual refresh. After a successful update, the app refreshes the currently loaded preview when it matches the updated target path. Selected `update_note` proposals are executable only when they carry `targetPath`, `currentContent`, and `proposedContent`; they are unselected by default, require an Apply Update diff preview, write through the preload vault API, create a backup in `.zeus/backups/YYYY-MM-DD/...`, reject stale content if the file changed since proposal creation, update the Markdown file, and append audit entries in `.zeus/audit.jsonl`. No-change update proposals remain visible for diagnosis but are marked non-executable.
 
 Phase 3 is complete at this core foundation boundary. `insert_into_note`, `move_note`, `rename_note`, and `archive_note` remain known schema types so model output can be classified safely, but they are deliberately non-executable until their own reviewed services exist. This prevents accidental execution while keeping the future action vocabulary stable.
+## Selection Action Update Proposals
+
+V1 supports update proposals through the selected Markdown file action `Propose content update`. The app supplies the selected `targetPath` and `currentContent`; the provider returns a structured proposal with full `proposedContent`. The proposal is added to the Review Basket as `update_note` with `updateMode: whole_note` and is never written directly from chat or by the provider. Proposal failures are reported by stage (`provider`, `parser`, `review_basket`, or `provider_exception`) with target path, content length, sent context length, instruction length, and truncation status so model, parser, and review failures can be diagnosed before fixing.
+
+Required gates before proposal generation:
+
+- selected target is a Markdown file
+- selected content is loaded in the preview/context state
+- `R` is enabled for context use
+- `W` is enabled for proposing a reviewed write
+- user provides an explicit update instruction through the `Propose update` action
+
+This is intentionally whole-note content replacement for V1. It must not rename, move, retarget, create, archive, or delete files. Partial insert/replace and richer diff editing belong to V1.1/V1.2 and should extend the same proposal/review/update service boundary instead of creating a second write path.
 
 Read-context actions are a separate lightweight chat path, not direct provider file access. Selected-folder listing requests are handled first by a request-scoped preflight: when the current selection is a folder with `R` active, the renderer calls the preload vault API and appends the folder listing as a ZEUS message before provider generation. Supported `list_folder` model-action envelopes remain a fallback: the renderer parses them, verifies that the requested folder is inside the active selected folder or selected-file parent folder, calls the preload vault API, and appends the folder listing as a ZEUS message. Unsupported or out-of-selection read actions are blocked instead of being executed or shown as raw tool-call text.
 
@@ -99,3 +112,4 @@ The user should not need to know action names. The UI and model choose the corre
 ## Non-Goal For V1
 
 Do not build a broad autonomous batch executor. Build a controlled review basket.
+

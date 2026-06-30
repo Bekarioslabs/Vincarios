@@ -87,6 +87,17 @@
       return removed.map((item) => Object.assign({}, item));
     }
 
+    function clearDone() {
+      const removed = [];
+      for (let index = items.length - 1; index >= 0; index -= 1) {
+        if (items[index].status === 'done') {
+          removed.unshift(items.splice(index, 1)[0]);
+        }
+      }
+      if (removed.length) emitChange();
+      return removed.map((item) => Object.assign({}, item));
+    }
+
     function findById(id) {
       return items.find((item) => item.id === id) || null;
     }
@@ -108,6 +119,7 @@
       updateStatus,
       remove,
       clearOpen,
+      clearDone,
       getSnapshot
     });
   }
@@ -118,14 +130,21 @@
     return {
       type: 'create_note',
       category: 'create',
-      title: deriveTitle(cleanContent),
-      targetFolder: options.targetFolder || profileApi.joinFolderRolePath(options.profile, profileApi.FOLDER_ROLES.inbox, DEFAULT_AI_RESPONSE_SUBFOLDER),
+      title: deriveTitle(options.suggestedTitle || cleanContent),
+      targetFolder: options.targetFolder || resolveSaveResponseTargetFolder(options),
       content: cleanContent,
       reason: 'Save assistant response as a Markdown note.',
       risk: 'low'
     };
   }
 
+  function resolveSaveResponseTargetFolder(options) {
+    const childPath = [DEFAULT_AI_RESPONSE_SUBFOLDER, options.responseSubfolder]
+      .map((part) => String(part || '').trim().replace(/^\/+|\/+$/g, ''))
+      .filter(Boolean)
+      .join('/');
+    return profileApi.joinFolderRolePath(options.profile, profileApi.FOLDER_ROLES.inbox, childPath);
+  }
 
   function getVaultProfileApi() {
     if (typeof window !== 'undefined' && window.ZeusVaultProfile) return window.ZeusVaultProfile;
@@ -185,6 +204,12 @@
       currentContent: item.currentContent,
       proposedContent: item.proposedContent
     });
+    if (item.diffPreview && item.diffPreview.ok && item.diffPreview.changed === false) {
+      item.executable = false;
+      item.selected = false;
+      item.noChange = true;
+      item.reason = item.reason || 'No content changes were proposed.';
+    }
     return item;
   }
 

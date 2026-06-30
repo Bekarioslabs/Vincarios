@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const { createProviderSettingsState } = require('./providerRegistry');
 const {
@@ -13,7 +13,8 @@ function createProviderChatService(options) {
   options = options || {};
   const settingsState = options.settingsState || createProviderSettingsState(options);
   const fetchImpl = options.fetchImpl || globalThis.fetch;
-  const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 60000;
+  const settingsStore = options.settingsStore || null;
+  const timeoutMs = Number.isFinite(options.timeoutMs) ? options.timeoutMs : 120000;
   const temperature = Number.isFinite(options.temperature) ? options.temperature : 0.3;
 
   async function sendChat(payload, requestOptions) {
@@ -34,7 +35,8 @@ function createProviderChatService(options) {
     }
 
     try {
-      const model = await resolveChatModel(provider, fetchImpl, timeoutMs, signal);
+      const requestTimeoutMs = getProviderTimeoutMs(settingsStore, timeoutMs);
+      const model = await resolveChatModel(provider, fetchImpl, requestTimeoutMs, signal);
       if (!model) {
         return createErrorResult(provider, 'No provider model available.');
       }
@@ -43,7 +45,7 @@ function createProviderChatService(options) {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(buildChatRequestBody(provider, model, messages, temperature))
-      }, timeoutMs, signal);
+      }, requestTimeoutMs, signal);
 
       if (!response || response.ok !== true) {
         const statusCode = response && response.status ? 'HTTP ' + response.status : 'no response';
@@ -65,12 +67,20 @@ function createProviderChatService(options) {
         }
       };
     } catch (error) {
+      if (isTimeoutError(error)) return createErrorResult(provider, 'Provider timed out.');
       if (isAbortError(error) || (signal && signal.aborted)) return createCanceledResult(provider);
       return createErrorResult(provider, 'Provider unavailable.');
     }
   }
 
   return Object.freeze({ sendChat });
+}
+
+function getProviderTimeoutMs(settingsStore, fallback) {
+  if (!settingsStore || typeof settingsStore.getSettings !== 'function') return fallback;
+  const settings = settingsStore.getSettings();
+  const value = settings && settings.limits ? Number(settings.limits.providerTimeoutMs) : NaN;
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
 }
 
 function normalizeMessages(messages) {
@@ -131,12 +141,19 @@ async function fetchWithTimeout(fetchImpl, url, options, timeoutMs, externalSign
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let timedOut = false;
+  const timeout = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
   const abortFromExternal = () => controller.abort();
   if (externalSignal) externalSignal.addEventListener('abort', abortFromExternal, { once: true });
 
   try {
     return await fetchImpl(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (timedOut) throw createTimeoutError();
+    throw error;
   } finally {
     clearTimeout(timeout);
     if (externalSignal) externalSignal.removeEventListener('abort', abortFromExternal);
@@ -149,12 +166,23 @@ function createAbortError() {
   return error;
 }
 
+function createTimeoutError() {
+  const error = new Error('Provider timed out.');
+  error.name = 'TimeoutError';
+  return error;
+}
+
 function isAbortError(error) {
   return error && (error.name === 'AbortError' || /abort|cancel/i.test(String(error.message || '')));
+}
+
+function isTimeoutError(error) {
+  return error && error.name === 'TimeoutError';
 }
 
 module.exports = {
   createProviderChatService,
   normalizeMessages,
+  getProviderTimeoutMs,
   buildChatUrl
 };

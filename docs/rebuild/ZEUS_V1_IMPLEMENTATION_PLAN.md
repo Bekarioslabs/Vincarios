@@ -102,8 +102,8 @@ This phase is inserted before Reviewed Update Flow because V1 should not rely on
 
 - [x] Create a focused Selection Actions module for selected folders/files. Actions are deterministic app flows, not guessed prompt intents.
 - [x] Initial module shape implemented as `actionCategories.js`, `actionRegistry.js`, and `mountSelectionActions.js`. No separate state file yet because `contextState` already owns active selection.
-- [x] Current Selection Action foundation for folders starts with three actions: Use as context, List folder, Analyze folder. `Use as context` is active when `R` is enabled and adds path-only folder context. `List folder` is active when `R` is enabled, lists the current folder level through app logic, and offers `Check whole tree` as a recursive follow-up. `Analyze folder` remains a visible V1 slot.
-- [x] Current Selection Action foundation for Markdown files starts with three actions: Summarize file, Use as context, Propose update. `Use as context` is active; the others are visible V1 slots.
+- [x] Current Selection Action foundation for folders includes: Use as context, List folder, Analyze folder, and Summarize MD files. `Use as context` is active when `R` is enabled and adds path-only folder context. `List folder` lists the current folder level through app logic and offers `Check whole tree` as a recursive follow-up. `Analyze folder` returns a structure-only analysis based on names and entry types. `Summarize MD files` reads only direct Markdown files and sends capped content to the provider.
+- [x] Current Selection Action foundation for Markdown files includes three actions: Summarize file, Use as context, Propose update. `Use as context` and `Summarize file` are active with `R`; `Propose update` is active with loaded content plus `R` and `W`.
 - [x] Registry shape supports target kinds separately from shell/chat code; future images, PDFs, and unknown files can be added through the registry.
 
 ### 5.4.4 Language Trigger Reduction
@@ -130,7 +130,7 @@ This phase is inserted before Reviewed Update Flow because V1 should not rely on
 - [x] `Ctrl+A` selects only the active or hovered region: chat message, Markdown Preview, File Tree, input, Review Basket, or Context Basket. Empty panel background does not trigger scoped selection.
 - [x] Right-click offers safe select/copy actions for concrete content regions.
 - [x] Scoped selection lives in `src/renderer/selection/scopedSelection.js`; file-tree navigation lives in `src/renderer/files/fileTreeKeyboard.js`.
-- [ ] Follow-up: when focus is on a File Tree row, `R` and `W` may toggle read/write permission for that selected row only. This must ignore text inputs/editors and must not conflict with future rename/edit shortcuts.
+- [x] Follow-up: when focus is on a File Tree row, `R` and `W` toggle read/write permission for that selected row only. This ignores interactive controls and does not conflict with future rename/edit shortcuts.
 
 ### 5.4.8 Docs And Tests
 
@@ -148,14 +148,14 @@ This is a V1-critical workflow, not a later comfort feature. The prototype alrea
 
 - [x] Read-only action foundation before writes: make `Summarize file` functional for one selected readable Markdown file.
 - [x] Keep `Analyze folder` V1-light as structure/name/type analysis first. It clearly labels results as structure-based and does not read Markdown contents.
-- [ ] Add later `Summarize Markdown files` on top of the same read-only action path: only `.md`, no images/PDF/attachments in V1, with max file count, max chars per file, and max total chars coming from Settings/Limits.
+- [x] Add `Summarize Markdown files` on top of the same read-only action path: only direct `.md`/`.markdown` files, no images/PDF/attachments in V1, with max file count and max chars per file coming from Settings/Limits.
 - [ ] Keep `Copy path` as a later secondary utility action. Keep `Reveal in Explorer` later because it needs main-process IPC.
-- [ ] Chat-generated `update_note` proposals reliably target the selected Markdown file when `R` and `W` allow it.
+- [x] Selection Action generated `update_note` proposals reliably target the selected Markdown file when `R` and `W` allow it. V1 generates whole-note proposals only and routes them into the Review Basket. Chat does not auto-trigger write proposals in V1.
 - [ ] Missing `R` or `W` produces a clear app-level guidance message, not generic model text about lacking filesystem access. `W` must use the shared blocked-action foundation when reviewed write execution is gated.
 - [ ] Edit Mode can create an `update_note` proposal from local source changes instead of writing directly.
-- [ ] V1 update scope stays whole-note replacement through reviewed diff; complex partial insert/replace is explicitly V1.1 work.
-- [ ] Diff preview remains mandatory before applying any update.
-- [ ] Backup, stale-content validation, and audit logging stay on the existing `update_note` service path.
+- [x] V1 update scope stays whole-note replacement through reviewed diff; complex partial insert/replace is explicitly V1.1 work.
+- [x] Diff preview remains mandatory before applying any update through the existing Review Basket update service.
+- [x] Backup, stale-content validation, and audit logging stay on the existing `update_note` service path.
 
 ## Phase 6 - V1 Release Hardening
 
