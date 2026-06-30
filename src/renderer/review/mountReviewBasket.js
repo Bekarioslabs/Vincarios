@@ -92,6 +92,8 @@
       text.textContent = item.title + ' -> ' + getItemTargetLabel(item);
       const diffSummary = renderDiffSummary(item);
       if (diffSummary) text.appendChild(diffSummary);
+      const errorSummary = renderErrorSummary(item);
+      if (errorSummary) text.appendChild(errorSummary);
 
       const itemActions = document.createElement('div');
       itemActions.className = 'review-basket-item-actions';
@@ -217,6 +219,14 @@
     summary.textContent = item.diffPreview && item.diffPreview.summary
       ? 'Diff required: ' + item.diffPreview.summary
       : 'Diff required';
+    return summary;
+  }
+
+  function renderErrorSummary(item) {
+    if (!item || item.status !== 'failed' || !item.error) return null;
+    const summary = document.createElement('div');
+    summary.className = 'review-basket-error-summary';
+    summary.textContent = 'Failed: ' + item.error;
     return summary;
   }
 

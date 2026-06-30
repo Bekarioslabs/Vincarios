@@ -207,7 +207,7 @@ User messages stay plain text to preserve exactly what the user typed.
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
 
-YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview. It is not directly editable in this renderer block. Future Properties actions belong to the Selection Actions and review workflows, so metadata suggestions can be proposed and reviewed instead of silently changing frontmatter.
+YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview, including simple inline arrays and block-list values such as `tags:\n  - item`. It is not directly editable in this renderer block. Future Properties actions belong to the Selection Actions and review workflows, so metadata suggestions can be proposed and reviewed instead of silently changing frontmatter.
 
 Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`.
 

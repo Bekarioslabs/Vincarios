@@ -118,3 +118,23 @@ test('vault write service rejects stale update proposals before backup or write'
   assert.equal(fs.readFileSync(path.join(root, '03_Wissen', 'Topic.md'), 'utf8'), 'Changed elsewhere');
   assert.equal(fs.existsSync(path.join(root, '.zeus', 'backups')), false);
 });
+
+test('vault write service updates YAML frontmatter content with backup', () => {
+  const root = createTempVault();
+  fs.mkdirSync(path.join(root, '03_Knowledge'), { recursive: true });
+  const current = '---\ntags: [ai]\nstatus: draft\n---\n\n# Topic\n\nBody.';
+  const proposed = '---\ntags: [ai, yaml]\nstatus: active\n---\n\n# Topic\n\nBody.';
+  fs.writeFileSync(path.join(root, '03_Knowledge', 'Topic.md'), current);
+  const service = createVaultWriteService({ now: () => new Date('2026-06-30T10:00:00.000Z') });
+  service.setRoot(root);
+
+  const result = service.updateNote({
+    targetPath: '03_Knowledge/Topic.md',
+    currentContent: current,
+    proposedContent: proposed
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(fs.readFileSync(path.join(root, '03_Knowledge', 'Topic.md'), 'utf8'), proposed);
+  assert.equal(fs.readFileSync(path.join(root, result.backupPath), 'utf8'), current);
+});

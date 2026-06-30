@@ -291,3 +291,9 @@
   width: 13px;
   height: 13px;
 }
+
+.review-basket-error-summary {
+  margin-top: 4px;
+  color: var(--status-danger);
+  font-size: 12px;
+}

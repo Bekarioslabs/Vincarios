@@ -266,3 +266,11 @@ test('review basket source disables and labels no-change proposals', () => {
   assert.match(source, /item\.executable === false/);
   assert.match(source, /No content changes proposed/);
 });
+
+test('review basket shows failed execution errors on the item', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(source, /renderErrorSummary\(item\)/);
+  assert.match(source, /review-basket-error-summary/);
+  assert.match(source, /Failed: /);
+});

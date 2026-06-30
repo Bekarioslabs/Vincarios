@@ -73,3 +73,12 @@ test('renders Obsidian-style four-backtick code fences without hanging', () => {
 function pathToProjectRoot() {
   return require('node:path').join(__dirname, '..');
 }
+
+test('renders YAML block list frontmatter values as properties', () => {
+  const html = renderMarkdown('---\ntags:\n  - marvel\n  - iron-man\n  - tony-stark\nstatus: active\n---\n\n# Tony Stark');
+
+  assert.match(html, /<dt>tags<\/dt>/);
+  assert.match(html, /marvel, iron-man, tony-stark/);
+  assert.match(html, /<dt>status<\/dt>/);
+  assert.match(html, /active/);
+});

@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -130,4 +130,11 @@ test('Markdown history icons are filtered for dark UI visibility', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
 
   assert.match(css, /\.markdown-history-icon\s*\{[\s\S]*filter:\s*brightness\(0\) invert\(1\)/);
+});
+
+test('review basket failed item errors use review stylesheet', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
+
+  assert.match(css, /review-basket-error-summary/);
+  assert.match(css, /--status-danger/);
 });

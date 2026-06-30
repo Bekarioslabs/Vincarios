@@ -27,12 +27,32 @@
   }
 
   function parseFrontmatter(frontmatter) {
-    return frontmatter
-      .split('\n')
-      .map((line) => line.match(/^([^:#][^:]*):\s*(.*)$/))
-      .filter(Boolean)
-      .map((match) => ({ key: match[1].trim(), value: normalizePropertyValue(match[2].trim()) }))
-      .filter((entry) => entry.key);
+    const lines = String(frontmatter || '').split('\n');
+    const properties = [];
+    let current = null;
+
+    lines.forEach((line) => {
+      const keyValue = line.match(/^([^:#][^:]*):\s*(.*)$/);
+      if (keyValue) {
+        current = {
+          key: keyValue[1].trim(),
+          value: normalizePropertyValue(keyValue[2].trim()),
+          listValues: []
+        };
+        if (current.key) properties.push(current);
+        return;
+      }
+
+      const listItem = line.match(/^\s*-\s+(.+)$/);
+      if (listItem && current) {
+        current.listValues.push(normalizePropertyValue(listItem[1].trim()));
+      }
+    });
+
+    return properties.map((entry) => ({
+      key: entry.key,
+      value: entry.listValues.length ? entry.listValues.join(', ') : entry.value
+    }));
   }
 
   function normalizePropertyValue(value) {
