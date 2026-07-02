@@ -143,10 +143,15 @@ Index behavior:
 
 Model behavior:
 
-- V1 default model decision: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
-- Default license: Apache-2.0.
+- V1 base model decision: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
+- V1 Transformers.js artifact source: `Xenova/paraphrase-multilingual-MiniLM-L12-v2`, because that repo is explicitly structured for Transformers.js with ONNX weights.
+- Default license follows the Apache-2.0 base model card.
 - Default dimensions: 384.
 - Runtime target: Transformers.js / ONNX.
+- Model artifact storage is prepared under project `.zeus/models/embeddings/...` through `src/main/embeddings/embeddingModelStore.js`. Local development artifacts are verified against source, license, revision, expected file list, and the recorded ONNX SHA256 before use.
+- Current expected artifact set is `config.json`, tokenizer files, `unigram.json`, and `onnx/model_quantized.onnx`; the quantized ONNX SHA256 is recorded in the model store before download wiring.
+- `src/main/embeddings/embeddingRuntimeService.js` owns local inference. It loads the local model path through Transformers.js/ONNX, sets `allowRemoteModels=false`, caches the extractor, and returns vectors only. It must not read vault files, write vault files, or call chat providers.
+- Packaging direction: keep model artifacts out of Git. Prefer bundling the embedding model with official release builds/installer if size remains acceptable. Developer/source users can use a controlled download script or app download flow.
 - Settings may allow a custom local embedding model path.
 - `intfloat/multilingual-e5-small` remains a later optional custom-model candidate, not the bundled default, because its license is MIT rather than Apache-2.0.
 - Switching embedding models requires a clear reindex notice.

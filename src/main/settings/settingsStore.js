@@ -6,6 +6,7 @@ const path = require('node:path');
 const SETTINGS_VERSION = 1;
 const DEFAULT_EMBEDDINGS = Object.freeze({
   defaultModelId: 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
+  artifactRepoId: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2',
   license: 'apache-2.0',
   dimensions: 384,
   runtime: 'transformers-js-onnx',
@@ -191,6 +192,7 @@ function normalizeEmbeddings(value) {
   return {
     activeModelSource,
     bundledModelId: DEFAULT_EMBEDDINGS.defaultModelId,
+    artifactRepoId: DEFAULT_EMBEDDINGS.artifactRepoId,
     customModelPath: activeModelSource === 'custom-local' ? customModelPath : '',
     dimensions: DEFAULT_EMBEDDINGS.dimensions,
     runtime: DEFAULT_EMBEDDINGS.runtime,

@@ -249,13 +249,16 @@ Status: complete for V1-light.
 
 ### Phase 7.4 - Local Embeddings V1-Light Foundation
 
-- [x] Choose local embedding runtime and bundled multilingual-capable default model: Transformers.js / ONNX with `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` as the V1 default.
+- [x] Choose local embedding runtime and multilingual-capable base model: Transformers.js / ONNX with `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; use `Xenova/paraphrase-multilingual-MiniLM-L12-v2` as the Transformers.js artifact source.
 - [x] Record the Apache-2.0 model/license decision in Settings and app settings normalization.
 - [x] Add settings-store foundation for bundled model versus custom local model path. UI controls for choosing a custom path are still pending.
-- [ ] Store the embedding model outside normal vault notes.
+- [x] Prepare embedding model artifact storage outside normal vault notes: bundled model metadata and manifest live under project `.zeus/models/embeddings/...`.
+- [x] Verify the pinned local artifact set with source, license, expected files, revision, and SHA256 checks. The local development copy lives under project `.zeus/models/embeddings/...` and is not committed to Git.
+- [x] Add the local embedding runtime service. It loads the bundled model path through Transformers.js/ONNX, disables remote model loading, caches the extractor, and returns vectors only.
+- [ ] Decide final V1 distribution mode: model bundled in release build if practical; source/dev users get controlled download script or app download flow. Do not commit model artifacts to Git.
 - [x] Decide index storage boundary: selected-vault `.zeus/index` by default. `.zeus` is internal app data, not normal vault notes or provider context.
-- [ ] Index schema includes path, hash, modified time, chunk metadata, and vector data.
-- [ ] Reindex only changed files; model changes require an explicit reindex notice.
+- [x] Index schema includes path, hash, modified time, chunk metadata, and vector data.
+- [x] Reindex decision foundation: unchanged hash/mtime skips work; changed hash/mtime or changed model requires reindex. User-facing reindex controls remain pending.
 - [x] Embeddings are separate from chat providers; no cloud embeddings in V1.
 
 ### Phase 7.5 - Embedding-Backed Suggestions

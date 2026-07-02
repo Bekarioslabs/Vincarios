@@ -18,7 +18,7 @@ Tests start on day one. Safety-critical behavior must be tested before feature p
 - audit log without note contents
 - provider boundary: providers never read/write files
 - renderer runtime parity: renderer modules prefer `window.Zeus...` browser APIs before Node/CommonJS test fallbacks
-- embedding index basics: Markdown-only, local, hash/mtime updates
+- embedding index/model/runtime basics: Markdown-only index schema, vault `.zeus/index` storage, project `.zeus/models` artifact metadata, hash/mtime updates, local runtime with remote model loading disabled
 
 ## Focused Audit Rhythm
 
@@ -51,6 +51,8 @@ Before public release, add or verify:
 - Electron/security scan if still using Electron
 - GitHub CI for JavaScript syntax checks and Node tests
 - release artifact SHA256 checksums
+- embedding model artifact source/license/SHA256 verification before release packaging
+- embedding runtime smoke: local bundled model path loads offline and returns 384-dimensional vectors
 - explicit unsigned-build warning until code signing is implemented
 - build-it-yourself instructions for cautious beta testers
 

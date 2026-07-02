@@ -25,5 +25,7 @@
   "devDependencies": {
     "electron": "42.4.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@huggingface/transformers": "^4.2.0"
+  }
 }

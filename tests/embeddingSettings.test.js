@@ -13,6 +13,7 @@ test('settings expose MiniLM as the V1 bundled embedding default', () => {
   assert.equal(DEFAULT_EMBEDDINGS.license, 'apache-2.0');
   assert.equal(settings.embeddings.activeModelSource, 'bundled');
   assert.equal(settings.embeddings.bundledModelId, DEFAULT_EMBEDDINGS.defaultModelId);
+  assert.equal(settings.embeddings.artifactRepoId, 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
   assert.equal(settings.embeddings.dimensions, 384);
   assert.equal(settings.embeddings.indexLocation, 'vault-zeus');
 });
