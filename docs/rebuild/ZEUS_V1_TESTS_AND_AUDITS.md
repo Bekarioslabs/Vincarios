@@ -42,12 +42,17 @@ npm test
 npm run check
 ```
 
-Before public release, add:
+Before public release, add or verify:
 
-- dependency audit
-- secret scan
+- dependency audit through `npm audit --audit-level=high`
+- clean-install check through `npm ci`
+- lockfile/dependency diff review for every release branch
+- secret scan with gitleaks or an equivalent scanner
 - Electron/security scan if still using Electron
 - GitHub CI for JavaScript syntax checks and Node tests
+- release artifact SHA256 checksums
+- explicit unsigned-build warning until code signing is implemented
+- build-it-yourself instructions for cautious beta testers
 
 ## Manual Smoke Areas
 
@@ -111,3 +116,20 @@ Deferred decisions:
 - ASAR/fuse integrity belongs to the future package/build phase.
 - Public license choice remains a pre-public-release decision.
 - Clipboard image handling belongs to the future image-feature phase.
+
+### Release trust baseline
+
+Before external beta or public V1 release, ZEUS must treat supply-chain trust as a release gate, not a feature nice-to-have.
+
+Required release checks:
+
+- install from the lockfile with `npm ci`.
+- run `npm audit --audit-level=high` locally or in CI.
+- review dependency and lockfile diffs before tagging a release.
+- run a secret scan before publishing the repository or release artifacts.
+- build release artifacts from a clean checkout.
+- publish SHA256 checksums for downloadable artifacts.
+- state clearly whether builds are unsigned. Unsigned beta builds must not be marketed as OS-trusted.
+- keep a short build-it-yourself path in the README so cautious testers can inspect and build locally.
+
+Code signing is desirable before broad public distribution, but it can be tracked separately from the first private beta if the unsigned status is explicit.

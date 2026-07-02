@@ -51,7 +51,7 @@
         '      <section class="left-nav-group left-nav-group-vault" aria-label="Vault">',
         '        <div class="left-section-title">Vault</div>',
         '        <button type="button" class="left-button left-button-accent" data-open-vault>Open Vault</button>',
-        '        <button type="button" class="left-button left-button-placeholder" data-future-slot="inbox-review" disabled>Inbox Review</button>',
+        '        <button type="button" class="left-button" data-inbox-review>Inbox Review</button>',
         '        <button type="button" class="left-button left-button-placeholder" data-future-slot="review-basket-nav" disabled>Review Basket</button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-settings" aria-label="Settings">',
@@ -151,6 +151,7 @@
 
       mountOptional('provider status', status, () => window.ZeusProviderStatus && window.ZeusProviderStatus.mountProviderStatus({ api, app }));
       mountOptional('settings panel', status, () => window.ZeusSettingsPanel && window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status }));
+      mountOptional('inbox cleanup', status, () => window.ZeusInboxCleanup && window.ZeusInboxCleanup.mountInboxCleanup({ api, app, status }));
       mountOptional('chat', status, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState }));
       mountOptional('context basket', status, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
       mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status }));

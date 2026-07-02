@@ -30,7 +30,7 @@ Permission shortcuts:
 
 ## Starting On Windows
 
-Use `start.bat` for the local Electron app when `npm` is not available in the shell. The launcher stores Electron user data and disk cache under `%LOCALAPPDATA%\ZEUS_AGENT\` to avoid Chromium cache permission errors in the project folder.
+Use `start.bat` for the local Electron app when `npm` is not available in the shell. The launcher keeps Electron user data, disk cache, and app settings portable under `D:\ZEUS_AGENT\.zeus\`. Vault-specific ZEUS data such as backups, audit logs, and future embedding indexes live under the opened vault's `.zeus/` folder.
 ## Planning Docs
 
 Start here:

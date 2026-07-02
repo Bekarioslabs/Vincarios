@@ -4,6 +4,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const SETTINGS_VERSION = 1;
+const DEFAULT_EMBEDDINGS = Object.freeze({
+  defaultModelId: 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
+  license: 'apache-2.0',
+  dimensions: 384,
+  runtime: 'transformers-js-onnx',
+  indexLocation: 'vault-zeus'
+});
 const DEFAULT_LIMITS = Object.freeze({
   providerTimeoutMs: 120000,
   modelListTimeoutMs: 3000,
@@ -87,6 +94,17 @@ function createSettingsStore(options) {
     return { ok: true, settings, limits: settings.limits };
   }
 
+  function setEmbeddingSettings(embeddings) {
+    const previous = settings.embeddings;
+    const nextEmbeddings = normalizeEmbeddings(Object.assign({}, previous, embeddings || {}));
+    const changedModel = previous.activeModelSource !== nextEmbeddings.activeModelSource || previous.customModelPath !== nextEmbeddings.customModelPath;
+    updateSettings((draft) => {
+      draft.embeddings = Object.assign({}, nextEmbeddings, { reindexRequired: changedModel || nextEmbeddings.reindexRequired === true });
+      return draft;
+    });
+    return { ok: true, settings, embeddings: settings.embeddings };
+  }
+
   function setVaultProfileRole(role, folderPath) {
     const normalizedRole = normalizeId(role);
     const normalizedPath = normalizeFolderPath(folderPath);
@@ -117,6 +135,7 @@ function createSettingsStore(options) {
     setProviderUrlOverride,
     resetProviderUrlOverride,
     setLimits,
+    setEmbeddingSettings,
     setVaultProfileRole,
     resetVaultProfileRole
   });
@@ -136,6 +155,7 @@ function normalizeAppSettings(value) {
     vaultProfile: Object.freeze({
       roles: Object.freeze(normalizeFolderMap(value.vaultProfile && value.vaultProfile.roles))
     }),
+    embeddings: Object.freeze(normalizeEmbeddings(value.embeddings || {})),
     theme: Object.freeze({
       mode: normalizeChoice(value.theme && value.theme.mode, ['dark', 'light', 'system'], 'dark'),
       accent: normalizeId(value.theme && value.theme.accent) || 'zeus-amber'
@@ -161,6 +181,22 @@ function normalizeLimits(value) {
     maxListedFiles: normalizePositiveNumber(input.maxListedFiles, DEFAULT_LIMITS.maxListedFiles),
     maxAnalysisFiles: normalizePositiveNumber(input.maxAnalysisFiles, DEFAULT_LIMITS.maxAnalysisFiles),
     maxSuggestionsPerReview: normalizePositiveNumber(input.maxSuggestionsPerReview, DEFAULT_LIMITS.maxSuggestionsPerReview)
+  };
+}
+
+function normalizeEmbeddings(value) {
+  const input = value || {};
+  const activeModelSource = normalizeChoice(input.activeModelSource, ['bundled', 'custom-local'], 'bundled');
+  const customModelPath = normalizeLocalPath(input.customModelPath);
+  return {
+    activeModelSource,
+    bundledModelId: DEFAULT_EMBEDDINGS.defaultModelId,
+    customModelPath: activeModelSource === 'custom-local' ? customModelPath : '',
+    dimensions: DEFAULT_EMBEDDINGS.dimensions,
+    runtime: DEFAULT_EMBEDDINGS.runtime,
+    license: DEFAULT_EMBEDDINGS.license,
+    indexLocation: DEFAULT_EMBEDDINGS.indexLocation,
+    reindexRequired: input.reindexRequired === true
   };
 }
 
@@ -248,6 +284,13 @@ function normalizeFolderMap(value) {
   return result;
 }
 
+function normalizeLocalPath(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\\/g, '/')
+    .replace(/\/+/g, '/');
+}
+
 function normalizeFolderPath(value) {
   return String(value || '')
     .trim()
@@ -270,9 +313,11 @@ function normalizeChoice(value, choices, fallback) {
 module.exports = {
   SETTINGS_VERSION,
   DEFAULT_LIMITS,
+  DEFAULT_EMBEDDINGS,
   createSettingsStore,
   normalizeAppSettings,
   normalizeLimits,
+  normalizeEmbeddings,
   toProviderRegistryOptions,
   validateProviderBaseUrl
 };

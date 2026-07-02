@@ -150,7 +150,7 @@ test('vault write service updates Markdown notes only after backup and content m
   assert.equal(result.ok, true);
   assert.equal(result.action, 'update_note');
   assert.equal(result.path, '03_Wissen/Topic.md');
-  assert.equal(result.backupPath, '.zeus/backups/2026-06-24/03_Wissen/Topic.2026-06-24_12-11-12.md');
+  assert.equal(result.backupPath, '.zeus/backups/2026-06-24/03_Wissen/Topic.2026-06-24_10-11-12.md');
   assert.equal(fs.readFileSync(path.join(root, '03_Wissen', 'Topic.md'), 'utf8'), '# Topic\n\nNew body.');
   assert.equal(fs.readFileSync(path.join(root, result.backupPath), 'utf8'), '# Topic\n\nOld body.');
 

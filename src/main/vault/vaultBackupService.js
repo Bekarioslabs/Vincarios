@@ -52,7 +52,7 @@ function createVaultBackupService(options) {
     }
     if (!stat.isFile()) return fail('not_file', 'Backup target must be a file.');
 
-    const stamp = createLocalTimestamp(now());
+    const stamp = createBackupTimestamp(now());
     const backupPath = createBackupPath(resolved.relativePath, stamp);
     const backupAbsolutePath = path.join(currentVault.vault.root, ...backupPath.split('/'));
 
@@ -95,19 +95,21 @@ function createBackupPath(relativePath, stamp) {
     .join('/');
 }
 
-function createLocalTimestamp(date) {
+function createBackupTimestamp(date) {
   const value = date instanceof Date ? date : new Date(date);
   const pad = (part) => String(part).padStart(2, '0');
   return [
-    value.getFullYear(),
-    pad(value.getMonth() + 1),
-    pad(value.getDate())
+    value.getUTCFullYear(),
+    pad(value.getUTCMonth() + 1),
+    pad(value.getUTCDate())
   ].join('-') + '_' + [
-    pad(value.getHours()),
-    pad(value.getMinutes()),
-    pad(value.getSeconds())
+    pad(value.getUTCHours()),
+    pad(value.getUTCMinutes()),
+    pad(value.getUTCSeconds())
   ].join('-');
 }
+
+const createLocalTimestamp = createBackupTimestamp;
 
 function appendAudit(vaultRoot, entry) {
   const auditDir = path.join(vaultRoot, '.zeus');
@@ -133,5 +135,6 @@ function fail(code, message) {
 module.exports = {
   createVaultBackupService,
   createBackupPath,
+  createBackupTimestamp,
   createLocalTimestamp
 };

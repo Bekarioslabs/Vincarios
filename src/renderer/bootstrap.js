@@ -16,6 +16,8 @@
     { name: 'ZeusContextState', globalName: 'ZeusContextState', methods: ['createContextState', 'buildChatContextPackage'] },
     { name: 'ZeusContextPackageBuilder', globalName: 'ZeusContextPackageBuilder', methods: ['buildChatContextPackage'] },
     { name: 'ZeusContextBasket', globalName: 'ZeusContextBasket', methods: ['mountContextBasket'] },
+    { name: 'ZeusInboxCleanupReport', globalName: 'ZeusInboxCleanupReport', methods: ['buildInboxCleanupReport', 'formatInboxCleanupReportMarkdown'] },
+    { name: 'ZeusInboxCleanup', globalName: 'ZeusInboxCleanup', methods: ['mountInboxCleanup', 'runInboxCleanupReport'] },
     { name: 'ZeusFileTreeKeyboard', globalName: 'ZeusFileTreeKeyboard', methods: ['getFileTreeNavigation', 'isFileTreeNavigationKey'] },
     { name: 'ZeusScopedSelection', globalName: 'ZeusScopedSelection', methods: ['mountScopedSelection'] },
     { name: 'ZeusSelectionActionCategories', globalName: 'ZeusSelectionActionCategories', methods: ['getActionCategory'] },

@@ -540,7 +540,7 @@ Settings Modal
 
 Current wired categories stay Providers, Limits, and Vault Profile. V1-ready categories are Providers, Limits, Vault Profile, Templates, Appearance, Embeddings, Safety, and About. Future/inactive categories may be visible only if they are clearly marked as not configured yet and do not imply fake functionality. Later hotkeys, plugin compatibility, custom actions, and theme presets must extend this same settings module and store shape instead of creating parallel configuration paths.
 
-Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with a left category menu and one active right-side category panel. Providers, Limits, and Vault Profile remain wired to the existing settings store. Templates, Appearance, Embeddings, Safety, and About are visible info-only slots until real modules exist.
+Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with a left category menu and one active right-side category panel. Providers, Limits, and Vault Profile remain wired to the existing settings store. Templates, Appearance, Safety, and About are visible info-only slots until real modules exist. Embeddings now shows the V1 default decision: MiniLM multilingual default, Apache-2.0 license, Transformers.js / ONNX runtime target, and vault `.zeus/index` storage. Custom model path controls and rebuild controls remain pending Phase 7.4 work.
 
 Vault Profile and Templates relationship:
 

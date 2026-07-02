@@ -97,7 +97,7 @@ V1 Settings categories:
 - `theme`: basic mode/accent readiness through CSS variables.
 - `safety`: review-required and future trusted-mode flags. Trusted mode is not V1 behavior.
 
-The settings store persists normalized JSON under Electron `userData`. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules. The Vault Profile settings bridge exposes role overrides for future consumers; it does not replace the Phase 2 folder-role helpers.
+The settings store persists normalized JSON under the portable app data folder `ZEUS_AGENT/.zeus/settings.json`, not under Windows `AppData`. If a legacy `userData/settings.json` exists, startup migrates it to the portable path and removes the old file. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules. The Vault Profile settings bridge exposes role overrides for future consumers; it does not replace the Phase 2 folder-role helpers.
 
 ## Provider Plan
 
@@ -139,12 +139,16 @@ Index behavior:
 - runs as a background job, not as a blocking UI operation.
 - uses limits and batching for large vaults.
 - uses hashes/modified timestamps so unchanged files are not re-indexed unnecessarily.
-- stores index data outside normal vault notes: app cache by default, optional `.zeus/index` only as an explicit per-vault choice.
+- stores index data outside normal vault notes in the selected vault's `.zeus/index` folder by default. `.zeus` remains blocked from normal AI/file-tree context and is used only by internal main-process services.
 
 Model behavior:
 
-- V1 should ship with a small bundled multilingual-capable embedding model if licensing/build size remain acceptable.
+- V1 default model decision: `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`.
+- Default license: Apache-2.0.
+- Default dimensions: 384.
+- Runtime target: Transformers.js / ONNX.
 - Settings may allow a custom local embedding model path.
+- `intfloat/multilingual-e5-small` remains a later optional custom-model candidate, not the bundled default, because its license is MIT rather than Apache-2.0.
 - Switching embedding models requires a clear reindex notice.
 - Embedding models are separate from chat providers and must not grant providers vault access.
 - No cloud embeddings in V1.

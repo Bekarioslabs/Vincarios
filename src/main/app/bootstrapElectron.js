@@ -15,13 +15,17 @@ const { createSettingsStore, toProviderRegistryOptions } = require('../settings/
 const { createSettingsService } = require('../settings/settingsService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
+const { getPortableSettingsPath, migrateLegacySettingsToPortable } = require('./portableDataPath');
 
 function bootstrapElectron(electron, options) {
   options = options || {};
   const { app, ipcMain, dialog, BrowserWindow } = electron;
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
   const vaultReadService = options.vaultReadService || createVaultReadService();
-  const settingsFilePath = options.settingsFilePath || getDefaultSettingsPath(app);
+  const settingsFilePath = options.settingsFilePath || getDefaultSettingsPath(app, projectRoot);
+  if (!options.settingsFilePath) {
+    migrateLegacySettingsToPortable({ app, projectRoot, portablePath: settingsFilePath });
+  }
   const settingsStore = options.settingsStore || createSettingsStore({
     filePath: settingsFilePath,
     initialSettings: options.initialSettings
@@ -70,11 +74,8 @@ function bootstrapElectron(electron, options) {
   });
 }
 
-function getDefaultSettingsPath(app) {
-  if (app && typeof app.getPath === 'function') {
-    return path.join(app.getPath('userData'), 'settings.json');
-  }
-  return '';
+function getDefaultSettingsPath(app, projectRoot) {
+  return getPortableSettingsPath(projectRoot);
 }
 
 module.exports = {

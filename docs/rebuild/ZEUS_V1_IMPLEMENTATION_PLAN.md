@@ -239,21 +239,24 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 - [ ] Do not persist this V1 activity list to the vault. Long-term audit/history UI remains separate from `.zeus/audit.jsonl` work.
 ### Phase 7.3 - Inbox Cleanup Light
 
-- [ ] Cleanup starts as a grouped report, not hundreds of Basket items.
-- [ ] Report groups include summaries and top candidates first.
-- [ ] Opening a group shows concrete previews: tag/property diff, Markdown-line diff, move plan, duplicate comparison, or new-note preview depending on suggestion type.
-- [ ] Only selected concrete actions are added to the Review Basket.
-- [ ] Large batch execution is not V1 unless it stays within the existing review/update safety path.
+Status: complete for V1-light.
+
+- [x] Cleanup starts as a grouped report, not hundreds of Basket items.
+- [x] Report groups include summaries, loose Markdown notes, subfolders, AI response notes, and other files.
+- [x] `Inbox Review` in the left navigation scans the Inbox plus one direct subfolder level, generates a saveable report-only ZEUS chat response, and creates no Review Basket actions.
+- [x] The report offers an explicit `Scan nested folders` follow-up for deeper Inbox structure scans without reading file contents.
+- [x] Large batch execution stays out of V1 unless it later fits the existing review/update safety path.
 
 ### Phase 7.4 - Local Embeddings V1-Light Foundation
 
-- [ ] Choose local embedding runtime and bundled multilingual-capable default model.
-- [ ] Add Settings option for bundled model versus custom local model path.
+- [x] Choose local embedding runtime and bundled multilingual-capable default model: Transformers.js / ONNX with `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` as the V1 default.
+- [x] Record the Apache-2.0 model/license decision in Settings and app settings normalization.
+- [x] Add settings-store foundation for bundled model versus custom local model path. UI controls for choosing a custom path are still pending.
 - [ ] Store the embedding model outside normal vault notes.
-- [ ] Store index data outside normal vault notes: app cache by default, optional `.zeus/index` only as an explicit per-vault choice.
+- [x] Decide index storage boundary: selected-vault `.zeus/index` by default. `.zeus` is internal app data, not normal vault notes or provider context.
 - [ ] Index schema includes path, hash, modified time, chunk metadata, and vector data.
 - [ ] Reindex only changed files; model changes require an explicit reindex notice.
-- [ ] Embeddings are separate from chat providers; no cloud embeddings in V1.
+- [x] Embeddings are separate from chat providers; no cloud embeddings in V1.
 
 ### Phase 7.5 - Embedding-Backed Suggestions
 
@@ -262,6 +265,8 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 - [ ] Tag candidates.
 - [ ] Folder candidates.
 - [ ] Suggestions enter grouped reports or Review Basket proposals only through registered suggestion/action types.
+- [ ] Opening a cleanup/suggestion group shows concrete previews: tag/property diff, Markdown-line diff, move plan, duplicate comparison, or new-note preview depending on suggestion type.
+- [ ] Only selected concrete suggestions are added to the Review Basket.
 - [ ] Suggestion types must be extensible without rewriting the cleanup/report/review pipeline.
 
 ### Phase 7.6 - Markdown Image Preview Optional
@@ -278,12 +283,16 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 
 V1 is done when all current V1 phases are complete and a sober freeze review finds no remaining must-have gaps. New findings are classified as V1-must only when they block safety, core usefulness, or external testing; otherwise they move to V1.1 or the Parking Lot.
 
-- [ ] README update.
+- [ ] README update, including clear beta trust boundaries and build-it-yourself guidance.
 - [ ] Architecture docs update.
 - [ ] Testing docs update.
 - [ ] Manual smoke tests.
 - [ ] Focused external audit.
 - [ ] GitHub cleanup.
+- [ ] Dependency and supply-chain gate: `npm ci`, `npm audit --audit-level=high`, lockfile review, and dependency diff review before release.
+- [ ] Secret scan gate with gitleaks or an equivalent tool before public release.
+- [ ] Release artifact gate: build from clean checkout, generate SHA256 checksums, and publish checksums with the release notes.
+- [ ] Document unsigned-build status until code signing exists; do not imply OS-level trust before signing is implemented.
 - [ ] Package/build check.
 - [ ] V1 freeze decision.
 

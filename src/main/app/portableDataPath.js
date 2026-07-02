@@ -1,0 +1,67 @@
+'use strict';
+
+const fs = require('node:fs');
+const path = require('node:path');
+
+const PORTABLE_DATA_FOLDER = '.zeus';
+const SETTINGS_FILE_NAME = 'settings.json';
+
+function getPortableDataRoot(projectRoot) {
+  const root = String(projectRoot || '').trim();
+  if (!root) return '';
+  return path.join(path.resolve(root), PORTABLE_DATA_FOLDER);
+}
+
+function getPortableSettingsPath(projectRoot) {
+  const dataRoot = getPortableDataRoot(projectRoot);
+  return dataRoot ? path.join(dataRoot, SETTINGS_FILE_NAME) : '';
+}
+
+function getLegacyUserDataSettingsPath(app) {
+  if (!app || typeof app.getPath !== 'function') return '';
+  try {
+    return path.join(app.getPath('userData'), SETTINGS_FILE_NAME);
+  } catch (error) {
+    return '';
+  }
+}
+
+function migrateLegacySettingsToPortable(options) {
+  options = options || {};
+  const fileSystem = options.fs || fs;
+  const portablePath = options.portablePath || getPortableSettingsPath(options.projectRoot);
+  const legacyPath = options.legacyPath || getLegacyUserDataSettingsPath(options.app);
+  if (!portablePath || !legacyPath || portablePath === legacyPath) {
+    return { ok: true, migrated: false, portablePath, legacyPath };
+  }
+
+  try {
+    const legacyExists = fileSystem.existsSync(legacyPath);
+    const portableExists = fileSystem.existsSync(portablePath);
+    if (!legacyExists) return { ok: true, migrated: false, portablePath, legacyPath };
+
+    if (!portableExists) {
+      fileSystem.mkdirSync(path.dirname(portablePath), { recursive: true });
+      fileSystem.copyFileSync(legacyPath, portablePath);
+    }
+    fileSystem.unlinkSync(legacyPath);
+    return { ok: true, migrated: !portableExists, removedLegacy: true, portablePath, legacyPath };
+  } catch (error) {
+    return {
+      ok: false,
+      code: 'settings_migration_failed',
+      message: 'Could not migrate legacy settings from userData to portable storage.',
+      portablePath,
+      legacyPath
+    };
+  }
+}
+
+module.exports = {
+  PORTABLE_DATA_FOLDER,
+  SETTINGS_FILE_NAME,
+  getPortableDataRoot,
+  getPortableSettingsPath,
+  getLegacyUserDataSettingsPath,
+  migrateLegacySettingsToPortable
+};
