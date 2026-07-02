@@ -255,6 +255,8 @@ Status: complete for V1-light.
 - [x] Prepare embedding model artifact storage outside normal vault notes: bundled model metadata and manifest live under project `.zeus/models/embeddings/...`.
 - [x] Verify the pinned local artifact set with source, license, expected files, revision, and SHA256 checks. The local development copy lives under project `.zeus/models/embeddings/...` and is not committed to Git.
 - [x] Add the local embedding runtime service. It loads the bundled model path through Transformers.js/ONNX, disables remote model loading, caches the extractor, and returns vectors only.
+- [x] Add Markdown discovery for indexing: recursive Markdown-only scan, protected dot-folder skip, no non-Markdown content.
+- [x] Add the local embedding indexer service: chunks Markdown, embeds changed documents, skips unchanged hash/mtime records, and writes document vectors to selected-vault `.zeus/index`.
 - [ ] Decide final V1 distribution mode: model bundled in release build if practical; source/dev users get controlled download script or app download flow. Do not commit model artifacts to Git.
 - [x] Decide index storage boundary: selected-vault `.zeus/index` by default. `.zeus` is internal app data, not normal vault notes or provider context.
 - [x] Index schema includes path, hash, modified time, chunk metadata, and vector data.

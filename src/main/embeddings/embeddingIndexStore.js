@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { createVaultContext } = require('../vault/vaultContext');
-const { createEmptyEmbeddingIndex } = require('../../shared/embeddings/embeddingIndexSchema');
+const { createEmptyEmbeddingIndex, createIndexedDocumentRecord } = require('../../shared/embeddings/embeddingIndexSchema');
 
 const INDEX_RELATIVE_FOLDER = '.zeus/index';
 const MANIFEST_FILE = 'manifest.json';
@@ -71,6 +71,33 @@ function createEmbeddingIndexStore(options) {
     }
   }
 
+  function loadDocuments() {
+    const location = getIndexLocation();
+    if (!location.ok) return location;
+    if (!fileSystem.existsSync(location.documentsPath)) {
+      return ok({ documents: {} });
+    }
+    try {
+      const parsed = JSON.parse(fileSystem.readFileSync(location.documentsPath, 'utf8'));
+      return ok({ documents: normalizeDocuments(parsed.documents) });
+    } catch (error) {
+      return fail('invalid_embedding_documents', 'Embedding index documents could not be read.');
+    }
+  }
+
+  function saveDocuments(documents) {
+    const location = getIndexLocation();
+    if (!location.ok) return location;
+    const normalized = normalizeDocuments(documents);
+    try {
+      fileSystem.mkdirSync(location.folderPath, { recursive: true });
+      fileSystem.writeFileSync(location.documentsPath, JSON.stringify({ documents: normalized }, null, 2) + '\n', 'utf8');
+      return ok({ documents: normalized, documentsPath: location.documentsPath });
+    } catch (error) {
+      return fail('embedding_documents_write_failed', 'Embedding index documents could not be written.');
+    }
+  }
+
   function requireVault() {
     if (!vault) return fail('vault_not_open', 'No vault is open.');
     return { ok: true, vault };
@@ -80,10 +107,21 @@ function createEmbeddingIndexStore(options) {
     setRoot,
     getIndexLocation,
     loadManifest,
-    saveManifest
+    saveManifest,
+    loadDocuments,
+    saveDocuments
   });
 }
 
+function normalizeDocuments(documents) {
+  const normalized = {};
+  if (!documents || typeof documents !== 'object' || Array.isArray(documents)) return normalized;
+  for (const [documentPath, record] of Object.entries(documents)) {
+    const indexedRecord = createIndexedDocumentRecord(Object.assign({}, record, { path: documentPath }));
+    if (indexedRecord.path) normalized[indexedRecord.path] = indexedRecord;
+  }
+  return normalized;
+}
 function ok(value) {
   return Object.assign({ ok: true }, value);
 }

@@ -53,6 +53,7 @@ Before public release, add or verify:
 - release artifact SHA256 checksums
 - embedding model artifact source/license/SHA256 verification before release packaging
 - embedding runtime smoke: local bundled model path loads offline and returns 384-dimensional vectors
+- embedding indexer smoke: selected-vault Markdown files build document vectors under `.zeus/index`; a second unchanged run skips all documents.
 - explicit unsigned-build warning until code signing is implemented
 - build-it-yourself instructions for cautious beta testers
 

@@ -34,6 +34,27 @@ test('embedding index store saves and loads manifest outside normal vault notes'
   assert.equal(fs.existsSync(path.join(root, 'manifest.json')), false);
 });
 
+test('embedding index store saves and loads indexed document records', () => {
+  const root = createTempVault();
+  const store = createEmbeddingIndexStore();
+  store.setRoot(root);
+
+  const saved = store.saveDocuments({
+    'Notes/One.md': {
+      path: 'Notes/One.md',
+      hash: 'abc',
+      mtimeMs: 12,
+      chunks: [{ id: '0', start: 0, end: 4, text: 'test' }],
+      vectors: [[1, 2, 3]]
+    }
+  });
+  const loaded = store.loadDocuments();
+
+  assert.equal(saved.ok, true);
+  assert.equal(loaded.ok, true);
+  assert.equal(loaded.documents['Notes/One.md'].hash, 'abc');
+  assert.deepEqual(loaded.documents['Notes/One.md'].vectors[0], [1, 2, 3]);
+});
 function createTempVault() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-embedding-index-'));
 }

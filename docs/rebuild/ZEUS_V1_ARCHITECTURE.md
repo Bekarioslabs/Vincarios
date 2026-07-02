@@ -151,6 +151,8 @@ Model behavior:
 - Model artifact storage is prepared under project `.zeus/models/embeddings/...` through `src/main/embeddings/embeddingModelStore.js`. Local development artifacts are verified against source, license, revision, expected file list, and the recorded ONNX SHA256 before use.
 - Current expected artifact set is `config.json`, tokenizer files, `unigram.json`, and `onnx/model_quantized.onnx`; the quantized ONNX SHA256 is recorded in the model store before download wiring.
 - `src/main/embeddings/embeddingRuntimeService.js` owns local inference. It loads the local model path through Transformers.js/ONNX, sets `allowRemoteModels=false`, caches the extractor, and returns vectors only. It must not read vault files, write vault files, or call chat providers.
+- `src/main/embeddings/embeddingMarkdownSource.js` owns Markdown discovery for indexing. It scans recursively, reads Markdown files only, and skips protected dot folders such as `.zeus` and `.obsidian`.
+- `src/main/embeddings/embeddingIndexer.js` coordinates Markdown source, runtime, and index store. It chunks Markdown, embeds changed documents, skips unchanged hash/mtime records, and stores vectors under the selected vault `.zeus/index`.
 - Packaging direction: keep model artifacts out of Git. Prefer bundling the embedding model with official release builds/installer if size remains acceptable. Developer/source users can use a controlled download script or app download flow.
 - Settings may allow a custom local embedding model path.
 - `intfloat/multilingual-e5-small` remains a later optional custom-model candidate, not the bundled default, because its license is MIT rather than Apache-2.0.
@@ -186,6 +188,6 @@ Run a focused audit after each block:
 - `permissions` owns Read/Write state and inheritance display.
 - `providers` talk to LM Studio/Ollama; they never access files.
 - `vault` reads/writes/lists files only after safety validation. Reviewed template writes may create folders through `createFolder` and notes through `createNote`; folders are created before files.
-- `embeddings` indexes and searches; it only returns candidates.
+- `embeddings` discovers Markdown, chunks content, runs local embeddings, stores indexes, and searches. It only returns candidates; it never performs cleanup or writes vault notes.
 - `settings` owns app configuration categories, normalization, persistence, and Settings UI/IPC. Settings UI should use a category menu plus active content pane instead of a single ever-growing modal body. Provider modules consume provider settings but do not own settings storage.
 - `templates` owns deterministic note/project preset definitions, materialization, and conversion from create plans to review proposals. Presets target vault folder roles instead of hard-coded folder names and return create plans; they do not write files directly. Multi-folder/multi-file project presets enter review as one `create_from_template` proposal instead of flooding the basket with separate file entries.
