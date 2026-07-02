@@ -213,6 +213,14 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 - [x] Create proposals are edited in the Review Basket before execution; execution no longer repeats the initial title dialog.
 - [x] Markdown preview renders unchecked and checked task-list boxes read-only.
 
+### Phase 7.1.5 - External Markdown Drag And Drop
+
+- [x] External `.md` and `.markdown` files dropped onto the chat become temporary Context Basket items.
+- [x] Dropped Markdown is not copied into the vault automatically.
+- [x] Dropped Markdown shows a ZEUS chat message with an `Import to Inbox` action.
+- [x] `Import to Inbox` adds a reviewed `create_note` proposal; Review Basket edit/execute performs the actual vault write.
+- [x] Images, PDFs, vision analysis, automatic sorting, and manual file-tree move drag/drop remain out of this block.
+
 ### Phase 7.2 - Manual File Operations V1-Light
 
 - [ ] F2 rename for a single selected file, if it stays small and clearly manual.

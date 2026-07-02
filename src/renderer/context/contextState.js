@@ -123,12 +123,15 @@
     const kind = item.kind === 'folder' ? 'folder' : 'file';
     const path = normalizeContextPath(item.path || '');
     if (!path) return null;
-    return {
+    const normalized = {
       id: kind + ':' + path,
       kind,
       path,
       content: typeof item.content === 'string' ? item.content : ''
     };
+    if (item.source) normalized.source = String(item.source);
+    if (item.externalPath) normalized.externalPath = String(item.externalPath);
+    return normalized;
   }
 
   function cloneContextItems(items) {

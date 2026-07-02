@@ -113,11 +113,26 @@
       }
     });
     input.addEventListener('input', () => autoSizeChatInput(input));
+    mountOptionalMarkdownDropController({
+      chatLog,
+      contextState,
+      reviewBasket,
+      status,
+      appendMessage(role, message, messageOptions) {
+        appendMessage(chatLog, role, message, Object.assign({ reviewBasket, status }, messageOptions || {}));
+      }
+    });
 
     return Object.freeze({ sendCurrentMessage, messages });
   }
 
 
+
+  function mountOptionalMarkdownDropController(options) {
+    const controller = typeof window !== 'undefined' ? window.ZeusMarkdownDropController : null;
+    if (!controller || typeof controller.mountMarkdownDropController !== 'function') return null;
+    return controller.mountMarkdownDropController(options);
+  }
   async function runReadContextPreflight(options) {
     const preflight = typeof window !== 'undefined' ? window.ZeusReadContextPreflight : null;
     if (!preflight || typeof preflight.runReadContextPreflight !== 'function') return { handled: false };

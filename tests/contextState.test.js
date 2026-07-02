@@ -105,3 +105,17 @@ test('context state stores read and write permissions for selected targets', () 
   assert.equal(file.writeAllowed, true);
   assert.equal(file.parentReadAllowed, true);
 });
+test('context state preserves dropped Markdown metadata for UI display', () => {
+  const state = createContextState();
+  state.addContextItem({
+    kind: 'file',
+    path: 'External Drops/Note.md',
+    content: '# Note',
+    source: 'dropped_markdown',
+    externalPath: 'D:/Downloads/Note.md'
+  });
+
+  const item = state.snapshot().contextItems[0];
+  assert.equal(item.source, 'dropped_markdown');
+  assert.equal(item.externalPath, 'D:/Downloads/Note.md');
+});

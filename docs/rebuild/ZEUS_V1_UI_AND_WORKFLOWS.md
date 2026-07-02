@@ -298,11 +298,12 @@ Context sources must remain visible and separated:
 
 Markdown drag and drop in V1:
 
-- `.md` files dropped into chat become temporary context immediately.
+- External `.md` and `.markdown` files dropped into chat become temporary Context Basket items immediately.
 - They are not automatically copied into the vault.
-- Dropped external files show an `Import to Inbox` action/button near the context item, similar to saving an AI answer as a note.
-- Importing is a separate reviewed write action with editable target name and default target Inbox.
-- If the dropped file already belongs to the opened vault, ZEUS should treat it as an existing vault file, not as an external import.
+- The chat shows a ZEUS message for the drop with an `Import to Inbox` action.
+- `Import to Inbox` adds a reviewed `create_note` proposal; Review Basket edit/execute performs the actual vault write.
+- The default import target is the configured Inbox role. Filename/title remain editable in the Review Basket before execution.
+- Detecting dropped files that already belong to the opened vault is a later refinement; this V1 slice handles external Markdown drops only.
 
 Manual move drag and drop is not part of the Markdown file import flow. If it enters V1, it must be a separate file-tree operation with a clear warning that link updates are not included yet. AI move with link updates is V1.1 work.
 

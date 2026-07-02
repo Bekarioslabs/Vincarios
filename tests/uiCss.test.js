@@ -177,3 +177,9 @@ test('left navigation keeps settings in a separate bottom group', () => {
   assert.match(css, /\.left-nav-group-settings\s*\{[\s\S]*margin-top:\s*auto;/);
   assert.match(css, /\.left-nav-group-settings\s*\{[\s\S]*border-top:\s*1px solid var\(--background-modifier-border\);/);
 });
+test('chat drag-over styling stays scoped to the chat log', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(source, /\.chat-log\.chat-log-drag-over/);
+  assert.match(source, /--interactive-accent-rgb/);
+});

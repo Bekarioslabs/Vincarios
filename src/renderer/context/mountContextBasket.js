@@ -115,6 +115,7 @@
   }
 
   function formatItemTitle(item) {
+    if (item && item.source === 'dropped_markdown' && item.externalPath) return String(item.externalPath);
     return String((item && item.path) || '');
   }
 
