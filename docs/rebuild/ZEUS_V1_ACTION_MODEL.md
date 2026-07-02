@@ -52,6 +52,17 @@ The user can select multiple items and click one execute button.
 Current implemented slice: assistant `Save as Note` creates a selected `create_note` proposal. The Review Basket can select, dismiss any visible entry, clear pending suggestions, clear executed suggestions, show compact diff summaries, and open dedicated preview modals. Selected `create_note` proposals execute after an in-app Create Note preview with an editable title field. After a successful create, the app refreshes the Files tree through the file panel refresh path so the new note becomes visible without manual refresh. After a successful update, the app refreshes the currently loaded preview when it matches the updated target path. Selected `update_note` proposals are executable only when they carry `targetPath`, `currentContent`, and `proposedContent`; they are unselected by default, require an Apply Update diff preview, write through the preload vault API, create a backup in `.zeus/backups/YYYY-MM-DD/...`, reject stale content if the file changed since proposal creation, update the Markdown file, and append audit entries in `.zeus/audit.jsonl`. No-change update proposals remain visible for diagnosis but are marked non-executable. Failed review executions display the returned vault error on the basket item so stale content, no-change, and frontmatter/update issues are visible without guessing.
 
 Phase 3 is complete at this core foundation boundary. `insert_into_note`, `move_note`, `rename_note`, and `archive_note` remain known schema types so model output can be classified safely, but they are deliberately non-executable until their own reviewed services exist. This prevents accidental execution while keeping the future action vocabulary stable.
+
+## Cleanup Reports
+
+V1 cleanup must not flood the Review Basket with every discovered suggestion. The flow is:
+
+```text
+scan/index candidates -> grouped cleanup report -> user opens a group -> concrete previews -> selected actions enter Review Basket -> reviewed execution
+```
+
+Report groups may include possible duplicates, tag/property suggestions, link candidates, folder candidates, or new-note/MOC candidates. Opening a group must show the appropriate preview type: property diff, Markdown-line diff, move plan, duplicate comparison, or create-note preview. The Review Basket remains the execution layer and should receive only selected concrete actions, not the whole analysis result.
+
 ## Selection Action Update Proposals
 
 V1 supports update proposals through the selected Markdown file action `Propose content update`. The action is visually muted but still clickable when R/W or loaded content are missing, so the app can explain the missing permission without calling the provider. The app supplies the selected `targetPath` and `currentContent`; the provider returns a structured proposal with full `proposedContent`. The proposal is added to the Review Basket as `update_note` with `updateMode: whole_note` and is never written directly from chat or by the provider. Proposal failures are reported by stage (`provider`, `parser`, `review_basket`, or `provider_exception`) with target path, content length, sent context length, instruction length, and truncation status so model, parser, and review failures can be diagnosed before fixing.

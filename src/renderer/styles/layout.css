@@ -101,7 +101,34 @@ button { cursor: pointer; }
 .provider-model-select {
   min-width: 150px;
 }
-.status-dot {
+
+.provider-refresh-button {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  background: var(--background-modifier-form-field);
+  color: var(--text-muted);
+  padding: 0;
+}
+
+.provider-refresh-button:hover:not(:disabled) {
+  color: var(--text-accent);
+  border-color: rgba(var(--interactive-accent-rgb), .6);
+}
+
+.provider-refresh-button:disabled {
+  cursor: default;
+  opacity: .55;
+}
+
+.provider-refresh-icon {
+  width: 13px;
+  height: 13px;
+  filter: var(--icon-muted-filter, none);
+}.status-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
@@ -144,9 +171,26 @@ button { cursor: pointer; }
 .left-nav-actions {
   display: flex;
   min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 14px;
+  overflow: auto;
+}
+
+.left-nav-group {
+  display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow: auto;
+}
+
+.left-nav-group-settings {
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.left-nav-group-settings .left-button {
+  margin-top: 2px;
 }
 
 .left-button,
@@ -165,10 +209,26 @@ button { cursor: pointer; }
   font-size: 12px;
 }
 
-.left-button:hover {
+.left-button:hover:not(:disabled) {
   border-color: rgba(var(--interactive-accent-rgb), .8);
   color: var(--text-accent);
   background: var(--background-modifier-form-field);
+}
+
+.left-button:disabled,
+.left-subbutton:disabled {
+  cursor: default;
+}
+
+.left-button-current {
+  border-color: rgba(var(--interactive-accent-rgb), .28);
+  background: rgba(var(--interactive-accent-rgb), .08);
+  color: var(--text-normal);
+}
+
+.left-button-placeholder {
+  color: var(--text-muted);
+  opacity: .68;
 }
 
 .left-button-accent {
@@ -204,9 +264,13 @@ button { cursor: pointer; }
   font-size: 11px;
 }
 
-.left-subbutton:hover {
+.left-subbutton:hover:not(:disabled) {
   background: var(--background-modifier-form-field);
   color: var(--text-accent);
+}
+
+.left-subbutton:disabled {
+  opacity: .6;
 }
 
 .main-workspace {
@@ -461,10 +525,53 @@ button { cursor: pointer; }
   padding: 12px 16px;
 }
 
-.mini-panel-title {
+.mini-panel-title,
+.mini-panel-toggle {
   color: var(--text-normal);
   font-size: 12px;
   font-weight: var(--font-weight-ui-strong);
+}
+
+.mini-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+}
+
+.mini-panel-toggle:hover {
+  color: var(--text-accent);
+}
+
+.mini-panel-toggle-icon {
+  width: 14px;
+  height: 14px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 14px;
+}
+
+.mini-panel-chevron-icon {
+  width: 14px;
+  height: 14px;
+  filter: var(--icon-accent-filter, none);
+}
+.mini-panel-count {
+  min-width: 18px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  padding: 1px 5px;
+  font-size: 10px;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.mini-panel-count[hidden] {
+  display: none;
 }
 
 .mini-panel-empty {
@@ -481,6 +588,14 @@ button { cursor: pointer; }
   background: var(--background-subtle);
 }
 
+
+.context-slot.is-collapsed {
+  min-height: 42px;
+}
+
+.context-slot.is-collapsed .context-basket-items {
+  display: none;
+}
 .context-basket-header {
   display: flex;
   align-items: center;
@@ -565,10 +680,11 @@ button { cursor: pointer; }
 }
 
 .context-clear-button {
-  padding: 3px 7px;
+  padding: 4px 8px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
   color: var(--text-muted);
+  font: var(--font-weight-ui-semibold) 11px var(--font-interface);
   cursor: pointer;
 }
 
@@ -592,8 +708,9 @@ button { cursor: pointer; }
 .chat-input-shell {
   flex: 1 1 auto;
   min-height: 40px;
-  max-height: 120px;
+  max-height: 180px;
   resize: none;
+  overflow-y: hidden;
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   outline: none;
@@ -614,7 +731,7 @@ button { cursor: pointer; }
   background: var(--interactive-accent);
   color: var(--text-on-accent);
   font-weight: var(--font-weight-ui-strong);
-  opacity: .82;
+  opacity: 1;
 }
 
 .send-button-shell:disabled { cursor: default; }

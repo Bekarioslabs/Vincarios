@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
@@ -20,6 +20,7 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_LIST_FOLDER: 'vault:list-folder',
   VAULT_READ_MARKDOWN: 'vault:read-markdown',
   VAULT_CREATE_NOTE: 'vault:create-note',
+  VAULT_CREATE_FOLDER: 'vault:create-folder',
   VAULT_UPDATE_NOTE: 'vault:update-note'
 });
 

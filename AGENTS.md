@@ -223,6 +223,14 @@ If any answer is unclear, update the relevant V1 doc and ask Beka before impleme
 
 Important features must be visible in the app flow. Prefer action cards, review baskets, previews, context bars, and status messages over hidden behavior.
 
+### Accessibility Rules
+
+New UI controls must be accessible when they are introduced, not retrofitted later.
+
+- Buttons, toggles, icon-only controls, dialogs, inputs, live status areas, dynamic action rows, and custom resize/selection controls need meaningful labels/states such as `aria-label`, `aria-expanded`, `aria-controls`, `aria-live`, `role`, or `aria-labelledby` when applicable.
+- Dynamic accessibility labels must use values that are in the owning component/function scope.
+- Important dynamic controls should get focused source or behavior tests in the same change.
+- A final V1 accessibility pass is still required, but it is a verification pass, not a substitute for building accessible UI from the start.
 ### CSS Rules
 
 Use the CSS variable names established in `src/renderer/styles/tokens.css`. Keep naming Obsidian-compatible where possible:

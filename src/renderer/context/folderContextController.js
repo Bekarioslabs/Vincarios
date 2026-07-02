@@ -122,10 +122,9 @@
 
     return {
       handled: true,
-      kind: blockedAction ? 'blocked_action' : 'message',
+      kind: 'message',
       message: options.message,
-      historyContent: options.historyContent || options.message,
-      blockedActions: blockedAction ? [{ label: formatBlockedActionRetryLabel(blockedAction.requiredPermission), blockedActionId: blockedAction.id }] : []
+      historyContent: options.historyContent || options.message
     };
   }
 
@@ -360,12 +359,6 @@
   }
 
 
-  function formatBlockedActionRetryLabel(permission) {
-    const api = getBlockedActionStateApi();
-    return api && typeof api.formatBlockedActionRetryLabel === 'function'
-      ? api.formatBlockedActionRetryLabel(permission)
-      : 'Retry after enabling ' + (String(permission || 'read').toLowerCase() === 'write' ? 'W' : 'R');
-  }
   function getIntentApi() {
     if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');

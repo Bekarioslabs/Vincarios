@@ -15,6 +15,8 @@ Middle: chat, Review Basket, Context Basket, and input
 Right: Files, Selection Actions, and Markdown Preview
 ```
 
+Chat input auto-grows within bounded limits for longer prompts. Once it reaches the limit, the input scrolls internally. The send/cancel button must remain reachable and the main app layout must not shift unpredictably.
+
 The exact layout can change, but these concepts must remain visible:
 
 - selected vault
@@ -52,6 +54,8 @@ Creates:
 The app can optionally ask the AI for draft content after the structure exists.
 
 The default project structure ships with V1, but the implementation must be template/preset-based and use vault folder roles so the structure can later become editable in Options without rewriting project creation logic.
+
+Current Phase 7.1 state: deterministic note/project presets live in `src/shared/templates/presetRegistry.js`. `src/renderer/templates/mountCreationPresets.js` renders the left-navigation preset buttons and adds generated review proposals to the Review Basket. Note presets create `create_note` proposals. Project presets create one `create_from_template` proposal containing planned folders and Markdown files. Presets never write directly. Create proposals are edited in the Review Basket before execution; execution does not show a second title prompt. Project preset execution creates folders first through the reviewed vault folder-create boundary, then creates Markdown files through the reviewed create-note boundary.
 
 ## Options Menu V1
 
@@ -130,6 +134,7 @@ The topbar shows provider state in three separate controls:
 Default provider URLs live in the provider registry. The topbar must not expose raw URLs. URL overrides belong to the Settings screen and update the same provider settings state instead of adding a parallel provider path. Provider timeout is shown in Settings as seconds and stored internally as milliseconds; local model users can raise it for slower requests without changing provider code.
 
 Provider controls never grant vault access. Providers only receive the context package prepared by app logic.
+The topbar also provides a manual provider status refresh button. It reuses the provider status/model refresh flow without polling or changing the selected provider.
 ## Review Basket Decisions
 
 Review Basket is a standalone module, not part of chat rendering.
@@ -186,6 +191,7 @@ Permission shortcuts:
 - Ctrl+Click `R` or `W`: apply to currently visible/expanded descendants only.
 - Shift+Click `R` or `W`: recursively apply to all descendants by listing folder structure only.
 - Focused File Tree row, `R` or `W`: planned follow-up shortcut to toggle read/write on that row only. It must be disabled while focus is in text inputs, editors, rename fields, or any future inline edit state.
+- Focused File Tree row, `F2`: V1 candidate for manual single-file rename. It must be disabled while focus is in text inputs/editors and must not imply link updates. AI rename remains a later reviewed service.
 
 Recursive permission application must not read Markdown contents. It only needs folder/file paths from the vault listing API. Context remains a separate workflow based on the selected file/folder and explicit context rules.
 
@@ -267,7 +273,7 @@ Selected context is explicit, visible, request-scoped, and deterministic:
 - Selection Actions use behavior categories with stable color slots: Context, Read, Write, and later Organize.
 - attached context is not stored back into chat history.
 - if Read is not active for an explicit app action, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
-- missing-Read blocks are retryable app actions. The chat should show a clear `Retry after enabling R` button tied to the exact selected file/folder and request. Missing-Write blocks must use the same shared blocked-action foundation with `Retry after enabling W`, but actual write execution gates belong to reviewed write flows. After the user enables the required permission, the button retries through app logic. If a matching blocked action is still open, narrow permission-confirmation text such as `es ist freigegeben` or `versuch es nochmal` may retry the same app action; without a matching blocked action, such text must not become a broad prompt trigger.
+- missing-Read and missing-Write blocks show a clear permission message, but no retry button. After enabling R or W, the user repeats the visible Selection Action or request explicitly. Permission-confirmation text such as es ist freigegeben must not become a broad prompt trigger.
 - if the selected target changes before retry, the retry must stop with a clear mismatch message instead of applying the old blocked action to the new target.
 - if the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
 - folder-scoped follow-up prompts are guidance-only in V1. The app should point the user to Selection Actions instead of inferring a parent folder from wording.
@@ -297,6 +303,8 @@ Markdown drag and drop in V1:
 - Dropped external files show an `Import to Inbox` action/button near the context item, similar to saving an AI answer as a note.
 - Importing is a separate reviewed write action with editable target name and default target Inbox.
 - If the dropped file already belongs to the opened vault, ZEUS should treat it as an existing vault file, not as an external import.
+
+Manual move drag and drop is not part of the Markdown file import flow. If it enters V1, it must be a separate file-tree operation with a clear warning that link updates are not included yet. AI move with link updates is V1.1 work.
 
 Non-V1 drag and drop:
 
@@ -472,6 +480,91 @@ V1 target categories are Providers, Limits, Vault Profile, Embeddings, Safety, a
 Later categories such as Theme, About, and hotkeys should extend the same settings module and store shape instead of creating parallel configuration paths.
 
 Later Settings should include a Chat Appearance option for assistant-message hover actions: text labels, Lucide SVG icons, or icon+text. The setting must only affect presentation; message actions remain semantic in chat code.
+
+## Phase 6.5 UI Cleanup Plan
+
+Phase 6.5 is a UI/settings cleanup step before new V1 feature candidates. It must not add new product workflows by itself.
+
+Goals:
+
+- make the left navigation calmer and grouped before adding New Project, Inbox Review, or future plugin-like entries.
+- make Settings category-based before adding Embeddings, Safety, Templates, Appearance, or plugin compatibility options.
+- keep all visible future slots explicit and non-functional until their real module exists.
+- preserve the current modular ownership: shell composes layout, settings owns settings UI, action registries own actions, and styles stay in focused CSS files.
+
+Left navigation target:
+
+```text
+WORKSPACE
+  Chat
+  Home          future slot
+  Recent Files  future slot
+
+CREATE
+  New Note
+    Note
+    Todo List
+    Article
+  New Project
+    Default
+    Wiki
+    DnD Campaign
+
+VAULT
+  Open Vault
+  Inbox Review
+  Review Basket
+  Vault Cleanup  future slot
+
+SETTINGS
+  Settings
+```
+
+`New Note` and `New Project` are preset toggles and are collapsed by default. Expanding them pushes lower actions down. Presets are user-extensible later; curated ZEUS preset packs must use the same preset mechanism instead of hard-coded special paths. If preset lists grow, the left column gets local scrolling or grouped sections instead of overflowing. Left navigation entries must stay app-level commands; target-specific actions belong in Selection Actions.
+
+Settings target:
+
+```text
+Settings Modal
+- category menu
+- active category panel
+```
+
+Current wired categories stay Providers, Limits, and Vault Profile. V1-ready categories are Providers, Limits, Vault Profile, Templates, Appearance, Embeddings, Safety, and About. Future/inactive categories may be visible only if they are clearly marked as not configured yet and do not imply fake functionality. Later hotkeys, plugin compatibility, custom actions, and theme presets must extend this same settings module and store shape instead of creating parallel configuration paths.
+
+Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with a left category menu and one active right-side category panel. Providers, Limits, and Vault Profile remain wired to the existing settings store. Templates, Appearance, Embeddings, Safety, and About are visible info-only slots until real modules exist.
+
+Vault Profile and Templates relationship:
+
+- Vault Profile defines where roles live in the vault, for example Inbox, Projects, Knowledge, Archive, and Brain.
+- Templates define what gets created, for example a project folder structure or a note draft.
+- Templates must target folder roles instead of hard-coded folder names, so a `New Project` preset creates under the configured `projects` role.
+- V1 keeps one active editable vault profile. Later versions may add multiple named vault profiles and custom roles such as Assets, Clients, Writing, or Research.
+- Future role path selection should prefer a `Choose from Vault folders` picker. It must list folders from the opened vault and validate that the selected path stays inside the vault. A native OS folder picker is not the preferred default because it can point outside the vault.
+- Manual path editing may remain available for power users, but it must be validated by the same vault-profile service.
+
+Markdown Properties/YAML display should be visually distinct from normal prose through dedicated CSS tokens such as `--metadata-accent`, `--metadata-background`, and `--metadata-border`. V1 may use an amber/ember-like default, but the color should be token-based so Appearance settings can change it later.
+
+Current Phase 6.5 implementation: Markdown preview Properties use the dedicated metadata tokens in `tokens.css`; only the rendered Properties block uses these tokens, normal prose/code/table styling remains on the general Markdown tokens.
+
+Project style presets are a future workflow, not a Phase 6.5 implementation target. The intended model is:
+
+1. ZEUS app theme controls the application UI.
+2. Markdown preview theme controls how notes render inside ZEUS.
+3. Optional project style presets can later influence Markdown preview and generated template structure for a project.
+
+Project style presets should be detected through explicit project metadata such as `zeus_style_preset` in a project home note, not guessed from folder names. They must not inject inline HTML/styles into normal Markdown notes. For Obsidian parity, V1 keeps styles ZEUS-only plus Markdown-compatible structure. A future V1.1 feature may optionally export an Obsidian CSS snippet, but only after explicit user confirmation and never by silently writing into `.obsidian`.
+
+Obsidian plugin compatibility direction:
+
+ZEUS does not execute Obsidian plugins. Compatibility means one of three safe things:
+
+1. render common Markdown/plugin output well enough that the vault remains readable.
+2. optionally read harmless plugin metadata after explicit user choice.
+3. rebuild useful workflows as ZEUS Selection Actions or Review Basket proposals.
+
+Candidate plugins to research after V1 core remains stable: Templater, Dataview, Tasks, Advanced Tables, Calendar, Kanban, Iconize, Style Settings, Omnisearch, Smart Connections, Tag Wrangler, Linter, Mindmap, Homepage, Recent Files, and Make.md.
+
 ### Selection UX
 
 The prototype's context-aware selection behavior should be recovered cleanly:
@@ -480,6 +573,11 @@ The prototype's context-aware selection behavior should be recovered cleanly:
 - right-click offers safe region-specific selection/copy actions for content regions. File Tree does not expose `Select area` in V1. No write actions belong in this menu for V1.
 - selection behavior belongs in `renderer/selection`; file-tree keyboard navigation belongs in `renderer/files`. Do not scatter shortcut logic across shell, chat, and preview code.
 - file tree keyboard navigation uses `ArrowUp` / `ArrowDown` for visible rows, `ArrowRight` / `ArrowLeft` for folder expand/collapse, and `PageUp` / `PageDown` / `Home` / `End` for larger navigation. These keys do not trigger write actions.
+
+
+### Detachable Edit Preview - Future
+
+Later versions should allow the Markdown edit surface to detach into its own window or panel for longer writing sessions. The detached editor should keep the current file context, show live Markdown preview updates for common formatting such as bold and italic, and eventually expose a small formatting toolbar for common Markdown actions. This is not V1-critical; V1 keeps Edit Mode local, reviewed, and proposal-based.
 
 ### Implementation Note
 

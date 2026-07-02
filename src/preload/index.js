@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const { contextBridge, ipcRenderer } = require('electron');
 
@@ -24,6 +24,7 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_LIST_FOLDER: 'vault:list-folder',
   VAULT_READ_MARKDOWN: 'vault:read-markdown',
   VAULT_CREATE_NOTE: 'vault:create-note',
+  VAULT_CREATE_FOLDER: 'vault:create-folder',
   VAULT_UPDATE_NOTE: 'vault:update-note'
 });
 
@@ -91,6 +92,9 @@ const zeus = Object.freeze({
     },
     createNote(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_CREATE_NOTE, payload);
+    },
+    createFolder(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_CREATE_FOLDER, payload);
     },
     updateNote(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_UPDATE_NOTE, payload);

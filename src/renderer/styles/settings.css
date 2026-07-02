@@ -11,8 +11,8 @@
 .settings-backdrop[hidden] { display: none; }
 
 .settings-panel {
-  width: min(720px, calc(100vw - 56px));
-  max-height: min(680px, calc(100vh - 56px));
+  width: min(920px, calc(100vw - 56px));
+  height: min(680px, calc(100vh - 56px));
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   border: 1px solid var(--background-modifier-border);
@@ -54,8 +54,49 @@
 
 .settings-body {
   min-height: 0;
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.settings-category-menu {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 10px;
+  border-right: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  overflow: auto;
+}
+
+.settings-category-button {
+  width: 100%;
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  padding: 6px 9px;
+  text-align: left;
+  font-size: 12px;
+}
+
+.settings-category-button:hover,
+.settings-category-button.is-active {
+  border-color: rgba(var(--interactive-accent-rgb), .35);
+  background: rgba(var(--interactive-accent-rgb), .08);
+  color: var(--text-accent);
+}
+
+.settings-category-content {
+  min-height: 0;
   overflow: auto;
   padding: 16px;
+}
+
+.settings-category-panel[hidden] {
+  display: none;
 }
 
 .settings-section {
@@ -104,9 +145,17 @@
 
 .settings-provider-meta span,
 .settings-empty,
-.settings-status {
+.settings-status,
+.settings-future-note {
   color: var(--text-muted);
   font-size: 11px;
+}
+
+.settings-future-note {
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
 }
 
 .settings-provider-url {
@@ -179,6 +228,16 @@
 }
 
 @media (max-width: 960px) {
+  .settings-body {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+
+  .settings-category-menu {
+    border-right: 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+  }
+
   .settings-provider-row {
     grid-template-columns: 1fr;
     align-items: stretch;

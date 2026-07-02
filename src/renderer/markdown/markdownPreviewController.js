@@ -16,6 +16,7 @@
     const forwardButton = app.querySelector('#markdown-history-forward');
     const title = app.querySelector('#markdown-preview-title');
     const linkFeedback = app.querySelector('#markdown-link-feedback');
+    const previewStatus = app.querySelector('#markdown-preview-status');
     const onOpenLink = typeof options.onOpenLink === 'function' ? options.onOpenLink : null;
     const onRevealCurrentPath = typeof options.onRevealCurrentPath === 'function' ? options.onRevealCurrentPath : null;
     const onOpenHistoryPath = typeof options.onOpenHistoryPath === 'function' ? options.onOpenHistoryPath : null;
@@ -50,6 +51,7 @@
       const shouldRecordHistory = !behavior || behavior.recordHistory !== false;
       setSourceInternal(nextSource, nextPath);
       clearLinkFeedback();
+      clearPreviewStatus();
       if (shouldRecordHistory) recordHistory(nextSource, nextPath);
       updateHistoryButtons();
     }
@@ -67,6 +69,7 @@
       mode = 'preview';
       editor.value = '';
       preview.textContent = String(message || 'No file selected.');
+      clearPreviewStatus();
       setVisibleMode();
       updateHistoryButtons();
     }
@@ -98,7 +101,7 @@
       editButton.textContent = 'Preview';
       setVisibleMode();
       editor.focus();
-      setStatus('Source editor is local only. Use Update to send changes to Review Basket.');
+      showPreviewStatus('Source editor is local only. Use Update to send changes to Review Basket.');
     }
 
     function showPreviewFromEditor() {
@@ -109,7 +112,7 @@
       editButton.textContent = 'Edit';
       setVisibleMode();
       updateProposeButton();
-      setStatus('Preview updated from local source editor. Not saved to vault.');
+      showPreviewStatus('Preview updated from local source editor. Not saved to vault.');
     }
 
     function setSourceInternal(source, path) {
@@ -145,10 +148,10 @@
         updateMode: 'whole_note'
       });
       if (result && result.ok === false) {
-        showLinkFeedback(result.message || 'Could not add update proposal.');
+        showPreviewStatus(result.message || 'Could not add update proposal.');
         return;
       }
-      clearLinkFeedback();
+      showPreviewStatus('Manual edit proposal added to Review Basket.');
       setStatus('Manual edit proposal added to Review Basket.');
     }
 
@@ -225,6 +228,20 @@
       editor.hidden = !sourceMode;
       editButton.textContent = sourceMode ? 'Preview' : 'Edit';
       updateProposeButton();
+    }
+
+    function showPreviewStatus(message) {
+      if (previewStatus) {
+        previewStatus.textContent = String(message || '');
+        previewStatus.hidden = !message;
+      }
+      if (message) setStatus(message);
+    }
+
+    function clearPreviewStatus() {
+      if (!previewStatus) return;
+      previewStatus.textContent = '';
+      previewStatus.hidden = true;
     }
 
     function setStatus(value) {

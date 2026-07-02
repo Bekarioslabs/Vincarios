@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -36,6 +36,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'SETTINGS_SET_LIMITS',
     'SETTINGS_SET_PROVIDER_URL',
     'SETTINGS_SET_VAULT_ROLE',
+    'VAULT_CREATE_FOLDER',
     'VAULT_CREATE_NOTE',
     'VAULT_LIST_FOLDER',
     'VAULT_READ_MARKDOWN',
@@ -59,6 +60,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE, 'settings:reset-vault-role');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_NOTE, 'vault:create-note');
+  assert.equal(IPC_CHANNELS.VAULT_CREATE_FOLDER, 'vault:create-folder');
   assert.equal(IPC_CHANNELS.VAULT_UPDATE_NOTE, 'vault:update-note');
 });
 

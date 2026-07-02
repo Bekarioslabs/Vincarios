@@ -23,21 +23,30 @@ ZEUS helps users clean up and maintain their vault without hidden file access, c
 3. Read Markdown notes and folders through explicit permissions.
 4. Collect AI suggestions in a review module instead of one-action-at-a-time chat cards.
 5. Preview every write with a diff before applying.
-6. Create, update, insert into, move, rename, and archive Markdown notes safely.
-7. Provide inbox/project/knowledge cleanup suggestions.
-8. Use local embeddings V1-light for similar notes, link candidates, tag candidates, and folder candidates.
-9. Create a new project through deterministic app logic.
+6. Create Markdown notes and update existing Markdown notes through reviewed whole-note proposals.
+7. Create new notes and projects through deterministic template/preset logic.
+8. Provide inbox cleanup and folder-organization suggestions through grouped reports before adding selected actions to the Review Basket.
+9. Use local embeddings V1-light with a bundled multilingual-capable model for similar notes, link candidates, tag candidates, and folder candidates.
 10. Keep backups and audit logs for risky actions.
+
+## V1 Manual File Operations
+
+Manual UI actions are separate from AI actions.
+
+- F2 rename for a single selected file may be V1 if it stays small, visible, and reviewed enough for a manual user action.
+- Drag-and-drop move is optional and lower priority than F2 rename. If it enters V1, it must clearly state that link updates are not included yet.
+- AI-driven rename/move/archive belongs to V1.1 because its real value is link-safety: rename and update links, move and update links, archive with backlink warnings, undo/repair, and batch review.
 
 ## Not V1
 
-- Vision and image workflows.
+- Vision and image analysis workflows.
 - PDF/audio/video handling.
 - Full plugin system.
 - Trusted/Yolo mode.
 - Cloud providers by default.
 - Theme builder or Obsidian theme compatibility.
 - Large autonomous vault cleanup.
+- AI-driven move/rename/archive with automatic link repair.
 - Complex automatic link repair after mass rename.
 - Monetization/Patreon features.
 - Complex external web research.

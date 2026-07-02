@@ -89,12 +89,12 @@ test('shell executes create note proposals through the preload vault API only', 
   assert.doesNotMatch(source, /require\('node:fs'\)/);
 });
 
-test('create note preview exposes an editable title field before execution', () => {
+test('create proposals expose an edit button instead of a second execute-time title prompt', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
 
-  assert.match(source, /review-modal-title-input/);
-  assert.match(source, /titleInput\.value = item\.title/);
-  assert.match(source, /title:\s*titleInput\.value\.trim\(\)/);
+  assert.match(source, /renderEditButton/);
+  assert.match(source, /showCreateEditModal/);
+  assert.doesNotMatch(source, /return confirmCreateNote\(item\)/);
 });
 
 test('review basket sends edited create-note title to the execution boundary', () => {
@@ -210,12 +210,12 @@ test('renderer browser globals take priority over CommonJS fallbacks', () => {
     if (firstRequire > -1) assert.equal(firstWindow < firstRequire, true, file);
   });
 });
-test('chat renders folder scope and blocked retry actions as message actions', () => {
+test('chat renders folder scope actions as message actions without blocked retry buttons', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
 
   assert.match(source, /scopeActions/);
-  assert.match(source, /blockedActions/);
-  assert.match(source, /runBlockedAction/);
+  assert.doesNotMatch(source, /blockedActions/);
+  assert.doesNotMatch(source, /runBlockedAction/);
   assert.match(source, /createMessageActions/);
   assert.match(source, /chat-message-action-button/);
   assert.match(source, /runScopeAction/);
@@ -280,4 +280,29 @@ test('review basket shows failed execution errors on the item', () => {
   assert.match(source, /renderErrorSummary\(item\)/);
   assert.match(source, /review-basket-error-summary/);
   assert.match(source, /Failed: /);
+});
+
+test('template preset edit modal shows folders and files in the read-only plan preview', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+
+  assert.match(source, /formatTemplatePlanPreview/);
+  assert.match(source, /Folders:/);
+  assert.match(source, /Files:/);
+  assert.doesNotMatch(source, /formatTemplateFilesPreview/);
+});
+
+test('shell executes template folder creation before template files', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const branchStart = source.indexOf("proposal.type === 'create_from_template'");
+  const branchEnd = source.indexOf("proposal.type === 'update_note'", branchStart);
+  const branch = source.slice(branchStart, branchEnd);
+  const folderIndex = branch.indexOf('api.vault.createFolder');
+  const noteIndex = branch.indexOf('api.vault.createNote');
+
+  assert.equal(branchStart > -1, true);
+  assert.equal(branchEnd > branchStart, true);
+  assert.equal(folderIndex > -1, true);
+  assert.equal(noteIndex > -1, true);
+  assert.equal(folderIndex < noteIndex, true);
+  assert.match(branch, /createdFolders/);
 });

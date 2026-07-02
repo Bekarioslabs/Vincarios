@@ -170,14 +170,14 @@ test('propose update stays clickable so missing permissions can show app guidanc
   assert.equal(update.requiredPermission, 'write');
   assert.equal(update.softDisabled, true);
 });
-test('propose update routes missing W through blocked action guidance', () => {
+test('propose update routes missing W through permission guidance without retry action', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
   assert.match(source, /createMissingPermissionAction/);
   assert.match(source, /missingPermissionMessage/);
   assert.match(source, /createMissingPermissionAction\(snapshot, 'write', 'file.proposeUpdate'\)/);
-  assert.match(source, /formatBlockedActionRetryLabel\(gate\.missingPermission\)/);
-  assert.match(source, /retrySelectionAction/);
+  assert.doesNotMatch(source, /formatBlockedActionRetryLabel/);
+  assert.doesNotMatch(source, /retrySelectionAction/);
 });
 
 test('propose update soft-disabled state is visual only', () => {

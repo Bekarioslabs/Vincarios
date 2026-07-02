@@ -105,3 +105,18 @@ test('future write workflow actions stay non-executable until their services exi
     assert.equal(item.selected, false);
   }
 });
+
+test('normalizes create from template proposals as executable create actions', () => {
+  const item = normalizeActionProposal({
+    type: 'create_from_template',
+    title: 'Project preset',
+    templatePresetId: 'project.default',
+    files: [{ path: '02_Projects/Test/Test.md', content: '# Test' }]
+  });
+
+  assert.equal(item.type, 'create_from_template');
+  assert.equal(item.category, 'create');
+  assert.equal(item.executable, true);
+  assert.equal(item.selected, true);
+  assert.equal(item.requiresDiff, false);
+});

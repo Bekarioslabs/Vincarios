@@ -156,22 +156,9 @@
       };
     }
 
-    function appendMissingPermissionMessage(gate, actionId) {
-      const action = gate && gate.missingPermission
-        ? [{ label: formatBlockedActionRetryLabel(gate.missingPermission), onClick: () => retrySelectionAction(actionId, gate) }]
-        : [];
-      appendActionMessage((gate && gate.message) || 'Action unavailable.', action);
+    function appendMissingPermissionMessage(gate) {
+      appendActionMessage((gate && gate.message) || 'Action unavailable.');
       setText(status, (gate && gate.message) || 'Action unavailable.');
-    }
-
-    function retrySelectionAction(actionId, blocked) {
-      const current = contextState && typeof contextState.snapshot === 'function' ? contextState.snapshot() : null;
-      if (!current || normalizePath(current.path) !== normalizePath(blocked && blocked.targetPath)) {
-        appendActionMessage('Blocked action no longer matches the current selection. Please select the target again.');
-        setText(status, 'Blocked action target changed.');
-        return;
-      }
-      runAction({ id: actionId, enabled: true }, current);
     }
 
     async function summarizeFile(snapshot) {
@@ -528,19 +515,6 @@
         }
       };
     }
-    function formatPermissionShortcut(permission) {
-      const api = getBlockedActionApi();
-      return api && typeof api.formatPermissionShortcut === 'function'
-        ? api.formatPermissionShortcut(permission)
-        : String(permission || 'read').toLowerCase() === 'read_write' ? 'R and W' : String(permission || 'read').toLowerCase() === 'write' ? 'W' : 'R';
-    }
-
-    function formatBlockedActionRetryLabel(permission) {
-      const api = getBlockedActionApi();
-      return api && typeof api.formatBlockedActionRetryLabel === 'function'
-        ? api.formatBlockedActionRetryLabel(permission)
-        : 'Retry after enabling ' + formatPermissionShortcut(permission);
-    }
 
     function normalizePath(value) {
       return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
@@ -615,11 +589,6 @@
     return /\.(md|markdown)$/i.test(String(entry.name || entry.path || ''));
   }
 
-  function getBlockedActionApi() {
-    if (typeof window !== 'undefined' && window.ZeusBlockedActionState) return window.ZeusBlockedActionState;
-    if (typeof module !== 'undefined' && module.exports) return require('../context/blockedActionState');
-    return null;
-  }
 
   function getRegistry() {
     if (typeof window !== 'undefined' && window.ZeusSelectionActionRegistry) return window.ZeusSelectionActionRegistry;

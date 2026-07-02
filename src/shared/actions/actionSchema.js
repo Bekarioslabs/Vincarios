@@ -7,6 +7,7 @@
     searchIndex: 'search_index',
     findSimilar: 'find_similar',
     createNote: 'create_note',
+    createFromTemplate: 'create_from_template',
     updateNote: 'update_note',
     insertIntoNote: 'insert_into_note',
     moveNote: 'move_note',
@@ -28,6 +29,7 @@
   
   const WRITE_ACTION_TYPES = Object.freeze([
     ACTION_TYPES.createNote,
+    ACTION_TYPES.createFromTemplate,
     ACTION_TYPES.updateNote,
     ACTION_TYPES.insertIntoNote,
     ACTION_TYPES.moveNote,
@@ -45,6 +47,7 @@
   
   const EXECUTABLE_ACTION_TYPES = Object.freeze([
     ACTION_TYPES.createNote,
+    ACTION_TYPES.createFromTemplate,
     ACTION_TYPES.updateNote
   ]);
   
@@ -54,6 +57,7 @@
     [ACTION_TYPES.searchIndex]: 'search',
     [ACTION_TYPES.findSimilar]: 'search',
     [ACTION_TYPES.createNote]: 'create',
+    [ACTION_TYPES.createFromTemplate]: 'create',
     [ACTION_TYPES.updateNote]: 'update',
     [ACTION_TYPES.insertIntoNote]: 'update',
     [ACTION_TYPES.moveNote]: 'move/rename',
@@ -157,7 +161,7 @@
   }
   
   function defaultRiskForType(type) {
-    if (type === ACTION_TYPES.createNote) return 'low';
+    if (type === ACTION_TYPES.createNote || type === ACTION_TYPES.createFromTemplate) return 'low';
     if (isWriteActionType(type)) return 'medium';
     return 'low';
   }

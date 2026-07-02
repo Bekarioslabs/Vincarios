@@ -10,6 +10,7 @@
     const executeButton = app ? app.querySelector('#review-execute') : null;
     const clearButton = app ? app.querySelector('#review-clear') : null;
     const clearDoneButton = app ? app.querySelector('#review-clear-done') : null;
+    const countBadge = app ? app.querySelector('#review-basket-count') : null;
     let isExecuting = false;
 
     if (!window.ZeusReviewBasketState || !root) return null;
@@ -17,6 +18,7 @@
     const state = window.ZeusReviewBasketState.createReviewBasketState({
       onChange(snapshot) {
         renderReviewBasket(root, snapshot, state);
+        updateCountBadge(countBadge, snapshot && snapshot.items);
         updateExecuteButton(executeButton, state, isExecuting);
         updateClearButton(clearButton, state, isExecuting);
         updateClearDoneButton(clearDoneButton, state, isExecuting);
@@ -59,6 +61,13 @@
     return state;
   }
 
+
+  function updateCountBadge(badge, items) {
+    if (!badge) return;
+    const count = Array.isArray(items) ? items.length : 0;
+    badge.textContent = String(count);
+    badge.hidden = count === 0;
+  }
   function renderReviewBasket(root, snapshot, state) {
     const items = snapshot && Array.isArray(snapshot.items) ? snapshot.items : [];
     root.innerHTML = '';
@@ -81,6 +90,7 @@
       check.type = 'checkbox';
       check.checked = item.selected !== false;
       check.disabled = item.status !== 'open' || item.executable === false;
+      check.setAttribute('aria-label', 'Select review item: ' + getItemSummary(item));
       check.addEventListener('change', () => {
         if (state && typeof state.setSelected === 'function') {
           state.setSelected(item.id, check.checked);
@@ -97,13 +107,13 @@
 
       const itemActions = document.createElement('div');
       itemActions.className = 'review-basket-item-actions';
+      const editButton = renderEditButton(item, state);
+      if (editButton) itemActions.appendChild(editButton);
       const diffButton = renderDiffButton(item);
       if (diffButton) itemActions.appendChild(diffButton);
       itemActions.appendChild(renderDismissButton(item, state));
 
-      const status = document.createElement('span');
-      status.className = 'review-basket-item-status';
-      status.textContent = item.status;
+      const status = renderStatusBadge(item.status);
 
       row.appendChild(check);
       row.appendChild(text);
@@ -113,6 +123,35 @@
     });
   }
 
+
+  function renderStatusBadge(statusValue) {
+    const status = String(statusValue || 'open');
+    const badge = document.createElement('span');
+    badge.className = 'review-basket-item-status review-basket-item-status-' + status;
+    badge.title = formatStatusLabel(status);
+    badge.setAttribute('aria-label', formatStatusLabel(status));
+
+    const renderer = getIconRenderer();
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      const iconName = status === 'done' ? 'check' : status === 'failed' ? 'warning' : '';
+      if (iconName) {
+        badge.appendChild(renderer.createIconElement(iconName, 'review-status-icon'));
+        return badge;
+      }
+    }
+
+    const dot = document.createElement('span');
+    dot.className = 'review-status-dot';
+    badge.appendChild(dot);
+    return badge;
+  }
+
+  function formatStatusLabel(status) {
+    if (status === 'done') return 'Done';
+    if (status === 'failed') return 'Failed';
+    if (status === 'running') return 'Running';
+    return 'Pending';
+  }
   function renderDismissButton(item, state) {
     const button = document.createElement('button');
     button.type = 'button';
@@ -136,12 +175,155 @@
     button.textContent = 'x';
   }
 
+  function renderEditButton(item, state) {
+    if (!item || item.status !== 'open') return null;
+    if (item.type !== 'create_note' && item.type !== 'create_from_template') return null;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'review-diff-button';
+    button.textContent = 'Edit';
+    button.setAttribute('aria-label', 'Edit review item: ' + getItemSummary(item));
+    button.addEventListener('click', () => showCreateEditModal(item, state));
+    return button;
+  }
+
+  function showCreateEditModal(item, state) {
+    const overlay = document.createElement('div');
+    overlay.className = 'review-modal-overlay';
+
+    const dialog = document.createElement('section');
+    dialog.className = 'review-modal';
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+
+    const title = document.createElement('h2');
+    title.id = createDialogTitleId('edit-create');
+    title.textContent = item.type === 'create_from_template' ? 'Edit Project Preset' : 'Edit Note';
+    dialog.setAttribute('aria-labelledby', title.id);
+
+    const titleField = document.createElement('label');
+    titleField.className = 'review-modal-field';
+    titleField.textContent = item.type === 'create_from_template' ? 'Project name' : 'Note title';
+
+    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.className = 'review-modal-title-input';
+    titleInput.value = item.title;
+    titleInput.setAttribute('autocomplete', 'off');
+    titleInput.setAttribute('spellcheck', 'false');
+
+    const contentField = document.createElement('label');
+    contentField.className = 'review-modal-field';
+    contentField.textContent = item.type === 'create_from_template' ? 'Plan preview' : 'Content';
+
+    const contentInput = document.createElement('textarea');
+    contentInput.className = 'review-modal-preview';
+    contentInput.value = item.type === 'create_from_template' ? formatTemplatePlanPreview(item) : (item.content || '');
+    contentInput.readOnly = item.type === 'create_from_template';
+
+    const actions = document.createElement('div');
+    actions.className = 'review-modal-actions';
+
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', () => overlay.remove());
+
+    const save = document.createElement('button');
+    save.type = 'button';
+    save.className = 'review-modal-confirm';
+    save.textContent = 'Save changes';
+    save.addEventListener('click', () => {
+      const nextTitle = titleInput.value.trim();
+      if (!nextTitle) return;
+      if (state && typeof state.updateProposal === 'function') {
+        state.updateProposal(item.id, buildCreateEditPatch(item, nextTitle, contentInput.value));
+      }
+      overlay.remove();
+    });
+
+    titleInput.addEventListener('input', () => {
+      save.disabled = titleInput.value.trim().length === 0;
+    });
+
+    titleField.appendChild(titleInput);
+    contentField.appendChild(contentInput);
+    actions.appendChild(cancel);
+    actions.appendChild(save);
+    dialog.appendChild(title);
+    dialog.appendChild(titleField);
+    dialog.appendChild(contentField);
+    dialog.appendChild(actions);
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    titleInput.focus();
+    titleInput.select();
+  }
+
+  function buildCreateEditPatch(item, nextTitle, content) {
+    if (item.type !== 'create_from_template') {
+      return { title: nextTitle, content: content };
+    }
+    return renameTemplatePlan(item, nextTitle);
+  }
+
+  function renameTemplatePlan(item, nextTitle) {
+    const oldRoot = item.templatePlanRootPath || item.targetPath || '';
+    const parent = oldRoot.split('/').slice(0, -1).join('/');
+    const newRoot = parent ? parent + '/' + sanitizePathSegment(nextTitle) : sanitizePathSegment(nextTitle);
+    const renamedFiles = (item.files || []).map((file) => ({
+      path: replacePathPrefix(file.path, oldRoot, newRoot),
+      content: String(file.content || '').replace(new RegExp(escapeRegExp(item.title), 'g'), nextTitle)
+    }));
+    const renamedFolders = (item.folders || []).map((folder) => replacePathPrefix(folder, oldRoot, newRoot));
+    return {
+      title: nextTitle,
+      targetPath: newRoot,
+      templatePlanRootPath: newRoot,
+      folders: renamedFolders,
+      files: renamedFiles
+    };
+  }
+
+  function formatTemplatePlanPreview(item) {
+    const folders = (item.folders || []).map((folder) => '- ' + folder);
+    const files = (item.files || []).map((file) => '- ' + file.path);
+    const sections = [];
+    if (folders.length > 0) sections.push('Folders:\n' + folders.join('\n'));
+    if (files.length > 0) sections.push('Files:\n' + files.join('\n'));
+    return sections.join('\n\n');
+  }
+
+  function replacePathPrefix(value, oldRoot, newRoot) {
+    const path = String(value || '');
+    if (!oldRoot || path === oldRoot) return newRoot;
+    if (path.indexOf(oldRoot + '/') === 0) return newRoot + path.slice(oldRoot.length);
+    return path;
+  }
+
+  function sanitizePathSegment(value) {
+    return String(value || 'Untitled')
+      .replace(/\\/g, '/')
+      .split('/')
+      .filter(Boolean)
+      .pop()
+      .replace(/[<>:"|?*\x00-\x1f]/g, ' ')
+      .replace(/[!]+/g, '')
+      .replace(/\s+/g, ' ')
+      .replace(/[. ]+$/g, '')
+      .trim() || 'Untitled';
+  }
+
+  function escapeRegExp(value) {
+    return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
   function renderDiffButton(item) {
     if (!item || !item.diffPreview) return null;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'review-diff-button';
     button.textContent = 'Review Diff';
+    button.setAttribute('aria-label', 'Review diff for: ' + getItemSummary(item));
     button.addEventListener('click', () => showDiffPreviewModal(item));
     return button;
   }
@@ -156,7 +338,9 @@
     dialog.setAttribute('aria-modal', 'true');
 
     const title = document.createElement('h2');
+    title.id = createDialogTitleId('diff');
     title.textContent = 'Diff Preview';
+    dialog.setAttribute('aria-labelledby', title.id);
 
     const target = document.createElement('div');
     target.className = 'review-modal-target';
@@ -230,6 +414,14 @@
     return summary;
   }
 
+
+  function getItemSummary(item) {
+    return String((item && item.title) || 'Review item') + ' -> ' + getItemTargetLabel(item || {});
+  }
+
+  function createDialogTitleId(prefix) {
+    return 'review-dialog-title-' + String(prefix || 'dialog') + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+  }
   function getItemTargetLabel(item) {
     return item.targetPath || item.targetFolder || item.sourcePath || 'No target';
   }
@@ -267,7 +459,7 @@
 
   function confirmReviewAction(item) {
     if (item && item.type === 'update_note') return confirmUpdateNote(item);
-    return confirmCreateNote(item);
+    return Promise.resolve({ ok: true, patch: {} });
   }
 
   function getSuccessMessage(proposal, result) {
@@ -312,7 +504,9 @@
       dialog.setAttribute('aria-modal', 'true');
 
       const title = document.createElement('h2');
+      title.id = createDialogTitleId('apply-update');
       title.textContent = 'Apply Update Preview';
+      dialog.setAttribute('aria-labelledby', title.id);
 
       const target = document.createElement('div');
       target.className = 'review-modal-target';
@@ -350,79 +544,6 @@
       overlay.appendChild(dialog);
       document.body.appendChild(overlay);
       confirm.focus();
-    });
-  }
-  function confirmCreateNote(item) {
-    return new Promise((resolve) => {
-      const overlay = document.createElement('div');
-      overlay.className = 'review-modal-overlay';
-
-      const dialog = document.createElement('section');
-      dialog.className = 'review-modal';
-      dialog.setAttribute('role', 'dialog');
-      dialog.setAttribute('aria-modal', 'true');
-
-      const title = document.createElement('h2');
-      title.textContent = 'Create Note Preview';
-
-      const field = document.createElement('label');
-      field.className = 'review-modal-field';
-      field.textContent = 'Note title';
-
-      const titleInput = document.createElement('input');
-      titleInput.type = 'text';
-      titleInput.className = 'review-modal-title-input';
-      titleInput.value = item.title;
-      titleInput.setAttribute('autocomplete', 'off');
-      titleInput.setAttribute('spellcheck', 'false');
-
-      const target = document.createElement('div');
-      target.className = 'review-modal-target';
-
-      const preview = document.createElement('pre');
-      preview.className = 'review-modal-preview';
-      preview.textContent = item.content || '';
-
-      const actions = document.createElement('div');
-      actions.className = 'review-modal-actions';
-
-      const cancel = document.createElement('button');
-      cancel.type = 'button';
-      cancel.textContent = 'Cancel';
-      cancel.addEventListener('click', () => close(false));
-
-      const confirm = document.createElement('button');
-      confirm.type = 'button';
-      confirm.className = 'review-modal-confirm';
-      confirm.textContent = 'Create note';
-      confirm.addEventListener('click', () => close({ ok: true, patch: { title: titleInput.value.trim() } }));
-
-      titleInput.addEventListener('input', updateTargetPreview);
-
-      function updateTargetPreview() {
-        const nextTitle = titleInput.value.trim();
-        target.textContent = (item.targetFolder || '') + ' / ' + (nextTitle || 'Untitled') + '.md';
-        confirm.disabled = nextTitle.length === 0;
-      }
-
-      function close(value) {
-        overlay.remove();
-        resolve(value);
-      }
-
-      field.appendChild(titleInput);
-      actions.appendChild(cancel);
-      actions.appendChild(confirm);
-      dialog.appendChild(title);
-      dialog.appendChild(field);
-      dialog.appendChild(target);
-      dialog.appendChild(preview);
-      dialog.appendChild(actions);
-      overlay.appendChild(dialog);
-      document.body.appendChild(overlay);
-      updateTargetPreview();
-      titleInput.focus();
-      titleInput.select();
     });
   }
   function setText(node, value) {

@@ -55,3 +55,20 @@ test('vault IPC exposes update note through a write-specific channel', async () 
   assert.equal(result.ok, true);
   assert.deepEqual(result.payload, { targetPath: '03_Wissen/Topic.md' });
 });
+
+test('vault IPC exposes create folder through a write-specific channel', async () => {
+  const handlers = new Map();
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const readService = { setRoot() {}, getState() { return {}; }, listFolder() {}, readMarkdown() {} };
+  const writeService = {
+    createFolder(payload) {
+      return { ok: true, payload, path: '02_Projects/Alpha' };
+    }
+  };
+
+  registerVaultIpc(ipcMain, {}, null, readService, writeService);
+  const result = await handlers.get(IPC_CHANNELS.VAULT_CREATE_FOLDER)(null, { targetFolder: '02_Projects/Alpha' });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.payload, { targetFolder: '02_Projects/Alpha' });
+});

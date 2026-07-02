@@ -138,6 +138,7 @@
       entries.forEach((entry) => {
         const row = document.createElement('div');
         row.setAttribute('role', 'button');
+        row.setAttribute('aria-label', formatRowAriaLabel(entry));
         row.tabIndex = 0;
         row.className = 'file-row file-row-' + entry.kind;
         row.dataset.path = entry.path;
@@ -154,7 +155,10 @@
         row.appendChild(label);
 
         const selected = navigator.snapshot().selectedPath === entry.path;
-        if (selected) row.classList.add('is-selected');
+        if (selected) {
+          row.classList.add('is-selected');
+          row.setAttribute('aria-current', 'true');
+        }
 
         row.addEventListener('click', () => {
           focusTreeRow(row);
@@ -404,12 +408,18 @@
       candidates.push('');
       return candidates;
     }
+
+    function formatRowAriaLabel(entry) {
+      const type = entry && entry.kind === 'folder' ? 'Folder' : 'File';
+      const name = (entry && (entry.name || entry.path)) || 'Untitled';
+      return type + ': ' + name;
+    }
     function createPermissionControls(path) {
       const controls = document.createElement('span');
       controls.className = 'file-permission-controls';
 
-      const readButton = createPermissionButton('R', 'Toggle read permission', (event) => togglePermission(path, 'read', event));
-      const writeButton = createPermissionButton('W', 'Toggle write permission', (event) => togglePermission(path, 'write', event));
+      const readButton = createPermissionButton('R', 'Toggle read permission', path, (event) => togglePermission(path, 'read', event));
+      const writeButton = createPermissionButton('W', 'Toggle write permission', path, (event) => togglePermission(path, 'write', event));
 
       controls.appendChild(readButton);
       controls.appendChild(writeButton);
@@ -503,12 +513,13 @@
       });
     }
 
-    function createPermissionButton(label, title, toggle) {
+    function createPermissionButton(label, title, path, toggle) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'file-permission-button';
       button.textContent = label;
       button.title = title;
+      button.setAttribute('aria-label', title + ': ' + path);
       button.addEventListener('click', async (event) => {
         event.preventDefault();
         event.stopPropagation();

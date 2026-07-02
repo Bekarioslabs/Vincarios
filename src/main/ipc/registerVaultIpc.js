@@ -40,6 +40,12 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
     }
     return vaultWriteService.createNote(payload);
   });
+  ipcMain.handle(IPC_CHANNELS.VAULT_CREATE_FOLDER, (_event, payload) => {
+    if (!vaultWriteService || typeof vaultWriteService.createFolder !== 'function') {
+      return { ok: false, code: 'write_unavailable', message: 'Vault folder create service unavailable.' };
+    }
+    return vaultWriteService.createFolder(payload);
+  });
   ipcMain.handle(IPC_CHANNELS.VAULT_UPDATE_NOTE, (_event, payload) => {
     if (!vaultWriteService || typeof vaultWriteService.updateNote !== 'function') {
       return { ok: false, code: 'write_unavailable', message: 'Vault update service unavailable.' };

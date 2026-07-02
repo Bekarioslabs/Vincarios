@@ -50,32 +50,79 @@
       '    <button type="button" class="settings-icon-button" data-settings-close aria-label="Close settings"></button>',
       '  </header>',
       '  <div class="settings-body">',
-      '    <section class="settings-section">',
-      '      <div class="settings-section-head">',
-      '        <h3>Local Providers</h3>',
-      '        <p>Override local provider URLs without changing provider code.</p>',
-      '      </div>',
-      '      <div class="settings-provider-list" data-settings-provider-list>',
-      '        <div class="settings-empty">Loading provider settings...</div>',
-      '      </div>',
-      '    </section>',
-      '    <section class="settings-section">',
-      '      <div class="settings-section-head">',
-      '        <h3>Limits</h3>',
-      '        <p>Control provider timeouts and request-size caps.</p>',
-      '      </div>',
-      '      <div class="settings-limit-grid" data-settings-limit-grid></div>',
-      '      <div class="settings-section-actions">',
-      '        <button type="button" class="settings-primary-button" data-settings-save-limits>Save limits</button>',
-      '      </div>',
-      '    </section>',
-      '    <section class="settings-section">',
-      '      <div class="settings-section-head">',
-      '        <h3>Vault Profile</h3>',
-      '        <p>Map app roles to vault folders. Defaults remain active unless overridden.</p>',
-      '      </div>',
-      '      <div class="settings-vault-role-list" data-settings-vault-role-list></div>',
-      '    </section>',
+      '    <nav class="settings-category-menu" aria-label="Settings categories">',
+      '      <button type="button" class="settings-category-button is-active" data-settings-category="providers" aria-controls="settings-panel-providers" aria-selected="true">Providers</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="limits" aria-controls="settings-panel-limits" aria-selected="false">Limits</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="vault-profile" aria-controls="settings-panel-vault-profile" aria-selected="false">Vault Profile</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="templates" aria-controls="settings-panel-templates" aria-selected="false">Templates</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="appearance" aria-controls="settings-panel-appearance" aria-selected="false">Appearance</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="embeddings" aria-controls="settings-panel-embeddings" aria-selected="false">Embeddings</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="safety" aria-controls="settings-panel-safety" aria-selected="false">Safety</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="about" aria-controls="settings-panel-about" aria-selected="false">About</button>',
+      '    </nav>',
+      '    <div class="settings-category-content">',
+      '      <section id="settings-panel-providers" class="settings-section settings-category-panel" data-settings-category-panel="providers">',
+      '        <div class="settings-section-head">',
+      '          <h3>Local Providers</h3>',
+      '          <p>Override local provider URLs without changing provider code.</p>',
+      '        </div>',
+      '        <div class="settings-provider-list" data-settings-provider-list>',
+      '          <div class="settings-empty">Loading provider settings...</div>',
+      '        </div>',
+      '      </section>',
+      '      <section id="settings-panel-limits" class="settings-section settings-category-panel" data-settings-category-panel="limits" hidden>',
+      '        <div class="settings-section-head">',
+      '          <h3>Limits</h3>',
+      '          <p>Control provider timeouts and request-size caps.</p>',
+      '        </div>',
+      '        <div class="settings-limit-grid" data-settings-limit-grid></div>',
+      '        <div class="settings-section-actions">',
+      '          <button type="button" class="settings-primary-button" data-settings-save-limits>Save limits</button>',
+      '        </div>',
+      '      </section>',
+      '      <section id="settings-panel-vault-profile" class="settings-section settings-category-panel" data-settings-category-panel="vault-profile" hidden>',
+      '        <div class="settings-section-head">',
+      '          <h3>Vault Profile</h3>',
+      '          <p>Map app roles to vault folders. Defaults remain active unless overridden.</p>',
+      '        </div>',
+      '        <div class="settings-vault-role-list" data-settings-vault-role-list></div>',
+      '      </section>',
+      '      <section id="settings-panel-templates" class="settings-section settings-category-panel" data-settings-category-panel="templates" hidden>',
+      '        <div class="settings-section-head">',
+      '          <h3>Templates</h3>',
+      '          <p>Future home for note and project preset management.</p>',
+      '        </div>',
+      '        <div class="settings-future-note">Template editing is not wired in this V1 step.</div>',
+      '      </section>',
+      '      <section id="settings-panel-appearance" class="settings-section settings-category-panel" data-settings-category-panel="appearance" hidden>',
+      '        <div class="settings-section-head">',
+      '          <h3>Appearance</h3>',
+      '          <p>Future home for UI theme and Markdown preview style controls.</p>',
+      '        </div>',
+      '        <div class="settings-future-note">Appearance settings will extend the existing token system later.</div>',
+      '      </section>',
+      '      <section id="settings-panel-embeddings" class="settings-section settings-category-panel" data-settings-category-panel="embeddings" hidden>',
+      '        <div class="settings-section-head">',
+      '          <h3>Embeddings</h3>',
+      '          <p>Future home for local index status and rebuild controls.</p>',
+      '        </div>',
+      '        <div class="settings-future-note">Embeddings are planned as local-only support, not automation authority.</div>',
+      '      </section>',
+      '      <section id="settings-panel-safety" class="settings-section settings-category-panel" data-settings-category-panel="safety" hidden>',
+      '        <div class="settings-section-head">',
+      '          <h3>Safety</h3>',
+      '          <p>Review, backup, permission, and audit behavior remains enforced in code.</p>',
+      '        </div>',
+      '        <div class="settings-future-note">Safety controls are informational until a real settings flow exists.</div>',
+      '      </section>',
+      '      <section id="settings-panel-about" class="settings-section settings-category-panel" data-settings-category-panel="about" hidden>',
+      '        <div class="settings-section-head">',
+      '          <h3>About</h3>',
+      '          <p>ZEUS Agent V1 local-first Markdown vault assistant.</p>',
+      '        </div>',
+      '        <div class="settings-future-note">Version and license details can be expanded here later.</div>',
+      '      </section>',
+      '    </div>',
       '  </div>',
       '  <footer class="settings-footer">',
       '    <span class="settings-status" data-settings-status></span>',
@@ -84,6 +131,7 @@
       '</div>'
     ].join('');
     renderSettingsCloseIcon(backdrop.querySelector('.settings-icon-button[data-settings-close]'));
+    bindSettingsCategories(backdrop);
 
     return {
       backdrop,
@@ -91,11 +139,30 @@
       limitsGrid: backdrop.querySelector('[data-settings-limit-grid]'),
       vaultRoleList: backdrop.querySelector('[data-settings-vault-role-list]'),
       saveLimitsButton: backdrop.querySelector('[data-settings-save-limits]'),
+      categoryButtons: Array.from(backdrop.querySelectorAll('[data-settings-category]')),
+      categoryPanels: Array.from(backdrop.querySelectorAll('[data-settings-category-panel]')),
       status: backdrop.querySelector('[data-settings-status]'),
       closeButtons: Array.from(backdrop.querySelectorAll('[data-settings-close]'))
     };
   }
 
+  function bindSettingsCategories(backdrop) {
+    const buttons = Array.from(backdrop.querySelectorAll('[data-settings-category]'));
+    const panels = Array.from(backdrop.querySelectorAll('[data-settings-category-panel]'));
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const category = button.getAttribute('data-settings-category');
+        buttons.forEach((item) => {
+          const active = item === button;
+          item.classList.toggle('is-active', active);
+          item.setAttribute('aria-selected', String(active));
+        });
+        panels.forEach((panel) => {
+          panel.hidden = panel.getAttribute('data-settings-category-panel') !== category;
+        });
+      });
+    });
+  }
 
   function renderSettingsCloseIcon(button) {
     if (!button) return;

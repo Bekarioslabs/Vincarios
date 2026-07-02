@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   async function mountProviderStatus(options) {
@@ -12,6 +12,7 @@
       statusDot: app.querySelector('#provider-dot'),
       statusLabel: app.querySelector('#provider-status-label'),
       providerName: app.querySelector('#provider-name'),
+      refreshButton: app.querySelector('#provider-refresh'),
       providerSelect: app.querySelector('#provider-select'),
       modelSelect: app.querySelector('#provider-model-select')
     };
@@ -49,6 +50,16 @@
       }
     }
 
+    renderProviderRefreshIcon(nodes.refreshButton);
+
+    if (nodes.refreshButton) {
+      nodes.refreshButton.addEventListener('click', async () => {
+        nodes.refreshButton.disabled = true;
+        await refresh(nodes.providerSelect ? nodes.providerSelect.value : undefined);
+        nodes.refreshButton.disabled = false;
+      });
+    }
+
     if (nodes.providerSelect) {
       nodes.providerSelect.addEventListener('change', async () => {
         const providerId = nodes.providerSelect.value;
@@ -78,6 +89,20 @@
     await refresh();
   }
 
+  function renderProviderRefreshIcon(button) {
+    if (!button) return;
+    button.textContent = '';
+    const renderer = getIconRenderer();
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      button.appendChild(renderer.createIconElement('refresh', 'provider-refresh-icon'));
+      return;
+    }
+    button.textContent = 'Refresh';
+  }
+
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
   function setProviderStatus(nodes, activeProvider, providers) {
     const isAvailable = !!(activeProvider && activeProvider.available);
     const label = isAvailable ? 'Provider online' : 'Provider offline';

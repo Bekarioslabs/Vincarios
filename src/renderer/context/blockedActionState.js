@@ -51,9 +51,6 @@
     return normalizeRequiredPermission(permission) === 'write' ? 'W' : 'R';
   }
 
-  function formatBlockedActionRetryLabel(permission) {
-    return 'Retry after enabling ' + formatPermissionShortcut(permission);
-  }
 
   function formatMissingPermissionMessage(blockedAction) {
     const blocked = blockedAction || {};
@@ -73,7 +70,6 @@
     normalizeBlockedAction,
     normalizeRequiredPermission,
     formatPermissionShortcut,
-    formatBlockedActionRetryLabel,
     formatMissingPermissionMessage
   };
 

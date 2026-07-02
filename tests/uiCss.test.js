@@ -76,9 +76,11 @@ test('review basket polish stays isolated in review stylesheet', () => {
 
   assert.match(reviewCss, /\.review-clear-button\s*\{[\s\S]*background:\s*transparent;[\s\S]*color:\s*var\(--text-muted\);/);
   assert.match(reviewCss, /\.review-execute-button\s*\{[\s\S]*background:\s*rgba\(var\(--interactive-accent-rgb\), \.1\);[\s\S]*color:\s*var\(--text-accent\);/);
-  assert.match(reviewCss, /\.review-basket-item-status\s*\{[\s\S]*border-radius:\s*999px;[\s\S]*letter-spacing:\s*\.06em;/);
+  assert.match(reviewCss, /\.review-execute-button:disabled,[\s\S]*\.review-clear-button:disabled\s*\{[\s\S]*opacity:\s*\.45;/);
+  assert.match(reviewCss, /\.review-basket-item-status\s*\{[\s\S]*display:\s*inline-grid;[\s\S]*border-radius:\s*999px;/);
   assert.match(reviewCss, /\.review-basket-item\[data-status="failed"\] \.review-basket-item-status/);
-  assert.match(reviewCss, /\.review-basket-item\[data-type="create_note"\] \.review-basket-item-status/);
+  assert.match(reviewCss, /\.review-status-icon/);
+  assert.match(reviewCss, /\.review-status-dot/);
 });
 test('vault panel layout places files and actions above full-width preview', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
@@ -132,6 +134,18 @@ test('Markdown history icons are filtered for dark UI visibility', () => {
   assert.match(css, /\.markdown-history-icon\s*\{[\s\S]*filter:\s*brightness\(0\) invert\(1\)/);
 });
 
+test('Markdown properties use dedicated metadata styling tokens', () => {
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+  const markdownCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
+
+  assert.match(tokensCss, /--metadata-accent:/);
+  assert.match(tokensCss, /--metadata-background:/);
+  assert.match(tokensCss, /--metadata-border:/);
+  assert.match(markdownCss, /\.markdown-properties\s*\{[\s\S]*border:\s*1px solid var\(--metadata-border\);/);
+  assert.match(markdownCss, /\.markdown-properties\s*\{[\s\S]*background:\s*var\(--metadata-background\);/);
+  assert.match(markdownCss, /\.markdown-properties dt\s*\{[\s\S]*color:\s*var\(--text-muted\);/);
+  assert.match(markdownCss, /\.markdown-properties dd\s*\{[\s\S]*color:\s*var\(--metadata-accent\);/);
+});
 test('review basket failed item errors use review stylesheet', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
 
@@ -148,4 +162,18 @@ test('readability tokens activate bundled Inter and avoid ultra-heavy UI weights
   assert.match(tokensCss, /--font-weight-ui-strong:\s*700;/);
   assert.doesNotMatch(filesCss, /font-weight:\s*900;/);
   assert.doesNotMatch(layoutCss, /font-size:\s*9px;/);
+});
+test('chat input uses auto-grow styling instead of manual resize', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.chat-input-shell\s*\{[\s\S]*resize:\s*none;[\s\S]*overflow-y:\s*hidden;/);
+  assert.match(css, /\.selection-action-form textarea\s*\{[\s\S]*resize:\s*vertical;/);
+});
+
+test('left navigation keeps settings in a separate bottom group', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.left-nav-actions\s*\{[\s\S]*flex:\s*1 1 auto;/);
+  assert.match(css, /\.left-nav-group-settings\s*\{[\s\S]*margin-top:\s*auto;/);
+  assert.match(css, /\.left-nav-group-settings\s*\{[\s\S]*border-top:\s*1px solid var\(--background-modifier-border\);/);
 });

@@ -79,6 +79,48 @@ function createVaultWriteService(options) {
     }
   }
 
+  function createFolder(input) {
+    const currentVault = requireVault();
+    if (!currentVault.ok) return currentVault;
+
+    const payload = normalizeCreateFolderInput(input);
+    if (!payload.ok) return payload;
+
+    const resolved = currentVault.vault.resolve(payload.targetFolder, { allowRoot: false });
+    if (!resolved.ok) return resolved;
+
+    if (fileSystem.existsSync(resolved.absolutePath)) {
+      let stat;
+      try {
+        stat = fileSystem.statSync(resolved.absolutePath);
+      } catch (error) {
+        return fail('stat_failed', 'Could not inspect target folder.');
+      }
+      if (!stat.isDirectory()) {
+        return fail('target_exists_not_folder', 'Target path exists and is not a folder.');
+      }
+      return ok({
+        action: 'create_folder',
+        path: resolved.relativePath,
+        alreadyExists: true
+      });
+    }
+
+    try {
+      fileSystem.mkdirSync(resolved.absolutePath, { recursive: true });
+      appendAudit(fileSystem, currentVault.vault.root, {
+        action: 'create_folder',
+        path: resolved.relativePath,
+        result: 'created'
+      });
+      return ok({
+        action: 'create_folder',
+        path: resolved.relativePath
+      });
+    } catch (error) {
+      return fail('write_failed', 'Could not create folder.');
+    }
+  }
   function updateNote(input) {
     const currentVault = requireVault();
     if (!currentVault.ok) return currentVault;
@@ -140,6 +182,7 @@ function createVaultWriteService(options) {
 
   return Object.freeze({
     setRoot,
+    createFolder,
     createNote,
     updateNote
   });
@@ -161,6 +204,12 @@ function normalizeCreateNoteInput(input) {
     fileName,
     content: String(input && input.content ? input.content : '')
   });
+}
+
+function normalizeCreateFolderInput(input) {
+  const targetFolder = String(input && input.targetFolder ? input.targetFolder : '').trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+  if (!targetFolder) return fail('invalid_target_folder', 'Target folder is required.');
+  return ok({ targetFolder });
 }
 
 function normalizeUpdateNoteInput(input) {

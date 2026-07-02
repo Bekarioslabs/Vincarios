@@ -78,3 +78,35 @@ test('settings panel shows provider timeout in seconds while storing millisecond
   assert.equal(formatLimitValue(field, 120000), 120);
   assert.equal(parseLimitInput(field, '180'), 180000);
 });
+test('settings panel uses a two-pane category layout', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
+
+  assert.match(source, /settings-category-menu/);
+  assert.match(source, /data-settings-category="providers"/);
+  assert.match(source, /data-settings-category-panel="providers"/);
+  assert.match(source, /data-settings-category="limits"/);
+  assert.match(source, /data-settings-category="vault-profile"/);
+  assert.match(css, /\.settings-body\s*\{[\s\S]*grid-template-columns:\s*180px minmax\(0, 1fr\);/);
+  assert.match(css, /\.settings-category-panel\[hidden\]/);
+});
+
+test('settings panel exposes V1 category slots without fake controls', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+
+  assert.match(source, /data-settings-category="templates"/);
+  assert.match(source, /data-settings-category="appearance"/);
+  assert.match(source, /data-settings-category="embeddings"/);
+  assert.match(source, /data-settings-category="safety"/);
+  assert.match(source, /data-settings-category="about"/);
+  assert.match(source, /settings-future-note/);
+});
+test('settings modal keeps a stable size and scrolls only active content', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
+
+  assert.match(css, /\.settings-panel\s*\{[\s\S]*width:\s*min\(920px, calc\(100vw - 56px\)\);/);
+  assert.match(css, /\.settings-panel\s*\{[\s\S]*\n\s*height:\s*min\(680px, calc\(100vh - 56px\)\);/);
+  assert.doesNotMatch(css, /\.settings-panel\s*\{[\s\S]*max-height:/);
+  assert.match(css, /\.settings-body\s*\{[\s\S]*overflow:\s*hidden;/);
+  assert.match(css, /\.settings-category-content\s*\{[\s\S]*overflow:\s*auto;/);
+});

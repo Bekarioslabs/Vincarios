@@ -82,3 +82,12 @@ test('renders YAML block list frontmatter values as properties', () => {
   assert.match(html, /<dt>status<\/dt>/);
   assert.match(html, /active/);
 });
+
+test('renders Markdown task list checkboxes as disabled checkbox controls', () => {
+  const html = renderMarkdown('- [ ] Draft outline\n- [x] Review done');
+
+  assert.match(html, /<input type="checkbox" disabled>/);
+  assert.match(html, /<input type="checkbox" checked disabled>/);
+  assert.match(html, /Draft outline/);
+  assert.match(html, /Review done/);
+});

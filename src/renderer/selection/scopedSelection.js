@@ -37,14 +37,14 @@
       match: '.chat-input-shell',
       select: '.chat-input-shell',
       nativeInput: true,
-      menuActions: []
+      menuActions: ['cut', 'copy', 'paste', 'select-area']
     },
     {
       id: 'markdown-editor',
       match: '.markdown-source-editor',
       select: '.markdown-source-editor',
       nativeInput: true,
-      menuActions: []
+      menuActions: ['cut', 'copy', 'paste', 'select-area']
     }
   ]);
 
@@ -68,7 +68,7 @@
     app.addEventListener('contextmenu', (event) => {
       const region = findScopedSelectionRegion(event.target);
       const actions = getContextMenuActionsForRegion(region);
-      if (!region || !region.element || region.nativeInput || actions.length === 0) return;
+      if (!region || !region.element || actions.length === 0) return;
 
       event.preventDefault();
       hoveredRegion = region;
@@ -78,7 +78,9 @@
         x: event.clientX,
         y: event.clientY,
         onSelect: () => selectRegion(region.element),
-        onCopy: () => copyRegion(region.element)
+        onCopy: () => copyRegion(region.element),
+        onCut: () => cutEditableRegion(region.element),
+        onPaste: () => pasteEditableRegion(region.element)
       });
       document.body.appendChild(menu);
     });
@@ -134,7 +136,9 @@
     root.style.left = Math.max(0, options.x) + 'px';
     root.style.top = Math.max(0, options.y) + 'px';
 
+    if (options.actions.includes('cut')) root.appendChild(createMenuButton('Cut', options.onCut));
     if (options.actions.includes('copy')) root.appendChild(createMenuButton('Copy', options.onCopy));
+    if (options.actions.includes('paste')) root.appendChild(createMenuButton('Paste', options.onPaste));
     if (options.actions.includes('select-area')) root.appendChild(createMenuButton('Select area', options.onSelect));
     return root;
   }
@@ -186,6 +190,10 @@
 
   async function copyRegion(element) {
     if (!element) return false;
+    if (isSelectableInput(element)) {
+      const selected = getInputSelectedText(element);
+      return writeClipboard(selected || String(element.value || ''));
+    }
     const text = getCopyTextForRegion({
       selectedText: getSelectedTextInside(element),
       regionText: getElementText(element)
@@ -206,6 +214,67 @@
     return false;
   }
 
+
+  async function cutEditableRegion(element) {
+    if (!isEditableInput(element)) return false;
+    const selected = getInputSelectedText(element);
+    if (!selected) return false;
+    const copied = await writeClipboard(selected);
+    if (!copied) return false;
+    replaceInputSelection(element, '');
+    return true;
+  }
+
+  async function pasteEditableRegion(element) {
+    if (!isEditableInput(element)) return false;
+    if (navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+      const text = await navigator.clipboard.readText();
+      replaceInputSelection(element, text);
+      return true;
+    }
+    element.focus();
+    return !!(document.execCommand && document.execCommand('paste'));
+  }
+
+  async function writeClipboard(text) {
+    if (!text) return false;
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+    if (document.execCommand) {
+      const cleanup = selectTextForLegacyCopy(text);
+      try {
+        return cleanup ? document.execCommand('copy') : false;
+      } finally {
+        if (typeof cleanup === 'function') cleanup();
+      }
+    }
+    return false;
+  }
+
+  function getInputSelectedText(element) {
+    if (!isSelectableInput(element)) return '';
+    const start = Number.isInteger(element.selectionStart) ? element.selectionStart : 0;
+    const end = Number.isInteger(element.selectionEnd) ? element.selectionEnd : start;
+    if (end <= start) return '';
+    return String(element.value || '').slice(start, end);
+  }
+
+  function replaceInputSelection(element, text) {
+    if (!isEditableInput(element)) return false;
+    const value = String(element.value || '');
+    const start = Number.isInteger(element.selectionStart) ? element.selectionStart : value.length;
+    const end = Number.isInteger(element.selectionEnd) ? element.selectionEnd : start;
+    const next = value.slice(0, start) + String(text || '') + value.slice(end);
+    element.value = next;
+    const cursor = start + String(text || '').length;
+    element.selectionStart = cursor;
+    element.selectionEnd = cursor;
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.focus();
+    return true;
+  }
   function selectTextForLegacyCopy(text) {
     const textarea = document.createElement('textarea');
     textarea.value = text;
@@ -243,10 +312,16 @@
     return tag === 'textarea' || tag === 'input';
   }
 
+  function isEditableInput(element) {
+    return isSelectableInput(element) && element.disabled !== true && element.readOnly !== true;
+  }
+
   function getContextMenuActionsForRegion(region) {
     if (!region) return [];
     const definition = REGION_DEFINITIONS.find((item) => item.id === region.id);
-    return definition && Array.isArray(definition.menuActions) ? definition.menuActions.slice() : [];
+    const actions = definition && Array.isArray(definition.menuActions) ? definition.menuActions.slice() : [];
+    if (region.nativeInput && !isEditableInput(region.element)) return actions.filter((action) => action === 'copy' || action === 'select-area');
+    return actions;
   }
 
   function getScopedSelectionRegionForClassNames(classNames) {

@@ -242,3 +242,14 @@ test('review basket makes no-change update proposals non-executable', () => {
   assert.equal(item.selected, false);
   assert.equal(basket.getSelectedOpenItems().length, 0);
 });
+
+test('review basket updates open create proposals before execution', () => {
+  const basket = createReviewBasketState();
+  const item = basket.addProposal(createSaveAssistantResponseProposal('# Old Title\n\nBody.'));
+
+  const updated = basket.updateProposal(item.id, { title: 'New Title', content: '# New Title\n\nBody.' });
+
+  assert.equal(updated.title, 'New Title');
+  assert.equal(updated.content, '# New Title\n\nBody.');
+  assert.equal(basket.getSelectedOpenItems()[0].title, 'New Title');
+});

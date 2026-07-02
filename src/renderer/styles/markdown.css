@@ -41,6 +41,18 @@
 .markdown-link-feedback[hidden] {
   display: none;
 }
+.markdown-preview-status {
+  flex: 0 0 auto;
+  border-bottom: 1px solid var(--background-modifier-border);
+  background: rgba(var(--interactive-accent-rgb), .06);
+  color: var(--text-accent);
+  padding: 6px 14px;
+  font: var(--font-weight-ui-semibold) 11px/1.35 var(--font-interface);
+}
+
+.markdown-preview-status[hidden] {
+  display: none;
+}
 .markdown-edit-toggle,
 .markdown-propose-update,
 .markdown-reveal-current,
@@ -231,9 +243,9 @@
 .markdown-properties {
   margin: 0 0 18px;
   padding: 10px 12px;
-  border: 1px solid var(--background-modifier-border);
+  border: 1px solid var(--metadata-border);
   border-radius: 8px;
-  background: var(--background-subtle);
+  background: var(--metadata-background);
 }
 
 .markdown-properties dl {
@@ -250,14 +262,20 @@
 .markdown-properties dt {
   color: var(--text-muted);
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .markdown-properties dd {
   min-width: 0;
   margin: 0;
-  color: var(--text-normal);
+  color: var(--metadata-accent);
   font-size: 12px;
+}
+
+.markdown-properties .markdown-link,
+.markdown-properties .markdown-wikilink {
+  color: var(--metadata-accent);
+  border-bottom-color: rgba(var(--interactive-accent-rgb), .22);
 }
 
 .markdown-history-icon {

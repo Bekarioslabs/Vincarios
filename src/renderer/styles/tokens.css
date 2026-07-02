@@ -26,6 +26,10 @@
   --interactive-accent: #d97706;
   --interactive-accent-rgb: 217,119,6;
 
+  --metadata-accent: #d08a22;
+  --metadata-background: rgba(255,255,255,.022);
+  --metadata-border: rgba(255,255,255,.08);
+
   --status-success: #16a34a;
   --status-danger: #dc2626;
   --status-error: #f08a8a;

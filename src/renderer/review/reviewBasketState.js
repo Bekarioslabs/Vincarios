@@ -60,6 +60,15 @@
         .map((item) => Object.assign({}, item));
     }
 
+    function updateProposal(id, patch) {
+      const item = findById(id);
+      if (!item || item.status !== 'open') return null;
+      Object.assign(item, patch || {});
+      item.fingerprint = createProposalFingerprint(item);
+      emitChange();
+      return Object.assign({}, item);
+    }
+
     function updateStatus(id, status, patch) {
       const item = findById(id);
       if (!item) return null;
@@ -117,6 +126,7 @@
       setSelected,
       getSelectedOpenItems,
       updateStatus,
+      updateProposal,
       remove,
       clearOpen,
       clearDone,

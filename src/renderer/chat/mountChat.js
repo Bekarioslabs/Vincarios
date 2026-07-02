@@ -25,6 +25,7 @@
     }
 
     setInputEnabled(input, sendButton, true);
+    autoSizeChatInput(input);
     setText(status, 'Chat ready.');
 
     async function sendCurrentMessage() {
@@ -39,6 +40,7 @@
       const requestId = createChatRequestId();
       activeRequest = { requestId, canceled: false, pending: null };
       input.value = '';
+      autoSizeChatInput(input);
       messages.push({ role: 'user', content });
       appendMessage(chatLog, 'user', content);
       setChatBusy(input, sendButton, true);
@@ -110,6 +112,7 @@
         sendCurrentMessage();
       }
     });
+    input.addEventListener('input', () => autoSizeChatInput(input));
 
     return Object.freeze({ sendCurrentMessage, messages });
   }
@@ -125,7 +128,6 @@
       selection: options.contextState && typeof options.contextState.snapshot === 'function'
         ? options.contextState.snapshot()
         : null,
-      blockedActionId: options.blockedActionId
     });
   }
 
@@ -137,13 +139,7 @@
           onClick: () => runScopeAction(Object.assign({}, options, { scopeChoice: action.scopeChoice }))
         }))
       : [];
-    const blockedActions = Array.isArray(preflight.blockedActions)
-      ? preflight.blockedActions.map((action) => ({
-          label: action.label,
-          onClick: () => runBlockedAction(Object.assign({}, options, { blockedActionId: action.blockedActionId }))
-        }))
-      : [];
-    const actions = scopeActions.concat(blockedActions);
+    const actions = scopeActions;
 
     options.messages.push({ role: 'assistant', content: preflight.historyContent || preflight.message });
     appendMessage(options.chatLog, 'assistant', preflight.message, { allowSave: false, actions });
@@ -172,50 +168,6 @@
       pending.remove();
       appendMessage(options.chatLog, 'assistant', 'Folder scope error: ' + ((error && error.message) || 'request failed'), { allowSave: false });
       setText(options.status, 'Folder scope failed.');
-    } finally {
-      setInputEnabled(options.input, options.sendButton, true);
-      options.input.focus();
-    }
-  }
-
-  async function runBlockedAction(options) {
-    setInputEnabled(options.input, options.sendButton, false);
-    setText(options.status, 'Retrying blocked action...');
-    const pending = appendMessage(options.chatLog, 'assistant', 'Retrying blocked action...', { allowSave: false });
-    try {
-      const result = await runReadContextPreflight({
-        api: options.api,
-        content: '',
-        blockedActionId: options.blockedActionId,
-        contextState: options.contextState
-      });
-
-      if (result && result.kind === 'retry_provider_request') {
-        await runProviderRequest({
-          api: options.api,
-          chatLog: options.chatLog,
-          content: result.retryUserText,
-          messages: options.messages,
-          contextState: options.contextState,
-          reviewBasket: options.reviewBasket,
-          status: options.status,
-          pending,
-          includeUserMessage: false
-        });
-        return;
-      }
-
-      pending.remove();
-      if (result && result.handled) {
-        appendPreflightResult(Object.assign({}, options, { preflight: result }));
-      } else {
-        appendMessage(options.chatLog, 'assistant', 'Blocked action is no longer available. Please run the request again.', { allowSave: false });
-        setText(options.status, 'Blocked action expired.');
-      }
-    } catch (error) {
-      pending.remove();
-      appendMessage(options.chatLog, 'assistant', 'Blocked action error: ' + ((error && error.message) || 'request failed'), { allowSave: false });
-      setText(options.status, 'Blocked action failed.');
     } finally {
       setInputEnabled(options.input, options.sendButton, true);
       options.input.focus();
@@ -447,6 +399,7 @@
   function setInputEnabled(input, sendButton, enabled) {
     input.readOnly = !enabled;
     input.setAttribute('aria-disabled', String(!enabled));
+    autoSizeChatInput(input);
     sendButton.disabled = !enabled;
     renderSendButtonIcon(sendButton, 'send');
     if (enabled) {
@@ -457,6 +410,7 @@
   function setChatBusy(input, sendButton, busy) {
     input.readOnly = busy;
     input.setAttribute('aria-disabled', String(busy));
+    autoSizeChatInput(input);
     sendButton.disabled = false;
     renderSendButtonIcon(sendButton, busy ? 'close' : 'send');
     sendButton.dataset.chatState = busy ? 'running' : 'idle';
@@ -479,6 +433,24 @@
 
   function getIconRenderer() {
     return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
+  function autoSizeChatInput(input) {
+    if (!input || !input.style) return;
+    const minHeight = readPixelStyle(input, 'minHeight', 40);
+    const maxHeight = readPixelStyle(input, 'maxHeight', 180);
+    input.style.height = 'auto';
+    const scrollHeight = Number(input.scrollHeight) || minHeight;
+    const nextHeight = Math.max(minHeight, Math.min(scrollHeight, maxHeight));
+    input.style.height = nextHeight + 'px';
+    input.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }
+
+  function readPixelStyle(input, property, fallback) {
+    const computed = (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function')
+      ? window.getComputedStyle(input)
+      : null;
+    const parsed = computed ? parseFloat(computed[property]) : NaN;
+    return Number.isFinite(parsed) ? parsed : fallback;
   }
   function cancelActiveChatRequest(options) {
     options = options || {};
@@ -517,7 +489,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountChat, appendMessage, buildOutboundMessages, runProviderRequest, createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest, formatMessageTime };
+    module.exports = { mountChat, appendMessage, buildOutboundMessages, runProviderRequest, createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest, formatMessageTime, autoSizeChatInput };
   }
 
   if (typeof window !== 'undefined') {

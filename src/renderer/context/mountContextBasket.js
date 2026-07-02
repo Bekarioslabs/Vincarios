@@ -11,6 +11,7 @@
     const root = app.querySelector('#context-basket');
     const itemsRoot = app.querySelector('#context-basket-items');
     const clearButton = app.querySelector('#context-clear-all');
+    const countBadge = app.querySelector('#context-basket-count');
     if (!root || !itemsRoot || !clearButton) return null;
 
     const unsubscribe = typeof contextState.subscribe === 'function'
@@ -27,6 +28,7 @@
       const items = Array.isArray(snapshot && snapshot.contextItems) ? snapshot.contextItems : [];
       itemsRoot.innerHTML = '';
       clearButton.disabled = items.length === 0;
+      updateCountBadge(countBadge, items);
 
       if (!items.length) {
         const empty = document.createElement('div');
@@ -48,6 +50,7 @@
       button.type = 'button';
       button.className = 'context-basket-open';
       button.title = formatItemTitle(item);
+      button.setAttribute('aria-label', 'Reveal context item: ' + formatItemTitle(item));
 
       const icon = document.createElement('span');
       icon.className = 'context-basket-icon';
@@ -67,6 +70,7 @@
       remove.type = 'button';
       remove.className = 'context-basket-remove';
       remove.title = 'Remove from context';
+      remove.setAttribute('aria-label', 'Remove context item: ' + formatItemTitle(item));
       renderRemoveIcon(remove);
       remove.addEventListener('click', () => {
         if (typeof contextState.removeContextItem === 'function') contextState.removeContextItem(item.id);
@@ -85,6 +89,13 @@
   }
 
 
+
+  function updateCountBadge(badge, items) {
+    if (!badge) return;
+    const count = Array.isArray(items) ? items.length : 0;
+    badge.textContent = String(count);
+    badge.hidden = count === 0;
+  }
   function renderRemoveIcon(button) {
     if (!button) return;
     const renderer = getIconRenderer();

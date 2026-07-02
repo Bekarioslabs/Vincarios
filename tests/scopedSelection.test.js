@@ -42,3 +42,10 @@ test('copy prefers an existing partial selection before falling back to region t
   assert.equal(getCopyTextForRegion({ selectedText: 'partial text', regionText: 'whole message' }), 'partial text');
   assert.equal(getCopyTextForRegion({ selectedText: '   ', regionText: 'whole message' }), 'whole message');
 });
+test('scoped selection offers edit actions only for editable text inputs', () => {
+  const editable = { id: 'markdown-editor', nativeInput: true, element: { tagName: 'TEXTAREA', disabled: false, readOnly: false } };
+  const readonly = { id: 'markdown-editor', nativeInput: true, element: { tagName: 'TEXTAREA', disabled: false, readOnly: true } };
+
+  assert.deepEqual(getContextMenuActionsForRegion(editable), ['cut', 'copy', 'paste', 'select-area']);
+  assert.deepEqual(getContextMenuActionsForRegion(readonly), ['copy', 'select-area']);
+});

@@ -47,6 +47,35 @@ test('vault write service refuses to overwrite existing notes', () => {
   assert.equal(fs.readFileSync(path.join(root, '00_Inbox', 'Existing.md'), 'utf8'), 'old');
 });
 
+test('vault write service creates reviewed folders and appends audit entries', () => {
+  const root = createTempVault();
+  const service = createVaultWriteService();
+  assert.equal(service.setRoot(root).ok, true);
+
+  const result = service.createFolder({
+    targetFolder: '02_Projects/Alpha/Knowledge'
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.path, '02_Projects/Alpha/Knowledge');
+  assert.equal(fs.statSync(path.join(root, '02_Projects', 'Alpha', 'Knowledge')).isDirectory(), true);
+
+  const audit = readAudit(root);
+  assert.equal(audit.length, 1);
+  assert.equal(audit[0].action, 'create_folder');
+  assert.equal(audit[0].path, '02_Projects/Alpha/Knowledge');
+  assert.equal(audit[0].result, 'created');
+});
+
+test('vault write service rejects unsafe create folder targets', () => {
+  const root = createTempVault();
+  const service = createVaultWriteService();
+  service.setRoot(root);
+
+  assert.equal(service.createFolder({ targetFolder: '../outside' }).code, 'traversal_not_allowed');
+  assert.equal(service.createFolder({ targetFolder: '.obsidian' }).code, 'protected_path');
+  assert.equal(service.createFolder({ targetFolder: '' }).code, 'invalid_target_folder');
+});
 test('vault write service rejects unsafe or non-markdown create targets', () => {
   const root = createTempVault();
   const service = createVaultWriteService();

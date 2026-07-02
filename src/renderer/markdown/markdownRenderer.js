@@ -137,7 +137,7 @@
           items.push(lines[i].replace(/^\s*[-*+]\s+/, ''));
           i += 1;
         }
-        output.push('<ul>' + items.map((item) => '<li>' + renderInline(item) + '</li>').join('') + '</ul>');
+        output.push('<ul>' + items.map(renderListItem).join('') + '</ul>');
         continue;
       }
 
@@ -162,6 +162,16 @@
     return output.join('\n');
   }
 
+
+  function renderListItem(item) {
+    const task = String(item || '').match(/^\[([ xX])\]\s+(.*)$/);
+    if (!task) return '<li>' + renderInline(item) + '</li>';
+    const checked = task[1].toLowerCase() === 'x';
+    const checkbox = checked
+      ? '<input type="checkbox" checked disabled>'
+      : '<input type="checkbox" disabled>';
+    return '<li class="markdown-task-list-item">' + checkbox + ' ' + renderInline(task[2]) + '</li>';
+  }
   function isBlockStart(lines, index) {
     const line = lines[index] || '';
     return Boolean(matchFenceStart(line)) ||

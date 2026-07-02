@@ -75,6 +75,7 @@ Every remaining implementation phase must include focused tests for the behavior
 - [x] Limits settings UI: provider timeout, model-list timeout, selected-file context cap, folder/file listing caps, analysis file cap, and review suggestion cap.
 - [x] Vault Profile settings bridge: expose existing folder-role foundation without replacing the Phase 2 core profile logic.
 - [x] Local-provider URL validation.
+- [x] Add manual provider status refresh button in the topbar; no polling/ticker.
 - [x] Model/capability display: model dropdown exists and Settings shows provider capability badges.
 - [x] Settings persistence in app/user-data storage.
 - [x] Focused provider/settings tests for provider URL validation, URL persistence, active provider/model persistence, limits persistence, vault role persistence, settings IPC/preload, capability display, and Settings renderer wiring. Abort tests are in place.
@@ -160,7 +161,6 @@ This is a V1-critical workflow, not a later comfort feature. The prototype alrea
 ## Phase 6 - V1 Release Hardening
 
 - [x] Bundle Inter variable font locally and include its license notice.
-- [ ] Test Noto Sans Variable as a closer bundled alternative to the current Segoe UI/systemfont look.
 - [x] Bundle first Lucide SVG icon set locally with semantic icon registry and license notice.
 
 - [x] Add renderer Content Security Policy.
@@ -170,28 +170,92 @@ This is a V1-critical workflow, not a later comfort feature. The prototype alrea
 - [x] Add `CHANGELOG.md`.
 - [x] Add `SECURITY.md`.
 - [x] Run dependency/security audit.
-- [ ] Run accessibility pass for custom controls, keyboard operation, contrast, and ARIA labels.
+- [x] Run accessibility pass for custom controls, keyboard operation, contrast, and ARIA labels.
 - [ ] Add IPC wrapper/helper only if duplicated validation/error mapping becomes evident.
 
-## Phase 7 - V1 Feature Candidates
+## Phase 6.5 - UI And Settings Cleanup Before New Features
 
-Phase 7 is not a promise to ship every candidate. Before implementing this phase, do a short V1 necessity review and keep only items that are needed for a presentable V1. Anything useful but not essential moves to V1.1.
+Phase 6.5 happens before Phase 7 feature work. Its purpose is to make the current app shell and settings surface calm, extensible, and understandable before adding more workflows.
 
-### V1 Priority Candidates
+- [x] Refine the left navigation into grouped app actions: `WORKSPACE`, `CREATE`, `VAULT`, and bottom `SETTINGS`.
+- [x] Keep `Open Vault` prominent under `VAULT`; keep `Settings` as the stable bottom modal entry.
+- [x] Add collapsed `CREATE` preset structure: `New Note` presets and `New Project` presets without wiring fake creation. Presets must stay user-extensible later, including optional curated ZEUS preset packs.
+- [x] Keep future left-nav entries as explicit future slots only; placeholders must not look like working features.
+- [x] Rework Settings into a two-pane modal: category menu on the left, active category content on the right.
+- [x] Keep implemented Settings categories wired to the existing settings store: Providers, Limits, and Vault Profile.
+- [x] Add V1-ready Settings categories for Templates, Appearance, Embeddings, Safety, and About without fake functionality.
+- [x] Add dedicated Markdown Properties/YAML style tokens so metadata can be visually distinct from prose and later controlled by Appearance settings.
+- [x] Document project style presets as V1.1 direction: detected through explicit project metadata such as `zeus_style_preset`, ZEUS-only in V1, optional Obsidian CSS snippet export later with explicit user confirmation.
+- [x] Keep Settings and UI tokens extensible for later hotkeys, plugin compatibility, custom actions, theme presets, and theme managers that may change shapes such as button radius.
+- [x] Ensure UI-only changes preserve keyboard access, ARIA labels/states, and local scrolling rules.
+- [x] Update UI docs and focused source/style tests for the changed shell/settings structure.
 
-- [ ] New Project workflow from deterministic template/preset logic.
-- [ ] Minimal template/preset support for new notes and projects.
-- [ ] Local embeddings V1-light: choose runtime, store private index, suggest similar notes/tags/links/folders.
-- [ ] Review Basket integration for embedding-backed suggestions.
-- [ ] Inbox cleanup workflow with reviewable suggestions.
-- [ ] Selected folder analysis with explicit scope, limits, and reviewable output.
-- [ ] Project note maintenance suggestions if they reuse the same review/update pipeline.
+## Phase 7 - V1 Feature Work After Scope Alignment
 
-### V1 Optional Candidate
+Phase 7 is deliberately smaller than the early product wish list. V1 should be useful and stable, not a broad autonomous vault manager. Anything useful but not required for a presentable V1 moves to V1.1/V1.2.
 
-- [ ] Basic image handling foundation only if it stays limited to display/import/move/rename through safe IPC and does not delay core Markdown workflows.
+### Phase 7.0 - Scope Alignment
 
-Candidates that do not pass the V1 necessity review are tracked only in the V1.1 / V1.2 Backlog below.
+- [x] Align Product Brief and Implementation Plan around a smaller V1.
+- [x] Separate manual UI file operations from AI file-operation actions.
+- [x] Keep AI-driven rename/move/archive in V1.1 because their real value is link-safety, undo/repair, and batch review.
+- [x] Define cleanup as report-first, not direct Basket flooding.
+- [x] Define embeddings as local-first with bundled default model plus optional custom local model path.
+
+### Phase 7.1 - Templates And Creation Presets
+
+- [x] New Note workflow from deterministic presets adds reviewed `create_note` proposals to the Review Basket.
+- [x] New Project workflow from deterministic presets enters the Review Basket as one `create_from_template` action. The reviewed execution path creates planned folders first through `createFolder`, then planned Markdown files through `createNote`.
+- [x] Template/preset data shape targets vault folder roles instead of hard-coded folder names.
+- [x] Presets remain extensible for custom user presets and later curated ZEUS preset packs through the shared registry shape; user-pack loading is later work.
+- [x] No AI improvisation in template creation: the preset registry materializes deterministic create plans.
+- [x] Preset UI binds left navigation preset buttons to Review Basket proposals; no direct writes.
+- [x] Create proposals are edited in the Review Basket before execution; execution no longer repeats the initial title dialog.
+- [x] Markdown preview renders unchecked and checked task-list boxes read-only.
+
+### Phase 7.2 - Manual File Operations V1-Light
+
+- [ ] F2 rename for a single selected file, if it stays small and clearly manual.
+- [ ] Rename must not pretend to update links in V1.
+- [ ] Drag-and-drop move remains optional after F2 rename. If added in V1, it must warn that link updates are not included yet.
+- [ ] AI rename/move/archive actions stay non-executable until V1.1 services exist.
+
+### Phase 7.3 - Inbox Cleanup Light
+
+- [ ] Cleanup starts as a grouped report, not hundreds of Basket items.
+- [ ] Report groups include summaries and top candidates first.
+- [ ] Opening a group shows concrete previews: tag/property diff, Markdown-line diff, move plan, duplicate comparison, or new-note preview depending on suggestion type.
+- [ ] Only selected concrete actions are added to the Review Basket.
+- [ ] Large batch execution is not V1 unless it stays within the existing review/update safety path.
+
+### Phase 7.4 - Local Embeddings V1-Light Foundation
+
+- [ ] Choose local embedding runtime and bundled multilingual-capable default model.
+- [ ] Add Settings option for bundled model versus custom local model path.
+- [ ] Store the embedding model outside normal vault notes.
+- [ ] Store index data outside normal vault notes: app cache by default, optional `.zeus/index` only as an explicit per-vault choice.
+- [ ] Index schema includes path, hash, modified time, chunk metadata, and vector data.
+- [ ] Reindex only changed files; model changes require an explicit reindex notice.
+- [ ] Embeddings are separate from chat providers; no cloud embeddings in V1.
+
+### Phase 7.5 - Embedding-Backed Suggestions
+
+- [ ] Similar notes candidates.
+- [ ] Link candidates.
+- [ ] Tag candidates.
+- [ ] Folder candidates.
+- [ ] Suggestions enter grouped reports or Review Basket proposals only through registered suggestion/action types.
+- [ ] Suggestion types must be extensible without rewriting the cleanup/report/review pipeline.
+
+### Phase 7.6 - Markdown Image Preview Optional
+
+- [ ] Render Markdown image links in Preview if it stays small.
+- [ ] Image preview does not include image editing, import automation, tagging, or vision analysis.
+
+### Phase 7.7 - V1 Necessity Review Gate
+
+- [ ] Re-check whether Recent Files/Homepage light, broken-link/orphan scan, and project note maintenance are V1-must or V1.1.
+- [ ] Anything not needed for a presentable V1 moves to the V1.1/V1.2 Backlog before Phase 8 freeze work.
 
 ## Phase 8 - V1 Freeze And Release Baseline
 
@@ -209,7 +273,8 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 ## V1.1 / V1.2 Backlog
 
 - [ ] Focused partial edit engine: insert/replace a section without sending or pasting back the whole note.
-- [ ] Move/rename/archive note services if they did not pass the V1 necessity review.
+- [ ] Manual drag-and-drop move with link-safety warning if it does not ship in V1.
+- [ ] AI move/rename/archive note services with link update, backlink warnings, undo/repair, and batch review.
 - [ ] Folder Context Index maps if they did not pass the V1 necessity review.
 - [ ] Slim Brain OS integration with explicit load order, validation, and no ability to override code-side safety laws.
 - [ ] Search within vault.
@@ -220,10 +285,18 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Batch AI actions over multiple notes with grouped diffs.
 - [ ] Plugin-style extension points for community contributions.
 - [ ] More complete settings UI, including hotkeys and theme presets.
+- [ ] Vault Profile V1.1: multiple named profiles, custom folder roles, and `Choose from Vault folders` path picker with inside-vault validation.
 - [ ] Chat action display setting: allow hover actions such as `Save as Note`, `Copy`, and future message actions to render as text, Lucide SVG icons, or icon+text without changing chat action logic.
 - [ ] Context Basket type badge polish: optional distinct badge/border colors for `MD`, `DIR`, future `IMG`, `PDF`, `FILE`, and unknown targets. These colors must remain separate from Selection Action behavior colors.
 - [ ] Detachable/undocked Markdown preview window for multi-monitor workflows.
 - [ ] Vision analysis and image tagging gated by model capability.
+- [ ] Obsidian plugin compatibility audit for common workflows: Templater, Dataview, Tasks, Advanced Tables, Calendar, Kanban, Iconize, Style Settings, Omnisearch, Smart Connections, Tag Wrangler, Linter, Mindmap, Homepage, Recent Files, and Make.md.
+- [ ] Optional Iconize compatibility: detect Iconize metadata when safe and mirror icons in ZEUS UI without requiring Iconize.
+- [ ] Style Settings compatibility research: read/import visual settings only through explicit user choice; do not write `.obsidian` automatically.
+- [ ] Kanban and Mindmap support should start as rendering/fallback research, not full plugin reimplementation.
+- [ ] Export actions: Markdown and HTML first, designed so more formats can be added later.
+- [ ] Editing toolbar light for Markdown edit mode: basic bold, italic, heading/size-like Markdown, and later color/style helpers only if they stay Markdown-safe.
+- [ ] ZEUS plugin/extension architecture research: define how future community modules register actions, settings, target types, and review flows without bypassing safety laws.
 - [ ] Natural Action Control (V2.1 candidate): optional toggle that lets the model map natural language to existing registered Selection Actions. It must only execute predefined app actions through the same permission, review, backup, and audit boundaries. The recognition layer may use prompts or trigger rules, but it must live in its own module and never create new hidden capabilities.
 - [ ] Chat Sessions / conversation history as a later V2 feature: session list, resume, delete, privacy rules, and per-vault/global storage decisions.
 

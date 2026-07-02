@@ -170,10 +170,9 @@
   function createBlockedStillNeedsPermission(blocked) {
     return {
       handled: true,
-      kind: 'blocked_action',
+      kind: 'message',
       message: formatMissingPermissionMessage(blocked),
-      historyContent: 'Blocked action still missing ' + formatPermissionShortcut(blocked.requiredPermission) + ': ' + blocked.targetPath,
-      blockedActions: [{ label: formatBlockedActionRetryLabel(blocked.requiredPermission), blockedActionId: blocked.id }]
+      historyContent: 'Blocked action still missing ' + formatPermissionShortcut(blocked.requiredPermission) + ': ' + blocked.targetPath
     };
   }
 
@@ -244,12 +243,6 @@
       : String(permission || 'read').toLowerCase() === 'write' ? 'W' : 'R';
   }
 
-  function formatBlockedActionRetryLabel(permission) {
-    const api = getBlockedActionStateApi();
-    return api && typeof api.formatBlockedActionRetryLabel === 'function'
-      ? api.formatBlockedActionRetryLabel(permission)
-      : 'Retry after enabling ' + formatPermissionShortcut(permission);
-  }
 
   function formatMissingPermissionMessage(blocked) {
     const api = getBlockedActionStateApi();

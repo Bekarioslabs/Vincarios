@@ -173,3 +173,55 @@ test('provider status view populates provider and model dropdown state', () => {
   assert.equal(modelSelect.value, 'model-b');
   assert.deepEqual(modelSelect.optionsData, [{ id: 'auto', label: 'Auto' }, { id: 'model-b', label: 'model-b' }]);
 });
+test('provider status refresh button rechecks status without changing provider', async () => {
+  const events = new Map();
+  const refreshButton = {
+    disabled: false,
+    addEventListener(name, handler) { events.set(name, handler); }
+  };
+  const providerSelect = { value: 'lm-studio', innerHTML: '', appendChild() {}, addEventListener(name, handler) { events.set('provider-' + name, handler); } };
+  const modelSelect = { value: 'auto', innerHTML: '', appendChild() {}, addEventListener(name, handler) { events.set('model-' + name, handler); } };
+  const nodes = {
+    statusPill: { dataset: {}, title: '' },
+    statusDot: { classList: { toggle() {} } },
+    statusLabel: { textContent: '' },
+    providerSelect,
+    modelSelect,
+    refreshButton
+  };
+  const app = {
+    querySelector(selector) {
+      return {
+        '#provider-status': nodes.statusPill,
+        '#provider-dot': nodes.statusDot,
+        '#provider-status-label': nodes.statusLabel,
+        '#provider-select': nodes.providerSelect,
+        '#provider-model-select': nodes.modelSelect,
+        '#provider-refresh': nodes.refreshButton
+      }[selector] || null;
+    }
+  };
+  let statusCalls = 0;
+  let setActiveCalls = 0;
+  const api = {
+    provider: {
+      async status() {
+        statusCalls += 1;
+        return {
+          activeProvider: { id: 'lm-studio', label: 'LM Studio', available: true, message: 'Provider online' },
+          providers: [{ id: 'lm-studio', label: 'LM Studio', available: true }]
+        };
+      },
+      async models() { return { selectedModel: 'auto', models: [{ id: 'auto', label: 'Auto' }] }; },
+      async setActive() { setActiveCalls += 1; }
+    }
+  };
+  const { mountProviderStatus } = require('../src/renderer/providers/mountProviderStatus');
+
+  await mountProviderStatus({ api, app });
+  await events.get('click')();
+
+  assert.equal(statusCalls, 2);
+  assert.equal(setActiveCalls, 0);
+  assert.equal(refreshButton.disabled, false);
+});

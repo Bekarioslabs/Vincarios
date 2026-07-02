@@ -133,13 +133,21 @@ Use for:
 
 Index behavior:
 
-- enabled automatically by default
-- can be disabled in Options
-- has a manual rebuild/update button in Options
-- runs as a background job, not as a blocking UI operation
-- uses limits and batching for large vaults
-- stores data locally and outside Git/private sharing
-- uses hashes/modified timestamps so unchanged files are not re-indexed unnecessarily
+- enabled automatically by default only after the user has opened a vault and accepted local indexing behavior.
+- can be disabled in Settings.
+- has a manual rebuild/update button in Settings.
+- runs as a background job, not as a blocking UI operation.
+- uses limits and batching for large vaults.
+- uses hashes/modified timestamps so unchanged files are not re-indexed unnecessarily.
+- stores index data outside normal vault notes: app cache by default, optional `.zeus/index` only as an explicit per-vault choice.
+
+Model behavior:
+
+- V1 should ship with a small bundled multilingual-capable embedding model if licensing/build size remain acceptable.
+- Settings may allow a custom local embedding model path.
+- Switching embedding models requires a clear reindex notice.
+- Embedding models are separate from chat providers and must not grant providers vault access.
+- No cloud embeddings in V1.
 
 Do not use for:
 
@@ -168,6 +176,7 @@ Run a focused audit after each block:
 - `context` is split by responsibility: `contextState` stores the active target and explicit Context Basket items, `mountContextBasket` owns the visible basket UI, `pendingActionState` stores one open request-scoped clarification, `blockedActionState` stores retryable app actions that were blocked by missing permissions or stale target state, `contextIntent` remains a narrow fallback only, `contextLimits` owns central request-size caps, `folderContextController` owns selected-folder scope decisions, and `contextPackageBuilder` builds request-scoped provider context from explicit Context Basket items. Future dropped Markdown files, folder indexes, and embedding candidates should extend this module family instead of adding hidden rules to chat or file-tree code.
 - `permissions` owns Read/Write state and inheritance display.
 - `providers` talk to LM Studio/Ollama; they never access files.
-- `vault` reads/writes/lists files only after safety validation.
+- `vault` reads/writes/lists files only after safety validation. Reviewed template writes may create folders through `createFolder` and notes through `createNote`; folders are created before files.
 - `embeddings` indexes and searches; it only returns candidates.
 - `settings` owns app configuration categories, normalization, persistence, and Settings UI/IPC. Settings UI should use a category menu plus active content pane instead of a single ever-growing modal body. Provider modules consume provider settings but do not own settings storage.
+- `templates` owns deterministic note/project preset definitions, materialization, and conversion from create plans to review proposals. Presets target vault folder roles instead of hard-coded folder names and return create plans; they do not write files directly. Multi-folder/multi-file project presets enter review as one `create_from_template` proposal instead of flooding the basket with separate file entries.

@@ -171,6 +171,7 @@ test('preview controller shows missing link feedback near the preview toolbar', 
     '#markdown-edit-toggle': createNode(),
     '#markdown-reveal-current': createNode(),
     '#markdown-link-feedback': feedback,
+    '#markdown-preview-status': createNode(),
     '#markdown-preview-title': createNode()
   };
   const controller = mountMarkdownPreview({
@@ -262,6 +263,7 @@ test('preview controller shows update proposal failures near the preview toolbar
     '#markdown-propose-update': proposeButton,
     '#markdown-reveal-current': createNode(),
     '#markdown-link-feedback': feedback,
+    '#markdown-preview-status': createNode(),
     '#markdown-preview-title': createNode()
   };
   const controller = mountMarkdownPreview({
@@ -278,8 +280,10 @@ test('preview controller shows update proposal failures near the preview toolbar
   editor.listeners.input();
   proposeButton.listeners.click();
 
-  assert.equal(feedback.hidden, false);
-  assert.equal(feedback.textContent, 'Please enable W for this file before updating: Folder/Note.md');
+  const previewStatus = nodes['#markdown-preview-status'];
+  assert.equal(feedback.hidden, true);
+  assert.equal(previewStatus.hidden, false);
+  assert.equal(previewStatus.textContent, 'Please enable W for this file before updating: Folder/Note.md');
   assert.equal(status.textContent, 'Please enable W for this file before updating: Folder/Note.md');
   delete global.window;
 });

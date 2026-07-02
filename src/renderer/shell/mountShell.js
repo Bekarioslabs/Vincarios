@@ -23,6 +23,7 @@
         '      <span id="provider-dot" class="status-dot" aria-hidden="true"></span>',
         '      <span id="provider-status-label">Provider offline</span>',
         '    </span>',
+        '    <button id="provider-refresh" type="button" class="provider-refresh-button" aria-label="Refresh provider status" title="Refresh provider status"></button>',
         '    <select id="provider-select" class="provider-select" aria-label="Provider">',
         '      <option value="lm-studio">LM Studio</option>',
         '    </select>',
@@ -32,29 +33,44 @@
         '  </div>',
         '</header>',
         '<section class="workspace">',
-        '  <aside class="left-nav">',
-        '    <div class="left-section-title">Actions</div>',
+        '  <aside class="left-nav" aria-label="Application navigation">',
         '    <div class="left-nav-actions">',
-        '      <button type="button" class="left-button left-button-accent" data-open-vault>Open Vault</button>',
-        '      <button type="button" class="left-button" data-toggle="new-entry-presets" data-future-slot="new-entry-presets" aria-expanded="false">+ New Entry</button>',
-        '      <div id="new-entry-presets" class="left-subactions" data-future-slot="new-entry-preset-list" hidden>',
-        '        <button type="button" class="left-subbutton">Project</button>',
-        '        <button type="button" class="left-subbutton">Custom Project 1</button>',
-        '        <button type="button" class="left-subbutton">Custom Project 2</button>',
-        '      </div>',
-        '      <button type="button" class="left-button" data-future-slot="inbox-review">Inbox Review</button>',
-        '      <button type="button" class="left-button" data-future-slot="review-basket-nav">Review Basket</button>',
-        '      <button type="button" class="left-button" data-open-settings>Settings</button>',
+        '      <section class="left-nav-group left-nav-group-workspace" aria-label="Workspace">',
+        '        <div class="left-section-title">Workspace</div>',
+        '        <button type="button" class="left-button left-button-current" aria-current="page" disabled>Chat</button>',
+        '      </section>',
+        '      <section class="left-nav-group left-nav-group-create" aria-label="Create">',
+        '        <div class="left-section-title">Create</div>',
+        '        <button type="button" class="left-button" data-toggle="note-presets" aria-expanded="false" aria-controls="note-presets">New Note</button>',
+        '        <div id="note-presets" class="left-subactions" data-preset-list="note" hidden>',
+        '        </div>',
+        '        <button type="button" class="left-button" data-toggle="project-presets" aria-expanded="false" aria-controls="project-presets">New Project</button>',
+        '        <div id="project-presets" class="left-subactions" data-preset-list="project" hidden>',
+        '        </div>',
+        '      </section>',
+        '      <section class="left-nav-group left-nav-group-vault" aria-label="Vault">',
+        '        <div class="left-section-title">Vault</div>',
+        '        <button type="button" class="left-button left-button-accent" data-open-vault>Open Vault</button>',
+        '        <button type="button" class="left-button left-button-placeholder" data-future-slot="inbox-review" disabled>Inbox Review</button>',
+        '        <button type="button" class="left-button left-button-placeholder" data-future-slot="review-basket-nav" disabled>Review Basket</button>',
+        '      </section>',
+        '      <section class="left-nav-group left-nav-group-settings" aria-label="Settings">',
+        '        <button type="button" class="left-button" data-open-settings>Settings</button>',
+        '      </section>',
         '    </div>',
         '  </aside>',
         '  <section class="main-workspace">',
         '    <div class="workspace-stack">',
-        '      <section id="chat-log" class="chat-log" aria-label="Chat messages">',
+        '      <section id="chat-log" class="chat-log" aria-label="Chat messages" aria-live="polite" aria-relevant="additions">',
         '        <div class="chat-empty-state">Vault loaded. How can I help?</div>',
         '      </section>',
         '      <section id="review-basket" class="review-slot" aria-label="Review Basket" data-future-slot="review-basket">',
         '        <div class="review-basket-header">',
-        '          <div class="mini-panel-title">Review Basket</div>',
+        '          <button type="button" class="mini-panel-toggle" data-panel-toggle="review-basket" aria-expanded="true" aria-controls="review-basket-items">',
+        '            <span class="mini-panel-toggle-icon" aria-hidden="true"></span>',
+        '            <span>Review Basket</span>',
+        '            <span id="review-basket-count" class="mini-panel-count" hidden>0</span>',
+        '          </button>',
         '          <div class="review-basket-actions">',
         '            <button id="review-clear" class="review-clear-button" type="button" disabled>Clear pending</button>',
         '            <button id="review-clear-done" class="review-clear-button" type="button" disabled>Clear executed</button>',
@@ -67,7 +83,11 @@
         '      </section>',
         '      <section id="context-basket" class="context-slot" aria-label="Context Basket">',
         '        <div class="context-basket-header">',
-        '          <div class="mini-panel-title">Context Basket</div>',
+        '          <button type="button" class="mini-panel-toggle" data-panel-toggle="context-basket" aria-expanded="true" aria-controls="context-basket-items">',
+        '            <span class="mini-panel-toggle-icon" aria-hidden="true"></span>',
+        '            <span>Context Basket</span>',
+        '            <span id="context-basket-count" class="mini-panel-count" hidden>0</span>',
+        '          </button>',
         '          <button id="context-clear-all" class="context-clear-button" type="button" disabled>Clear all</button>',
         '        </div>',
         '        <div id="context-basket-items" class="context-basket-items">',
@@ -75,35 +95,36 @@
         '        </div>',
         '      </section>',
         '      <section class="input-slot" aria-label="Chat input">',
-        '        <textarea id="chat-input" class="chat-input-shell" rows="1" placeholder="Write something..." readonly aria-disabled="true"></textarea>',
-        '        <button id="chat-send" type="button" class="send-button-shell" disabled>&gt;</button>',
+        '        <textarea id="chat-input" class="chat-input-shell" rows="1" placeholder="Write something..." readonly aria-disabled="true" aria-label="Chat message"></textarea>',
+        '        <button id="chat-send" type="button" class="send-button-shell" disabled aria-label="Send message">&gt;</button>',
         '      </section>',
         '    </div>',
         '  </section>',
-        '  <div class="pane-resizer" data-resize="vault" title="Resize chat and vault"></div>',
+        '  <div class="pane-resizer" data-resize="vault" title="Resize chat and vault" role="separator" aria-label="Resize chat and vault" aria-orientation="vertical"></div>',
         '  <aside class="vault-panel">',
         '    <section class="files-pane">',
         '      <div id="file-panel"></div>',
         '    </section>',
-        '    <div class="pane-resizer" data-resize="files" title="Resize files and actions"></div>',
+        '    <div class="pane-resizer" data-resize="files" title="Resize files and actions" role="separator" aria-label="Resize files and actions" aria-orientation="vertical"></div>',
         '    <aside class="selection-actions-pane" data-future-slot="selection-actions" aria-label="Selection actions">',
         '      <div class="selection-actions-header">Selection Actions</div>',
         '      <div class="selection-actions-empty">Select a file or folder.</div>',
         '    </aside>',
-        '    <div class="pane-resizer pane-resizer-horizontal" data-resize="preview" title="Resize preview"></div>',
+        '    <div class="pane-resizer pane-resizer-horizontal" data-resize="preview" title="Resize preview" role="separator" aria-label="Resize Markdown preview" aria-orientation="horizontal"></div>',
         '    <section class="preview-pane">',
         '      <div class="markdown-preview-shell">',
         '        <div class="markdown-preview-toolbar">',
         '          <div id="markdown-preview-title" class="markdown-preview-title">Markdown Preview</div>',
-        '          <div id="markdown-link-feedback" class="markdown-link-feedback" hidden></div>',
-        '          <button id="markdown-history-back" class="markdown-history-button" type="button" title="Back" disabled>&lt;</button>',
-        '          <button id="markdown-history-forward" class="markdown-history-button" type="button" title="Forward" disabled>&gt;</button>',
-        '          <button id="markdown-reveal-current" class="markdown-reveal-current" type="button" disabled>Reveal in Files</button>',
-        '          <button id="markdown-edit-toggle" class="markdown-edit-toggle" type="button" disabled>Edit</button>',
-        '          <button id="markdown-propose-update" class="markdown-propose-update" type="button" disabled>Update</button>',
+        '          <div id="markdown-link-feedback" class="markdown-link-feedback" hidden aria-live="polite"></div>',
+        '          <button id="markdown-history-back" class="markdown-history-button" type="button" title="Back" aria-label="Back in preview history" disabled>&lt;</button>',
+        '          <button id="markdown-history-forward" class="markdown-history-button" type="button" title="Forward" aria-label="Forward in preview history" disabled>&gt;</button>',
+        '          <button id="markdown-reveal-current" class="markdown-reveal-current" type="button" aria-label="Reveal current note in Files" disabled>Reveal in Files</button>',
+        '          <button id="markdown-edit-toggle" class="markdown-edit-toggle" type="button" aria-label="Edit Markdown source" disabled>Edit</button>',
+        '          <button id="markdown-propose-update" class="markdown-propose-update" type="button" aria-label="Propose Markdown update" disabled>Update</button>',
         '        </div>',
-        '        <article id="markdown-preview" class="markdown-preview">No file selected.</article>',
-        '        <textarea id="markdown-source-editor" class="markdown-source-editor" spellcheck="false" hidden></textarea>',
+        '        <div id="markdown-preview-status" class="markdown-preview-status" hidden aria-live="polite"></div>',
+        '        <article id="markdown-preview" class="markdown-preview" aria-label="Markdown preview">No file selected.</article>',
+        '        <textarea id="markdown-source-editor" class="markdown-source-editor" spellcheck="false" aria-label="Markdown source editor" hidden></textarea>',
         '      </div>',
         '    </section>',
         '  </aside>',
@@ -113,6 +134,8 @@
       const status = document.createElement('footer');
       status.id = 'status-bar';
       status.className = 'status-bar';
+      status.setAttribute('role', 'status');
+      status.setAttribute('aria-live', 'polite');
       status.textContent = info.name + ' ' + info.version + ' - local first';
 
       app.appendChild(status);
@@ -123,6 +146,7 @@
       const reviewBasket = mountOptional('review basket', status, () => window.ZeusReviewBasket
         ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) })
         : null);
+      mountOptional('creation presets', status, () => window.ZeusCreationPresets && window.ZeusCreationPresets.mountCreationPresets({ app, api, reviewBasket, status }));
       wireVaultShell(api, app, contextState, vaultUi, reviewBasket);
 
       mountOptional('provider status', status, () => window.ZeusProviderStatus && window.ZeusProviderStatus.mountProviderStatus({ api, app }));
@@ -163,19 +187,51 @@
     });
   }
   function wireShellInteractions(app) {
-    const presetToggle = app.querySelector('[data-toggle="new-entry-presets"]');
-    const presetList = app.querySelector('#new-entry-presets');
-    if (!presetToggle || !presetList) return;
+    app.querySelectorAll('[data-toggle]').forEach((button) => {
+      const targetId = button.getAttribute('aria-controls');
+      const target = targetId ? app.querySelector('#' + targetId) : null;
+      if (!target) return;
+      button.addEventListener('click', () => {
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-expanded', String(!isExpanded));
+        target.hidden = isExpanded;
+      });
+    });
 
-    presetToggle.addEventListener('click', () => {
-      const isExpanded = presetToggle.getAttribute('aria-expanded') === 'true';
-      presetToggle.setAttribute('aria-expanded', String(!isExpanded));
-      presetList.hidden = isExpanded;
+    app.querySelectorAll('[data-panel-toggle]').forEach((button) => {
+      renderPanelToggleIcon(button);
+      button.addEventListener('click', () => {
+        const panelId = button.getAttribute('data-panel-toggle');
+        const panel = panelId ? app.querySelector('#' + panelId) : null;
+        if (!panel) return;
+        const isExpanded = button.getAttribute('aria-expanded') === 'true';
+        button.setAttribute('aria-expanded', String(!isExpanded));
+        panel.classList.toggle('is-collapsed', isExpanded);
+        renderPanelToggleIcon(button);
+      });
     });
   }
 
 
 
+
+  function renderPanelToggleIcon(button) {
+    if (!button) return;
+    const slot = button.querySelector('.mini-panel-toggle-icon');
+    if (!slot) return;
+    slot.textContent = '';
+    const iconName = button.getAttribute('aria-expanded') === 'false' ? 'chevronRight' : 'chevronDown';
+    const renderer = getIconRenderer();
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      slot.appendChild(renderer.createIconElement(iconName, 'mini-panel-chevron-icon'));
+      return;
+    }
+    slot.textContent = iconName === 'chevronRight' ? '>' : 'v';
+  }
+
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
   function addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState) {
     const permission = validatePreviewUpdatePermission(proposal, contextState);
     if (!permission.ok) {
@@ -230,6 +286,52 @@
       if (result && result.ok) await refreshFilePanelAfterWrite(vaultUi);
       return result;
     }
+    if (proposal.type === 'create_from_template') {
+      if (typeof api.vault.createFolder !== 'function') {
+        return { ok: false, code: 'write_unavailable', message: 'Vault folder create API unavailable.' };
+      }
+      if (typeof api.vault.createNote !== 'function') {
+        return { ok: false, code: 'write_unavailable', message: 'Vault create API unavailable.' };
+      }
+      const folders = Array.isArray(proposal.folders) ? proposal.folders : [];
+      const files = Array.isArray(proposal.files) ? proposal.files : [];
+      const createdFolders = [];
+      const created = [];
+      for (const folder of folders) {
+        const result = await api.vault.createFolder({ targetFolder: folder });
+        if (!result || !result.ok) {
+          return Object.assign({}, result || {}, {
+            ok: false,
+            code: (result && result.code) || 'template_folder_create_failed',
+            message: (result && result.message) || 'Template folder creation failed.',
+            createdFolders,
+            created
+          });
+        }
+        createdFolders.push(result.path);
+      }
+      for (const file of files) {
+        const parts = splitPath(file.path);
+        const fileName = parts.pop() || 'Untitled.md';
+        const result = await api.vault.createNote({
+          targetFolder: parts.join('/'),
+          title: fileName.replace(/\.md$/i, ''),
+          content: file.content || ''
+        });
+        if (!result || !result.ok) {
+          return Object.assign({}, result || {}, {
+            ok: false,
+            code: (result && result.code) || 'template_create_failed',
+            message: (result && result.message) || 'Template creation failed.',
+            createdFolders,
+            created
+          });
+        }
+        created.push(result.path);
+      }
+      await refreshFilePanelAfterWrite(vaultUi);
+      return { ok: true, action: 'create_from_template', path: proposal.targetPath || proposal.templatePlanRootPath || '', createdFolders, created };
+    }
     if (proposal.type === 'update_note') {
       if (typeof api.vault.updateNote !== 'function') {
         return { ok: false, code: 'write_unavailable', message: 'Vault update API unavailable.' };
@@ -243,6 +345,10 @@
       return result;
     }
     return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
+  }
+
+  function splitPath(value) {
+    return String(value || '').replace(/\\/g, '/').split('/').map((part) => part.trim()).filter(Boolean);
   }
 
   async function refreshFilePanelAfterWrite(vaultUi) {
