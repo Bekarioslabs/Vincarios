@@ -61,6 +61,13 @@ Current Phase 7.1 state: deterministic note/project presets live in `src/shared/
 
 Keep settings minimal and focused. The confirmed V1 sections are defined below in `Options Menu Decisions`.
 
+## Session Activity Status
+
+The status bar currently shows the latest app status only. V1 should add a lightweight session Activity/Status Messages view under `WORKSPACE` if it stays small.
+
+Activity is not audit history. It is an in-memory per-session UI list that clears when the app restarts. Each entry should carry structured fields such as time, type, action, target path, and detail. This allows messages such as `Renamed: 00_Inbox/01_TODO_TEST.md. Links were not updated in V1.` to render with clearer hierarchy: the action can be success-colored, the path neutral, and the warning amber.
+
+Persistent audit and restore-oriented history belong to `.zeus/audit.jsonl` and later backup/history UI work, not this session activity view.
 ## Review Basket
 
 The review basket is the central V1 UX.
@@ -191,7 +198,7 @@ Permission shortcuts:
 - Ctrl+Click `R` or `W`: apply to currently visible/expanded descendants only.
 - Shift+Click `R` or `W`: recursively apply to all descendants by listing folder structure only.
 - Focused File Tree row, `R` or `W`: planned follow-up shortcut to toggle read/write on that row only. It must be disabled while focus is in text inputs, editors, rename fields, or any future inline edit state.
-- Focused File Tree row, `F2`: V1 candidate for manual single-file rename. It must be disabled while focus is in text inputs/editors and must not imply link updates. AI rename remains a later reviewed service.
+- Focused File Tree row, `F2`: starts Rename Light for one selected Markdown file. Rename Light is same-folder only, writes through the main-process vault service, appends an audit entry, and reports that links are not updated in V1. It is disabled while focus is in text inputs/editors and must not imply link updates. AI rename remains a later reviewed service.
 
 Recursive permission application must not read Markdown contents. It only needs folder/file paths from the vault listing API. Context remains a separate workflow based on the selected file/folder and explicit context rules.
 
@@ -305,7 +312,7 @@ Markdown drag and drop in V1:
 - The default import target is the configured Inbox role. Filename/title remain editable in the Review Basket before execution.
 - Detecting dropped files that already belong to the opened vault is a later refinement; this V1 slice handles external Markdown drops only.
 
-Manual move drag and drop is not part of the Markdown file import flow. If it enters V1, it must be a separate file-tree operation with a clear warning that link updates are not included yet. AI move with link updates is V1.1 work.
+Manual move drag and drop is not part of the Markdown file import flow. It is deferred to V1.1 so Move/Rename can include deterministic Markdown link-update planning, diff/review, backup, and audit. Embeddings may help suggest target folders, but link rewriting must be parser/app logic rather than LLM guessing.
 
 Non-V1 drag and drop:
 

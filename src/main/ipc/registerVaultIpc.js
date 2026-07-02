@@ -52,7 +52,12 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
     }
     return vaultWriteService.updateNote(payload);
   });
-}
+  ipcMain.handle(IPC_CHANNELS.VAULT_RENAME_FILE, (_event, payload) => {
+    if (!vaultWriteService || typeof vaultWriteService.renameFile !== 'function') {
+      return { ok: false, code: 'write_unavailable', message: 'Vault rename service unavailable.' };
+    }
+    return vaultWriteService.renameFile(payload);
+  });}
 
 module.exports = {
   registerVaultIpc

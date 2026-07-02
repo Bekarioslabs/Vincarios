@@ -40,6 +40,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'VAULT_CREATE_NOTE',
     'VAULT_LIST_FOLDER',
     'VAULT_READ_MARKDOWN',
+    'VAULT_RENAME_FILE',
     'VAULT_SELECT_FOLDER',
     'VAULT_SET_ROOT',
     'VAULT_STATE',
@@ -62,6 +63,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.VAULT_CREATE_NOTE, 'vault:create-note');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_FOLDER, 'vault:create-folder');
   assert.equal(IPC_CHANNELS.VAULT_UPDATE_NOTE, 'vault:update-note');
+  assert.equal(IPC_CHANNELS.VAULT_RENAME_FILE, 'vault:rename-file');
 });
 
 test('preload exposes reviewed create note writes through the vault API', () => {
@@ -99,4 +101,11 @@ test('preload exposes chat cancel and settings without filesystem access', () =>
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_GET\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_SET_PROVIDER_URL, payload\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_RESET_PROVIDER_URL, payload\)/);
+});
+
+test('preload exposes manual rename without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /renameFile\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.VAULT_RENAME_FILE, payload\)/);
 });

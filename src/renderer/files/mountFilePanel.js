@@ -14,6 +14,7 @@
     const keyboard = options.keyboard || window.ZeusFileTreeKeyboard || null;
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
+    let activeRename = null;
 
     if (!root) return null;
 
@@ -171,6 +172,11 @@
             activateEntry(entry);
             return;
           }
+          if (event.key === 'F2') {
+            event.preventDefault();
+            startInlineRename(entry, row, label);
+            return;
+          }
           if (handlePermissionHotkey(event, entry)) return;
           handleTreeKeydown(event, row, entry);
         });
@@ -198,6 +204,96 @@
       });
     }
 
+    function startInlineRename(entry, row, label) {
+      if (!entry || entry.kind === 'folder') return;
+      if (!isMarkdownPath(entry.path)) {
+        setStatus('Rename Light supports Markdown files only.');
+        return;
+      }
+      if (!api || !api.vault || typeof api.vault.renameFile !== 'function') {
+        setStatus('Rename service unavailable.');
+        return;
+      }
+      if (activeRename && typeof activeRename.cancel === 'function') activeRename.cancel();
+
+      row.classList.add('is-renaming');
+      label.textContent = '';
+      const input = document.createElement('input');
+      input.className = 'file-rename-input';
+      input.type = 'text';
+      input.value = entry.name;
+      input.setAttribute('aria-label', 'Rename file ' + entry.name);
+      label.appendChild(input);
+
+      let finished = false;
+      function restore() {
+        row.classList.remove('is-renaming');
+        label.textContent = entry.name;
+        activeRename = null;
+        focusTreeRow(row);
+      }
+      function cancel() {
+        if (finished) return;
+        finished = true;
+        restore();
+        setStatus('Rename cancelled.');
+      }
+      async function commit() {
+        if (finished) return;
+        finished = true;
+        const nextName = input.value.trim();
+        row.classList.remove('is-renaming');
+        activeRename = null;
+        if (!nextName || nextName === entry.name) {
+          label.textContent = entry.name;
+          focusTreeRow(row);
+          return;
+        }
+
+        label.textContent = nextName;
+        setStatus('Renaming ' + entry.path + '...');
+        const result = await api.vault.renameFile({ sourcePath: entry.path, newName: nextName });
+        if (!result || !result.ok) {
+          label.textContent = entry.name;
+          setStatus('Rename failed: ' + ((result && result.message) || 'Could not rename file.'));
+          renderTree();
+          focusRenderedPath(entry.path);
+          return;
+        }
+
+        navigator.selectFile(result.targetPath);
+        await refreshTree();
+        await refreshRenamedPreview(entry.path, result.targetPath);
+        focusRenderedPath(result.targetPath);
+        setStatus('Renamed: ' + result.targetPath + '. Links were not updated in V1.');
+      }
+
+      activeRename = { cancel };
+      input.addEventListener('click', (event) => event.stopPropagation());
+      input.addEventListener('keydown', (event) => {
+        event.stopPropagation();
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          commit();
+        }
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          cancel();
+        }
+      });
+      input.addEventListener('blur', commit);
+      input.focus();
+      input.select();
+    }
+
+    async function refreshRenamedPreview(oldPath, newPath) {
+      if (!previewController || typeof previewController.getCurrentPath !== 'function') return;
+      if (window.ZeusFileNavigator.normalizePath(previewController.getCurrentPath()) !== window.ZeusFileNavigator.normalizePath(oldPath)) return;
+      const read = await api.vault.readMarkdown(newPath);
+      if (!read.ok) return;
+      setPreviewSource(read.content, read.path, { recordHistory: false });
+      if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
+    }
     async function activateEntry(entry) {
       if (entry.kind === 'folder') {
         navigator.toggleFolder(entry.path);

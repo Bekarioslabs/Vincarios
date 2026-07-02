@@ -223,11 +223,20 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 
 ### Phase 7.2 - Manual File Operations V1-Light
 
-- [ ] F2 rename for a single selected file, if it stays small and clearly manual.
-- [ ] Rename must not pretend to update links in V1.
-- [ ] Drag-and-drop move remains optional after F2 rename. If added in V1, it must warn that link updates are not included yet.
+- [x] F2 Rename Light for one selected Markdown file in the File Tree.
+- [x] Rename Light stays manual and same-folder only; it does not move files.
+- [x] Rename Light reports clearly that links are not updated in V1.
+- [x] Rename Light writes through main-process vault validation and audit logging, not renderer filesystem access.
+- [ ] Drag-and-drop move is deferred to V1.1 with automatic link-update planning and review.
 - [ ] AI rename/move/archive actions stay non-executable until V1.1 services exist.
 
+### Phase 7.2.5 - Session Activity And Status Messages
+
+- [ ] Add a session-only Activity/Status Messages view under `WORKSPACE`.
+- [ ] Keep the bottom status bar as the latest-message surface, but also record structured in-memory status events for the current app session.
+- [ ] Activity entries include local time, type (`info`, `success`, `warning`, `error`), action label, target path when relevant, and detail text.
+- [ ] Render important parts with visual hierarchy, e.g. action `Renamed` and warning `Links were not updated in V1` can use distinct status colors.
+- [ ] Do not persist this V1 activity list to the vault. Long-term audit/history UI remains separate from `.zeus/audit.jsonl` work.
 ### Phase 7.3 - Inbox Cleanup Light
 
 - [ ] Cleanup starts as a grouped report, not hundreds of Basket items.
@@ -281,7 +290,7 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 ## V1.1 / V1.2 Backlog
 
 - [ ] Focused partial edit engine: insert/replace a section without sending or pasting back the whole note.
-- [ ] Manual drag-and-drop move with link-safety warning if it does not ship in V1.
+- [ ] Manual drag-and-drop move with link-update planning and review; embeddings may help suggest destinations, but Markdown link rewriting must be deterministic parser/app logic.
 - [ ] AI move/rename/archive note services with link update, backlink warnings, undo/repair, and batch review.
 - [ ] Folder Context Index maps if they did not pass the V1 necessity review.
 - [ ] Slim Brain OS integration with explicit load order, validation, and no ability to override code-side safety laws.

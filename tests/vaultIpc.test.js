@@ -72,3 +72,19 @@ test('vault IPC exposes create folder through a write-specific channel', async (
   assert.equal(result.ok, true);
   assert.deepEqual(result.payload, { targetFolder: '02_Projects/Alpha' });
 });
+test('vault IPC exposes manual rename through a write-specific channel', async () => {
+  const handlers = new Map();
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const readService = { setRoot() {}, getState() { return {}; }, listFolder() {}, readMarkdown() {} };
+  const writeService = {
+    renameFile(payload) {
+      return { ok: true, payload, targetPath: '03_Knowledge/New.md' };
+    }
+  };
+
+  registerVaultIpc(ipcMain, {}, null, readService, writeService);
+  const result = await handlers.get(IPC_CHANNELS.VAULT_RENAME_FILE)(null, { sourcePath: '03_Knowledge/Old.md', newName: 'New' });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.payload, { sourcePath: '03_Knowledge/Old.md', newName: 'New' });
+});

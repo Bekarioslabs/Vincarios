@@ -199,3 +199,43 @@ test('vault write service updates YAML frontmatter content with backup', () => {
   assert.equal(fs.readFileSync(path.join(root, '03_Knowledge', 'Topic.md'), 'utf8'), proposed);
   assert.equal(fs.readFileSync(path.join(root, result.backupPath), 'utf8'), current);
 });
+
+test('vault write service renames one Markdown file in place and appends audit entry', () => {
+  const root = createTempVault();
+  fs.mkdirSync(path.join(root, '03_Knowledge'), { recursive: true });
+  fs.writeFileSync(path.join(root, '03_Knowledge', 'Old Name.md'), '# Old');
+  const service = createVaultWriteService();
+  service.setRoot(root);
+
+  const result = service.renameFile({
+    sourcePath: '03_Knowledge/Old Name.md',
+    newName: 'New Name'
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.action, 'rename_file');
+  assert.equal(result.path, '03_Knowledge/Old Name.md');
+  assert.equal(result.targetPath, '03_Knowledge/New Name.md');
+  assert.equal(result.linksUpdated, false);
+  assert.equal(fs.existsSync(path.join(root, '03_Knowledge', 'Old Name.md')), false);
+  assert.equal(fs.readFileSync(path.join(root, '03_Knowledge', 'New Name.md'), 'utf8'), '# Old');
+
+  const audit = readAudit(root);
+  assert.equal(audit[0].action, 'rename_file');
+  assert.equal(audit[0].path, '03_Knowledge/Old Name.md');
+  assert.equal(audit[0].targetPath, '03_Knowledge/New Name.md');
+  assert.equal(audit[0].linksUpdated, false);
+});
+
+test('vault write service keeps Rename Light in the same folder and prevents overwrite', () => {
+  const root = createTempVault();
+  fs.mkdirSync(path.join(root, '03_Knowledge'), { recursive: true });
+  fs.writeFileSync(path.join(root, '03_Knowledge', 'Old.md'), 'old');
+  fs.writeFileSync(path.join(root, '03_Knowledge', 'Existing.md'), 'existing');
+  const service = createVaultWriteService();
+  service.setRoot(root);
+
+  assert.equal(service.renameFile({ sourcePath: '03_Knowledge/Old.md', newName: '../Move.md' }).code, 'path_not_allowed');
+  assert.equal(service.renameFile({ sourcePath: '03_Knowledge/Old.md', newName: 'Existing.md' }).code, 'file_exists');
+  assert.equal(fs.readFileSync(path.join(root, '03_Knowledge', 'Old.md'), 'utf8'), 'old');
+});

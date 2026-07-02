@@ -25,7 +25,8 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_READ_MARKDOWN: 'vault:read-markdown',
   VAULT_CREATE_NOTE: 'vault:create-note',
   VAULT_CREATE_FOLDER: 'vault:create-folder',
-  VAULT_UPDATE_NOTE: 'vault:update-note'
+  VAULT_UPDATE_NOTE: 'vault:update-note',
+  VAULT_RENAME_FILE: 'vault:rename-file'
 });
 
 const zeus = Object.freeze({
@@ -98,6 +99,9 @@ const zeus = Object.freeze({
     },
     updateNote(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_UPDATE_NOTE, payload);
+    },
+    renameFile(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_RENAME_FILE, payload);
     }
   })
 });

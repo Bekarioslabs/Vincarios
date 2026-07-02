@@ -175,6 +175,62 @@ function createVaultWriteService(options) {
     }
   }
 
+  function renameFile(input) {
+    const currentVault = requireVault();
+    if (!currentVault.ok) return currentVault;
+
+    const payload = normalizeRenameFileInput(input);
+    if (!payload.ok) return payload;
+
+    const source = currentVault.vault.resolve(payload.sourcePath, { allowRoot: false });
+    if (!source.ok) return source;
+    if (!source.relativePath.toLowerCase().endsWith('.md')) {
+      return fail('not_markdown', 'Only Markdown files can be renamed in V1 Rename Light.');
+    }
+    if (!fileSystem.existsSync(source.absolutePath)) {
+      return fail('file_not_found', 'Cannot rename a missing file.');
+    }
+
+    let stat;
+    try {
+      stat = fileSystem.statSync(source.absolutePath);
+    } catch (error) {
+      return fail('stat_failed', 'Could not inspect source file.');
+    }
+    if (!stat.isFile()) return fail('not_a_file', 'Only files can be renamed.');
+
+    const parentFolder = source.relativePath.includes('/')
+      ? source.relativePath.slice(0, source.relativePath.lastIndexOf('/'))
+      : '';
+    const targetPath = parentFolder ? parentFolder + '/' + payload.fileName : payload.fileName;
+    if (targetPath === source.relativePath) return fail('no_changes', 'Rename target is unchanged.');
+
+    const target = currentVault.vault.resolve(targetPath, { allowRoot: false });
+    if (!target.ok) return target;
+    if (fileSystem.existsSync(target.absolutePath)) {
+      return fail('file_exists', 'Rename target already exists.');
+    }
+
+    try {
+      fileSystem.renameSync(source.absolutePath, target.absolutePath);
+      appendAudit(fileSystem, currentVault.vault.root, {
+        action: 'rename_file',
+        path: source.relativePath,
+        targetPath: target.relativePath,
+        result: 'renamed',
+        linksUpdated: false
+      });
+      return ok({
+        action: 'rename_file',
+        path: source.relativePath,
+        targetPath: target.relativePath,
+        linksUpdated: false,
+        warning: 'Links were not updated in V1 Rename Light.'
+      });
+    } catch (error) {
+      return fail('rename_failed', 'Could not rename file.');
+    }
+  }
   function requireVault() {
     if (!vault) return fail('vault_not_open', 'No vault is open.');
     return { ok: true, vault };
@@ -184,7 +240,8 @@ function createVaultWriteService(options) {
     setRoot,
     createFolder,
     createNote,
-    updateNote
+    updateNote,
+    renameFile
   });
 }
 
@@ -230,6 +287,30 @@ function normalizeUpdateNoteInput(input) {
   });
 }
 
+function normalizeRenameFileInput(input) {
+  const sourcePath = String(input && input.sourcePath ? input.sourcePath : '').trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+  if (!sourcePath) return fail('invalid_source_path', 'Source path is required.');
+  if (!sourcePath.toLowerCase().endsWith('.md')) return fail('not_markdown', 'Only Markdown files can be renamed in V1 Rename Light.');
+
+  const rawName = String(input && input.newName ? input.newName : '').trim();
+  if (!rawName) return fail('invalid_name', 'New file name is required.');
+  if (/[\\/]/.test(rawName)) return fail('path_not_allowed', 'Rename Light only changes the file name, not the folder.');
+
+  return ok({
+    sourcePath,
+    fileName: toRenameFileName(rawName)
+  });
+}
+
+function toRenameFileName(name) {
+  const clean = String(name || '')
+    .replace(/[/:*?"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[. ]+$/g, '');
+  const base = clean || 'Untitled';
+  return base.toLowerCase().endsWith('.md') ? base : base + '.md';
+}
 function toMarkdownFileName(title) {
   const clean = String(title || '')
     .replace(/\\/g, '-')
