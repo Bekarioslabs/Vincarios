@@ -305,13 +305,15 @@
         const result = await api.embeddings.findSimilarNotes(Object.assign({ targetPath: targetPath }, searchOptions || {}));
         removeNode(pending);
         if (result && result.ok && suggestionState && typeof suggestionState.addGroup === 'function') {
-          addSimilarNotesSuggestionGroup(targetPath, result, snapshot && snapshot.content);
-          if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') {
-            workspaceState.setActiveWorkspace('suggestions');
+          const added = addSimilarNotesSuggestionGroup(targetPath, result, snapshot && snapshot.content);
+          if (added) {
+            if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') {
+              workspaceState.setActiveWorkspace('suggestions');
+            }
+            appendActionMessage('Similar notes found. Opened Suggestions workspace.');
+            setText(status, 'Similar notes found: ' + targetPath);
+            return;
           }
-          appendActionMessage('Similar notes found. Opened Suggestions workspace.');
-          setText(status, 'Similar notes found: ' + targetPath);
-          return;
         }
         appendActionMessage(formatSimilarNotesSummary(targetPath, result, snapshot && snapshot.content));
         setText(status, result && result.ok ? 'Similar notes found: ' + targetPath : 'Similar notes unavailable.');
@@ -673,6 +675,7 @@
         ].join('\n'),
         data: candidate
       }));
+      if (!items.length) return false;
       suggestionState.addGroup({
         id: 'similar-notes:' + normalizePath(targetPath),
         title: 'Similar notes for: ' + targetPath,
@@ -680,6 +683,7 @@
         summary: 'Mode: ' + mode + ' | Minimum: ' + threshold + '%' + (lowContent ? ' | Low content target' : ''),
         items
       });
+      return true;
     }
 
     function scoreToneForPercent(value) {

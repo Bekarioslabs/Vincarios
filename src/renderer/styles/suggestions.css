@@ -6,6 +6,9 @@
   padding: 16px;
   background: var(--background-primary);
 }
+.workspace-panel.is-active.suggestions-workspace {
+  display: grid;
+}
 
 .suggestions-header {
   color: var(--text-accent);

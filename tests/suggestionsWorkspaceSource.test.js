@@ -76,3 +76,12 @@ test('suggestions score colors are scoped to score badges', () => {
   assert.match(css, /\.suggestions-item-score\.is-score-orange/);
   assert.match(css, /\.suggestions-item-score\.is-score-red/);
 });
+test('similar notes does not open suggestions workspace for empty result groups', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /const added = addSimilarNotesSuggestionGroup/);
+  assert.match(source, /if \(added\)/);
+  assert.match(source, /if \(!items\.length\) return false/);
+  assert.match(source, /return true/);
+  assert.doesNotMatch(source, /Similar notes found\. Opened Suggestions workspace\.[\s\S]{0,220}if \(!items\.length\)/);
+});
