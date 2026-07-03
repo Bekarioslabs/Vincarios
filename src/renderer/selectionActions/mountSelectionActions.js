@@ -7,6 +7,8 @@
     const app = options.app;
     const contextState = options.contextState;
     const reviewBasket = options.reviewBasket || null;
+    const suggestionState = options.suggestionState || null;
+    const workspaceState = options.workspaceState || null;
     const status = options.status || null;
     let similarNotesSessionOptions = null;
     if (!app || !contextState || typeof contextState.snapshot !== 'function') return null;
@@ -302,7 +304,15 @@
       try {
         const result = await api.embeddings.findSimilarNotes(Object.assign({ targetPath: targetPath }, searchOptions || {}));
         removeNode(pending);
-        renderSimilarNotesResultsPanel(targetPath, result, snapshot && snapshot.content);
+        if (result && result.ok && suggestionState && typeof suggestionState.addGroup === 'function') {
+          addSimilarNotesSuggestionGroup(targetPath, result, snapshot && snapshot.content);
+          if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') {
+            workspaceState.setActiveWorkspace('suggestions');
+          }
+          appendActionMessage('Similar notes found. Opened Suggestions workspace.');
+          setText(status, 'Similar notes found: ' + targetPath);
+          return;
+        }
         appendActionMessage(formatSimilarNotesSummary(targetPath, result, snapshot && snapshot.content));
         setText(status, result && result.ok ? 'Similar notes found: ' + targetPath : 'Similar notes unavailable.');
       } catch (error) {
@@ -637,80 +647,39 @@
       }
       if (!result || !result.ok) return 'Similar notes unavailable for: ' + targetPath + '\n\n' + ((result && (result.message || result.code)) || 'Unknown error.');
       const count = Array.isArray(result.candidates) ? result.candidates.length : 0;
-      return 'Similar notes for: ' + targetPath + '\n\n' + count + ' matches found. Details are shown in Selection Actions.';
+      return 'Similar notes for: ' + targetPath + '\n\n' + count + ' matches found. Details are shown in Suggestions.';
     }
 
-    function renderSimilarNotesResultsPanel(targetPath, result, targetContent) {
-      const existing = root.querySelector('.selection-action-results[data-action-id="file.findSimilar"]');
-      if (existing) existing.remove();
-
+    function addSimilarNotesSuggestionGroup(targetPath, result, targetContent) {
       const presentation = getSimilarNotesPresentation();
       const candidates = presentation && typeof presentation.normalizeSimilarNotesCandidates === 'function'
         ? presentation.normalizeSimilarNotesCandidates(result && result.candidates)
         : [];
-
-      const panel = document.createElement('section');
-      panel.className = 'selection-action-results';
-      panel.dataset.actionId = 'file.findSimilar';
-
-      const title = document.createElement('div');
-      title.className = 'selection-action-results-title';
-      title.textContent = 'Similar Notes';
-      panel.appendChild(title);
-
-      const meta = document.createElement('div');
-      meta.className = 'selection-action-results-meta';
       const mode = result && result.mode ? result.mode : 'mixed';
       const threshold = Number.isFinite(Number(result && result.minimumScorePercent)) ? Number(result.minimumScorePercent) : 0;
-      meta.textContent = 'Target: ' + targetPath + ' | Mode: ' + mode + ' | Minimum: ' + threshold + '%';
-      panel.appendChild(meta);
-
-      if (presentation && typeof presentation.isLowContent === 'function' && presentation.isLowContent(targetContent)) {
-        const warning = document.createElement('div');
-        warning.className = 'selection-action-results-warning';
-        warning.textContent = 'Low content target: scores can be noisy for very short notes.';
-        panel.appendChild(warning);
-      }
-
-      if (!result || !result.ok) {
-        const empty = document.createElement('div');
-        empty.className = 'selection-action-results-empty';
-        empty.textContent = 'Similar notes unavailable: ' + ((result && (result.message || result.code)) || 'Unknown error.');
-        panel.appendChild(empty);
-      } else if (!candidates.length) {
-        const empty = document.createElement('div');
-        empty.className = 'selection-action-results-empty';
-        empty.textContent = 'No similar indexed Markdown notes found.';
-        panel.appendChild(empty);
-      } else {
-        candidates.forEach((candidate) => panel.appendChild(createSimilarNoteResult(candidate)));
-      }
-
-      root.appendChild(panel);
-    }
-
-    function createSimilarNoteResult(candidate) {
-      const item = document.createElement('article');
-      item.className = 'selection-action-result-item';
-
-      const score = document.createElement('span');
-      score.className = 'selection-action-score ' + candidate.scoreClassName;
-      score.textContent = candidate.scoreText + ' ' + candidate.scoreLabel;
-      item.appendChild(score);
-
-      const path = document.createElement('div');
-      path.className = 'selection-action-result-path';
-      path.textContent = candidate.path;
-      item.appendChild(path);
-
-      const details = document.createElement('div');
-      details.className = 'selection-action-result-details';
-      details.textContent = candidate.contentScoreText + ' | ' + candidate.metadataScoreText;
-      item.appendChild(details);
-
-      return item;
-    }
-    function formatFolderListing(folderPath, result) {
+      const lowContent = presentation && typeof presentation.isLowContent === 'function' && presentation.isLowContent(targetContent);
+      const items = candidates.map((candidate, index) => ({
+        id: normalizePath(candidate.path) || 'candidate-' + String(index + 1),
+        title: candidate.path,
+        path: candidate.path,
+        kind: 'similar_note',
+        scoreLabel: candidate.scoreText + ' ' + candidate.scoreLabel,
+        detail: [
+          candidate.path,
+          '',
+          candidate.scoreText + ' ' + candidate.scoreLabel,
+          candidate.contentScoreText + ' | ' + candidate.metadataScoreText
+        ].join('\n'),
+        data: candidate
+      }));
+      suggestionState.addGroup({
+        id: 'similar-notes:' + normalizePath(targetPath),
+        title: 'Similar notes for: ' + targetPath,
+        source: 'file.findSimilar',
+        summary: 'Mode: ' + mode + ' | Minimum: ' + threshold + '%' + (lowContent ? ' | Low content target' : ''),
+        items
+      });
+    }    function formatFolderListing(folderPath, result) {
       if (!result || !result.ok) return 'Folder listing failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
       const entries = Array.isArray(result.entries) ? result.entries : [];
       if (!entries.length) return 'Folder listed: ' + folderPath + '\n\nNo supported Markdown folders or files found.';

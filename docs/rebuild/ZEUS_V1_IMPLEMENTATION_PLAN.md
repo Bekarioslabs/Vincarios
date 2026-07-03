@@ -277,12 +277,12 @@ Status: complete for V1-light.
 
 ### Phase 7.5.5 - Suggestions Workspace Foundation
 
-- [ ] Add a workspace tab foundation for `Chat`, `Suggestions`, and later `Session Log` without moving provider or vault logic into the workspace UI.
-- [ ] Add a Suggestions renderer module that can show grouped suggestion items, selected-item detail, compact status/score labels, checkboxes, and dismiss controls.
-- [ ] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat should only get a short status line when the workspace opens.
-- [ ] Keep Similar Notes report-only until a future suggestion converter creates concrete Review Basket actions.
+- [x] Add a workspace tab foundation for `Chat`, `Suggestions`, and later `Session Log` without moving provider or vault logic into the workspace UI.
+- [x] Add a Suggestions renderer module that can show grouped suggestion items, selected-item detail, compact status/score labels, checkboxes, and dismiss controls.
+- [x] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat should only get a short status line when the workspace opens.
+- [x] Keep Similar Notes report-only until a future suggestion converter creates concrete Review Basket actions.
 - [ ] Define the conversion boundary: `Add selected to Review Basket` is disabled until selected suggestions map to supported concrete action types.
-- [ ] Preserve the right-side Files/Preview area; Suggestions is a main workspace, not a modal that hides the vault context.
+- [x] Preserve the right-side Files/Preview area; Suggestions is a main workspace, not a modal that hides the vault context.
 
 ### Phase 7.6 - Markdown Image Preview Optional
 

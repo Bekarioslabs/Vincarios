@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -40,6 +40,8 @@ test('shell mounts selection action panel with context state', () => {
   assert.match(source, /ZeusSelectionActions\.mountSelectionActions/);
   assert.match(source, /contextState/);
   assert.match(source, /reviewBasket/);
+  assert.match(source, /suggestionState/);
+  assert.match(source, /workspaceState/);
 });
 
 test('context basket renders target-type icons separate from action colors', () => {
@@ -198,15 +200,17 @@ test('soft-disabled actions route through missing permission guidance', () => {
   assert.match(source, /createSoftDisabledActionGate\(action, snapshot\)/);
   assert.match(source, /appendMissingPermissionMessage\(gate, action\.id\)/);
 });
-test('find similar notes action uses embeddings API with compact chat summary and detail panel', () => {
+test('find similar notes action routes details to suggestions workspace', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
   assert.match(source, /file\.findSimilar/);
   assert.match(source, /renderSimilarNotesForm\(snapshot\)/);
   assert.match(source, /api\.embeddings\.findSimilarNotes/);
-  assert.match(source, /formatSimilarNotesSummary/);
-  assert.match(source, /renderSimilarNotesResultsPanel/);
-  assert.match(source, /getSimilarNotesPresentation/);
+  assert.match(source, /addSimilarNotesSuggestionGroup/);
+  assert.match(source, /suggestionState\.addGroup/);
+  assert.match(source, /workspaceState\.setActiveWorkspace\('suggestions'\)/);
+  assert.match(source, /Similar notes found\. Opened Suggestions workspace\./);
+  assert.doesNotMatch(source, /renderSimilarNotesResultsPanel/);
   assert.doesNotMatch(source, /formatSimilarNotesReport/);
   assert.doesNotMatch(source, /file\.findSimilar[\s\S]{0,240}reviewBasket\.addProposal/);
 });
@@ -225,6 +229,6 @@ test('find similar notes opens a settings-backed mini form', () => {
   assert.match(source, /data-similar-min/);
   assert.match(source, /data-similar-content-weight/);
   assert.match(source, /data-similar-refresh-index/);
-  assert.match(source, /renderSimilarNotesResultsPanel/);
+  assert.match(source, /addSimilarNotesSuggestionGroup/);
   assert.doesNotMatch(source, /reviewBasket.addProposal[sS]{0,500}file.findSimilar/);
 });

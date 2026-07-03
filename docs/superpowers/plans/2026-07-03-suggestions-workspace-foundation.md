@@ -1,4 +1,4 @@
-﻿# Suggestions Workspace Implementation Plan
+## Task 6: Verification And Docs Suggestions Workspace Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -58,7 +58,7 @@
 
 ## Task 6: Verification And Docs
 
-- [ ] Update `ZEUS_V1_UI_AND_WORKFLOWS.md`, `ZEUS_V1_ACTION_MODEL.md`, and `ZEUS_V1_IMPLEMENTATION_PLAN.md` if implementation deviates from this plan.
-- [ ] Run `npm test`.
+- [x] Update `ZEUS_V1_UI_AND_WORKFLOWS.md`, `ZEUS_V1_ACTION_MODEL.md`, and `ZEUS_V1_IMPLEMENTATION_PLAN.md` if implementation deviates from this plan.
+- [x] Run `npm test`.
 - [ ] Manual test: Similar Notes opens Suggestions, selecting candidates changes the detail preview, dismiss hides a suggestion, Chat remains clean, Review Basket is unchanged.
 - [ ] Commit after manual acceptance.

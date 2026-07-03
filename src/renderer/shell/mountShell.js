@@ -37,7 +37,9 @@
         '    <div class="left-nav-actions">',
         '      <section class="left-nav-group left-nav-group-workspace" aria-label="Workspace">',
         '        <div class="left-section-title">Workspace</div>',
-        '        <button type="button" class="left-button left-button-current" aria-current="page" disabled>Chat</button>',
+        '        <button type="button" class="left-button left-button-current" data-workspace-tab="chat" aria-current="page">Chat</button>',
+        '        <button type="button" class="left-button" data-workspace-tab="suggestions">Suggestions</button>',
+        '        <button type="button" class="left-button left-button-placeholder" data-workspace-tab="sessionLog" data-future-slot="session-log" disabled>Session Log</button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-create" aria-label="Create">',
         '        <div class="left-section-title">Create</div>',
@@ -60,6 +62,7 @@
         '    </div>',
         '  </aside>',
         '  <section class="main-workspace">',
+        '    <section class="workspace-panel is-active" data-workspace-panel="chat">',
         '    <div class="workspace-stack">',
         '      <section id="chat-log" class="chat-log" aria-label="Chat messages" aria-live="polite" aria-relevant="additions">',
         '        <div class="chat-empty-state">Vault loaded. How can I help?</div>',
@@ -99,6 +102,8 @@
         '        <button id="chat-send" type="button" class="send-button-shell" disabled aria-label="Send message">&gt;</button>',
         '      </section>',
         '    </div>',
+        '    </section>',
+        '    <section id="suggestions-workspace" class="workspace-panel" data-workspace-panel="suggestions" hidden></section>',
         '  </section>',
         '  <div class="pane-resizer" data-resize="vault" title="Resize chat and vault" role="separator" aria-label="Resize chat and vault" aria-orientation="vertical"></div>',
         '  <aside class="vault-panel">',
@@ -141,7 +146,10 @@
       app.appendChild(status);
       root.appendChild(app);
       wireShellInteractions(app);
+      const workspaceState = createWorkspaceState();
+      wireWorkspaceTabs(app, workspaceState);
       const contextState = createContextState();
+      const suggestionState = createSuggestionState();
       const vaultUi = { filePanel: null };
       const reviewBasket = mountOptional('review basket', status, () => window.ZeusReviewBasket
         ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) })
@@ -154,12 +162,48 @@
       mountOptional('inbox cleanup', status, () => window.ZeusInboxCleanup && window.ZeusInboxCleanup.mountInboxCleanup({ api, app, status }));
       mountOptional('chat', status, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState }));
       mountOptional('context basket', status, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
-      mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status }));
+      mountOptional('suggestions workspace', status, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState }));
+      mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status, suggestionState, workspaceState }));
       mountOptional('pane resize', status, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
       mountOptional('scoped selection', status, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));
     });
   }
 
+
+  function createWorkspaceState() {
+    if (!window.ZeusWorkspaceState) return null;
+    return window.ZeusWorkspaceState.createWorkspaceState();
+  }
+
+  function createSuggestionState() {
+    if (!window.ZeusSuggestionState) return null;
+    return window.ZeusSuggestionState.createSuggestionState();
+  }
+
+  function wireWorkspaceTabs(app, workspaceState) {
+    if (!app || !workspaceState) return;
+    const buttons = Array.from(app.querySelectorAll('[data-workspace-tab]'));
+    const panels = Array.from(app.querySelectorAll('[data-workspace-panel]'));
+    function render(snapshot) {
+      const active = snapshot && snapshot.activeWorkspace ? snapshot.activeWorkspace : 'chat';
+      buttons.forEach((button) => {
+        const isActive = button.dataset.workspaceTab === active;
+        button.classList.toggle('left-button-current', isActive);
+        if (isActive) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+      });
+      panels.forEach((panel) => {
+        const isActive = panel.dataset.workspacePanel === active;
+        panel.hidden = !isActive;
+        panel.classList.toggle('is-active', isActive);
+      });
+    }
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => workspaceState.setActiveWorkspace(button.dataset.workspaceTab));
+    });
+    workspaceState.subscribe(render);
+    render(workspaceState.snapshot());
+  }
 
   function createContextState() {
     if (!window.ZeusContextState) return null;
