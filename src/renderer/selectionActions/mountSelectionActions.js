@@ -664,6 +664,7 @@
         path: candidate.path,
         kind: 'similar_note',
         scoreLabel: candidate.scoreText + ' ' + candidate.scoreLabel,
+        scoreTone: scoreToneForPercent(candidate.scorePercent),
         detail: [
           candidate.path,
           '',
@@ -679,7 +680,18 @@
         summary: 'Mode: ' + mode + ' | Minimum: ' + threshold + '%' + (lowContent ? ' | Low content target' : ''),
         items
       });
-    }    function formatFolderListing(folderPath, result) {
+    }
+
+    function scoreToneForPercent(value) {
+      const score = Number(value);
+      if (!Number.isFinite(score)) return 'neutral';
+      if (score >= 90) return 'green';
+      if (score >= 80) return 'yellow';
+      if (score >= 60) return 'orange';
+      return 'red';
+    }
+
+    function formatFolderListing(folderPath, result) {
       if (!result || !result.ok) return 'Folder listing failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
       const entries = Array.isArray(result.entries) ? result.entries : [];
       if (!entries.length) return 'Folder listed: ' + folderPath + '\n\nNo supported Markdown folders or files found.';

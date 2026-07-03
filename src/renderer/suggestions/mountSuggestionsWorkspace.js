@@ -22,7 +22,10 @@
       header.textContent = 'Suggestions';
       root.appendChild(header);
 
-      if (!snapshot || !Array.isArray(snapshot.groups) || snapshot.groups.length === 0) {
+      const visibleGroups = snapshot && Array.isArray(snapshot.groups)
+        ? snapshot.groups.filter((group) => group.items.some((item) => item.dismissed !== true))
+        : [];
+      if (!visibleGroups.length) {
         const empty = document.createElement('div');
         empty.className = 'suggestions-workspace-empty';
         empty.textContent = 'No suggestions yet.';
@@ -35,7 +38,7 @@
 
       const list = document.createElement('div');
       list.className = 'suggestions-list';
-      snapshot.groups.forEach((group) => list.appendChild(renderGroup(group, snapshot.selectedItem)));
+      visibleGroups.forEach((group) => list.appendChild(renderGroup(group, snapshot.selectedItem)));
 
       const detail = document.createElement('div');
       detail.className = 'suggestions-detail';
@@ -79,13 +82,22 @@
       });
       row.appendChild(checkbox);
 
+      row.title = item.path || item.title;
+
       const text = document.createElement('span');
       text.className = 'suggestions-item-text';
-      text.textContent = item.title;
+      const name = document.createElement('span');
+      name.className = 'suggestions-item-name';
+      name.textContent = formatSuggestionName(item);
+      const parent = document.createElement('span');
+      parent.className = 'suggestions-item-parent';
+      parent.textContent = formatSuggestionParent(item);
+      text.appendChild(name);
+      if (parent.textContent) text.appendChild(parent);
       row.appendChild(text);
 
       const score = document.createElement('span');
-      score.className = 'suggestions-item-score';
+      score.className = 'suggestions-item-score ' + scoreToneClass(item);
       score.textContent = [item.scoreText, item.scoreLabel].filter(Boolean).join(' ');
       row.appendChild(score);
 
@@ -123,6 +135,7 @@
 
       const add = document.createElement('button');
       add.type = 'button';
+      add.className = 'chat-message-action-button';
       add.textContent = 'Add selected to Review Basket';
       add.disabled = true;
       add.title = 'No converter exists for these suggestions yet.';
@@ -138,7 +151,29 @@
     });
   }
 
-  const api = { mountSuggestionsWorkspace };
+  function formatSuggestionName(item) {
+    const value = String(item && (item.path || item.title) || 'Suggestion').replace(/\\/g, '/');
+    const parts = value.split('/').filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : value;
+  }
+
+  function formatSuggestionParent(item) {
+    const value = String(item && item.path || '').replace(/\\/g, '/');
+    const parts = value.split('/').filter(Boolean);
+    if (parts.length <= 1) return '';
+    return parts.slice(0, -1).join('/');
+  }
+
+  function scoreToneClass(item) {
+    const tone = String(item && item.scoreTone || 'neutral');
+    if (tone === 'green') return 'is-score-green';
+    if (tone === 'yellow') return 'is-score-yellow';
+    if (tone === 'orange') return 'is-score-orange';
+    if (tone === 'red') return 'is-score-red';
+    return 'is-score-neutral';
+  }
+
+  const api = { mountSuggestionsWorkspace, formatSuggestionName, formatSuggestionParent, scoreToneClass };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZeusSuggestionsWorkspace = Object.freeze(api);

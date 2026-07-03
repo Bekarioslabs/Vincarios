@@ -103,6 +103,7 @@
       detail: String(item && item.detail || ''),
       scoreLabel: String(item && item.scoreLabel || ''),
       scoreText: String(item && item.scoreText || ''),
+      scoreTone: String(item && item.scoreTone || ''),
       kind: String(item && item.kind || ''),
       checked: item && item.checked === true,
       dismissed: item && item.dismissed === true,
