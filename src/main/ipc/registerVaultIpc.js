@@ -2,7 +2,7 @@
 
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 
-function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaultWriteService) {
+function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaultWriteService, embeddingService) {
   ipcMain.handle(IPC_CHANNELS.VAULT_STATE, () => vaultReadService.getState());
 
   ipcMain.handle(IPC_CHANNELS.VAULT_SELECT_FOLDER, async () => {
@@ -19,16 +19,16 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
     }
 
     const readResult = vaultReadService.setRoot(result.filePaths[0]);
-    if (readResult.ok && vaultWriteService && typeof vaultWriteService.setRoot === 'function') {
-      vaultWriteService.setRoot(result.filePaths[0]);
+    if (readResult.ok) {
+      syncDependentRoot(result.filePaths[0], vaultWriteService, embeddingService);
     }
     return readResult;
   });
 
   ipcMain.handle(IPC_CHANNELS.VAULT_SET_ROOT, (_event, vaultRoot) => {
     const readResult = vaultReadService.setRoot(vaultRoot);
-    if (readResult.ok && vaultWriteService && typeof vaultWriteService.setRoot === 'function') {
-      vaultWriteService.setRoot(vaultRoot);
+    if (readResult.ok) {
+      syncDependentRoot(vaultRoot, vaultWriteService, embeddingService);
     }
     return readResult;
   });
@@ -57,7 +57,17 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
       return { ok: false, code: 'write_unavailable', message: 'Vault rename service unavailable.' };
     }
     return vaultWriteService.renameFile(payload);
-  });}
+  });
+}
+
+function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService) {
+  if (vaultWriteService && typeof vaultWriteService.setRoot === 'function') {
+    vaultWriteService.setRoot(vaultRoot);
+  }
+  if (embeddingService && typeof embeddingService.setRoot === 'function') {
+    embeddingService.setRoot(vaultRoot);
+  }
+}
 
 module.exports = {
   registerVaultIpc

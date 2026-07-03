@@ -43,6 +43,8 @@ src/
     settings/
     prompts/
     selectionActions/
+    suggestions/
+    sessionLog/
     selection/
   shared/
     actions/
@@ -63,6 +65,7 @@ docs/
 - Prompt rules live in a dedicated module, not scattered through UI code.
 - Renderer modules are browser-first. They must use loaded `window.Zeus...` APIs before CommonJS `require(...)` fallbacks; `require(...)` exists only so the same modules can run in Node tests.
 - Review state is its own concept, not just chat messages.
+- Suggestions are their own concept between analysis and Review Basket execution. They must not be hidden in chat text.
 - Context control and permission state are their own modules, not hidden inside chat or file-tree rendering.
 - The bootstrap entry should initialize modules only; it must not become a large orchestration file.
 
@@ -152,7 +155,8 @@ Model behavior:
 - Current expected artifact set is `config.json`, tokenizer files, `unigram.json`, and `onnx/model_quantized.onnx`; the quantized ONNX SHA256 is recorded in the model store before download wiring.
 - `src/main/embeddings/embeddingRuntimeService.js` owns local inference. It loads the local model path through Transformers.js/ONNX, sets `allowRemoteModels=false`, caches the extractor, and returns vectors only. It must not read vault files, write vault files, or call chat providers.
 - `src/main/embeddings/embeddingMarkdownSource.js` owns Markdown discovery for indexing. It scans recursively, reads Markdown files only, and skips protected dot folders such as `.zeus` and `.obsidian`.
-- `src/main/embeddings/embeddingIndexer.js` coordinates Markdown source, runtime, and index store. It chunks Markdown, embeds changed documents, skips unchanged hash/mtime records, and stores vectors under the selected vault `.zeus/index`.
+- `src/main/embeddings/embeddingIndexer.js` coordinates Markdown source, runtime, and index store. It splits YAML frontmatter from body text, chunks Markdown, embeds changed documents, reindexes legacy records that lack split vectors, skips unchanged hash/mtime records, and stores vectors under the selected vault `.zeus/index`.
+- `src/main/embeddings/embeddingSimilaritySearch.js` owns local similar-note lookup. It reads stored vectors, supports `content`, `metadata`, and `mixed` scoring modes, applies Settings/default thresholds and result limits, can explicitly rebuild the selected vault index before a search when requested, computes ranked `similar_note` candidates, and never creates review actions by itself.
 - Packaging direction: keep model artifacts out of Git. Prefer bundling the embedding model with official release builds/installer if size remains acceptable. Developer/source users can use a controlled download script or app download flow.
 - Settings may allow a custom local embedding model path.
 - `intfloat/multilingual-e5-small` remains a later optional custom-model candidate, not the bundled default, because its license is MIT rather than Apache-2.0.
@@ -183,6 +187,8 @@ Run a focused audit after each block:
 - `review` owns proposal state, selected items, statuses, and execution requests.
 - `files` owns file tree navigation, file-tree keyboard navigation, and selected path state.
 - `selectionActions` owns deterministic actions shown for the currently selected file/folder. It must use app state and action registries, not broad prompt phrases. `actionCategories` owns behavior color categories, `actionRegistry` owns target-to-action mapping, and `mountSelectionActions` owns the visible panel.
+- `suggestions` owns grouped analysis results before they become Review Basket proposals. It should store suggestion groups/items, selected suggestion state, dismiss state, and selected-detail preview state. It must not execute vault writes.
+- `sessionLog` owns per-session UI messages for visible app activity. Persistent audit logs remain main-side audit service responsibility.
 - `selection` owns scoped selection behavior such as region-aware `Ctrl+A` and right-click select/copy commands.
 - `context` is split by responsibility: `contextState` stores the active target and explicit Context Basket items, `mountContextBasket` owns the visible basket UI, `pendingActionState` stores one open request-scoped clarification, `blockedActionState` stores retryable app actions that were blocked by missing permissions or stale target state, `contextIntent` remains a narrow fallback only, `contextLimits` owns central request-size caps, `folderContextController` owns selected-folder scope decisions, and `contextPackageBuilder` builds request-scoped provider context from explicit Context Basket items. Future dropped Markdown files, folder indexes, and embedding candidates should extend this module family instead of adding hidden rules to chat or file-tree code.
 - `permissions` owns Read/Write state and inheritance display.

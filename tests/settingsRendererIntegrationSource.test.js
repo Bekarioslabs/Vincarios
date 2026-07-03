@@ -110,3 +110,13 @@ test('settings modal keeps a stable size and scrolls only active content', () =>
   assert.match(css, /\.settings-body\s*\{[\s\S]*overflow:\s*hidden;/);
   assert.match(css, /\.settings-category-content\s*\{[\s\S]*overflow:\s*auto;/);
 });
+
+test('settings panel wires similar-note embedding defaults through settings API', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+
+  assert.match(source, /data-settings-embeddings-grid/);
+  assert.match(source, /Minimum match %/);
+  assert.match(source, /Mode/);
+  assert.match(source, /api.settings.setEmbeddings/);
+  assert.doesNotMatch(source, /api.embeddings.findSimilarNotes/);
+});

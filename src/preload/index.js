@@ -18,6 +18,8 @@ const IPC_CHANNELS = Object.freeze({
   SETTINGS_SET_LIMITS: 'settings:set-limits',
   SETTINGS_SET_VAULT_ROLE: 'settings:set-vault-role',
   SETTINGS_RESET_VAULT_ROLE: 'settings:reset-vault-role',
+  SETTINGS_SET_EMBEDDINGS: 'settings:set-embeddings',
+  EMBEDDINGS_FIND_SIMILAR_NOTES: 'embeddings:find-similar-notes',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',
@@ -68,11 +70,19 @@ const zeus = Object.freeze({
     setLimits(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_LIMITS, payload);
     },
+    setEmbeddings(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS, payload);
+    },
     setVaultRole(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE, payload);
     },
     resetVaultRole(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE, payload);
+    }
+  }),
+  embeddings: Object.freeze({
+    findSimilarNotes(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.EMBEDDINGS_FIND_SIMILAR_NOTES, payload);
     }
   }),
   vault: Object.freeze({

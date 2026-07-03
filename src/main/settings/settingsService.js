@@ -35,6 +35,10 @@ function createSettingsService(options) {
     return settingsStore.setLimits(payload || {});
   }
 
+  function setEmbeddingSettings(payload) {
+    return settingsStore.setEmbeddingSettings(payload || {});
+  }
+
   function setVaultProfileRole(role, folderPath) {
     return settingsStore.setVaultProfileRole(role, folderPath);
   }
@@ -48,6 +52,7 @@ function createSettingsService(options) {
     setProviderUrlOverride,
     resetProviderUrlOverride,
     setLimits,
+    setEmbeddingSettings,
     setVaultProfileRole,
     resetVaultProfileRole
   });

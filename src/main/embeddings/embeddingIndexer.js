@@ -53,29 +53,36 @@ function createEmbeddingIndexer(options) {
     for (const document of listed.documents || []) {
       const state = getDocumentState(document);
       const existing = previousDocuments[state.path];
-      if (!shouldReindexDocument(existing, { hash: state.hash, mtimeMs: state.mtimeMs, modelChanged: false })) {
+      const splitIndexMissing = existing && !Array.isArray(existing.bodyVectors);
+      if (!shouldReindexDocument(existing, { hash: state.hash, mtimeMs: state.mtimeMs, modelChanged: splitIndexMissing })) {
         nextDocuments[state.path] = existing;
         skippedDocuments += 1;
         chunkCount += existing.chunks.length;
         continue;
       }
 
-      const chunks = chunkText(state.path, state.content, { chunkSizeChars, chunkOverlapChars });
-      const vectors = [];
-      for (const chunk of chunks) {
-        const embedded = await runtime.embedText(chunk.text);
-        if (!embedded.ok) return embedded;
-        vectors.push(embedded.vector);
-      }
+      const sections = splitMarkdownSections(state.content);
+      const bodyChunks = chunkText(state.path, sections.bodyText, { chunkSizeChars, chunkOverlapChars });
+      const frontmatterChunks = sections.frontmatterText
+        ? chunkText(state.path + '#frontmatter', sections.frontmatterText, { chunkSizeChars, chunkOverlapChars })
+        : [];
+      const bodyVectors = await embedChunks(runtime, bodyChunks);
+      if (!bodyVectors.ok) return bodyVectors;
+      const frontmatterVectors = await embedChunks(runtime, frontmatterChunks);
+      if (!frontmatterVectors.ok) return frontmatterVectors;
       nextDocuments[state.path] = createIndexedDocumentRecord({
         path: state.path,
         hash: state.hash,
         mtimeMs: state.mtimeMs,
-        chunks,
-        vectors
+        chunks: bodyChunks,
+        vectors: bodyVectors.vectors,
+        bodyChunks,
+        bodyVectors: bodyVectors.vectors,
+        frontmatterChunks,
+        frontmatterVectors: frontmatterVectors.vectors
       });
       indexedDocuments += 1;
-      chunkCount += chunks.length;
+      chunkCount += bodyChunks.length + frontmatterChunks.length;
     }
 
     const saved = indexStore.saveDocuments(nextDocuments);
@@ -102,6 +109,27 @@ function getDocumentState(document) {
     content,
     hash: normalizeString(document && document.hash) || hashText(content),
     mtimeMs: Number(document && document.mtimeMs) || 0
+  };
+}
+
+async function embedChunks(runtime, chunks) {
+  const vectors = [];
+  for (const chunk of chunks) {
+    const embedded = await runtime.embedText(chunk.text);
+    if (!embedded.ok) return embedded;
+    vectors.push(embedded.vector);
+  }
+  return ok({ vectors });
+}
+
+function splitMarkdownSections(content) {
+  const text = String(content || '');
+  if (!text.startsWith('---')) return { frontmatterText: '', bodyText: text };
+  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  if (!match) return { frontmatterText: '', bodyText: text };
+  return {
+    frontmatterText: match[1].trim(),
+    bodyText: text.slice(match[0].length)
   };
 }
 
@@ -156,5 +184,6 @@ module.exports = {
   DEFAULT_CHUNK_OVERLAP_CHARS,
   createEmbeddingIndexer,
   chunkText,
-  hashText
+  hashText,
+  splitMarkdownSections
 };

@@ -31,6 +31,7 @@
     return [
       action({ id: 'file.summarize', label: 'Summarize file', category: 'read', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canSummarize, requiredPermission: 'read', reason: canSummarize ? '' : permissionText.fileReadReason() }),
       action({ id: 'file.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.fileReadReason() }),
+      action({ id: 'file.findSimilar', label: 'Find similar notes', category: 'read', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.fileReadReason() }),
       action({ id: 'file.proposeUpdate', label: 'Propose content update', category: 'write', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canProposeUpdate, requiredPermission: 'write', reason: canProposeUpdate ? permissionText.fileUpdateReadyReason() : permissionText.fileWriteReason() })
     ];
   }

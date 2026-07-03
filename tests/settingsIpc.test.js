@@ -17,6 +17,7 @@ test('settings IPC exposes get and provider URL override actions', async () => {
     setProviderUrlOverride(providerId, baseUrl) { return { ok: true, providerId, baseUrl }; },
     resetProviderUrlOverride(providerId) { return { ok: true, providerId }; },
     setLimits(payload) { return { ok: true, limits: payload }; },
+    setEmbeddingSettings(payload) { return { ok: true, embeddings: payload }; },
     setVaultProfileRole(role, folderPath) { return { ok: true, role, folderPath }; },
     resetVaultProfileRole(role) { return { ok: true, role }; }
   };
@@ -27,6 +28,7 @@ test('settings IPC exposes get and provider URL override actions', async () => {
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_PROVIDER_URL), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_RESET_PROVIDER_URL), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_LIMITS), true);
+  assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE), true);
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_GET)(), { version: 1 });
@@ -42,6 +44,10 @@ test('settings IPC exposes get and provider URL override actions', async () => {
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_LIMITS)(null, { maxListedFiles: 300 }), {
     ok: true,
     limits: { maxListedFiles: 300 }
+  });
+  assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS)(null, { similarNotes: { maxResults: 5 } }), {
+    ok: true,
+    embeddings: { similarNotes: { maxResults: 5 } }
   });
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE)(null, { role: 'projects', folderPath: 'Projects' }), {
     ok: true,

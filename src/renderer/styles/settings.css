@@ -295,7 +295,17 @@
   font-size: 11px;
 }
 
+.settings-range-field {
+  grid-column: 1 / -1;
+}
+
+.settings-range-field strong {
+  color: var(--text-accent);
+  font-weight: var(--font-weight-ui-semibold);
+}
+
 .settings-limit-field input,
+.settings-limit-field select,
 .settings-vault-role-path {
   min-width: 0;
   width: 100%;
@@ -311,6 +321,7 @@
 }
 
 .settings-limit-field input:focus,
+.settings-limit-field select:focus,
 .settings-vault-role-path:focus {
   border-color: rgba(var(--interactive-accent-rgb), .75);
 }

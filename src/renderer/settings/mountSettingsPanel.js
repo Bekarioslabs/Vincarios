@@ -113,7 +113,10 @@
       '          <div><dt>Runtime target</dt><dd>Transformers.js / ONNX</dd></div>',
       '          <div><dt>Index storage</dt><dd>Vault .zeus/index by default</dd></div>',
       '        </dl>',
-      '        <div class="settings-future-note">V1 foundation only: no model download, indexing job, or cloud embeddings are wired in this step.</div>',
+      '        <div class="settings-limit-grid" data-settings-embeddings-grid></div>',
+      '        <div class="settings-section-actions">',
+      '          <button type="button" class="settings-primary-button" data-settings-save-embeddings>Save embedding defaults</button>',
+      '        </div>',
       '      </section>',
       '      <section id="settings-panel-safety" class="settings-section settings-category-panel" data-settings-category-panel="safety" hidden>',
       '        <div class="settings-section-head">',
@@ -145,6 +148,8 @@
       providerList: backdrop.querySelector('[data-settings-provider-list]'),
       limitsGrid: backdrop.querySelector('[data-settings-limit-grid]'),
       vaultRoleList: backdrop.querySelector('[data-settings-vault-role-list]'),
+      embeddingsGrid: backdrop.querySelector('[data-settings-embeddings-grid]'),
+      saveEmbeddingsButton: backdrop.querySelector('[data-settings-save-embeddings]'),
       saveLimitsButton: backdrop.querySelector('[data-settings-save-limits]'),
       categoryButtons: Array.from(backdrop.querySelectorAll('[data-settings-category]')),
       categoryPanels: Array.from(backdrop.querySelectorAll('[data-settings-category-panel]')),
@@ -209,6 +214,7 @@
     renderProviderSettings(panel, api, statusBar, settings, providerStatus);
     renderLimitSettings(panel, api, statusBar, settings);
     renderVaultProfileSettings(panel, api, statusBar, settings);
+    renderEmbeddingSettings(panel, api, statusBar, settings);
     setText(panel.status, 'Ready');
   }
 
@@ -305,6 +311,104 @@
     const number = Number(value);
     if (field && field.unit === 'seconds') return Number.isFinite(number) ? Math.floor(number * 1000) : number;
     return number;
+  }
+
+  function renderEmbeddingSettings(panel, api, statusBar, settings) {
+    const embeddings = settings && settings.embeddings ? settings.embeddings : {};
+    const similarNotes = embeddings.similarNotes || {};
+    if (!panel.embeddingsGrid) return;
+    panel.embeddingsGrid.innerHTML = '';
+
+    const modeField = createSelectField('Mode', 'mode', [
+      ['mixed', 'Mixed'],
+      ['content', 'Content'],
+      ['metadata', 'Metadata']
+    ], similarNotes.mode || 'mixed');
+    panel.embeddingsGrid.appendChild(modeField);
+
+    panel.embeddingsGrid.appendChild(createEmbeddingNumberField('Minimum match %', 'minimumScorePercent', similarNotes.minimumScorePercent || 65, { min: 0, max: 100 }));
+    panel.embeddingsGrid.appendChild(createEmbeddingWeightField(similarNotes.contentWeight || 80));
+    panel.embeddingsGrid.appendChild(createEmbeddingNumberField('Max results', 'maxResults', similarNotes.maxResults || 8, { min: 1 }));
+
+    if (panel.saveEmbeddingsButton && !panel.saveEmbeddingsButton.dataset.bound) {
+      panel.saveEmbeddingsButton.dataset.bound = 'true';
+      panel.saveEmbeddingsButton.addEventListener('click', async () => {
+        const contentWeight = normalizePercent(panel.embeddingsGrid.querySelector('[data-settings-embedding-weight]').value, 80);
+        const payload = { similarNotes: {
+          mode: readEmbeddingValue(panel.embeddingsGrid, 'mode', 'mixed'),
+          minimumScorePercent: readEmbeddingValue(panel.embeddingsGrid, 'minimumScorePercent', '65'),
+          contentWeight,
+          metadataWeight: 100 - contentWeight,
+          maxResults: readEmbeddingValue(panel.embeddingsGrid, 'maxResults', '8')
+        } };
+        setText(panel.status, 'Saving embedding defaults...');
+        const result = await api.settings.setEmbeddings(payload);
+        if (!result || result.ok === false) {
+          setText(panel.status, result && result.message ? result.message : 'Could not save embedding defaults.');
+          return;
+        }
+        setText(panel.status, 'Embedding defaults saved.');
+        renderSettings(panel, api, statusBar, result.settings || settings);
+      });
+    }
+  }
+
+  function createEmbeddingNumberField(labelText, key, value, options) {
+    options = options || {};
+    const label = document.createElement('label');
+    label.className = 'settings-limit-field';
+    label.innerHTML = '<span></span><input type="number" step="1" data-settings-embedding>';
+    label.querySelector('span').textContent = labelText;
+    const input = label.querySelector('input');
+    input.setAttribute('data-embedding-key', key);
+    if (options.min !== undefined) input.setAttribute('min', String(options.min));
+    if (options.max !== undefined) input.setAttribute('max', String(options.max));
+    input.value = String(value);
+    return label;
+  }
+
+  function createEmbeddingWeightField(value) {
+    const label = document.createElement('label');
+    label.className = 'settings-limit-field settings-range-field';
+    label.innerHTML = '<span>Content / metadata weight <strong data-settings-embedding-weight-display></strong></span><input type="range" min="0" max="100" step="5" data-settings-embedding-weight>';
+    const input = label.querySelector('[data-settings-embedding-weight]');
+    const display = label.querySelector('[data-settings-embedding-weight-display]');
+    input.value = String(normalizePercent(value, 80));
+    function update() {
+      const content = normalizePercent(input.value, 80);
+      display.textContent = content + '% content / ' + (100 - content) + '% metadata';
+    }
+    input.addEventListener('input', update);
+    update();
+    return label;
+  }
+
+  function readEmbeddingValue(root, key, fallback) {
+    const input = root.querySelector('[data-embedding-key="' + key + '"]');
+    return input ? input.value : fallback;
+  }
+
+  function normalizePercent(value, fallback) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return fallback;
+    return Math.max(0, Math.min(100, Math.floor(number)));
+  }
+
+  function createSelectField(labelText, key, options, value) {
+    const label = document.createElement('label');
+    label.className = 'settings-limit-field';
+    label.innerHTML = '<span></span><select class="settings-provider-url" data-settings-embedding-mode></select>';
+    label.querySelector('span').textContent = labelText;
+    const select = label.querySelector('select');
+    select.setAttribute('data-embedding-key', key);
+    options.forEach((option) => {
+      const item = document.createElement('option');
+      item.value = option[0];
+      item.textContent = option[1];
+      item.selected = option[0] === value;
+      select.appendChild(item);
+    });
+    return label;
   }
 
   function renderVaultProfileSettings(panel, api, statusBar, settings) {

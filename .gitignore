@@ -6,6 +6,7 @@ node_modules/
 npm-debug.log*
 .zeus/
 .zeus_backups/
+.superpowers/
 
 # private vault/runtime data
 ZEUS/

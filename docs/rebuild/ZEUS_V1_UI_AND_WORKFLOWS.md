@@ -11,7 +11,7 @@ V1 should stay simple:
 
 ```text
 Left: app navigation and actions
-Middle: chat, Review Basket, Context Basket, and input
+Middle: workspace tabs for Chat, Suggestions, and Session Log; Chat owns Review Basket, Context Basket, and input
 Right: Files, Selection Actions, and Markdown Preview
 ```
 
@@ -256,7 +256,7 @@ Missing permissions for Selection Actions are handled by app logic before provid
 
 Current V1 foundation actions:
 
-- selected Markdown file currently shows `Summarize file`, `Use as context`, and `Propose content update`. `Propose content update` stays visible and clickable for Markdown files; when R/W or loaded content are missing it appears visually muted and clicks show app-side guidance. When ready, it asks for an explicit content-change instruction, then adds a reviewed whole-note `update_note` proposal to the Review Basket. Rename, move, archive, and delete remain separate future actions.
+- selected Markdown file currently shows `Summarize file`, `Use as context`, `Find similar notes`, and `Propose content update`. `Propose content update` stays visible and clickable for Markdown files; when R/W or loaded content are missing it appears visually muted and clicks show app-side guidance. When ready, it asks for an explicit content-change instruction, then adds a reviewed whole-note `update_note` proposal to the Review Basket. Rename, move, archive, and delete remain separate future actions.
 - selected folder currently shows `Use as context`, `List folder`, `Analyze folder`, and `Summarize MD files`.
 - `Use as context` is active for readable folders and for readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content.
 - inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.
@@ -455,9 +455,35 @@ Current V1 foundation actions for selected Markdown files:
 
 - Summarize file
 - Use as context
+- Find similar notes
 - Propose update
 
-Future actions can be added through the same registry and handler structure, for example `Find similar files`, `Find related notes`, `Inbox Review`, move/rename, image actions, or later custom actions. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
+Find similar notes uses the local embedding index and keeps the chat output compact. Clicking it opens a compact options form with Settings-backed defaults for mode, minimum match, content/metadata weight, and max results. The same field order is used in Settings and in the per-run form. The form remembers the last used values for the current app session; Settings remain the restart defaults. `Refresh index first` is explicit and should be used after copying, moving, or editing Markdown files outside the index. Results are shown as percentages with strong/medium/weak/noisy labels, content/metadata detail, and a low-content warning. The V1 direction is to show these results in a dedicated Suggestions workspace instead of a long chat bubble or a cramped action panel. It does not create Review Basket actions by itself.
+
+Future actions can be added through the same registry and handler structure, for example `Find related notes`, `Inbox Review`, move/rename, image actions, or later custom actions. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
+
+
+## Workspace Tabs Direction
+
+The main work area should support three V1/V1.x workspaces:
+
+- `Chat`: normal conversation, assistant responses, Save as Note, Review Basket, Context Basket, and prompt input.
+- `Suggestions`: grouped analysis results such as similar notes, link candidates, tag candidates, folder candidates, and cleanup findings. Suggestions are not writes. They can be dismissed, previewed, or converted into concrete Review Basket actions only when the user selects them.
+- `Session Log`: per-session status/audit-style messages for visible app activity such as reads, writes, renames, failures, and warnings. This is a UI convenience layer over the current status stream, not a replacement for persistent audit logs.
+
+Suggestions should behave as an intermediate review layer between analysis and the Review Basket:
+
+```text
+analysis action -> grouped suggestions -> user selects suggestions -> preview/diff -> add concrete actions to Review Basket -> reviewed execution
+```
+
+Recommended layout for the Suggestions workspace:
+
+- left side: compact suggestion groups/items with checkboxes, status/score labels, dismiss controls, and per-item preview controls.
+- right side: detail preview for the selected suggestion. Preview type depends on suggestion kind: text detail, Markdown-line diff, property/tag diff, move plan, duplicate comparison, or create-note preview.
+- top or footer action bar: `Add selected to Review Basket` only becomes active when selected suggestions can become concrete actions. It must not mean execute.
+
+Use `Dismiss suggestion` for hiding suggestions. Do not use `Delete` for suggestion rows, because file deletion/archive is a separate vault action with different risk.
 
 ### Left Navigation Cleanup
 
@@ -540,7 +566,7 @@ Settings Modal
 
 Current wired categories stay Providers, Limits, and Vault Profile. V1-ready categories are Providers, Limits, Vault Profile, Templates, Appearance, Embeddings, Safety, and About. Future/inactive categories may be visible only if they are clearly marked as not configured yet and do not imply fake functionality. Later hotkeys, plugin compatibility, custom actions, and theme presets must extend this same settings module and store shape instead of creating parallel configuration paths.
 
-Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with a left category menu and one active right-side category panel. Providers, Limits, and Vault Profile remain wired to the existing settings store. Templates, Appearance, Safety, and About are visible info-only slots until real modules exist. Embeddings now shows the V1 default decision: MiniLM multilingual default, Apache-2.0 license, Transformers.js / ONNX runtime target, and vault `.zeus/index` storage. Custom model path controls and rebuild controls remain pending Phase 7.4 work.
+Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with a left category menu and one active right-side category panel. Providers, Limits, and Vault Profile remain wired to the existing settings store. Templates, Appearance, Safety, and About are visible info-only slots until real modules exist. Embeddings now shows the V1 default decision: MiniLM multilingual default, Apache-2.0 license, Transformers.js / ONNX runtime target, and vault `.zeus/index` storage. It also owns Similar Notes defaults in the same order as the action form: mode, minimum match, content/metadata weight slider, and max results. Custom model path controls and broader rebuild controls remain pending follow-up work; the per-search form already has explicit refresh before search.
 
 Vault Profile and Templates relationship:
 

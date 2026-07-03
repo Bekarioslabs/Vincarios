@@ -1,0 +1,50 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZEUS Similar Notes Workspace Options</title>
+<style>
+:root{color-scheme:dark;--bg:#0e0e0e;--panel:#151515;--panel2:#101010;--line:#2a2a2a;--muted:#888;--text:#e8e8e8;--accent:#f59e0b;--green:#22c55e;--blue:#38bdf8;--purple:#a78bfa;--red:#ef4444;font-family:Inter,Segoe UI,system-ui,sans-serif}body{margin:0;background:var(--bg);color:var(--text);padding:22px}h1{font-size:18px;margin:0 0 6px;color:var(--accent)}p{color:var(--muted);line-height:1.45}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden}.title{padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700;color:var(--accent)}.body{padding:12px}.mock{height:430px;border:1px solid var(--line);background:#080808;display:grid;gap:6px;padding:8px}.chat{background:#0c0c0c;border:1px solid var(--line);border-radius:8px;padding:8px;color:#aaa;font-size:11px}.side{background:#121212;border:1px solid var(--line);border-radius:8px;padding:8px}.row{border:1px solid var(--line);border-radius:7px;padding:7px;margin:6px 0;background:#181818;font-size:10px}.tag{display:inline-block;padding:2px 6px;border-radius:999px;border:1px solid var(--line);font-size:9px;color:var(--muted);margin-right:5px}.tag.green{color:var(--green);border-color:#225c38}.tag.amber{color:var(--accent);border-color:#6b4c0a}.tag.blue{color:var(--blue);border-color:#15536c}.diff{background:#0b0b0b;border:1px solid var(--line);border-radius:8px;padding:8px;font-family:Consolas,monospace;font-size:10px;color:#ccc}.plus{color:#86efac}.minus{color:#fca5a5}.mini{font-size:10px;color:var(--muted)}.layout-a{grid-template-rows:1fr auto}.layout-a .work{display:grid;grid-template-columns:1fr 1fr;gap:6px}.layout-b{grid-template-columns:1.1fr .9fr}.layout-b .left{display:grid;grid-template-rows:auto 1fr;gap:6px}.layout-c{grid-template-rows:auto 1fr}.bar{display:flex;gap:6px}.btn{border:1px solid var(--line);border-radius:7px;padding:5px 7px;background:#111;color:#ddd;font-size:10px}.btn.primary{border-color:#6b4c0a;color:var(--accent)}ul{padding-left:18px;color:#aaa}.recommend{border-color:#6b4c0a;box-shadow:0 0 0 1px rgba(245,158,11,.15)}@media(max-width:1200px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<h1>ZEUS Similar Notes / Suggestion Workspace</h1>
+<p>Three possible UX directions. Goal: no giant chat bubble, clear reviewable suggestions, scalable later for diff/update/move actions.</p>
+<div class="grid">
+  <section class="card">
+    <div class="title">A. Inline Selection Panel</div>
+    <div class="body">
+      <div class="mock layout-a">
+        <div class="work">
+          <div class="side"><b>Selection Actions</b><div class="row"><span class="tag blue">READ</span>Find similar notes</div><div class="row"><span class="tag green">strong</span>Note_A.md</div><div class="row"><span class="tag amber">weak</span>Note_B.md</div></div>
+          <div class="diff"><b>Detail Preview</b><br><br><span class="plus">+ matching tags</span><br><span class="minus">- no direct link yet</span></div>
+        </div>
+        <div class="chat">Chat: “3 matches found. Details shown in Selection Actions.”</div>
+      </div>
+      <ul><li>Closest to current UI.</li><li>Low disruption.</li><li>Panel may become crowded.</li></ul>
+    </div>
+  </section>
+  <section class="card recommend">
+    <div class="title">B. Dedicated Workspace Drawer</div>
+    <div class="body">
+      <div class="mock layout-b">
+        <div class="left"><div class="bar"><button class="btn primary">Add to Review Basket</button><button class="btn">Diff</button></div><div class="side"><b>Suggestions</b><div class="row"><span class="tag green">82% strong</span>Related: Stark Arc.md</div><div class="row"><span class="tag amber">58% weak</span>Related: Marvel Notes.md</div><div class="row"><span class="tag blue">info</span>Low-content warning</div></div></div>
+        <div class="diff"><b>Diff / Detail Preview</b><br><br>Selected suggestion:<br><span class="plus">+ Add backlink to Stark Arc</span><br><span class="plus">+ Suggested tag: #marvel</span><br><br><span class="mini">No vault write until added to Review Basket.</span></div>
+      </div>
+      <ul><li>Best for future diff-heavy workflows.</li><li>Chat stays quiet.</li><li>Needs a clear open/close workspace state.</li></ul>
+    </div>
+  </section>
+  <section class="card">
+    <div class="title">C. Overlay Modal</div>
+    <div class="body">
+      <div class="mock layout-c">
+        <div class="chat">Main app dimmed behind overlay</div>
+        <div class="side"><b>Modal: Similar Notes</b><div class="row">Options at top</div><div class="row">Results list left</div><div class="diff">Preview right<br><span class="plus">+ proposed change</span></div></div>
+      </div>
+      <ul><li>Very focused, good for complex review.</li><li>Interrupts flow more strongly.</li><li>Less good for comparing with file tree/preview.</li></ul>
+    </div>
+  </section>
+</div>
+</body>
+</html>

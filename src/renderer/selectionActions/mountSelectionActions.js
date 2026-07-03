@@ -8,6 +8,7 @@
     const contextState = options.contextState;
     const reviewBasket = options.reviewBasket || null;
     const status = options.status || null;
+    let similarNotesSessionOptions = null;
     if (!app || !contextState || typeof contextState.snapshot !== 'function') return null;
 
     const root = app.querySelector('.selection-actions-pane');
@@ -94,6 +95,10 @@
       if (action.id === 'file.useAsContext') {
         contextState.addContextItem({ kind: 'file', path: snapshot.path, content: snapshot.content });
         setText(status, 'Added to Context Basket: ' + snapshot.path);
+        return;
+      }
+      if (action.id === 'file.findSimilar') {
+        renderSimilarNotesForm(snapshot);
         return;
       }
       if (action.id === 'file.proposeUpdate') {
@@ -201,6 +206,111 @@
       }
     }
 
+    async function renderSimilarNotesForm(snapshot) {
+      const existing = root.querySelector('.selection-action-form[data-action-id="file.findSimilar"]');
+      if (existing) existing.remove();
+      const defaults = await loadSimilarNotesDefaults();
+      const form = document.createElement('form');
+      form.className = 'selection-action-form';
+      form.dataset.actionId = 'file.findSimilar';
+      form.innerHTML = [
+        '<label class="selection-action-form-label">Find similar notes</label>',
+        '<div class="selection-action-grid">',
+        '  <label><span>Mode</span><select data-similar-mode><option value="mixed">Mixed</option><option value="content">Content</option><option value="metadata">Metadata</option></select></label>',
+        '  <label><span>Minimum match %</span><input type="number" min="0" max="100" step="1" data-similar-min></label>',
+        '  <label class="selection-action-range"><span>Content / metadata weight <strong data-similar-weight-display></strong></span><input type="range" min="0" max="100" step="5" data-similar-content-weight></label>',
+        '  <label><span>Max results</span><input type="number" min="1" step="1" data-similar-limit></label>',
+        '  <label class="selection-action-check"><input type="checkbox" data-similar-refresh-index><span>Refresh index first</span></label>',
+        '</div>',
+        '<div class="selection-action-form-actions">',
+        '  <button type="submit">Find</button>',
+        '  <button type="button" data-similar-cancel>Cancel</button>',
+        '</div>'
+      ].join('');
+      const values = similarNotesSessionOptions || defaults;
+      form.querySelector('[data-similar-min]').value = String(values.minimumScorePercent);
+      form.querySelector('[data-similar-limit]').value = String(values.maxResults);
+      form.querySelector('[data-similar-mode]').value = values.mode;
+      form.querySelector('[data-similar-content-weight]').value = String(values.contentWeight);
+      wireSimilarWeightSlider(form, values.contentWeight);
+      form.querySelector('[data-similar-refresh-index]').checked = values.refreshIndex === true;
+      form.querySelector('[data-similar-cancel]').addEventListener('click', () => form.remove());
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const contentWeight = normalizePercent(form.querySelector('[data-similar-content-weight]').value, 80);
+        const options = {
+          mode: form.querySelector('[data-similar-mode]').value,
+          minimumScorePercent: form.querySelector('[data-similar-min]').value,
+          contentWeight,
+          metadataWeight: 100 - contentWeight,
+          limit: form.querySelector('[data-similar-limit]').value,
+          refreshIndex: form.querySelector('[data-similar-refresh-index]').checked
+        };
+        similarNotesSessionOptions = Object.assign({}, options, { maxResults: options.limit });
+        form.remove();
+        findSimilarNotes(snapshot, options);
+      });
+      root.appendChild(form);
+      const submit = form.querySelector('button[type="submit"]');
+      if (submit) submit.focus();
+    }
+
+    function normalizePercent(value, fallback) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return fallback;
+      return Math.max(0, Math.min(100, Math.floor(number)));
+    }
+
+    function wireSimilarWeightSlider(form, value) {
+      const slider = form.querySelector('[data-similar-content-weight]');
+      const display = form.querySelector('[data-similar-weight-display]');
+      function update() {
+        const content = normalizePercent(slider && slider.value, value);
+        if (display) display.textContent = content + '% content / ' + (100 - content) + '% metadata';
+      }
+      if (slider) slider.addEventListener('input', update);
+      update();
+    }
+
+    async function loadSimilarNotesDefaults() {
+      const fallback = { minimumScorePercent: 65, maxResults: 8, mode: 'mixed', contentWeight: 80, metadataWeight: 20 };
+      if (!api.settings || typeof api.settings.get !== 'function') return fallback;
+      try {
+        const settings = await api.settings.get();
+        const similarNotes = settings && settings.embeddings && settings.embeddings.similarNotes ? settings.embeddings.similarNotes : {};
+        return {
+          minimumScorePercent: similarNotes.minimumScorePercent || fallback.minimumScorePercent,
+          maxResults: similarNotes.maxResults || fallback.maxResults,
+          mode: similarNotes.mode || fallback.mode,
+          contentWeight: similarNotes.contentWeight || fallback.contentWeight,
+          metadataWeight: similarNotes.metadataWeight || fallback.metadataWeight
+        };
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    async function findSimilarNotes(snapshot, searchOptions) {
+      if (!api.embeddings || typeof api.embeddings.findSimilarNotes !== 'function') {
+        appendActionMessage('Similar notes failed: embeddings API unavailable.');
+        setText(status, 'Similar notes failed.');
+        return;
+      }
+      const targetPath = normalizePath(snapshot && snapshot.path);
+      setText(status, 'Finding similar notes: ' + targetPath);
+      const pending = appendActionMessage('Finding similar notes: ' + targetPath, [], { pending: true });
+      try {
+        const result = await api.embeddings.findSimilarNotes(Object.assign({ targetPath: targetPath }, searchOptions || {}));
+        removeNode(pending);
+        renderSimilarNotesResultsPanel(targetPath, result, snapshot && snapshot.content);
+        appendActionMessage(formatSimilarNotesSummary(targetPath, result, snapshot && snapshot.content));
+        setText(status, result && result.ok ? 'Similar notes found: ' + targetPath : 'Similar notes unavailable.');
+      } catch (error) {
+        removeNode(pending);
+        appendActionMessage('Similar notes failed: ' + ((error && error.message) || 'request failed'));
+        setText(status, 'Similar notes failed.');
+      }
+    }
     function renderUpdateInstructionForm(snapshot) {
       const existing = root.querySelector('.selection-action-form');
       if (existing) existing.remove();
@@ -520,6 +630,86 @@
       return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
     }
 
+    function formatSimilarNotesSummary(targetPath, result, targetContent) {
+      const presentation = getSimilarNotesPresentation();
+      if (presentation && typeof presentation.formatSimilarNotesSummary === 'function') {
+        return presentation.formatSimilarNotesSummary(targetPath, result, targetContent);
+      }
+      if (!result || !result.ok) return 'Similar notes unavailable for: ' + targetPath + '\n\n' + ((result && (result.message || result.code)) || 'Unknown error.');
+      const count = Array.isArray(result.candidates) ? result.candidates.length : 0;
+      return 'Similar notes for: ' + targetPath + '\n\n' + count + ' matches found. Details are shown in Selection Actions.';
+    }
+
+    function renderSimilarNotesResultsPanel(targetPath, result, targetContent) {
+      const existing = root.querySelector('.selection-action-results[data-action-id="file.findSimilar"]');
+      if (existing) existing.remove();
+
+      const presentation = getSimilarNotesPresentation();
+      const candidates = presentation && typeof presentation.normalizeSimilarNotesCandidates === 'function'
+        ? presentation.normalizeSimilarNotesCandidates(result && result.candidates)
+        : [];
+
+      const panel = document.createElement('section');
+      panel.className = 'selection-action-results';
+      panel.dataset.actionId = 'file.findSimilar';
+
+      const title = document.createElement('div');
+      title.className = 'selection-action-results-title';
+      title.textContent = 'Similar Notes';
+      panel.appendChild(title);
+
+      const meta = document.createElement('div');
+      meta.className = 'selection-action-results-meta';
+      const mode = result && result.mode ? result.mode : 'mixed';
+      const threshold = Number.isFinite(Number(result && result.minimumScorePercent)) ? Number(result.minimumScorePercent) : 0;
+      meta.textContent = 'Target: ' + targetPath + ' | Mode: ' + mode + ' | Minimum: ' + threshold + '%';
+      panel.appendChild(meta);
+
+      if (presentation && typeof presentation.isLowContent === 'function' && presentation.isLowContent(targetContent)) {
+        const warning = document.createElement('div');
+        warning.className = 'selection-action-results-warning';
+        warning.textContent = 'Low content target: scores can be noisy for very short notes.';
+        panel.appendChild(warning);
+      }
+
+      if (!result || !result.ok) {
+        const empty = document.createElement('div');
+        empty.className = 'selection-action-results-empty';
+        empty.textContent = 'Similar notes unavailable: ' + ((result && (result.message || result.code)) || 'Unknown error.');
+        panel.appendChild(empty);
+      } else if (!candidates.length) {
+        const empty = document.createElement('div');
+        empty.className = 'selection-action-results-empty';
+        empty.textContent = 'No similar indexed Markdown notes found.';
+        panel.appendChild(empty);
+      } else {
+        candidates.forEach((candidate) => panel.appendChild(createSimilarNoteResult(candidate)));
+      }
+
+      root.appendChild(panel);
+    }
+
+    function createSimilarNoteResult(candidate) {
+      const item = document.createElement('article');
+      item.className = 'selection-action-result-item';
+
+      const score = document.createElement('span');
+      score.className = 'selection-action-score ' + candidate.scoreClassName;
+      score.textContent = candidate.scoreText + ' ' + candidate.scoreLabel;
+      item.appendChild(score);
+
+      const path = document.createElement('div');
+      path.className = 'selection-action-result-path';
+      path.textContent = candidate.path;
+      item.appendChild(path);
+
+      const details = document.createElement('div');
+      details.className = 'selection-action-result-details';
+      details.textContent = candidate.contentScoreText + ' | ' + candidate.metadataScoreText;
+      item.appendChild(details);
+
+      return item;
+    }
     function formatFolderListing(folderPath, result) {
       if (!result || !result.ok) return 'Folder listing failed: ' + ((result && (result.message || result.code)) || 'Unknown error.');
       const entries = Array.isArray(result.entries) ? result.entries : [];
@@ -590,6 +780,12 @@
   }
 
 
+  function getSimilarNotesPresentation() {
+    if (typeof window !== 'undefined' && window.ZeusSimilarNotesPresentation) return window.ZeusSimilarNotesPresentation;
+    if (typeof module !== 'undefined' && module.exports) return require('./similarNotesPresentation');
+    return null;
+  }
+
   function getRegistry() {
     if (typeof window !== 'undefined' && window.ZeusSelectionActionRegistry) return window.ZeusSelectionActionRegistry;
     if (typeof module !== 'undefined' && module.exports) return require('./actionRegistry');
@@ -641,4 +837,3 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZeusSelectionActions = Object.freeze(api);
 })();
-

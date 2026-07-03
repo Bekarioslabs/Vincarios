@@ -259,13 +259,13 @@ Status: complete for V1-light.
 - [x] Add the local embedding indexer service: chunks Markdown, embeds changed documents, skips unchanged hash/mtime records, and writes document vectors to selected-vault `.zeus/index`.
 - [ ] Decide final V1 distribution mode: model bundled in release build if practical; source/dev users get controlled download script or app download flow. Do not commit model artifacts to Git.
 - [x] Decide index storage boundary: selected-vault `.zeus/index` by default. `.zeus` is internal app data, not normal vault notes or provider context.
-- [x] Index schema includes path, hash, modified time, chunk metadata, and vector data.
+- [x] Index schema includes path, hash, modified time, chunk metadata, vector data, and separate body/frontmatter vector fields for sharper similarity scoring.
 - [x] Reindex decision foundation: unchanged hash/mtime skips work; changed hash/mtime or changed model requires reindex. User-facing reindex controls remain pending.
 - [x] Embeddings are separate from chat providers; no cloud embeddings in V1.
 
 ### Phase 7.5 - Embedding-Backed Suggestions
 
-- [ ] Similar notes candidates.
+- [x] Similar notes candidates: local index search returns ranked `similar_note` candidates from stored embeddings only. V1 includes percent scores, strong/medium/weak/noisy labels, threshold filtering, max-results defaults, content/metadata/mixed modes, a content/metadata weight slider, session-remembered per-run values, a compact chat summary, a detailed Selection Actions result panel, low-content target warnings, and an explicit `Refresh index first` option for newly added or changed Markdown files. No Review Basket actions are created yet.
 - [ ] Link candidates.
 - [ ] Tag candidates.
 - [ ] Folder candidates.
@@ -273,6 +273,16 @@ Status: complete for V1-light.
 - [ ] Opening a cleanup/suggestion group shows concrete previews: tag/property diff, Markdown-line diff, move plan, duplicate comparison, or new-note preview depending on suggestion type.
 - [ ] Only selected concrete suggestions are added to the Review Basket.
 - [ ] Suggestion types must be extensible without rewriting the cleanup/report/review pipeline.
+
+
+### Phase 7.5.5 - Suggestions Workspace Foundation
+
+- [ ] Add a workspace tab foundation for `Chat`, `Suggestions`, and later `Session Log` without moving provider or vault logic into the workspace UI.
+- [ ] Add a Suggestions renderer module that can show grouped suggestion items, selected-item detail, compact status/score labels, checkboxes, and dismiss controls.
+- [ ] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat should only get a short status line when the workspace opens.
+- [ ] Keep Similar Notes report-only until a future suggestion converter creates concrete Review Basket actions.
+- [ ] Define the conversion boundary: `Add selected to Review Basket` is disabled until selected suggestions map to supported concrete action types.
+- [ ] Preserve the right-side Files/Preview area; Suggestions is a main workspace, not a modal that hides the vault context.
 
 ### Phase 7.6 - Markdown Image Preview Optional
 

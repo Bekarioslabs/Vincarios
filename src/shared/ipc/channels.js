@@ -14,6 +14,8 @@ const IPC_CHANNELS = Object.freeze({
   SETTINGS_SET_LIMITS: 'settings:set-limits',
   SETTINGS_SET_VAULT_ROLE: 'settings:set-vault-role',
   SETTINGS_RESET_VAULT_ROLE: 'settings:reset-vault-role',
+  SETTINGS_SET_EMBEDDINGS: 'settings:set-embeddings',
+  EMBEDDINGS_FIND_SIMILAR_NOTES: 'embeddings:find-similar-notes',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',

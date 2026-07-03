@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -11,6 +11,7 @@ test('index loads selection action modules before shell', () => {
   const permissionIndex = source.indexOf('./src/renderer/selectionActions/permissionText.js');
   const registryIndex = source.indexOf('./src/renderer/selectionActions/actionRegistry.js');
   const summaryIndex = source.indexOf('./src/renderer/selectionActions/fileSummaryAction.js');
+  const similarPresentationIndex = source.indexOf('./src/renderer/selectionActions/similarNotesPresentation.js');
   const mountIndex = source.indexOf('./src/renderer/selectionActions/mountSelectionActions.js');
   const shellIndex = source.indexOf('./src/renderer/shell/mountShell.js');
 
@@ -18,7 +19,8 @@ test('index loads selection action modules before shell', () => {
   assert.equal(permissionIndex > categoriesIndex, true);
   assert.equal(registryIndex > permissionIndex, true);
   assert.equal(summaryIndex > registryIndex, true);
-  assert.equal(mountIndex > summaryIndex, true);
+  assert.equal(similarPresentationIndex > summaryIndex, true);
+  assert.equal(mountIndex > similarPresentationIndex, true);
   assert.equal(shellIndex > mountIndex, true);
 });
 
@@ -195,4 +197,34 @@ test('soft-disabled actions route through missing permission guidance', () => {
   assert.match(source, /if \(action\.softDisabled\)/);
   assert.match(source, /createSoftDisabledActionGate\(action, snapshot\)/);
   assert.match(source, /appendMissingPermissionMessage\(gate, action\.id\)/);
+});
+test('find similar notes action uses embeddings API with compact chat summary and detail panel', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /file\.findSimilar/);
+  assert.match(source, /renderSimilarNotesForm\(snapshot\)/);
+  assert.match(source, /api\.embeddings\.findSimilarNotes/);
+  assert.match(source, /formatSimilarNotesSummary/);
+  assert.match(source, /renderSimilarNotesResultsPanel/);
+  assert.match(source, /getSimilarNotesPresentation/);
+  assert.doesNotMatch(source, /formatSimilarNotesReport/);
+  assert.doesNotMatch(source, /file\.findSimilar[\s\S]{0,240}reviewBasket\.addProposal/);
+});
+
+
+test('find similar notes opens a settings-backed mini form', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /renderSimilarNotesForm\(snapshot\)/);
+  assert.match(source, /let similarNotesSessionOptions = null/);
+  assert.equal(source.includes('function normalizePercent(value, fallback)'), true);
+  assert.equal(source.indexOf('function normalizePercent(value, fallback)') < source.indexOf('function wireSimilarWeightSlider'), true);
+  assert.match(source, /loadSimilarNotesDefaults/);
+  assert.match(source, /api.settings.get/);
+  assert.match(source, /data-similar-mode/);
+  assert.match(source, /data-similar-min/);
+  assert.match(source, /data-similar-content-weight/);
+  assert.match(source, /data-similar-refresh-index/);
+  assert.match(source, /renderSimilarNotesResultsPanel/);
+  assert.doesNotMatch(source, /reviewBasket.addProposal[sS]{0,500}file.findSimilar/);
 });

@@ -1046,6 +1046,58 @@ body.is-resizing .pane-resizer::after {
   border-color: rgba(var(--interactive-accent-rgb), .55);
 }
 
+
+.selection-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.selection-action-grid label {
+  display: grid;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.selection-action-grid .selection-action-range,
+.selection-action-grid .selection-action-check {
+  grid-column: 1 / -1;
+}
+
+.selection-action-grid .selection-action-range strong {
+  color: var(--text-accent);
+  font-weight: var(--font-weight-ui-semibold);
+}
+
+.selection-action-grid .selection-action-check {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.selection-action-grid .selection-action-check input {
+  width: 14px;
+  height: 14px;
+}
+
+.selection-action-grid input,
+.selection-action-grid select {
+  min-width: 0;
+  height: 28px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 0 8px;
+  outline: none;
+}
+
+.selection-action-grid input:focus,
+.selection-action-grid select:focus {
+  border-color: rgba(var(--interactive-accent-rgb), .55);
+}
+
 .selection-action-form-actions {
   display: flex;
   gap: 8px;
@@ -1061,6 +1113,85 @@ body.is-resizing .pane-resizer::after {
   padding: 0 10px;
   font-size: 11px;
   font-weight: var(--font-weight-ui-semibold);
+}
+
+.selection-action-results {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.selection-action-results-title {
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: var(--font-weight-ui-strong);
+}
+
+.selection-action-results-meta,
+.selection-action-results-empty,
+.selection-action-results-warning {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.selection-action-results-warning {
+  color: var(--text-accent);
+}
+
+.selection-action-result-item {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 7px;
+  background: var(--background-primary);
+}
+
+.selection-action-score {
+  justify-self: start;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: var(--font-weight-ui-semibold);
+  color: var(--text-muted);
+}
+
+.selection-action-score.is-strong {
+  border-color: rgba(34, 197, 94, .35);
+  color: var(--status-success);
+}
+
+.selection-action-score.is-medium {
+  border-color: rgba(var(--interactive-accent-rgb), .4);
+  color: var(--text-accent);
+}
+
+.selection-action-score.is-weak {
+  border-color: rgba(var(--interactive-accent-rgb), .22);
+  color: var(--text-muted);
+}
+
+.selection-action-score.is-noisy {
+  border-color: rgba(239, 68, 68, .25);
+  color: var(--text-muted);
+}
+
+.selection-action-result-path {
+  overflow-wrap: anywhere;
+  color: var(--text-normal);
+  font-family: var(--font-monospace);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.selection-action-result-details {
+  color: var(--text-muted);
+  font-size: 10px;
 }
 
 .selection-action-form-actions button[type="submit"] {

@@ -24,6 +24,10 @@ function registerSettingsIpc(ipcMain, settingsService) {
     ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_LIMITS, (event, payload) => settingsService.setLimits(payload || {}));
   }
 
+  if (typeof settingsService.setEmbeddingSettings === 'function') {
+    ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS, (event, payload) => settingsService.setEmbeddingSettings(payload || {}));
+  }
+
   if (typeof settingsService.setVaultProfileRole === 'function') {
     ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE, (event, payload) => settingsService.setVaultProfileRole(
       payload && payload.role,

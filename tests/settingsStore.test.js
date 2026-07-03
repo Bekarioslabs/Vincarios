@@ -116,3 +116,45 @@ test('settings store persists vault profile role overrides and can reset them', 
   assert.equal(store.resetVaultProfileRole('projects').ok, true);
   assert.equal(store.getSettings().vaultProfile.roles.projects, undefined);
 });
+
+
+test('settings store persists similar-note defaults with safe normalization', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const filePath = path.join(dir, 'settings.json');
+  const store = createSettingsStore({ filePath });
+
+  const result = store.setEmbeddingSettings({
+    similarNotes: {
+      minimumScorePercent: 72,
+      maxResults: 5,
+      mode: 'content',
+      contentWeight: 90,
+      metadataWeight: 10
+    }
+  });
+
+  assert.equal(result.ok, true);
+  const reloaded = createSettingsStore({ filePath });
+  assert.equal(reloaded.getSettings().embeddings.similarNotes.minimumScorePercent, 72);
+  assert.equal(reloaded.getSettings().embeddings.similarNotes.maxResults, 5);
+  assert.equal(reloaded.getSettings().embeddings.similarNotes.mode, 'content');
+  assert.equal(reloaded.getSettings().embeddings.similarNotes.contentWeight, 90);
+  assert.equal(reloaded.getSettings().embeddings.similarNotes.metadataWeight, 10);
+
+  const normalized = normalizeAppSettings({
+    embeddings: {
+      similarNotes: {
+        minimumScorePercent: 999,
+        maxResults: -1,
+        mode: 'wild',
+        contentWeight: -5,
+        metadataWeight: 500
+      }
+    }
+  });
+  assert.equal(normalized.embeddings.similarNotes.minimumScorePercent, 100);
+  assert.equal(normalized.embeddings.similarNotes.maxResults, 8);
+  assert.equal(normalized.embeddings.similarNotes.mode, 'mixed');
+  assert.equal(normalized.embeddings.similarNotes.contentWeight, 0);
+  assert.equal(normalized.embeddings.similarNotes.metadataWeight, 100);
+});

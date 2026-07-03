@@ -26,6 +26,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'APP_INFO',
     'CHAT_CANCEL',
     'CHAT_SEND',
+    'EMBEDDINGS_FIND_SIMILAR_NOTES',
     'PROVIDER_MODELS',
     'PROVIDER_SET_ACTIVE',
     'PROVIDER_SET_MODEL',
@@ -33,6 +34,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'SETTINGS_GET',
     'SETTINGS_RESET_PROVIDER_URL',
     'SETTINGS_RESET_VAULT_ROLE',
+    'SETTINGS_SET_EMBEDDINGS',
     'SETTINGS_SET_LIMITS',
     'SETTINGS_SET_PROVIDER_URL',
     'SETTINGS_SET_VAULT_ROLE',
@@ -49,6 +51,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.APP_INFO, 'app:info');
   assert.equal(IPC_CHANNELS.CHAT_SEND, 'chat:send');
   assert.equal(IPC_CHANNELS.CHAT_CANCEL, 'chat:cancel');
+  assert.equal(IPC_CHANNELS.EMBEDDINGS_FIND_SIMILAR_NOTES, 'embeddings:find-similar-notes');
   assert.equal(IPC_CHANNELS.PROVIDER_STATUS, 'provider:status');
   assert.equal(IPC_CHANNELS.PROVIDER_MODELS, 'provider:models');
   assert.equal(IPC_CHANNELS.PROVIDER_SET_ACTIVE, 'provider:set-active');
@@ -57,6 +60,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.SETTINGS_SET_PROVIDER_URL, 'settings:set-provider-url');
   assert.equal(IPC_CHANNELS.SETTINGS_RESET_PROVIDER_URL, 'settings:reset-provider-url');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_LIMITS, 'settings:set-limits');
+  assert.equal(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS, 'settings:set-embeddings');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE, 'settings:set-vault-role');
   assert.equal(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE, 'settings:reset-vault-role');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
@@ -108,4 +112,20 @@ test('preload exposes manual rename without filesystem access', () => {
 
   assert.match(preloadSource, /renameFile\(payload\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.VAULT_RENAME_FILE, payload\)/);
+});
+test('preload exposes embedding search without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /embeddings: Object\.freeze/);
+  assert.match(preloadSource, /findSimilarNotes\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.EMBEDDINGS_FIND_SIMILAR_NOTES, payload\)/);
+});
+
+
+test('preload exposes embedding settings without filesystem access', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(source, /setEmbeddings\(payload\)/);
+  assert.match(source, /SETTINGS_SET_EMBEDDINGS/);
+  assert.doesNotMatch(source, /require('node:fs')/);
 });

@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createEmbeddingIndexer } = require('../src/main/embeddings/embeddingIndexer');
+const { createEmbeddingIndexer, splitMarkdownSections } = require('../src/main/embeddings/embeddingIndexer');
 
 test('embedding indexer embeds markdown documents into chunk vectors and saves the index', async () => {
   const runtimeCalls = [];
@@ -41,7 +41,11 @@ test('embedding indexer skips unchanged documents already in the index', async (
       hash: 'fixed-hash',
       mtimeMs: 10,
       chunks: [{ id: 'old', start: 0, end: 3, text: 'old' }],
-      vectors: [[9]]
+      vectors: [[9]],
+      bodyChunks: [{ id: 'old', start: 0, end: 3, text: 'old' }],
+      bodyVectors: [[9]],
+      frontmatterChunks: [],
+      frontmatterVectors: []
     }
   });
   const indexer = createEmbeddingIndexer({
@@ -98,3 +102,67 @@ function createMemoryStore(existingDocuments) {
   };
   return store;
 }
+
+
+test('embedding indexer stores body and frontmatter vectors separately', async () => {
+  const runtimeCalls = [];
+  const store = createMemoryStore();
+  const indexer = createEmbeddingIndexer({
+    source: createSource([
+      { path: 'Notes/Tagged.md', content: '---\ntags:\n  - project-a\n---\nBody content only.', mtimeMs: 10 }
+    ]),
+    indexStore: store,
+    runtime: createRuntime(runtimeCalls),
+    modelId: 'test-model',
+    dimensions: 3,
+    chunkSizeChars: 1200,
+    chunkOverlapChars: 0
+  });
+
+  const result = await indexer.rebuildIndex();
+
+  assert.equal(result.ok, true);
+  const record = store.savedDocuments['Notes/Tagged.md'];
+  assert.equal(record.bodyChunks[0].text, 'Body content only.');
+  assert.equal(record.frontmatterChunks[0].text.includes('project-a'), true);
+  assert.deepEqual(record.bodyVectors[0], [1, 2, 3]);
+  assert.deepEqual(record.frontmatterVectors[0], [1, 2, 3]);
+});
+
+test('splitMarkdownSections removes YAML from body text', () => {
+  const result = splitMarkdownSections('---\ntags:\n  - zeus\n---\n# Title\nBody');
+
+  assert.equal(result.frontmatterText, 'tags:\n  - zeus');
+  assert.equal(result.bodyText, '# Title\nBody');
+});
+
+
+test('embedding indexer reindexes unchanged legacy records without split vectors', async () => {
+  const runtimeCalls = [];
+  const store = createMemoryStore({
+    'Notes/Legacy.md': {
+      path: 'Notes/Legacy.md',
+      hash: 'fixed-hash',
+      mtimeMs: 10,
+      chunks: [{ id: 'legacy', start: 0, end: 3, text: 'old' }],
+      vectors: [[9]]
+    }
+  });
+  const indexer = createEmbeddingIndexer({
+    source: createSource([
+      { path: 'Notes/Legacy.md', content: 'same', hash: 'fixed-hash', mtimeMs: 10 }
+    ]),
+    indexStore: store,
+    runtime: createRuntime(runtimeCalls),
+    modelId: 'test-model',
+    dimensions: 3
+  });
+
+  const result = await indexer.rebuildIndex();
+
+  assert.equal(result.ok, true);
+  assert.equal(result.indexedDocuments, 1);
+  assert.equal(result.skippedDocuments, 0);
+  assert.equal(runtimeCalls.length > 0, true);
+  assert.equal(Array.isArray(store.savedDocuments['Notes/Legacy.md'].bodyVectors), true);
+});

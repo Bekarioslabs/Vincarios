@@ -23,7 +23,11 @@ function createIndexedDocumentRecord(input) {
     hash: normalizeString(input.hash),
     mtimeMs: normalizePositiveNumber(input.mtimeMs, 0),
     chunks: normalizeChunks(input.chunks),
-    vectors: normalizeVectors(input.vectors)
+    vectors: normalizeVectors(input.vectors),
+    bodyChunks: normalizeChunks(input.bodyChunks),
+    bodyVectors: normalizeVectors(input.bodyVectors),
+    frontmatterChunks: normalizeChunks(input.frontmatterChunks),
+    frontmatterVectors: normalizeVectors(input.frontmatterVectors)
   };
 }
 

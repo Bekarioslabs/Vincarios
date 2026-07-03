@@ -43,3 +43,19 @@ test('embedding reindex decision only reindexes changed files or changed models'
   assert.equal(shouldReindexDocument(record, { hash: 'h1', mtimeMs: 100, modelChanged: true }), true);
   assert.equal(shouldReindexDocument(null, { hash: 'h1', mtimeMs: 100, modelChanged: false }), true);
 });
+
+
+test('embedding document records keep split body and frontmatter vectors', () => {
+  const record = createIndexedDocumentRecord({
+    path: '03_Knowledge/Topic.md',
+    bodyChunks: [{ id: 'body', start: 0, end: 4, text: 'Body' }],
+    bodyVectors: [[0.1, 0.2]],
+    frontmatterChunks: [{ id: 'yaml', start: 0, end: 9, text: 'tags: ai' }],
+    frontmatterVectors: [[0.9, 0.8]]
+  });
+
+  assert.equal(record.bodyChunks[0].id, 'body');
+  assert.deepEqual(record.bodyVectors[0], [0.1, 0.2]);
+  assert.equal(record.frontmatterChunks[0].id, 'yaml');
+  assert.deepEqual(record.frontmatterVectors[0], [0.9, 0.8]);
+});

@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -19,17 +19,19 @@ test('registry resolves selected target kinds without using prompt text', () => 
   assert.equal(getTargetKind({ kind: 'none' }), 'none');
 });
 
-test('registry returns three V1 actions for selected Markdown files', () => {
+test('registry returns V1 actions for selected Markdown files', () => {
   const actions = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: true });
 
   assert.deepEqual(actions.map((action) => action.id), [
     'file.summarize',
     'file.useAsContext',
+    'file.findSimilar',
     'file.proposeUpdate'
   ]);
-  assert.deepEqual(actions.map((action) => action.category), ['read', 'context', 'write']);
+  assert.deepEqual(actions.map((action) => action.category), ['read', 'context', 'read', 'write']);
   assert.equal(actions.find((action) => action.id === 'file.useAsContext').enabled, true);
   assert.equal(actions.find((action) => action.id === 'file.summarize').enabled, true);
+  assert.equal(actions.find((action) => action.id === 'file.findSimilar').enabled, true);
 });
 
 test('Markdown read actions stay clickable and soft-disabled without readable loaded content', () => {

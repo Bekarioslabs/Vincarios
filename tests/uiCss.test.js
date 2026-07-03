@@ -183,3 +183,23 @@ test('chat drag-over styling stays scoped to the chat log', () => {
   assert.match(source, /\.chat-log\.chat-log-drag-over/);
   assert.match(source, /--interactive-accent-rgb/);
 });
+
+
+test('similar notes mini form uses selection action form styling', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /.selection-action-grid/);
+  assert.match(css, /.selection-action-grid input,/);
+  assert.match(css, /.selection-action-grid select/);
+});
+
+test('similar notes detail panel uses compact score styling', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.selection-action-results\s*\{/);
+  assert.match(css, /\.selection-action-result-item\s*\{/);
+  assert.match(css, /\.selection-action-score\.is-strong/);
+  assert.match(css, /\.selection-action-score\.is-medium/);
+  assert.match(css, /\.selection-action-score\.is-weak/);
+  assert.match(css, /\.selection-action-score\.is-noisy/);
+});

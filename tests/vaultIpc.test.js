@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -87,4 +87,30 @@ test('vault IPC exposes manual rename through a write-specific channel', async (
 
   assert.equal(result.ok, true);
   assert.deepEqual(result.payload, { sourcePath: '03_Knowledge/Old.md', newName: 'New' });
+});
+test('vault IPC also sets embedding root after folder selection and direct root set', async () => {
+  const handlers = new Map();
+  const roots = [];
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const dialog = {
+    async showOpenDialog() {
+      return { canceled: false, filePaths: ['D:/Vault'] };
+    }
+  };
+  const readService = { setRoot(root) { roots.push(['read', root]); return { ok: true, root }; }, getState() { return {}; }, listFolder() {}, readMarkdown() {} };
+  const writeService = { setRoot(root) { roots.push(['write', root]); return { ok: true, root }; } };
+  const embeddingService = { setRoot(root) { roots.push(['embedding', root]); return { ok: true, root }; } };
+
+  registerVaultIpc(ipcMain, dialog, null, readService, writeService, embeddingService);
+  await handlers.get(IPC_CHANNELS.VAULT_SELECT_FOLDER)();
+  await handlers.get(IPC_CHANNELS.VAULT_SET_ROOT)(null, 'D:/Vault2');
+
+  assert.deepEqual(roots, [
+    ['read', 'D:/Vault'],
+    ['write', 'D:/Vault'],
+    ['embedding', 'D:/Vault'],
+    ['read', 'D:/Vault2'],
+    ['write', 'D:/Vault2'],
+    ['embedding', 'D:/Vault2']
+  ]);
 });

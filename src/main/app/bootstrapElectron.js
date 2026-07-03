@@ -7,6 +7,7 @@ const { registerChatIpc } = require('../ipc/registerChatIpc');
 const { registerVaultIpc } = require('../ipc/registerVaultIpc');
 const { registerProviderIpc } = require('../ipc/registerProviderIpc');
 const { registerSettingsIpc } = require('../ipc/registerSettingsIpc');
+const { registerEmbeddingIpc } = require('../ipc/registerEmbeddingIpc');
 const { createProviderChatService } = require('../providers/providerChatService');
 const { createProviderStatusService } = require('../providers/providerStatusService');
 const { createProviderModelService } = require('../providers/providerModelService');
@@ -15,6 +16,8 @@ const { createSettingsStore, toProviderRegistryOptions } = require('../settings/
 const { createSettingsService } = require('../settings/settingsService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
+const { createEmbeddingSimilaritySearch } = require('../embeddings/embeddingSimilaritySearch');
+const { createEmbeddingIndexer } = require('../embeddings/embeddingIndexer');
 const { getPortableSettingsPath, migrateLegacySettingsToPortable } = require('./portableDataPath');
 
 function bootstrapElectron(electron, options) {
@@ -49,15 +52,18 @@ function bootstrapElectron(electron, options) {
     timeoutMs: providerOptions.modelListTimeoutMs
   }));
   const chatService = options.chatService || createProviderChatService(providerOptions);
+  const embeddingIndexer = options.embeddingIndexer || createEmbeddingIndexer({ settingsStore });
+  const embeddingSearchService = options.embeddingSearchService || createEmbeddingSimilaritySearch({ settingsStore, indexer: embeddingIndexer });
 
   registerChatIpc(ipcMain, chatService);
   registerAppIpc(ipcMain, {
     appName: 'ZEUS Agent',
     version: app.getVersion ? app.getVersion() : '0.1.0'
   });
-  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService);
+  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);
   registerSettingsIpc(ipcMain, settingsService);
+  registerEmbeddingIpc(ipcMain, embeddingSearchService);
 
   app.whenReady().then(() => {
     createMainWindow(electron, { projectRoot });

@@ -4,13 +4,22 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const SETTINGS_VERSION = 1;
+const DEFAULT_SIMILAR_NOTES = Object.freeze({
+  minimumScorePercent: 65,
+  maxResults: 8,
+  mode: 'mixed',
+  contentWeight: 80,
+  metadataWeight: 20
+});
+
 const DEFAULT_EMBEDDINGS = Object.freeze({
   defaultModelId: 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2',
   artifactRepoId: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2',
   license: 'apache-2.0',
   dimensions: 384,
   runtime: 'transformers-js-onnx',
-  indexLocation: 'vault-zeus'
+  indexLocation: 'vault-zeus',
+  similarNotes: DEFAULT_SIMILAR_NOTES
 });
 const DEFAULT_LIMITS = Object.freeze({
   providerTimeoutMs: 120000,
@@ -198,7 +207,21 @@ function normalizeEmbeddings(value) {
     runtime: DEFAULT_EMBEDDINGS.runtime,
     license: DEFAULT_EMBEDDINGS.license,
     indexLocation: DEFAULT_EMBEDDINGS.indexLocation,
+    similarNotes: Object.freeze(normalizeSimilarNotes(input.similarNotes || {})),
     reindexRequired: input.reindexRequired === true
+  };
+}
+
+function normalizeSimilarNotes(value) {
+  const input = value || {};
+  const contentWeight = normalizePercent(input.contentWeight, DEFAULT_SIMILAR_NOTES.contentWeight);
+  const metadataWeight = normalizePercent(input.metadataWeight, DEFAULT_SIMILAR_NOTES.metadataWeight);
+  return {
+    minimumScorePercent: normalizePercent(input.minimumScorePercent, DEFAULT_SIMILAR_NOTES.minimumScorePercent),
+    maxResults: normalizePositiveNumber(input.maxResults, DEFAULT_SIMILAR_NOTES.maxResults),
+    mode: normalizeChoice(input.mode, ['content', 'metadata', 'mixed'], DEFAULT_SIMILAR_NOTES.mode),
+    contentWeight,
+    metadataWeight
   };
 }
 
@@ -307,6 +330,12 @@ function normalizePositiveNumber(value, fallback) {
   return Number.isFinite(number) && number > 0 ? Math.floor(number) : fallback;
 }
 
+function normalizePercent(value, fallback) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.max(0, Math.min(100, Math.floor(number)));
+}
+
 function normalizeChoice(value, choices, fallback) {
   const item = normalizeId(value);
   return choices.includes(item) ? item : fallback;
@@ -316,10 +345,12 @@ module.exports = {
   SETTINGS_VERSION,
   DEFAULT_LIMITS,
   DEFAULT_EMBEDDINGS,
+  DEFAULT_SIMILAR_NOTES,
   createSettingsStore,
   normalizeAppSettings,
   normalizeLimits,
   normalizeEmbeddings,
+  normalizeSimilarNotes,
   toProviderRegistryOptions,
   validateProviderBaseUrl
 };

@@ -112,6 +112,26 @@ Suggestion actions:
 
 `delete_note` is not a normal V1 user action. Deleting first means `archive_note`: move into the configured archive/trash area. Permanent deletion is a separate explicit archive-emptying/trash-emptying workflow, not a casual AI action.
 
+
+## Suggestion Workspace Boundary
+
+Suggestions are not Review Basket actions. A suggestion is an analysis result that may later become one or more concrete reviewed actions.
+
+V1 direction:
+
+```text
+candidate/report -> suggestion item -> preview/diff -> selected conversion -> Review Basket proposal
+```
+
+Examples:
+
+- a link suggestion previews the Markdown-line change that would add a wikilink, then converts to an `update_note` proposal.
+- a tag suggestion previews a YAML/property diff, then converts to an `update_note` proposal.
+- a folder suggestion previews a move plan, then later converts to a move/rename action once those services exist.
+- a duplicate/similar-note suggestion may remain report-only until the user chooses a concrete operation.
+
+The Review Basket must receive only selected concrete actions. It must not receive every raw search result, cleanup finding, or embedding candidate.
+
 ## Important Rule
 
 The user should not need to know action names. The UI and model choose the correct action type from the user's intent.
