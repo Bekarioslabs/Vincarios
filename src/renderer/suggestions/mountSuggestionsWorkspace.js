@@ -114,19 +114,41 @@
     }
 
     function renderDetail(container, item) {
+      container.classList.add('suggestions-detail-grid');
       if (!item) {
-        container.textContent = 'Select a suggestion to preview details.';
+        const empty = document.createElement('div');
+        empty.className = 'suggestions-detail-empty';
+        empty.textContent = 'Select a suggestion to preview details.';
+        container.appendChild(empty);
         return;
       }
+
+      const info = document.createElement('section');
+      info.className = 'suggestions-detail-info';
+
       const title = document.createElement('div');
       title.className = 'suggestions-detail-title';
       title.textContent = item.title;
-      container.appendChild(title);
+      info.appendChild(title);
 
       const body = document.createElement('pre');
       body.className = 'suggestions-detail-body';
-      body.textContent = item.detail || item.path || 'No detail preview available.';
-      container.appendChild(body);
+      body.textContent = item.detail || item.path || 'No detail available.';
+      info.appendChild(body);
+
+      const preview = document.createElement('section');
+      preview.className = 'suggestions-preview-slot';
+      const previewTitle = document.createElement('div');
+      previewTitle.className = 'suggestions-preview-title';
+      previewTitle.textContent = 'Preview';
+      const previewBody = document.createElement('div');
+      previewBody.className = 'suggestions-preview-empty';
+      previewBody.textContent = 'No change preview yet. Convert this suggestion to a Review Basket action first.';
+      preview.appendChild(previewTitle);
+      preview.appendChild(previewBody);
+
+      container.appendChild(info);
+      container.appendChild(preview);
     }
 
     function renderActionBar() {

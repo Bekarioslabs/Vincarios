@@ -200,6 +200,10 @@ button { cursor: pointer; }
 
 .left-button {
   min-height: 31px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
   background: var(--background-primary);
@@ -208,6 +212,22 @@ button { cursor: pointer; }
   text-align: left;
   font-size: 12px;
 }
+
+.left-button-count {
+  min-width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid rgba(var(--interactive-accent-rgb), .45);
+  border-radius: 999px;
+  background: rgba(var(--interactive-accent-rgb), .12);
+  color: var(--text-accent);
+  font-size: 10px;
+  line-height: 1;
+  padding: 0 5px;
+}
+
+.left-button-count[hidden] { display: none; }
 
 .left-button:hover:not(:disabled) {
   border-color: rgba(var(--interactive-accent-rgb), .8);
@@ -1096,6 +1116,17 @@ body.is-resizing .pane-resizer::after {
 .selection-action-grid input:focus,
 .selection-action-grid select:focus {
   border-color: rgba(var(--interactive-accent-rgb), .55);
+}
+
+.selection-action-form input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.selection-action-form input[type="number"]::-webkit-outer-spin-button,
+.selection-action-form input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .selection-action-form-actions {

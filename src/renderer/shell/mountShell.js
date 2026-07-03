@@ -38,7 +38,7 @@
         '      <section class="left-nav-group left-nav-group-workspace" aria-label="Workspace">',
         '        <div class="left-section-title">Workspace</div>',
         '        <button type="button" class="left-button left-button-current" data-workspace-tab="chat" aria-current="page">Chat</button>',
-        '        <button type="button" class="left-button" data-workspace-tab="suggestions">Suggestions</button>',
+        '        <button type="button" class="left-button" data-workspace-tab="suggestions"><span>Suggestions</span><span class="left-button-count" data-suggestions-count hidden>0</span></button>',
         '        <button type="button" class="left-button left-button-placeholder" data-workspace-tab="sessionLog" data-future-slot="session-log" disabled>Session Log</button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-create" aria-label="Create">',
@@ -150,6 +150,7 @@
       wireWorkspaceTabs(app, workspaceState);
       const contextState = createContextState();
       const suggestionState = createSuggestionState();
+      wireSuggestionIndicator(app, suggestionState);
       const vaultUi = { filePanel: null };
       const reviewBasket = mountOptional('review basket', status, () => window.ZeusReviewBasket
         ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) })
@@ -163,7 +164,7 @@
       mountOptional('chat', status, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState }));
       mountOptional('context basket', status, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
       mountOptional('suggestions workspace', status, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState }));
-      mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status, suggestionState, workspaceState }));
+      mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status, suggestionState }));
       mountOptional('pane resize', status, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
       mountOptional('scoped selection', status, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));
     });
@@ -203,6 +204,32 @@
     });
     workspaceState.subscribe(render);
     render(workspaceState.snapshot());
+  }
+
+  function wireSuggestionIndicator(app, suggestionState) {
+    if (!app || !suggestionState || typeof suggestionState.subscribe !== 'function') return;
+    const count = app.querySelector('[data-suggestions-count]');
+    const button = app.querySelector('[data-workspace-tab="suggestions"]');
+    if (!count || !button) return;
+
+    function render(snapshot) {
+      const total = countSuggestionItems(snapshot);
+      count.hidden = total === 0;
+      count.textContent = String(total);
+      if (total > 0) button.setAttribute('aria-label', 'Suggestions, ' + total + ' open item' + (total === 1 ? '' : 's'));
+      else button.setAttribute('aria-label', 'Suggestions');
+    }
+
+    suggestionState.subscribe(render);
+    render(suggestionState.snapshot());
+  }
+
+  function countSuggestionItems(snapshot) {
+    const groups = snapshot && Array.isArray(snapshot.groups) ? snapshot.groups : [];
+    return groups.reduce((total, group) => {
+      const items = group && Array.isArray(group.items) ? group.items : [];
+      return total + items.filter((item) => item && item.dismissed !== true).length;
+    }, 0);
   }
 
   function createContextState() {

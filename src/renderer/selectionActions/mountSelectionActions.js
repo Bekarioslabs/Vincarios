@@ -8,7 +8,6 @@
     const contextState = options.contextState;
     const reviewBasket = options.reviewBasket || null;
     const suggestionState = options.suggestionState || null;
-    const workspaceState = options.workspaceState || null;
     const status = options.status || null;
     let similarNotesSessionOptions = null;
     if (!app || !contextState || typeof contextState.snapshot !== 'function') return null;
@@ -307,10 +306,7 @@
         if (result && result.ok && suggestionState && typeof suggestionState.addGroup === 'function') {
           const added = addSimilarNotesSuggestionGroup(targetPath, result, snapshot && snapshot.content);
           if (added) {
-            if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') {
-              workspaceState.setActiveWorkspace('suggestions');
-            }
-            appendActionMessage('Similar notes found. Opened Suggestions workspace.');
+            appendActionMessage('Similar notes found. Suggestions updated.');
             setText(status, 'Similar notes found: ' + targetPath);
             return;
           }

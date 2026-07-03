@@ -272,14 +272,14 @@ Status: complete for V1-light.
 - [ ] Suggestions enter grouped reports or Review Basket proposals only through registered suggestion/action types.
 - [ ] Opening a cleanup/suggestion group shows concrete previews: tag/property diff, Markdown-line diff, move plan, duplicate comparison, or new-note preview depending on suggestion type.
 - [ ] Only selected concrete suggestions are added to the Review Basket.
-- [ ] Suggestion types must be extensible without rewriting the cleanup/report/review pipeline.
+- [ ] Suggestion types must be extensible without rewriting the cleanup/report/review pipeline. Planned types: `similar_note`, `near_duplicate`, `complementary_note`, `related_note`, `version_conflict`, `name_conflict`, `destination_candidate`, `link_candidate`, and `metadata_candidate`.
 
 
 ### Phase 7.5.5 - Suggestions Workspace Foundation
 
 - [x] Add a workspace tab foundation for `Chat`, `Suggestions`, and later `Session Log` without moving provider or vault logic into the workspace UI.
 - [x] Add a Suggestions renderer module that can show grouped suggestion items, selected-item detail, compact status/score labels, checkboxes, and dismiss controls.
-- [x] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat should only get a short status line when the workspace opens.
+- [x] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat gets only a short status line, ZEUS does not auto-switch workspaces, and the Suggestions tab shows an item-count indicator.
 - [x] Keep Similar Notes report-only until a future suggestion converter creates concrete Review Basket actions.
 - [ ] Define the conversion boundary: `Add selected to Review Basket` is disabled until selected suggestions map to supported concrete action types.
 - [x] Preserve the right-side Files/Preview area; Suggestions is a main workspace, not a modal that hides the vault context.
@@ -341,6 +341,7 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Natural Action Control (V2.1 candidate): optional toggle that lets the model map natural language to existing registered Selection Actions. It must only execute predefined app actions through the same permission, review, backup, and audit boundaries. The recognition layer may use prompts or trigger rules, but it must live in its own module and never create new hidden capabilities.
 - [ ] Chat Sessions / conversation history as a later V2 feature: session list, resume, delete, privacy rules, and per-vault/global storage decisions.
 
+- [ ] Persistent Suggestion Sessions: optionally store open suggestion groups under selected-vault `.zeus/` with created time, source target, index/model version or file hashes, status, and stale validation. Current V1 Suggestions remain intentionally session-only and disappear on reload/restart.
 ## Parking Lot
 
 - [ ] Voice input.

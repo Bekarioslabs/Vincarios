@@ -85,3 +85,25 @@ test('similar notes does not open suggestions workspace for empty result groups'
   assert.match(source, /return true/);
   assert.doesNotMatch(source, /Similar notes found\. Opened Suggestions workspace\.[\s\S]{0,220}if \(!items\.length\)/);
 });
+test('suggestions detail uses compact info above larger preview slot', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
+
+  assert.match(source, /suggestions-detail-info/);
+  assert.match(source, /suggestions-preview-slot/);
+  assert.match(source, /suggestions-preview-empty/);
+  assert.match(source, /No change preview yet/);
+  assert.match(css, /\.suggestions-detail-grid/);
+  assert.match(css, /grid-template-rows: auto minmax\(0, 1fr\)/);
+  assert.match(css, /\.suggestions-detail-info[\s\S]*max-height: 150px/);
+  assert.match(css, /\.suggestions-preview-slot/);
+});
+test('suggestions workspace tab exposes an item count indicator without auto switching', () => {
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(shell, /wireSuggestionIndicator\(app, suggestionState\)/);
+  assert.match(shell, /data-suggestions-count/);
+  assert.match(shell, /countSuggestionItems/);
+  assert.match(css, /\.left-button-count/);
+});

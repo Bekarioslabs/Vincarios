@@ -41,7 +41,6 @@ test('shell mounts selection action panel with context state', () => {
   assert.match(source, /contextState/);
   assert.match(source, /reviewBasket/);
   assert.match(source, /suggestionState/);
-  assert.match(source, /workspaceState/);
 });
 
 test('context basket renders target-type icons separate from action colors', () => {
@@ -208,8 +207,8 @@ test('find similar notes action routes details to suggestions workspace', () => 
   assert.match(source, /api\.embeddings\.findSimilarNotes/);
   assert.match(source, /addSimilarNotesSuggestionGroup/);
   assert.match(source, /suggestionState\.addGroup/);
-  assert.match(source, /workspaceState\.setActiveWorkspace\('suggestions'\)/);
-  assert.match(source, /Similar notes found\. Opened Suggestions workspace\./);
+  assert.doesNotMatch(source, /workspaceState\.setActiveWorkspace\('suggestions'\)/);
+  assert.match(source, /Similar notes found\. Suggestions updated\./);
   assert.doesNotMatch(source, /renderSimilarNotesResultsPanel/);
   assert.doesNotMatch(source, /formatSimilarNotesReport/);
   assert.doesNotMatch(source, /file\.findSimilar[\s\S]{0,240}reviewBasket\.addProposal/);

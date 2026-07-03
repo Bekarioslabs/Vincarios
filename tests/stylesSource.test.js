@@ -145,3 +145,12 @@ test('selection action update form styles stay in layout stylesheet', () => {
   assert.match(source, /\.selection-action-form textarea/);
   assert.match(source, /\.selection-action-form-actions/);
 });
+
+test('selection action number inputs hide native spinner chrome', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(source, /\.selection-action-form input\[type="number"\]/);
+  assert.match(source, /appearance:\s*textfield/);
+  assert.match(source, /::-webkit-inner-spin-button/);
+  assert.match(source, /-webkit-appearance:\s*none/);
+});

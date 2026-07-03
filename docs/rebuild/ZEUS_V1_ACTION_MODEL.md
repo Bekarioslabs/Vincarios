@@ -117,6 +117,8 @@ Suggestion actions:
 
 Suggestions are not Review Basket actions. A suggestion is an analysis result that may later become one or more concrete reviewed actions.
 
+Current V1 suggestion state is session-only renderer state. Suggestions intentionally disappear on app restart or reload. Persistent suggestion sessions are later work and must live under `.zeus/`, not normal vault notes. A persisted suggestion must carry enough validation data such as creation time, source target, index/model version or file hashes, status, and stale-state checks before it can be shown again.
+
 V1 direction:
 
 ```text
@@ -131,6 +133,19 @@ Examples:
 - a duplicate/similar-note suggestion may remain report-only until the user chooses a concrete operation.
 
 The Review Basket must receive only selected concrete actions. It must not receive every raw search result, cleanup finding, or embedding candidate.
+Planned suggestion types and handling rules:
+
+- `similar_note`: embedding-backed relation only. It shows ranked context and may stay report-only.
+- `near_duplicate`: two notes are nearly identical with small differences. Show a comparison/diff first; possible later actions are keep one, merge missing lines, archive one, or ignore. Never delete automatically.
+- `complementary_note`: notes share context but contain different useful information. Prefer merge/link/new consolidation-note previews over duplicate handling.
+- `related_note`: notes share a topic or project but have different roles. Prefer link candidates, not merging.
+- `version_conflict`: normalized names or imported variants indicate older/newer drafts such as `.md.md` or copied core files. First compare; then suggest skip, merge missing sections, or keep as variant.
+- `name_conflict`: file names collide or normalize to an existing note. First compare target existence and content before proposing rename/import/skip.
+- `destination_candidate`: a note appears to belong in another folder. V1 may report the destination; reviewed move/link-update actions remain later work.
+- `link_candidate`: two notes should likely link. Preview the exact Markdown line diff before converting to an `update_note` proposal.
+- `metadata_candidate`: tags/properties/status values are likely missing or inconsistent. Preview YAML/property diff before converting to an `update_note` proposal.
+
+Classification should be conservative. High similarity alone is not enough to merge; the UI should distinguish duplicates, complementary overlap, same-topic relation, and version/name conflicts before offering concrete Review Basket actions.
 
 ## Important Rule
 
