@@ -138,7 +138,7 @@ test('propose update uses the selected update proposal builder from selection ac
 test('propose update uses an inline instruction form instead of browser prompt', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
-  assert.match(source, /renderUpdateInstructionForm\(snapshot\)/);
+  assert.match(source, /renderUpdateInstructionForm\(snapshot, host\)/);
   assert.match(source, /selection-action-form/);
   assert.match(source, /textarea/);
   assert.match(source, /Create proposal/);
@@ -203,7 +203,7 @@ test('find similar notes action routes details to suggestions workspace', () => 
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
   assert.match(source, /file\.findSimilar/);
-  assert.match(source, /renderSimilarNotesForm\(snapshot\)/);
+  assert.match(source, /renderSimilarNotesForm\(snapshot, host\)/);
   assert.match(source, /api\.embeddings\.findSimilarNotes/);
   assert.match(source, /addSimilarNotesSuggestionGroup/);
   assert.match(source, /suggestionState\.addGroup/);
@@ -218,7 +218,7 @@ test('find similar notes action routes details to suggestions workspace', () => 
 test('find similar notes opens a settings-backed mini form', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
-  assert.match(source, /renderSimilarNotesForm\(snapshot\)/);
+  assert.match(source, /renderSimilarNotesForm\(snapshot, host\)/);
   assert.match(source, /let similarNotesSessionOptions = null/);
   assert.equal(source.includes('function normalizePercent(value, fallback)'), true);
   assert.equal(source.indexOf('function normalizePercent(value, fallback)') < source.indexOf('function wireSimilarWeightSlider'), true);
@@ -228,6 +228,9 @@ test('find similar notes opens a settings-backed mini form', () => {
   assert.match(source, /data-similar-min/);
   assert.match(source, /data-similar-content-weight/);
   assert.match(source, /data-similar-refresh-index/);
+  assert.match(source, /createActionRow/);
+  assert.match(source, /selection-action-row/);
+  assert.match(source, /appendActionForm\(host, form\)/);
   assert.match(source, /addSimilarNotesSuggestionGroup/);
   assert.doesNotMatch(source, /reviewBasket.addProposal[sS]{0,500}file.findSimilar/);
 });

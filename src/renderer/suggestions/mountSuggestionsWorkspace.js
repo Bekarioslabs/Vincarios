@@ -5,6 +5,9 @@
     options = options || {};
     const root = options.root;
     const suggestionState = options.suggestionState;
+    const reviewBasket = options.reviewBasket || null;
+    const status = options.status || null;
+    const converters = getSuggestionConverters();
     if (!root || !suggestionState || typeof suggestionState.snapshot !== 'function') return null;
 
     const unsubscribe = typeof suggestionState.subscribe === 'function'
@@ -47,7 +50,7 @@
       body.appendChild(list);
       body.appendChild(detail);
       root.appendChild(body);
-      root.appendChild(renderActionBar());
+      root.appendChild(renderActionBar(snapshot));
     }
 
     function renderGroup(group, selectedItem) {
@@ -141,29 +144,57 @@
       const previewTitle = document.createElement('div');
       previewTitle.className = 'suggestions-preview-title';
       previewTitle.textContent = 'Preview';
-      const previewBody = document.createElement('div');
-      previewBody.className = 'suggestions-preview-empty';
-      previewBody.textContent = 'No change preview yet. Convert this suggestion to a Review Basket action first.';
       preview.appendChild(previewTitle);
-      preview.appendChild(previewBody);
+      renderSuggestionPreview(preview, item);
 
       container.appendChild(info);
       container.appendChild(preview);
     }
 
-    function renderActionBar() {
+    function renderActionBar(snapshot) {
       const bar = document.createElement('div');
       bar.className = 'suggestions-action-bar';
+      const conversion = converters.getConvertibleCheckedSuggestions(snapshot);
 
       const add = document.createElement('button');
       add.type = 'button';
       add.className = 'chat-message-action-button';
       add.textContent = 'Add selected to Review Basket';
-      add.disabled = true;
-      add.title = 'No converter exists for these suggestions yet.';
+      add.disabled = !conversion.canConvertAll || !reviewBasket || typeof reviewBasket.addProposal !== 'function';
+      add.title = conversion.canConvertAll ? 'Add selected metadata suggestions as reviewed update proposals.' : 'Select only convertible metadata_candidate suggestions.';
+      add.addEventListener('click', () => convertCheckedSuggestionsToReviewBasket(conversion));
       bar.appendChild(add);
 
       return bar;
+    }
+
+    function convertCheckedSuggestionsToReviewBasket(conversion) {
+      if (!conversion || !conversion.canConvertAll || !reviewBasket || typeof reviewBasket.addProposal !== 'function') return;
+      const added = [];
+      conversion.convertible.forEach((item) => {
+        const result = converters.convertSuggestionToReviewProposal(item);
+        if (result.ok) added.push(reviewBasket.addProposal(result.proposal));
+      });
+      setText(status, added.length ? 'Suggestion proposals added to Review Basket: ' + added.length : 'No convertible suggestions selected.');
+    }
+
+    function renderSuggestionPreview(preview, item) {
+      const diff = converters.buildSuggestionDiffPreview(item);
+      if (!diff || !diff.ok) {
+        const empty = document.createElement('div');
+        empty.className = 'suggestions-preview-empty';
+        empty.textContent = 'No change preview yet. Convert this suggestion to a Review Basket action first.';
+        preview.appendChild(empty);
+        return;
+      }
+      const body = document.createElement('div');
+      body.className = 'suggestions-preview-diff review-diff-body';
+      const summary = document.createElement('div');
+      summary.className = 'suggestions-preview-summary';
+      summary.textContent = 'Diff: ' + diff.summary;
+      body.appendChild(summary);
+      getDiffLineRenderer().renderDiffLines(body, diff);
+      preview.appendChild(body);
     }
 
     return Object.freeze({
@@ -171,6 +202,38 @@
         if (typeof unsubscribe === 'function') unsubscribe();
       }
     });
+  }
+
+  function getDiffLineRenderer() {
+    if (typeof window !== 'undefined' && window.ZeusDiffLineRenderer) return window.ZeusDiffLineRenderer;
+    if (typeof require === 'function') {
+      try {
+        return require('../diff/diffLineRenderer');
+      } catch (error) {
+        // Fall through to the inert renderer below.
+      }
+    }
+    return { renderDiffLines() {} };
+  }
+
+  function getSuggestionConverters() {
+    if (typeof window !== 'undefined' && window.ZeusSuggestionConverters) return window.ZeusSuggestionConverters;
+    if (typeof require === 'function') {
+      try {
+        return require('./suggestionConverters');
+      } catch (error) {
+        // Fall through to the inert converter below.
+      }
+    }
+    return {
+      getConvertibleCheckedSuggestions() { return { checked: [], convertible: [], canConvertAll: false }; },
+      convertSuggestionToReviewProposal() { return { ok: false, code: 'converter_unavailable', message: 'Suggestion converter unavailable.' }; },
+      buildSuggestionDiffPreview() { return { ok: false, code: 'converter_unavailable', message: 'Suggestion converter unavailable.' }; }
+    };
+  }
+
+  function setText(node, text) {
+    if (node) node.textContent = text;
   }
 
   function formatSuggestionName(item) {
@@ -195,7 +258,7 @@
     return 'is-score-neutral';
   }
 
-  const api = { mountSuggestionsWorkspace, formatSuggestionName, formatSuggestionParent, scoreToneClass };
+  const api = { mountSuggestionsWorkspace, formatSuggestionName, formatSuggestionParent, scoreToneClass, getSuggestionConverters };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZeusSuggestionsWorkspace = Object.freeze(api);

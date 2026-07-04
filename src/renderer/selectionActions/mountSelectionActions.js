@@ -50,10 +50,18 @@
         return;
       }
 
-      actions.forEach((action) => root.appendChild(createActionButton(action, snapshot)));
+      actions.forEach((action) => root.appendChild(createActionRow(action, snapshot)));
     }
 
-    function createActionButton(action, snapshot) {
+    function createActionRow(action, snapshot) {
+      const row = document.createElement('div');
+      row.className = 'selection-action-row';
+      row.dataset.actionId = action.id;
+      row.appendChild(createActionButton(action, snapshot, row));
+      return row;
+    }
+
+    function createActionButton(action, snapshot, host) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'selection-action-button is-' + action.category;
@@ -78,11 +86,11 @@
 
       button.appendChild(tag);
       button.appendChild(label);
-      button.addEventListener('click', () => runAction(action, snapshot));
+      button.addEventListener('click', () => runAction(action, snapshot, host));
       return button;
     }
 
-    function runAction(action, snapshot) {
+    function runAction(action, snapshot, host) {
       if (!action || action.enabled !== true) return;
       if (action.softDisabled) {
         const gate = createSoftDisabledActionGate(action, snapshot);
@@ -99,7 +107,11 @@
         return;
       }
       if (action.id === 'file.findSimilar') {
-        renderSimilarNotesForm(snapshot);
+        renderSimilarNotesForm(snapshot, host);
+        return;
+      }
+      if (action.id === 'file.suggestTags') {
+        suggestTags(snapshot);
         return;
       }
       if (action.id === 'file.proposeUpdate') {
@@ -108,7 +120,7 @@
           appendMissingPermissionMessage(gate, 'file.proposeUpdate');
           return;
         }
-        renderUpdateInstructionForm(snapshot);
+        renderUpdateInstructionForm(snapshot, host);
         return;
       }
       if (action.id === 'folder.useAsContext') {
@@ -146,7 +158,9 @@
     }
 
     function createSoftDisabledActionGate(action, snapshot) {
-      if (action && action.id === 'file.proposeUpdate') return createMissingPermissionAction(snapshot, 'read_write', action.id);
+      if (action && (action.id === 'file.proposeUpdate' || action.id === 'file.suggestTags')) {
+        return createMissingPermissionAction(snapshot, 'read_write', action.id);
+      }
       return createMissingPermissionAction(snapshot, action && action.requiredPermission ? action.requiredPermission : 'read', action && action.id);
     }
 
@@ -207,9 +221,31 @@
       }
     }
 
-    async function renderSimilarNotesForm(snapshot) {
-      const existing = root.querySelector('.selection-action-form[data-action-id="file.findSimilar"]');
-      if (existing) existing.remove();
+    function suggestTags(snapshot) {
+      const builder = getTagCandidateAction();
+      if (!builder || typeof builder.buildTagCandidates !== 'function') {
+        appendActionMessage('Tag candidates failed: tag candidate module unavailable.');
+        setText(status, 'Tag candidates failed.');
+        return;
+      }
+      if (!suggestionState || typeof suggestionState.addGroup !== 'function') {
+        appendActionMessage('Tag candidates failed: Suggestions workspace unavailable.');
+        setText(status, 'Tag candidates failed.');
+        return;
+      }
+      const result = builder.buildTagCandidates({ path: snapshot && snapshot.path, content: snapshot && snapshot.content });
+      if (!result.ok) {
+        appendActionMessage('No tag candidates found: ' + (result.message || 'No useful missing tags.'));
+        setText(status, 'No tag candidates found.');
+        return;
+      }
+      suggestionState.addGroup(result.group);
+      appendActionMessage('Tag candidates added to Suggestions.');
+      setText(status, 'Tag candidates added: ' + snapshot.path);
+    }
+
+    async function renderSimilarNotesForm(snapshot, host) {
+      removeOpenActionForms();
       const defaults = await loadSimilarNotesDefaults();
       const form = document.createElement('form');
       form.className = 'selection-action-form';
@@ -251,11 +287,19 @@
         form.remove();
         findSimilarNotes(snapshot, options);
       });
-      root.appendChild(form);
+      appendActionForm(host, form);
       const submit = form.querySelector('button[type="submit"]');
       if (submit) submit.focus();
     }
 
+    function appendActionForm(host, form) {
+      const target = host && typeof host.appendChild === 'function' ? host : root;
+      target.appendChild(form);
+    }
+
+    function removeOpenActionForms() {
+      Array.from(root.querySelectorAll('.selection-action-form')).forEach(removeNode);
+    }
     function normalizePercent(value, fallback) {
       const number = Number(value);
       if (!Number.isFinite(number)) return fallback;
@@ -319,9 +363,8 @@
         setText(status, 'Similar notes failed.');
       }
     }
-    function renderUpdateInstructionForm(snapshot) {
-      const existing = root.querySelector('.selection-action-form');
-      if (existing) existing.remove();
+    function renderUpdateInstructionForm(snapshot, host) {
+      removeOpenActionForms();
 
       const form = document.createElement('form');
       form.className = 'selection-action-form';
@@ -364,7 +407,7 @@
         proposeFileUpdate(snapshot, instruction);
       });
 
-      root.appendChild(form);
+      appendActionForm(host, form);
       textarea.focus();
       setText(status, 'Describe update for: ' + snapshot.path);
     }
@@ -627,6 +670,7 @@
         missingPermissionMessage(options) {
           const path = options && options.path ? options.path : '';
           if (options && options.actionId === 'file.proposeUpdate') return 'Please enable R and W for this file before proposing a content update: ' + path;
+          if (options && options.actionId === 'file.suggestTags') return 'Please enable R and W for this file before suggesting tag updates: ' + path;
           const shortcut = options && options.requiredPermission === 'read_write' ? 'R and W' : options && options.requiredPermission === 'write' ? 'W' : 'R';
           const targetKind = options && options.targetKind === 'folder' ? 'folder' : 'file';
           return 'Please enable ' + shortcut + ' for this ' + targetKind + ': ' + path;
@@ -760,6 +804,12 @@
     return /\.(md|markdown)$/i.test(String(entry.name || entry.path || ''));
   }
 
+
+  function getTagCandidateAction() {
+    if (typeof window !== 'undefined' && window.ZeusTagCandidateAction) return window.ZeusTagCandidateAction;
+    if (typeof module !== 'undefined' && module.exports) return require('./tagCandidateAction');
+    return null;
+  }
 
   function getSimilarNotesPresentation() {
     if (typeof window !== 'undefined' && window.ZeusSimilarNotesPresentation) return window.ZeusSimilarNotesPresentation;

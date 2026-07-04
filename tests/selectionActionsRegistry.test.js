@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -26,12 +26,14 @@ test('registry returns V1 actions for selected Markdown files', () => {
     'file.summarize',
     'file.useAsContext',
     'file.findSimilar',
+    'file.suggestTags',
     'file.proposeUpdate'
   ]);
-  assert.deepEqual(actions.map((action) => action.category), ['read', 'context', 'read', 'write']);
+  assert.deepEqual(actions.map((action) => action.category), ['read', 'context', 'read', 'write', 'write']);
   assert.equal(actions.find((action) => action.id === 'file.useAsContext').enabled, true);
   assert.equal(actions.find((action) => action.id === 'file.summarize').enabled, true);
   assert.equal(actions.find((action) => action.id === 'file.findSimilar').enabled, true);
+  assert.equal(actions.find((action) => action.id === 'file.suggestTags').enabled, true);
 });
 
 test('Markdown read actions stay clickable and soft-disabled without readable loaded content', () => {
@@ -96,5 +98,9 @@ test('permission text helper keeps read and write guidance centralized', () => {
   assert.equal(
     text.missingPermissionMessage({ actionId: 'file.proposeUpdate', requiredPermission: 'write', targetKind: 'file', path: 'A.md' }),
     'Please enable R and W for this file before proposing a content update: A.md'
+  );
+  assert.equal(
+    text.missingPermissionMessage({ actionId: 'file.suggestTags', requiredPermission: 'write', targetKind: 'file', path: 'A.md' }),
+    'Please enable R and W for this file before suggesting tag updates: A.md'
   );
 });

@@ -23,7 +23,7 @@ test('suggestions workspace renderer owns list detail and disabled conversion UI
   assert.match(source, /suggestions-item/);
   assert.match(source, /suggestions-detail/);
   assert.match(source, /Add selected to Review Basket/);
-  assert.match(source, /disabled = true/);
+  assert.match(source, /add.disabled = !conversion.canConvertAll/);
   assert.doesNotMatch(source, /api\.vault/);
   assert.doesNotMatch(source, /api\.chat/);
 });
@@ -106,4 +106,37 @@ test('suggestions workspace tab exposes an item count indicator without auto swi
   assert.match(shell, /data-suggestions-count/);
   assert.match(shell, /countSuggestionItems/);
   assert.match(css, /\.left-button-count/);
+});
+
+
+test('suggestions workspace loads converter before mount', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const converterIndex = html.indexOf('./src/renderer/suggestions/suggestionConverters.js');
+  const mountIndex = html.indexOf('./src/renderer/suggestions/mountSuggestionsWorkspace.js');
+
+  assert.equal(converterIndex > -1, true);
+  assert.equal(mountIndex > converterIndex, true);
+});
+
+test('suggestions workspace can convert metadata candidates but keeps report-only items disabled', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+
+  assert.match(source, /getSuggestionConverters/);
+  assert.match(source, /convertCheckedSuggestionsToReviewBasket/);
+  assert.match(source, /canConvertAll/);
+  assert.match(source, /metadata_candidate/);
+});
+
+test('suggestions preview uses the shared diff line renderer', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+
+  const rendererIndex = html.indexOf('./src/renderer/diff/diffLineRenderer.js');
+  const suggestionsIndex = html.indexOf('./src/renderer/suggestions/mountSuggestionsWorkspace.js');
+
+  assert.equal(rendererIndex > -1, true);
+  assert.equal(suggestionsIndex > rendererIndex, true);
+  assert.match(source, /getDiffLineRenderer\(\)\.renderDiffLines\(body, diff\)/);
+  assert.match(source, /review-diff-body/);
+  assert.doesNotMatch(source, /formatDiffPreview/);
 });

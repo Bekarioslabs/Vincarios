@@ -127,9 +127,9 @@ candidate/report -> suggestion item -> preview/diff -> selected conversion -> Re
 
 Examples:
 
-- a link suggestion previews the Markdown-line change that would add a wikilink, then converts to an `update_note` proposal.
-- a tag suggestion previews a YAML/property diff, then converts to an `update_note` proposal.
-- a folder suggestion previews a move plan, then later converts to a move/rename action once those services exist.
+- a future link suggestion previews the Markdown-line change that would add a wikilink, then converts to an `update_note` proposal. This is V1.1+ unless the V1 necessity gate reclassifies it.
+- a tag suggestion previews a YAML/property diff, then converts to an `update_note` proposal. Current V1 conversion foundation supports `metadata_candidate` only when it carries `currentContent` and `proposedContent`; the selected-file `Suggest tags` action can generate this shape through local heuristics.
+- a future folder/destination suggestion previews a move plan, then later converts to a move/rename action once those services exist. This is V1.1+ because safe move/link-update services are not V1 scope.
 - a duplicate/similar-note suggestion may remain report-only until the user chooses a concrete operation.
 
 The Review Basket must receive only selected concrete actions. It must not receive every raw search result, cleanup finding, or embedding candidate.
@@ -141,11 +141,36 @@ Planned suggestion types and handling rules:
 - `related_note`: notes share a topic or project but have different roles. Prefer link candidates, not merging.
 - `version_conflict`: normalized names or imported variants indicate older/newer drafts such as `.md.md` or copied core files. First compare; then suggest skip, merge missing sections, or keep as variant.
 - `name_conflict`: file names collide or normalize to an existing note. First compare target existence and content before proposing rename/import/skip.
-- `destination_candidate`: a note appears to belong in another folder. V1 may report the destination; reviewed move/link-update actions remain later work.
-- `link_candidate`: two notes should likely link. Preview the exact Markdown line diff before converting to an `update_note` proposal.
-- `metadata_candidate`: tags/properties/status values are likely missing or inconsistent. Preview YAML/property diff before converting to an `update_note` proposal.
+- `destination_candidate`: a note appears to belong in another folder. V1.1+ work; reviewed move/link-update actions must exist before conversion is executable.
+- `link_candidate`: two notes should likely link. V1.1+ work; preview the exact Markdown line diff before converting to an `update_note` proposal.
+- `metadata_candidate`: tags/properties/status values are likely missing or inconsistent. Preview YAML/property diff before converting to an `update_note` proposal. V1 currently generates conservative tag candidates from selected-file path/title/frontmatter only. The local tag heuristic uses strong sources only: existing YAML tags for dedupe, vault-profile folder roles, project name from the configured projects role, exact standard file roles such as `References.md` or `Tasks.md`, selected structural folders such as `Wiki`, identifier-like filenames, and conservative title/proper-name extraction. Sentence-like chat filenames are ignored instead of filtered through broad stopword lists. AI/embedding-generated metadata candidates and structured metadata-index inputs are later refinement work.
 
 Classification should be conservative. High similarity alone is not enough to merge; the UI should distinguish duplicates, complementary overlap, same-topic relation, and version/name conflicts before offering concrete Review Basket actions.
+
+## Future Merge Workspace
+
+Merging similar notes is later work, not part of the current V1 executable action set. When it is implemented, it should be a dedicated merge flow instead of an overloaded `update_note`.
+
+Minimum flow:
+
+1. User selects two source notes from a suggestion group such as `near_duplicate` or `complementary_note`.
+2. ZEUS shows a comparison diff between source A and source B, including overlaps, additions, and conflicts.
+3. ZEUS creates or requests a reviewed merged version as a third file candidate.
+4. User reviews the final merged file, target folder, and file name before execution.
+5. Execution creates the merged file and records an audit entry.
+6. Archiving source A and source B is optional and must require explicit confirmation. Conservative mode keeps both sources in place.
+
+Future action type shape:
+
+- `merge_notes`
+- `sourcePaths: [A, B]`
+- `targetPath`
+- `mergedContent`
+- `archiveSources: true | false`
+- `diffSummary`
+- `conflicts`
+
+The Review Basket should execute only the final concrete plan. Source files must never be deleted silently; if sources are moved after merge, they go to archive/backup through a reviewed archive/move service.
 
 ## Important Rule
 
@@ -154,6 +179,8 @@ The user should not need to know action names. The UI and model choose the corre
 ## Write Rules
 
 - New-file `create_note` actions need a Create Preview and explicit confirmation.
+- Create and write flows should support reviewed Metadata/YAML assist where useful. Summaries, imports, note/project presets, and future update actions may propose fields such as `tags`, `type`, `status`, or source context, but the user must see and edit those fields before execution. Metadata assist is part of the reviewed action UI, not a provider-side direct write.
+- Generated AI notes should receive app-owned identity metadata at creation time. Save-as-note, summaries, imports, and future AI drafts should mark origin with deterministic fields such as `source`, `created_by`, `created_at`, `origin_action`, and suitable base `tags`/`type`; do not depend on later filename-based tag inference for generated notes.
 - Any existing-file write needs diff. `update_note` is the only implemented existing-file write in Phase 3: it requires current/proposed content, explicit Apply Update confirmation, backup, stale-content validation, and audit logging. Other existing-file write types remain non-executable until their services exist.
 - Archive/trash actions need explicit confirmation. Permanent deletion is not a normal V1 assistant action.
 - Any risky action creates a backup first. `update_note` already calls the backup service before writing; future insert/move/rename/archive services must do the same where applicable.

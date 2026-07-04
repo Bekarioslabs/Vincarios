@@ -132,7 +132,7 @@ test('propose update uses the selected update proposal builder from selection ac
 test('propose update uses an inline instruction form instead of browser prompt', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
-  assert.match(source, /renderUpdateInstructionForm\(snapshot\)/);
+  assert.match(source, /renderUpdateInstructionForm\(snapshot, host\)/);
   assert.match(source, /selection-action-form/);
   assert.match(source, /textarea/);
   assert.match(source, /Create proposal/);

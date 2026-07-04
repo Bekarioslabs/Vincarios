@@ -32,6 +32,9 @@
     if (actionId === 'file.proposeUpdate') {
       return 'Please enable R and W for this file before proposing a content update: ' + path;
     }
+    if (actionId === 'file.suggestTags') {
+      return 'Please enable R and W for this file before suggesting tag updates: ' + path;
+    }
     const shortcut = options.requiredPermission === 'write' ? 'W' : 'R';
     return 'Please enable ' + shortcut + ' for this ' + targetKind + ': ' + path;
   }

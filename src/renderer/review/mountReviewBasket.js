@@ -369,28 +369,7 @@
   }
 
   function renderDiffLines(root, diffPreview) {
-    const hunks = diffPreview && Array.isArray(diffPreview.hunks) ? diffPreview.hunks : [];
-    if (hunks.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'review-diff-line';
-      empty.textContent = 'No changes';
-      root.appendChild(empty);
-      return;
-    }
-    hunks.forEach((hunk) => {
-      hunk.lines.forEach((line) => {
-        const row = document.createElement('div');
-        row.className = 'review-diff-line review-diff-line-' + line.type;
-        row.textContent = diffPrefix(line.type) + ' ' + line.text;
-        root.appendChild(row);
-      });
-    });
-  }
-
-  function diffPrefix(type) {
-    if (type === 'add') return '+';
-    if (type === 'remove') return '-';
-    return ' ';
+    getDiffLineRenderer().renderDiffLines(root, diffPreview);
   }
   function renderDiffSummary(item) {
     if (!item || !item.requiresDiff) return null;
@@ -548,6 +527,18 @@
   }
   function setText(node, value) {
     if (node) node.textContent = value;
+  }
+
+  function getDiffLineRenderer() {
+    if (typeof window !== 'undefined' && window.ZeusDiffLineRenderer) return window.ZeusDiffLineRenderer;
+    if (typeof require === 'function') {
+      try {
+        return require('../diff/diffLineRenderer');
+      } catch (error) {
+        // Fall through to the inert renderer below.
+      }
+    }
+    return { renderDiffLines() {} };
   }
 
   function getIconRenderer() {

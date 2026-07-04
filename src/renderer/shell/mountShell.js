@@ -163,7 +163,7 @@
       mountOptional('inbox cleanup', status, () => window.ZeusInboxCleanup && window.ZeusInboxCleanup.mountInboxCleanup({ api, app, status }));
       mountOptional('chat', status, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState }));
       mountOptional('context basket', status, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
-      mountOptional('suggestions workspace', status, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState }));
+      mountOptional('suggestions workspace', status, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status }));
       mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status, suggestionState }));
       mountOptional('pane resize', status, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
       mountOptional('scoped selection', status, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));

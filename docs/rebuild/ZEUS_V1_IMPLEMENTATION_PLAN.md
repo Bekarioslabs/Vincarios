@@ -266,13 +266,15 @@ Status: complete for V1-light.
 ### Phase 7.5 - Embedding-Backed Suggestions
 
 - [x] Similar notes candidates: local index search returns ranked `similar_note` candidates from stored embeddings only. V1 includes percent scores, strong/medium/weak/noisy labels, threshold filtering, max-results defaults, content/metadata/mixed modes, a content/metadata weight slider, session-remembered per-run values, a compact chat summary, a detailed Selection Actions result panel, low-content target warnings, and an explicit `Refresh index first` option for newly added or changed Markdown files. No Review Basket actions are created yet.
-- [ ] Link candidates.
-- [ ] Tag candidates.
-- [ ] Folder candidates.
-- [ ] Suggestions enter grouped reports or Review Basket proposals only through registered suggestion/action types.
+- [ ] Link candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
+- [x] Tag candidates: selected Markdown files expose `Suggest tags`, which creates local heuristic `metadata_candidate` suggestions with full `currentContent` and `proposedContent`. Selected candidates can enter the Review Basket as reviewed `update_note` proposals. The V1 heuristic is role-aware, avoids hard-coded project-folder names, ignores sentence-like chat filenames, prefers strong project/file-role/structural-folder/title signals, and avoids broad stopword-list growth. AI/embedding-generated tag candidates remain later refinement work.
+- [ ] Metadata/YAML assist for create/write flows: summaries, new notes, project presets, imports, and later update actions should be able to attach reviewed YAML fields such as `tags`, `type`, `status`, or source context through a visible edit field or metadata panel before execution. This must reuse the Review Basket/create/update boundaries and must not become silent metadata writing.
+- [ ] Metadata index planning: add a future structured index under selected-vault `.zeus/index/metadata/` for notes, tags, links, template metadata, and project/file-role summaries. Do not overload the embedding index with this data. V1 tag suggestions are designed so this metadata index can become an input later without changing the Review Basket boundary.
+- [ ] Folder candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
+- [x] Suggestions enter grouped reports or Review Basket proposals only through registered suggestion/action types. Current conversion path supports `metadata_candidate` only.
 - [ ] Opening a cleanup/suggestion group shows concrete previews: tag/property diff, Markdown-line diff, move plan, duplicate comparison, or new-note preview depending on suggestion type.
-- [ ] Only selected concrete suggestions are added to the Review Basket.
-- [ ] Suggestion types must be extensible without rewriting the cleanup/report/review pipeline. Planned types: `similar_note`, `near_duplicate`, `complementary_note`, `related_note`, `version_conflict`, `name_conflict`, `destination_candidate`, `link_candidate`, and `metadata_candidate`.
+- [x] Only selected concrete suggestions are added to the Review Basket.
+- [x] Suggestion types must be extensible without rewriting the cleanup/report/review pipeline. Current renderer state/converter boundary supports this for `similar_note` and `metadata_candidate`; planned later types remain `near_duplicate`, `complementary_note`, `related_note`, `version_conflict`, `name_conflict`, `destination_candidate`, and `link_candidate`.
 
 
 ### Phase 7.5.5 - Suggestions Workspace Foundation
@@ -281,13 +283,22 @@ Status: complete for V1-light.
 - [x] Add a Suggestions renderer module that can show grouped suggestion items, selected-item detail, compact status/score labels, checkboxes, and dismiss controls.
 - [x] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat gets only a short status line, ZEUS does not auto-switch workspaces, and the Suggestions tab shows an item-count indicator.
 - [x] Keep Similar Notes report-only until a future suggestion converter creates concrete Review Basket actions.
-- [ ] Define the conversion boundary: `Add selected to Review Basket` is disabled until selected suggestions map to supported concrete action types.
+- [x] Define the conversion boundary: `Add selected to Review Basket` is disabled until selected suggestions map to supported concrete action types. Current supported conversion is `metadata_candidate` with complete `currentContent` and `proposedContent` into reviewed `update_note`; similar notes remain report-only.
 - [x] Preserve the right-side Files/Preview area; Suggestions is a main workspace, not a modal that hides the vault context.
 
-### Phase 7.6 - Markdown Image Preview Optional
+### Phase 7.5.6 - Metadata Defaults For Generated Notes
 
-- [ ] Render Markdown image links in Preview if it stays small.
-- [ ] Image preview does not include image editing, import automation, tagging, or vision analysis.
+- [ ] Generated notes receive deterministic YAML defaults at creation time.
+- [ ] Save as Note, AI summaries, imports, and future AI drafts mark their origin explicitly.
+- [ ] Example fields: `tags`, `type`, `status`, `source`, `created_by`, `created_at`, `origin_action`.
+- [ ] Do not rely on later tag inference from generated filenames.
+- [ ] LLM-generated extra metadata must remain optional and reviewed.
+### Phase 7.6 - Markdown Render And Editor Light
+
+- [ ] Expand Markdown Preview toward Obsidian-core rendering where practical: local image links, strikethrough, task lists, wikilinks/Markdown links, code fences, tables if small enough, and safe HTML handling rules.
+- [ ] Keep this as renderer support only. No image editing, import automation, tagging, or vision analysis in this block.
+- [ ] Compare against Obsidian's default Markdown behavior and document intentional V1 differences instead of chasing plugin behavior.
+- [ ] Evaluate Editor Light only if it stays small: basic Markdown editing affordances such as bold, italic, headings, and task-list insertion. Full toolbar, color styling, live preview editing, and detachable editor remain V1.1/V1.2 unless reclassified by the V1 necessity gate.
 
 ### Phase 7.7 - V1 Necessity Review Gate
 
@@ -342,6 +353,7 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Chat Sessions / conversation history as a later V2 feature: session list, resume, delete, privacy rules, and per-vault/global storage decisions.
 
 - [ ] Persistent Suggestion Sessions: optionally store open suggestion groups under selected-vault `.zeus/` with created time, source target, index/model version or file hashes, status, and stale validation. Current V1 Suggestions remain intentionally session-only and disappear on reload/restart.
+- [ ] Merge Workspace for similar/complementary notes: compare two source notes, show A/B diff, create a reviewed third merged file, and optionally archive the sources only after explicit confirmation. This must become a dedicated `merge_notes` action, not an overloaded `update_note`.
 ## Parking Lot
 
 - [ ] Voice input.

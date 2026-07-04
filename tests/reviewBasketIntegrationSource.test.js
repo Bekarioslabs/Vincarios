@@ -116,7 +116,7 @@ test('review basket exposes a dedicated diff approval modal for diff proposals',
   assert.match(source, /review-diff-button/);
   assert.match(source, /showDiffPreviewModal/);
   assert.match(source, /Diff Preview/);
-  assert.match(source, /review-diff-line/);
+  assert.match(source, /getDiffLineRenderer\(\)\.renderDiffLines/);
 });
 test('review basket confirms update note proposals before execution', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');

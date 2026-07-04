@@ -211,3 +211,13 @@
 .suggestions-detail-empty {
   padding: 10px;
 }
+.suggestions-preview-diff {
+  margin: 0;
+  color: var(--text-readable);
+  font: 11px/1.45 var(--font-monospace);
+}
+
+.suggestions-preview-summary {
+  margin-bottom: 6px;
+  color: var(--text-muted);
+}
