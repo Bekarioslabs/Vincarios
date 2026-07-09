@@ -23,7 +23,7 @@
   "author": "Bekarios Labs",
   "license": "UNLICENSED",
   "devDependencies": {
-    "electron": "42.4.1"
+    "electron": "43.1.0"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
