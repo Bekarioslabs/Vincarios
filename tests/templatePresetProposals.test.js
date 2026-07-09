@@ -14,6 +14,10 @@ test('note create plans convert to one create note proposal', () => {
   assert.equal(proposals[0].type, 'create_note');
   assert.equal(proposals[0].targetFolder, '00_Inbox');
   assert.equal(proposals[0].title, 'Star Lu');
+  assert.equal(proposals[0].fileRole, 'note');
+  assert.equal(proposals[0].metadata.type, 'note');
+  assert.equal(proposals[0].metadata.origin_action, 'create_from_preset');
+  assert.match(proposals[0].content, /source: preset:note\.default/);
   assert.match(proposals[0].content, /# Star Lu/);
   assert.match(proposals[0].reason, /note.default/);
 });
@@ -35,4 +39,9 @@ test('project create plans convert to one template proposal', () => {
   assert.equal(proposals[0].templatePresetId, 'project.default');
   assert.equal(proposals[0].folders.length > 0, true);
   assert.equal(proposals[0].files.length, 7);
+  assert.equal(proposals[0].files[0].role, 'project-overview');
+  assert.equal(proposals[0].files[0].metadata.type, 'project-overview');
+  assert.equal(proposals[0].files[2].role, 'references');
+  assert.equal(proposals[0].files[2].metadata.type, 'references');
+  assert.match(proposals[0].files[0].content, /origin_action: create_from_preset/);
 });

@@ -41,6 +41,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'VAULT_CREATE_FOLDER',
     'VAULT_CREATE_NOTE',
     'VAULT_LIST_FOLDER',
+    'VAULT_READ_IMAGE_ASSET',
     'VAULT_READ_MARKDOWN',
     'VAULT_RENAME_FILE',
     'VAULT_SELECT_FOLDER',
@@ -64,12 +65,19 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE, 'settings:set-vault-role');
   assert.equal(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE, 'settings:reset-vault-role');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
+  assert.equal(IPC_CHANNELS.VAULT_READ_IMAGE_ASSET, 'vault:read-image-asset');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_NOTE, 'vault:create-note');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_FOLDER, 'vault:create-folder');
   assert.equal(IPC_CHANNELS.VAULT_UPDATE_NOTE, 'vault:update-note');
   assert.equal(IPC_CHANNELS.VAULT_RENAME_FILE, 'vault:rename-file');
 });
 
+test('preload exposes image asset reads without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /readImageAsset\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.VAULT_READ_IMAGE_ASSET, payload\)/);
+});
 test('preload exposes reviewed create note writes through the vault API', () => {
   const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
 

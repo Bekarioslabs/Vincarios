@@ -226,6 +226,14 @@ Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsaniti
 
 The preview toolbar includes an `Edit` button that switches to local Markdown source mode. Local source edits do not write directly to the vault. When the edited source differs from the loaded source, `Propose update` creates an `update_note` proposal in the Review Basket. Persisted writes still require the existing diff, backup, stale-content validation, and audit logging path.
 
+
+Markdown image embeds:
+
+- V1 resolves Markdown image syntax and Obsidian image embeds through the main-process vault read service, not through renderer filesystem access.
+- Supported V1 image extensions are `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.svg`, `.bmp`, and `.ico`.
+- The renderer first creates safe image placeholders. The preview controller then asks `api.vault.readImageAsset` for a validated Data URL scoped to the opened vault.
+- File Tree lists supported image files with image icons, but standalone image-file preview and image Selection Actions are a separate follow-up block.
+- Image editing, importing, tagging, vision analysis, and automatic media organization remain out of this Markdown renderer block.
 ## Markdown Link Navigation Decisions
 
 Markdown rendering and Markdown navigation are separate blocks.
@@ -590,6 +598,10 @@ Project style presets are a future workflow, not a Phase 6.5 implementation targ
 Project style presets should be detected through explicit project metadata such as `zeus_style_preset` in a project home note, not guessed from folder names. They must not inject inline HTML/styles into normal Markdown notes. For Obsidian parity, V1 keeps styles ZEUS-only plus Markdown-compatible structure. A future V1.1 feature may optionally export an Obsidian CSS snippet, but only after explicit user confirmation and never by silently writing into `.obsidian`.
 
 Obsidian plugin compatibility direction:
+
+The active Obsidian-core compatibility matrix, intentional differences, plugin fallback boundary, and implementation order live in `docs/rebuild/ZEUS_V1_MARKDOWN_COMPATIBILITY.md`. Phase 7.6 changes must update that matrix instead of scattering compatibility claims through renderer code or unrelated docs.
+
+Current Phase 7.6 foundation: ZEUS uses pinned `markdown-it` behind focused renderer modules for the standard engine, Obsidian-specific syntax, Properties, and the public rendering facade. Raw HTML is disabled. Chat and Markdown Preview consume the same facade, so later core improvements apply consistently without duplicating parsing logic.
 
 ZEUS does not execute Obsidian plugins. Compatibility means one of three safe things:
 

@@ -115,15 +115,27 @@
 
   function createImportProposalFromDrop(drop) {
     const name = sanitizeFileName(drop && drop.name ? drop.name : 'Dropped.md');
+    const metadataApi = getGeneratedMetadataApi();
+    const generated = metadataApi.applyGeneratedNoteMetadata(String((drop && drop.content) || ''), {
+      originAction: metadataApi.ORIGIN_ACTIONS.importMarkdown
+    });
     return {
       type: 'create_note',
       category: 'create',
       title: stripMarkdownExtension(name),
       targetFolder: resolveInboxFolder(drop && drop.profile),
-      content: String((drop && drop.content) || ''),
+      content: generated.content,
+      metadata: generated.metadata,
+      originAction: metadataApi.ORIGIN_ACTIONS.importMarkdown,
       reason: 'Import external Markdown drop into the Inbox through reviewed creation.',
       risk: 'low'
     };
+  }
+
+  function getGeneratedMetadataApi() {
+    if (typeof window !== 'undefined' && window.ZeusGeneratedNoteMetadata) return window.ZeusGeneratedNoteMetadata;
+    if (typeof require === 'function') return require('../../shared/metadata/generatedNoteMetadata');
+    throw new Error('Generated note metadata API unavailable.');
   }
 
   function resolveInboxFolder(profile) {

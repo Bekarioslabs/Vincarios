@@ -154,3 +154,13 @@ test('selection action number inputs hide native spinner chrome', () => {
   assert.match(source, /::-webkit-inner-spin-button/);
   assert.match(source, /-webkit-appearance:\s*none/);
 });
+test('Markdown highlights use dedicated theme tokens and scoped styles', () => {
+  const tokens = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+  const markdown = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
+
+  assert.match(tokens, /--markdown-highlight-background:/);
+  assert.match(tokens, /--markdown-highlight-text:/);
+  assert.match(markdown, /\.markdown-preview mark/);
+  assert.match(markdown, /var\(--markdown-highlight-background\)/);
+  assert.match(markdown, /var\(--markdown-highlight-text\)/);
+});

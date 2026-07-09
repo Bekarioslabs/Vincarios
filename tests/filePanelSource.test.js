@@ -127,3 +127,11 @@ test('file panel supports F2 Rename Light through the vault API only', () => {
   assert.match(source, /Links were not updated in V1/);
   assert.doesNotMatch(source, /fs\.rename/);
 });
+test('file panel treats selected image files as image selections instead of Markdown reads', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /entry\.kind === 'image'/);
+  assert.match(source, /Image file selected/);
+  assert.match(source, /Image selected:/);
+  assert.match(source, /createIconElement\(entry\.kind === 'image' \? 'image'/);
+});

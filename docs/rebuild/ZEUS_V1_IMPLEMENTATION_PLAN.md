@@ -268,7 +268,7 @@ Status: complete for V1-light.
 - [x] Similar notes candidates: local index search returns ranked `similar_note` candidates from stored embeddings only. V1 includes percent scores, strong/medium/weak/noisy labels, threshold filtering, max-results defaults, content/metadata/mixed modes, a content/metadata weight slider, session-remembered per-run values, a compact chat summary, a detailed Selection Actions result panel, low-content target warnings, and an explicit `Refresh index first` option for newly added or changed Markdown files. No Review Basket actions are created yet.
 - [ ] Link candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
 - [x] Tag candidates: selected Markdown files expose `Suggest tags`, which creates local heuristic `metadata_candidate` suggestions with full `currentContent` and `proposedContent`. Selected candidates can enter the Review Basket as reviewed `update_note` proposals. The V1 heuristic is role-aware, avoids hard-coded project-folder names, ignores sentence-like chat filenames, prefers strong project/file-role/structural-folder/title signals, and avoids broad stopword-list growth. AI/embedding-generated tag candidates remain later refinement work.
-- [ ] Metadata/YAML assist for create/write flows: summaries, new notes, project presets, imports, and later update actions should be able to attach reviewed YAML fields such as `tags`, `type`, `status`, or source context through a visible edit field or metadata panel before execution. This must reuse the Review Basket/create/update boundaries and must not become silent metadata writing.
+- [x] Metadata/YAML assist for V1 create flows: Save as Note, summaries, new-note/project presets, and Markdown imports attach deterministic YAML through the shared generated-note metadata policy. The Create Edit view exposes the full YAML before execution. Existing-note update metadata continues through the separate reviewed `update_note` diff path.
 - [ ] Metadata index planning: add a future structured index under selected-vault `.zeus/index/metadata/` for notes, tags, links, template metadata, and project/file-role summaries. Do not overload the embedding index with this data. V1 tag suggestions are designed so this metadata index can become an input later without changing the Review Basket boundary.
 - [ ] Folder candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
 - [x] Suggestions enter grouped reports or Review Basket proposals only through registered suggestion/action types. Current conversion path supports `metadata_candidate` only.
@@ -288,19 +288,33 @@ Status: complete for V1-light.
 
 ### Phase 7.5.6 - Metadata Defaults For Generated Notes
 
-- [ ] Generated notes receive deterministic YAML defaults at creation time.
-- [ ] Save as Note, AI summaries, imports, and future AI drafts mark their origin explicitly.
-- [ ] Example fields: `tags`, `type`, `status`, `source`, `created_by`, `created_at`, `origin_action`.
-- [ ] Do not rely on later tag inference from generated filenames.
-- [ ] LLM-generated extra metadata must remain optional and reviewed.
+- [x] Generated notes receive deterministic YAML defaults before their reviewed `create_note` or `create_from_template` proposal is executed.
+- [x] Save as Note, file/folder summaries, Markdown imports, and note/project presets mark their origin explicitly.
+- [x] Presets supply declarative values; the shared metadata policy validates, merges, orders, and serializes them. V1 fields are `tags`, `type`, `status`, `source`, `created_at`, and `origin_action`; `created_by` is intentionally excluded.
+- [x] Every built-in preset file declares a filename-independent semantic role and matching visible metadata. Custom presets can rename files while retaining roles such as `brainstorm`, `references`, `tasks`, or `log`; no filename guessing is required.
+- [x] Existing frontmatter is preserved, default tags are deduplicated, and generated-note identity does not rely on later filename inference.
+- [x] LLM-generated extra metadata remains optional and reviewed; the Create Edit view keeps the final Markdown/YAML editable before execution.
 ### Phase 7.6 - Markdown Render And Editor Light
 
-- [ ] Expand Markdown Preview toward Obsidian-core rendering where practical: local image links, strikethrough, task lists, wikilinks/Markdown links, code fences, tables if small enough, and safe HTML handling rules.
-- [ ] Keep this as renderer support only. No image editing, import automation, tagging, or vision analysis in this block.
+- [x] Audit current preview behavior against Obsidian core Markdown and record Full/Partial/Missing/Intentional Difference status in ZEUS_V1_MARKDOWN_COMPATIBILITY.md.
+- [x] Add a non-executed compatibility fixture covering core syntax and explicit plugin-code-block examples.
+- [ ] Confirm the remaining V1 rendering subset with Beka before each parser/asset block.
+- [x] Replace the hand-written block/inline regex renderer with pinned `markdown-it` 14.3.0 behind focused engine, Obsidian-extension, Properties, and facade modules.
+- [x] Support standards-based soft line breaks, emphasis variants, strikethrough, nested lists, horizontal rules, inline code, and escapes; add basic Obsidian highlight and inline-comment handling.
+- [x] Bundle the browser engine and MIT license locally, require all Markdown submodules at startup, and keep raw HTML disabled.
+- [ ] Add a data-driven safe fallback registry for explicitly identified plugin blocks; preserve source and never execute plugin code.
+
+- [x] Expand Markdown Preview toward Obsidian-core rendering where practical for current V1 subset: strikethrough, task lists, wikilinks/Markdown links, code fences, tables through markdown-it, and safe HTML escaping.
+- [x] Add local image embeds for Markdown Preview through validated Main/Preload asset reads. V1 supports .png, .jpg, .jpeg, .webp, .gif, .svg, .bmp, and .ico as Markdown embeds and file-tree image entries.
+- [ ] Add standalone image-file preview after Markdown embeds if it stays small: selecting an image file should show the image in Preview without adding vision analysis or write actions.
+- [x] Keep this as renderer support only. No image editing, import automation, tagging, or vision analysis in this block.
 - [ ] Compare against Obsidian's default Markdown behavior and document intentional V1 differences instead of chasing plugin behavior.
 - [ ] Evaluate Editor Light only if it stays small: basic Markdown editing affordances such as bold, italic, headings, and task-list insertion. Full toolbar, color styling, live preview editing, and detachable editor remain V1.1/V1.2 unless reclassified by the V1 necessity gate.
 
 ### Phase 7.7 - V1 Necessity Review Gate
+
+- [ ] Review the five external UI/UX proposal files currently under docs/ together with Beka before accepting any recommendation. Treat them as design input only; do not implement or commit them implicitly.
+- [ ] Create a concise dependency/flow overview (preferably graphical) showing how UI actions, policies, Review Basket, main services, and providers connect.
 
 - [ ] Re-check whether Recent Files/Homepage light, broken-link/orphan scan, and project note maintenance are V1-must or V1.1.
 - [ ] Anything not needed for a presentable V1 moves to the V1.1/V1.2 Backlog before Phase 8 freeze work.
@@ -340,6 +354,7 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Vault Profile V1.1: multiple named profiles, custom folder roles, and `Choose from Vault folders` path picker with inside-vault validation.
 - [ ] Chat action display setting: allow hover actions such as `Save as Note`, `Copy`, and future message actions to render as text, Lucide SVG icons, or icon+text without changing chat action logic.
 - [ ] Context Basket type badge polish: optional distinct badge/border colors for `MD`, `DIR`, future `IMG`, `PDF`, `FILE`, and unknown targets. These colors must remain separate from Selection Action behavior colors.
+- [ ] Ambiguous image-link resolver: when `![[image.png]]` matches multiple vault images, show a clear unresolved state, let the user choose the intended image, then propose a reviewed Markdown link update instead of guessing.
 - [ ] Detachable/undocked Markdown preview window for multi-monitor workflows.
 - [ ] Vision analysis and image tagging gated by model capability.
 - [ ] Obsidian plugin compatibility audit for common workflows: Templater, Dataview, Tasks, Advanced Tables, Calendar, Kanban, Iconize, Style Settings, Omnisearch, Smart Connections, Tag Wrangler, Linter, Mindmap, Homepage, Recent Files, and Make.md.

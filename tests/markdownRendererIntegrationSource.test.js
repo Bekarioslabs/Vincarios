@@ -30,7 +30,7 @@ test('preview controller owns rendered/source mode switching', () => {
   assert.match(source, /ZeusMarkdownRenderer\.renderMarkdown/);
   assert.match(source, /preview\.textContent = String\(source \|\| ''\)/);
   assert.match(source, /editButton\.textContent = sourceMode \? 'Preview' : 'Edit'/);
-  assert.match(source, /Use Update to send changes to Review Basket/);
+  assert.match(source, /Local changes are not saved\. Use Update to send them to Review Basket\./);
   assert.match(source, /type: 'update_note'/);
   assert.match(source, /currentContent: loadedSource/);
   assert.match(source, /proposedContent/);
@@ -55,4 +55,18 @@ test('shell creates status bar before mounting Markdown preview controller', () 
 
   assert.equal(statusIndex > -1, true);
   assert.equal(previewControllerIndex > statusIndex, true);
+});
+test('index loads the bundled Markdown engine and focused extensions before the renderer facade', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const vendorIndex = source.indexOf('./third_party/markdown-it/markdown-it.min.js');
+  const extensionIndex = source.indexOf('./src/renderer/markdown/obsidianMarkdownExtension.js');
+  const engineIndex = source.indexOf('./src/renderer/markdown/markdownEngine.js');
+  const propertiesIndex = source.indexOf('./src/renderer/markdown/markdownProperties.js');
+  const rendererIndex = source.indexOf('./src/renderer/markdown/markdownRenderer.js');
+
+  assert.equal(vendorIndex > -1, true);
+  assert.equal(extensionIndex > vendorIndex, true);
+  assert.equal(engineIndex > extensionIndex, true);
+  assert.equal(propertiesIndex > engineIndex, true);
+  assert.equal(rendererIndex > propertiesIndex, true);
 });

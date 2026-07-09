@@ -42,7 +42,7 @@ test('shell passes review basket into Markdown preview update wiring', () => {
 
   assert.match(source, /wireVaultShell\(api, app, contextState, vaultUi, reviewBasket\)/);
   assert.match(source, /function wireVaultShell\(api, app, contextState, vaultUi, reviewBasket\)/);
-  assert.match(source, /onProposeUpdate: \(proposal\) => addPreviewUpdateProposal\(reviewBasket, statusBar, proposal, contextState\)/);
+  assert.match(source, /onProposeUpdate: \(proposal\) => addPreviewUpdateProposal\(reviewBasket, statusBar, proposal, contextState, permissionState\)/);
 });
 test('assistant messages expose a save-as-note action through the review basket', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');

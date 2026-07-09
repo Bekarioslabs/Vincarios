@@ -51,6 +51,17 @@ test('materialize project preset resolves target role and renders files', () => 
     'Custom Projects/Star Lu/Log.md'
   ]);
   assert.match(plan.files[0].content, /# Star Lu/);
+  assert.deepEqual(plan.files.map((file) => file.role), [
+    'project-overview',
+    'instructions',
+    'references',
+    'brainstorm',
+    'tasks',
+    'decisions',
+    'log'
+  ]);
+  assert.equal(plan.files[2].metadata.type, 'references');
+  assert.deepEqual(plan.files[2].metadata.tags, ['project', 'references']);
 });
 
 test('materialize note preset creates one Markdown file under the selected role', () => {
@@ -63,6 +74,8 @@ test('materialize note preset creates one Markdown file under the selected role'
   assert.deepEqual(plan.files.map((file) => file.path), ['Inbox/Daily Plan.md']);
   assert.match(plan.files[0].content, /# Daily Plan/);
   assert.match(plan.files[0].content, /- \[ \]/);
+  assert.equal(plan.files[0].role, 'todo');
+  assert.equal(plan.files[0].metadata.type, 'task-list');
 });
 
 test('materialize preset sanitizes path segment input', () => {

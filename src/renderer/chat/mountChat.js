@@ -405,7 +405,13 @@
         setText(options.status, 'Review Basket unavailable.');
         return;
       }
-      const proposal = factory(content, { suggestedTitle: options.suggestedTitle });
+      const proposal = factory(content, {
+        suggestedTitle: options.suggestedTitle,
+        responseSubfolder: options.responseSubfolder,
+        profile: options.profile,
+        originAction: options.originAction,
+        metadata: options.metadata
+      });
       options.reviewBasket.addProposal(proposal);
       setText(options.status, 'Added to Review Basket.');
     });

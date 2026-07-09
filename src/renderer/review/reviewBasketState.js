@@ -5,6 +5,7 @@
   const actionSchemaApi = getActionSchemaApi();
   const proposalPlanApi = getProposalPlanApi();
   const diffPreviewApi = getDiffPreviewApi();
+  const generatedMetadataApi = getGeneratedMetadataApi();
   const DEFAULT_AI_RESPONSE_SUBFOLDER = 'AI Responses';
 
   function createReviewBasketState(options) {
@@ -137,15 +138,35 @@
   function createSaveAssistantResponseProposal(content, options) {
     options = options || {};
     const cleanContent = String(content || '').trim();
+    const originAction = options.originAction || generatedMetadataApi.ORIGIN_ACTIONS.saveAssistantResponse;
+    const generated = generatedMetadataApi.applyGeneratedNoteMetadata(cleanContent, {
+      originAction,
+      metadata: options.metadata,
+      now: options.now
+    });
     return {
       type: 'create_note',
       category: 'create',
       title: deriveTitle(options.suggestedTitle || cleanContent),
       targetFolder: options.targetFolder || resolveSaveResponseTargetFolder(options),
-      content: cleanContent,
+      content: generated.content,
+      metadata: generated.metadata,
+      originAction,
       reason: 'Save assistant response as a Markdown note.',
       risk: 'low'
     };
+  }
+
+  function getGeneratedMetadataApi() {
+    if (typeof window !== 'undefined' && window.ZeusGeneratedNoteMetadata) return window.ZeusGeneratedNoteMetadata;
+    if (typeof require === 'function') {
+      try {
+        return require('../../shared/metadata/generatedNoteMetadata');
+      } catch (error) {
+        // Node fallback failed; report a clear API error below.
+      }
+    }
+    throw new Error('Generated note metadata API unavailable.');
   }
 
   function resolveSaveResponseTargetFolder(options) {

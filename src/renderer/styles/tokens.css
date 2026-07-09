@@ -30,6 +30,9 @@
   --metadata-background: rgba(255,255,255,.022);
   --metadata-border: rgba(255,255,255,.08);
 
+  --markdown-highlight-background: rgba(var(--text-accent-rgb), .22);
+  --markdown-highlight-text: var(--text-strong);
+
   --status-success: #16a34a;
   --status-danger: #dc2626;
   --status-error: #f08a8a;

@@ -19,6 +19,7 @@ test('vault read service opens a vault and lists visible folders and Markdown fi
   fs.mkdirSync(path.join(root, '00_Inbox'));
   fs.mkdirSync(path.join(root, '.obsidian'));
   fs.writeFileSync(path.join(root, 'A.md'), '# A');
+  fs.writeFileSync(path.join(root, 'Hero.png'), Buffer.from([137, 80, 78, 71]));
   fs.writeFileSync(path.join(root, 'B.txt'), 'hidden from ZEUS');
 
   const service = createVaultReadService();
@@ -28,8 +29,8 @@ test('vault read service opens a vault and lists visible folders and Markdown fi
 
   const listed = service.listFolder('');
   assert.equal(listed.ok, true);
-  assert.deepEqual(listed.entries.map((entry) => entry.name), ['00_Inbox', 'A.md']);
-  assert.deepEqual(listed.entries.map((entry) => entry.kind), ['folder', 'markdown']);
+  assert.deepEqual(listed.entries.map((entry) => entry.name), ['00_Inbox', 'A.md', 'Hero.png']);
+  assert.deepEqual(listed.entries.map((entry) => entry.kind), ['folder', 'markdown', 'image']);
 });
 
 test('vault read service reads Markdown but rejects other files and protected paths', () => {
@@ -56,6 +57,56 @@ test('vault read service reads Markdown but rejects other files and protected pa
   assert.equal(protectedFile.code, 'protected_path');
 });
 
+test('vault read service reads image assets as data URLs after path and type validation', () => {
+  const root = createTempVault();
+  fs.mkdirSync(path.join(root, 'Assets'));
+  fs.writeFileSync(path.join(root, 'Assets', 'Hero.png'), Buffer.from([137, 80, 78, 71]));
+  fs.writeFileSync(path.join(root, 'Assets', 'Notes.txt'), 'not image');
+
+  const service = createVaultReadService();
+  service.setRoot(root);
+
+  const image = service.readImageAsset({ targetPath: 'Hero.png', currentPath: 'Assets/Note.md' });
+  assert.equal(image.ok, true);
+  assert.equal(image.path, 'Assets/Hero.png');
+  assert.equal(image.mimeType, 'image/png');
+  assert.match(image.dataUrl, /^data:image\/png;base64,/);
+
+  const text = service.readImageAsset({ targetPath: 'Notes.txt', currentPath: 'Assets/Note.md' });
+  assert.equal(text.ok, false);
+  assert.equal(text.code, 'not_image');
+
+  const traversal = service.readImageAsset({ targetPath: '../Hero.png', currentPath: '../Unsafe.md' });
+  assert.equal(traversal.ok, false);
+});
+test('vault read service resolves unique Obsidian image embeds by basename inside the vault', () => {
+  const root = createTempVault();
+  fs.mkdirSync(path.join(root, 'Assets'));
+  fs.mkdirSync(path.join(root, 'Notes'));
+  fs.writeFileSync(path.join(root, 'Assets', 'Hero.png'), Buffer.from([137, 80, 78, 71]));
+
+  const service = createVaultReadService();
+  service.setRoot(root);
+
+  const image = service.readImageAsset({ targetPath: 'Hero.png', currentPath: 'Notes/Note.md' });
+  assert.equal(image.ok, true);
+  assert.equal(image.path, 'Assets/Hero.png');
+});
+
+test('vault read service rejects ambiguous Obsidian image basename embeds', () => {
+  const root = createTempVault();
+  fs.mkdirSync(path.join(root, 'A'));
+  fs.mkdirSync(path.join(root, 'B'));
+  fs.writeFileSync(path.join(root, 'A', 'Hero.png'), Buffer.from([137, 80, 78, 71]));
+  fs.writeFileSync(path.join(root, 'B', 'Hero.png'), Buffer.from([137, 80, 78, 71]));
+
+  const service = createVaultReadService();
+  service.setRoot(root);
+
+  const image = service.readImageAsset({ targetPath: 'Hero.png', currentPath: 'Notes/Note.md' });
+  assert.equal(image.ok, false);
+  assert.equal(image.code, 'ambiguous_image_link');
+});
 test('vault read service requires an opened vault', () => {
   const service = createVaultReadService();
   assert.equal(service.listFolder('').code, 'vault_not_open');

@@ -47,7 +47,9 @@ test('markdown drop import proposal targets inbox review flow', () => {
   assert.equal(proposal.category, 'create');
   assert.equal(proposal.title, 'Outside Note');
   assert.equal(proposal.targetFolder, '00_Inbox');
-  assert.equal(proposal.content, '# Outside\n\nBody.');
+  assert.match(proposal.content, /tags:\n  - imported-note/);
+  assert.match(proposal.content, /origin_action: import_markdown/);
+  assert.match(proposal.content, /# Outside\n\nBody\.$/);
   assert.match(proposal.reason, /external Markdown drop/);
 });
 

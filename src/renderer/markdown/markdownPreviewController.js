@@ -4,6 +4,7 @@
   function mountMarkdownPreview(options) {
     options = options || {};
     const app = options.app;
+    const api = options.api || null;
     const status = options.status || null;
     if (!app) return null;
 
@@ -37,7 +38,7 @@
     if (backButton) backButton.addEventListener('click', () => moveHistory(-1));
     if (forwardButton) forwardButton.addEventListener('click', () => moveHistory(1));
     if (proposeButton) proposeButton.addEventListener('click', handleProposeUpdate);
-    if (editor) editor.addEventListener('input', updateProposeButton);
+    if (editor) editor.addEventListener('input', handleEditorInput);
 
     editButton.addEventListener('click', () => {
       if (!currentSource) return;
@@ -101,10 +102,11 @@
       editButton.textContent = 'Preview';
       setVisibleMode();
       editor.focus();
-      showPreviewStatus('Source editor is local only. Use Update to send changes to Review Basket.');
+      clearPreviewStatus();
     }
 
     function showPreviewFromEditor() {
+      const changed = String(editor.value || '') !== loadedSource;
       mode = 'preview';
       currentSource = editor.value;
       updateCurrentHistorySource(currentSource);
@@ -112,7 +114,14 @@
       editButton.textContent = 'Edit';
       setVisibleMode();
       updateProposeButton();
-      showPreviewStatus('Preview updated from local source editor. Not saved to vault.');
+      if (changed) showPreviewStatus('Preview updated from local source editor. Not saved to vault.');
+      else clearPreviewStatus();
+    }
+
+    function handleEditorInput() {
+      updateProposeButton();
+      if (hasLocalChanges()) showPreviewStatus('Local changes are not saved. Use Update to send them to Review Basket.');
+      else clearPreviewStatus();
     }
 
     function setSourceInternal(source, path) {
@@ -220,8 +229,30 @@
         return;
       }
       preview.innerHTML = window.ZeusMarkdownRenderer.renderMarkdown(source);
+      resolveMarkdownImages();
     }
 
+    function resolveMarkdownImages() {
+      if (!api || !api.vault || typeof api.vault.readImageAsset !== 'function') return;
+      const images = Array.from(preview.querySelectorAll('img.markdown-image-embed[data-image-target]'));
+      images.forEach((image) => resolveMarkdownImage(image));
+    }
+
+    async function resolveMarkdownImage(image) {
+      const targetPath = image.dataset.imageTarget || '';
+      if (!targetPath) return;
+      image.dataset.imageState = 'loading';
+      const result = await api.vault.readImageAsset({ targetPath, currentPath });
+      if (!result || !result.ok || !result.dataUrl) {
+        image.dataset.imageState = 'missing';
+        image.removeAttribute('src');
+        image.setAttribute('title', (result && result.message) || 'Image not available.');
+        return;
+      }
+      image.src = result.dataUrl;
+      image.dataset.imageState = 'loaded';
+      image.setAttribute('data-image-path', result.path || targetPath);
+    }
     function setVisibleMode() {
       const sourceMode = mode === 'source';
       preview.hidden = sourceMode;

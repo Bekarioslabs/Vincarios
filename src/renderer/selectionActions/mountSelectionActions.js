@@ -207,7 +207,7 @@
         const result = await api.chat.send({ messages: request.messages });
         if (result && result.ok && result.message && result.message.content) {
           removeNode(pending);
-          appendActionMessage(result.message.content, [], { allowSave: true, suggestedTitle: buildSummaryTitle('md', request.path), responseSubfolder: 'Summaries' });
+          appendActionMessage(result.message.content, [], { allowSave: true, suggestedTitle: buildSummaryTitle('md', request.path), responseSubfolder: 'Summaries', originAction: 'summarize_file' });
           setText(status, 'File summarized: ' + request.path);
           return;
         }
@@ -522,7 +522,7 @@
         const result = await api.chat.send({ messages: request.messages });
         removeNode(pending);
         if (result && result.ok && result.message && result.message.content) {
-          appendActionMessage(result.message.content, [], { allowSave: true, suggestedTitle: buildSummaryTitle('dir', snapshot.path), responseSubfolder: 'Summaries' });
+          appendActionMessage(result.message.content, [], { allowSave: true, suggestedTitle: buildSummaryTitle('dir', snapshot.path), responseSubfolder: 'Summaries', originAction: 'summarize_folder' });
           setText(status, 'Folder Markdown summarized: ' + snapshot.path);
           return;
         }
@@ -593,7 +593,7 @@
       const chatLog = app.querySelector('#chat-log');
       if (!chatLog) return;
       if (typeof window !== 'undefined' && window.ZeusChat && typeof window.ZeusChat.appendMessage === 'function') {
-        const message = window.ZeusChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder });
+        const message = window.ZeusChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction });
         if (options.pending && message) {
           message.classList.add('chat-message-pending');
           message.setAttribute('aria-busy', 'true');

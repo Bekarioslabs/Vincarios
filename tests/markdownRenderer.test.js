@@ -17,12 +17,14 @@ test('renders YAML frontmatter as visible properties block', () => {
 });
 
 test('renders common Markdown and Obsidian-style wikilinks safely', () => {
-  const html = renderMarkdown('# Title\n\nThis is **bold**, *italic*, `code`, and [[Project Home|home]].');
+  const html = renderMarkdown('# Title\n\nThis is **bold**, *italic*, `code`, [Google](https://www.google.com), and [[Project Home|home]].');
 
   assert.match(html, /<h1>Title<\/h1>/);
   assert.match(html, /<strong>bold<\/strong>/);
   assert.match(html, /<em>italic<\/em>/);
   assert.match(html, /<code>code<\/code>/);
+  assert.match(html, /class="markdown-link"/);
+  assert.match(html, /data-link-target="https:\/\/www\.google\.com"/);
   assert.match(html, /class="markdown-wikilink"/);
   assert.match(html, /data-link-target="Project Home"/);
   assert.match(html, />home<\/span>/);
@@ -90,4 +92,44 @@ test('renders Markdown task list checkboxes as disabled checkbox controls', () =
   assert.match(html, /<input type="checkbox" checked disabled>/);
   assert.match(html, /Draft outline/);
   assert.match(html, /Review done/);
+});
+test('renders soft line breaks as one paragraph without forced br elements', () => {
+  const html = renderMarkdown('Soft\nline break.');
+
+  assert.match(html, /<p>Soft\nline break\.<\/p>/);
+  assert.doesNotMatch(html, /<br>/);
+});
+
+test('renders CommonMark emphasis variants and strikethrough', () => {
+  const html = renderMarkdown('This is __bold__, _italic_, and ~~removed~~.');
+
+  assert.match(html, /<strong>bold<\/strong>/);
+  assert.match(html, /<em>italic<\/em>/);
+  assert.match(html, /<s>removed<\/s>/);
+});
+
+test('renders Obsidian highlights and hides Obsidian comments', () => {
+  const html = renderMarkdown('Visible ==highlight== and %%private comment%% text.');
+
+  assert.match(html, /<mark>highlight<\/mark>/);
+  assert.doesNotMatch(html, /private comment/);
+  assert.match(html, /Visible/);
+});
+
+test('renders nested lists as nested list structures', () => {
+  const html = renderMarkdown('- Parent\n  - Child\n- Sibling');
+
+  assert.match(html, /<li>Parent\s*<ul>/);
+  assert.match(html, /<li>Child<\/li>/);
+  assert.match(html, /<li>Sibling<\/li>/);
+});
+test('renders Markdown and Obsidian image embeds as safe preview placeholders', () => {
+  const html = renderMarkdown('![Hero](assets/hero.png)\n\n![[assets/portrait.jpg|Portrait]]');
+
+  assert.match(html, /class="markdown-image-embed"/);
+  assert.match(html, /data-image-target="assets\/hero\.png"/);
+  assert.match(html, /alt="Hero"/);
+  assert.match(html, /data-image-target="assets\/portrait\.jpg"/);
+  assert.match(html, /alt="Portrait"/);
+  assert.doesNotMatch(html, /src="assets\/hero\.png"/);
 });

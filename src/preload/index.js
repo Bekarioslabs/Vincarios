@@ -25,6 +25,7 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_SET_ROOT: 'vault:set-root',
   VAULT_LIST_FOLDER: 'vault:list-folder',
   VAULT_READ_MARKDOWN: 'vault:read-markdown',
+  VAULT_READ_IMAGE_ASSET: 'vault:read-image-asset',
   VAULT_CREATE_NOTE: 'vault:create-note',
   VAULT_CREATE_FOLDER: 'vault:create-folder',
   VAULT_UPDATE_NOTE: 'vault:update-note',
@@ -100,6 +101,9 @@ const zeus = Object.freeze({
     },
     readMarkdown(relativePath) {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_READ_MARKDOWN, relativePath);
+    },
+    readImageAsset(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_READ_IMAGE_ASSET, payload);
     },
     createNote(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_CREATE_NOTE, payload);

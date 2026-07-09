@@ -132,7 +132,7 @@
         return wrapper;
       }
 
-      wrapper.appendChild(renderer.createIconElement(isMarkdownPath(entry.path) ? 'markdownFile' : 'file', 'file-row-type-icon'));
+      wrapper.appendChild(renderer.createIconElement(entry.kind === 'image' ? 'image' : (isMarkdownPath(entry.path) ? 'markdownFile' : 'file'), 'file-row-type-icon'));
       return wrapper;
     }
     function renderEntries(entries, depth, parentNode) {
@@ -313,6 +313,13 @@
       updateNavigation(navigator.snapshot());
       renderTree();
       focusRenderedPath(entry.path);
+      if (entry.kind === 'image') {
+        setPreviewMessage('Image file selected. Image file preview is planned after Markdown image embeds.');
+        if (contextState) contextState.setFile(entry.path, createFileSelectionDetails(entry.path));
+        else setText(context, 'Selection image: ' + entry.path);
+        setStatus('Image selected: ' + entry.path);
+        return;
+      }
       setStatus('Reading ' + entry.path + '...');
       const read = await api.vault.readMarkdown(entry.path);
       if (!read.ok) {
@@ -460,7 +467,15 @@
     }
 
     function isMarkdownPath(path) {
-      return /\.md$/i.test(String(path || ''));
+      return /\.m(?:d|arkdown)$/i.test(String(path || ''));
+    }
+    function createFileSelectionDetails(path) {
+      return {
+        content: '',
+        readAllowed: canUsePathAsContext(path),
+        writeAllowed: canUsePathAsUpdateTarget(path),
+        parentReadAllowed: canUsePathAsContext(window.ZeusFileNavigator.parentFolder(path) || '')
+      };
     }
     function createContextDetails(path, content) {
       const parentFolder = window.ZeusFileNavigator.parentFolder(path);

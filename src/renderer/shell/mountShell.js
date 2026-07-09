@@ -304,8 +304,8 @@
   function getIconRenderer() {
     return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
   }
-  function addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState) {
-    const permission = validatePreviewUpdatePermission(proposal, contextState);
+  function addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState, permissionState) {
+    const permission = validatePreviewUpdatePermission(proposal, contextState, permissionState);
     if (!permission.ok) {
       setText(statusBar, permission.message);
       return permission;
@@ -317,10 +317,14 @@
     setText(statusBar, 'Update proposal added to Review Basket.');
     return { ok: true };
   }
-  function validatePreviewUpdatePermission(proposal, contextState) {
+  function validatePreviewUpdatePermission(proposal, contextState, permissionState) {
     const targetPath = normalizePath(proposal && proposal.targetPath);
     const selection = contextState && typeof contextState.snapshot === 'function' ? contextState.snapshot() : null;
     if (!targetPath) return { ok: false, message: 'Update target unavailable.' };
+    if (permissionState && typeof permissionState.resolve === 'function') {
+      if (permissionState.resolve(targetPath).write === true) return { ok: true };
+      return { ok: false, message: 'Please enable W for this file before updating: ' + targetPath };
+    }
     if (!selection || selection.kind !== 'file' || normalizePath(selection.path) !== targetPath) {
       return { ok: false, message: 'Select this file before updating: ' + targetPath };
     }
@@ -461,6 +465,7 @@
     const previewController = window.ZeusMarkdownPreview
       ? window.ZeusMarkdownPreview.mountMarkdownPreview({
         app,
+        api,
         status: statusBar,
         onOpenLink: (request) => filePanel && filePanel.openLinkedMarkdown
           ? filePanel.openLinkedMarkdown(request.target, request.currentPath)
@@ -472,7 +477,7 @@
           setText(statusBar, 'Preview history: ' + path);
           return { ok: true, path };
         },
-        onProposeUpdate: (proposal) => addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState)
+        onProposeUpdate: (proposal) => addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState, permissionState)
       })
       : null;
     const permissionState = createPermissionState(statusBar);

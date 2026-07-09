@@ -43,3 +43,19 @@ test('renderer bootstrap requires the selected update proposal module', () => {
   assert.equal(result.ok, false);
   assert.match(result.message, /ZeusSelectedUpdateProposalAction/);
 });
+test('renderer bootstrap requires the Markdown engine submodules', () => {
+  ['ZeusObsidianMarkdownExtension', 'ZeusMarkdownEngine', 'ZeusMarkdownProperties'].forEach((globalName) => {
+    const runtime = createRuntime({ [globalName]: undefined });
+    const result = validateRendererModules(runtime);
+
+    assert.equal(result.ok, false);
+    assert.match(result.message, new RegExp(globalName));
+  });
+});
+test('preview update validation uses permission state instead of requiring selected context match', () => {
+  const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /addPreviewUpdateProposal\(reviewBasket, statusBar, proposal, contextState, permissionState\)/);
+  assert.match(source, /validatePreviewUpdatePermission\(proposal, contextState, permissionState\)/);
+  assert.match(source, /permissionState\.resolve\(targetPath\)\.write === true/);
+});

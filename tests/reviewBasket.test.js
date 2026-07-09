@@ -24,7 +24,9 @@ test('review basket stores save-as-note proposals without executing vault writes
   assert.equal(added.selected, true);
   assert.equal(added.targetFolder, '00_Inbox/AI Responses');
   assert.equal(added.title, 'Good Answer');
-  assert.equal(added.content, '# Good Answer\n\nUseful Markdown body.');
+  assert.match(added.content, /tags:\n  - ai-response/);
+  assert.match(added.content, /origin_action: save_assistant_response/);
+  assert.match(added.content, /# Good Answer\n\nUseful Markdown body\.$/);
   assert.equal(basket.getSnapshot().items.length, 1);
   assert.equal(changes.length, 1);
 });
@@ -38,10 +40,13 @@ test('save-as-note proposal creates a safe fallback title from plain text', () =
 
 test('save-as-note proposal uses an explicit suggested title when provided', () => {
   const proposal = createSaveAssistantResponseProposal('Generated summary body.', {
-    suggestedTitle: 'Summary - Core - 2026-06-29'
+    suggestedTitle: 'Summary - Core - 2026-06-29',
+    originAction: 'summarize_file'
   });
 
   assert.equal(proposal.title, 'Summary - Core - 2026-06-29');
+  assert.equal(proposal.metadata.type, 'summary');
+  assert.equal(proposal.metadata.origin_action, 'summarize_file');
 });
 test('save-as-note proposal can target a response subfolder under AI Responses', () => {
   const proposal = createSaveAssistantResponseProposal('Generated summary body.', {

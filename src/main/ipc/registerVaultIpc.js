@@ -34,6 +34,7 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
   });
   ipcMain.handle(IPC_CHANNELS.VAULT_LIST_FOLDER, (_event, relativePath) => vaultReadService.listFolder(relativePath));
   ipcMain.handle(IPC_CHANNELS.VAULT_READ_MARKDOWN, (_event, relativePath) => vaultReadService.readMarkdown(relativePath));
+  ipcMain.handle(IPC_CHANNELS.VAULT_READ_IMAGE_ASSET, (_event, payload) => vaultReadService.readImageAsset(payload));
   ipcMain.handle(IPC_CHANNELS.VAULT_CREATE_NOTE, (_event, payload) => {
     if (!vaultWriteService || typeof vaultWriteService.createNote !== 'function') {
       return { ok: false, code: 'write_unavailable', message: 'Vault write service unavailable.' };

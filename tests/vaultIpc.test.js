@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -23,6 +23,25 @@ test('vault IPC sets read and write roots after folder selection', async () => {
   assert.deepEqual(roots, [['read', 'D:/Vault'], ['write', 'D:/Vault']]);
 });
 
+test('vault IPC exposes read image assets through a read-specific channel', async () => {
+  const handlers = new Map();
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const readService = {
+    setRoot() {},
+    getState() { return {}; },
+    listFolder() {},
+    readMarkdown() {},
+    readImageAsset(payload) {
+      return { ok: true, payload, dataUrl: 'data:image/png;base64,AAAA' };
+    }
+  };
+
+  registerVaultIpc(ipcMain, {}, null, readService, null);
+  const result = await handlers.get(IPC_CHANNELS.VAULT_READ_IMAGE_ASSET)(null, { targetPath: 'A.png', currentPath: 'Note.md' });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.payload, { targetPath: 'A.png', currentPath: 'Note.md' });
+});
 test('vault IPC exposes create note through a write-specific channel', async () => {
   const handlers = new Map();
   const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };

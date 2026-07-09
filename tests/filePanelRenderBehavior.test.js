@@ -100,3 +100,73 @@ test('file panel renders root folders after opening a vault', async () => {
     else global.document = previousDocument;
   }
 });
+test('file panel opens Markdown after selecting an image file', async () => {
+  const previousWindow = global.window;
+  const previousDocument = global.document;
+  const navigator = require('../src/renderer/files/fileNavigator');
+  const keyboard = require('../src/renderer/files/fileTreeKeyboard');
+  const permissions = require('../src/renderer/permissions/permissionState');
+  const context = require('../src/renderer/context/contextState');
+  const { mountFilePanel } = require('../src/renderer/files/mountFilePanel');
+
+  global.document = { createElement: createNode };
+  global.window = {
+    ZeusFileNavigator: navigator,
+    ZeusFileTreeKeyboard: keyboard,
+    ZeusIconRenderer: {
+      createIconElement(name, className) {
+        const icon = createNode('img');
+        icon.iconName = name;
+        icon.className = className || '';
+        return icon;
+      }
+    }
+  };
+
+  try {
+    const root = createRoot();
+    const previewCalls = [];
+    const previewController = {
+      setSource(content, filePath) { previewCalls.push({ content, path: filePath }); },
+      setMessage(message) { previewCalls.push({ message }); }
+    };
+    const state = context.createContextState();
+    const api = {
+      vault: {
+        listFolder() {
+          return Promise.resolve({ ok: true, entries: [
+            { name: 'test.png', path: '03_Knowledge/test.png', kind: 'image' },
+            { name: 'Markdown_TEST.md', path: '03_Knowledge/Markdown_TEST.md', kind: 'markdown' }
+          ] });
+        },
+        readMarkdown(filePath) {
+          return Promise.resolve({ ok: true, path: filePath, content: '# Markdown Test' });
+        }
+      }
+    };
+    const panel = mountFilePanel({
+      api,
+      root,
+      previewController,
+      contextState: state,
+      permissionState: permissions.createPermissionState(),
+      navigator: navigator.createFileNavigator(),
+      keyboard
+    });
+
+    await panel.openRoot();
+    const imageRow = root.nodes['#file-tree'].children[0];
+    const markdownRow = root.nodes['#file-tree'].children[1];
+    await imageRow.listeners.click();
+    await markdownRow.listeners.click();
+
+    assert.deepEqual(previewCalls.at(-1), { content: '# Markdown Test', path: '03_Knowledge/Markdown_TEST.md' });
+    assert.equal(state.snapshot().path, '03_Knowledge/Markdown_TEST.md');
+    assert.equal(state.snapshot().content, '# Markdown Test');
+  } finally {
+    if (previousWindow === undefined) delete global.window;
+    else global.window = previousWindow;
+    if (previousDocument === undefined) delete global.document;
+    else global.document = previousDocument;
+  }
+});
