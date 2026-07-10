@@ -932,15 +932,27 @@ body.is-resizing .pane-resizer::after {
   grid-column: 1 / -1;
   min-width: 0;
   min-height: var(--min-preview-width);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   background: var(--background-primary);
 }
 .status-bar {
-  padding: 5px 12px;
+  display: flex;
+  min-height: var(--statusbar-height);
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
   color: var(--text-muted);
   font-size: 11px;
+}
+
+.status-bar-global {
+  min-width: 0;
+  overflow: hidden;
+  padding: 5px 12px;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .start-screen {

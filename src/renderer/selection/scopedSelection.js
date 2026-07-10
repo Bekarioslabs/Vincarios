@@ -78,6 +78,7 @@
         x: event.clientX,
         y: event.clientY,
         onSelect: () => selectRegion(region.element),
+        onCopyLink: () => copyPreviewLink(region.element),
         onCopy: () => copyRegion(region.element),
         onCut: () => cutEditableRegion(region.element),
         onPaste: () => pasteEditableRegion(region.element)
@@ -136,6 +137,7 @@
     root.style.left = Math.max(0, options.x) + 'px';
     root.style.top = Math.max(0, options.y) + 'px';
 
+    if (options.actions.includes('copy-link')) root.appendChild(createMenuButton('Copy as link', options.onCopyLink));
     if (options.actions.includes('cut')) root.appendChild(createMenuButton('Cut', options.onCut));
     if (options.actions.includes('copy')) root.appendChild(createMenuButton('Copy', options.onCopy));
     if (options.actions.includes('paste')) root.appendChild(createMenuButton('Paste', options.onPaste));
@@ -214,6 +216,11 @@
     return false;
   }
 
+  async function copyPreviewLink(element) {
+    const link = getPreviewLinkForPath(element && element.dataset ? element.dataset.previewCurrentPath : '');
+    if (!link) return false;
+    return writeClipboard(link);
+  }
 
   async function cutEditableRegion(element) {
     if (!isEditableInput(element)) return false;
@@ -300,6 +307,26 @@
     return String((element && (element.innerText || element.textContent)) || '');
   }
 
+  function getPreviewLinkForPath(filePath) {
+    const normalized = normalizePreviewPath(filePath);
+    if (!normalized) return '';
+    if (isImagePreviewPath(normalized)) return '![[' + normalized + ']]';
+    if (isMarkdownPreviewPath(normalized)) return '[[' + normalized.replace(/\.(md|markdown)$/i, '') + ']]';
+    return '[[' + normalized + ']]';
+  }
+
+  function normalizePreviewPath(filePath) {
+    return String(filePath || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').trim();
+  }
+
+  function isMarkdownPreviewPath(filePath) {
+    return /\.(md|markdown)$/i.test(String(filePath || ''));
+  }
+
+  function isImagePreviewPath(filePath) {
+    return /\.(png|jpe?g|webp|gif|svg|bmp|ico)$/i.test(String(filePath || ''));
+  }
+
   function getCopyTextForRegion(options) {
     options = options || {};
     const selected = String(options.selectedText || '').trim();
@@ -320,8 +347,13 @@
     if (!region) return [];
     const definition = REGION_DEFINITIONS.find((item) => item.id === region.id);
     const actions = definition && Array.isArray(definition.menuActions) ? definition.menuActions.slice() : [];
+    if (region.id === 'markdown-preview' && hasPreviewLinkPath(region.element)) actions.unshift('copy-link');
     if (region.nativeInput && !isEditableInput(region.element)) return actions.filter((action) => action === 'copy' || action === 'select-area');
     return actions;
+  }
+
+  function hasPreviewLinkPath(element) {
+    return Boolean(element && element.dataset && normalizePreviewPath(element.dataset.previewCurrentPath));
   }
 
   function getScopedSelectionRegionForClassNames(classNames) {
@@ -352,6 +384,7 @@
     findScopedSelectionRegion,
     getContextMenuActionsForRegion,
     getCopyTextForRegion,
+    getPreviewLinkForPath,
     getScopedSelectionRegionForClassNames,
     isCopyShortcut,
     isSelectAllShortcut

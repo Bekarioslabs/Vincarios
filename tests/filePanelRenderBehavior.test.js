@@ -170,3 +170,66 @@ test('file panel opens Markdown after selecting an image file', async () => {
     else global.document = previousDocument;
   }
 });
+
+test('file panel opens selected images in the preview controller', async () => {
+  const previousWindow = global.window;
+  const previousDocument = global.document;
+  const navigator = require('../src/renderer/files/fileNavigator');
+  const keyboard = require('../src/renderer/files/fileTreeKeyboard');
+  const permissions = require('../src/renderer/permissions/permissionState');
+  const context = require('../src/renderer/context/contextState');
+  const { mountFilePanel } = require('../src/renderer/files/mountFilePanel');
+
+  global.document = { createElement: createNode };
+  global.window = {
+    ZeusFileNavigator: navigator,
+    ZeusFileTreeKeyboard: keyboard,
+    ZeusIconRenderer: {
+      createIconElement(name, className) {
+        const icon = createNode('img');
+        icon.iconName = name;
+        icon.className = className || '';
+        return icon;
+      }
+    }
+  };
+
+  try {
+    const root = createRoot();
+    const previewCalls = [];
+    const previewController = {
+      setImageAsset(filePath) { previewCalls.push({ image: filePath }); },
+      setMessage(message) { previewCalls.push({ message }); }
+    };
+    const state = context.createContextState();
+    const api = {
+      vault: {
+        listFolder() {
+          return Promise.resolve({ ok: true, entries: [
+            { name: 'Hero.png', path: 'Images/Hero.png', kind: 'image' }
+          ] });
+        }
+      }
+    };
+    const panel = mountFilePanel({
+      api,
+      root,
+      previewController,
+      contextState: state,
+      permissionState: permissions.createPermissionState(),
+      navigator: navigator.createFileNavigator(),
+      keyboard
+    });
+
+    await panel.openRoot();
+    await root.nodes['#file-tree'].children[0].listeners.click();
+
+    assert.deepEqual(previewCalls, [{ image: 'Images/Hero.png' }]);
+    assert.equal(state.snapshot().path, 'Images/Hero.png');
+  } finally {
+    if (previousWindow === undefined) delete global.window;
+    else global.window = previousWindow;
+    if (previousDocument === undefined) delete global.document;
+    else global.document = previousDocument;
+  }
+});

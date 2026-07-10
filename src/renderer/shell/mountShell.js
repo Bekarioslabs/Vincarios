@@ -120,17 +120,16 @@
         '      <div class="markdown-preview-shell">',
         '        <div class="markdown-preview-toolbar">',
         '          <div id="markdown-preview-title" class="markdown-preview-title">Markdown Preview</div>',
-        '          <div id="markdown-link-feedback" class="markdown-link-feedback" hidden aria-live="polite"></div>',
         '          <button id="markdown-history-back" class="markdown-history-button" type="button" title="Back" aria-label="Back in preview history" disabled>&lt;</button>',
         '          <button id="markdown-history-forward" class="markdown-history-button" type="button" title="Forward" aria-label="Forward in preview history" disabled>&gt;</button>',
         '          <button id="markdown-reveal-current" class="markdown-reveal-current" type="button" aria-label="Reveal current note in Files" disabled>Reveal in Files</button>',
         '          <button id="markdown-edit-toggle" class="markdown-edit-toggle" type="button" aria-label="Edit Markdown source" disabled>Edit</button>',
         '          <button id="markdown-propose-update" class="markdown-propose-update" type="button" aria-label="Propose Markdown update" disabled>Update</button>',
         '        </div>',
-        '        <div id="markdown-preview-status" class="markdown-preview-status" hidden aria-live="polite"></div>',
         '        <article id="markdown-preview" class="markdown-preview" aria-label="Markdown preview">No file selected.</article>',
         '        <textarea id="markdown-source-editor" class="markdown-source-editor" spellcheck="false" aria-label="Markdown source editor" hidden></textarea>',
         '      </div>',
+        '      <div id="markdown-preview-status" class="markdown-preview-status is-empty" aria-live="polite" aria-atomic="true"></div>',
         '    </section>',
         '  </aside>',
         '</section>'
@@ -139,9 +138,9 @@
       const status = document.createElement('footer');
       status.id = 'status-bar';
       status.className = 'status-bar';
-      status.setAttribute('role', 'status');
-      status.setAttribute('aria-live', 'polite');
-      status.textContent = info.name + ' ' + info.version + ' - local first';
+      status.innerHTML = '<div id="status-bar-global" class="status-bar-global" role="status" aria-live="polite"></div>';
+      const globalStatus = status.querySelector('#status-bar-global');
+      globalStatus.textContent = info.name + ' ' + info.version + ' - local first';
 
       app.appendChild(status);
       root.appendChild(app);
@@ -460,7 +459,7 @@
   function wireVaultShell(api, app, contextState, vaultUi, reviewBasket) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
-    const statusBar = app.querySelector('#status-bar');
+    const statusBar = app.querySelector('#status-bar-global');
     let filePanel = null;
     const previewController = window.ZeusMarkdownPreview
       ? window.ZeusMarkdownPreview.mountMarkdownPreview({

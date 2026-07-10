@@ -16,7 +16,6 @@
     const backButton = app.querySelector('#markdown-history-back');
     const forwardButton = app.querySelector('#markdown-history-forward');
     const title = app.querySelector('#markdown-preview-title');
-    const linkFeedback = app.querySelector('#markdown-link-feedback');
     const previewStatus = app.querySelector('#markdown-preview-status');
     const onOpenLink = typeof options.onOpenLink === 'function' ? options.onOpenLink : null;
     const onRevealCurrentPath = typeof options.onRevealCurrentPath === 'function' ? options.onRevealCurrentPath : null;
@@ -58,21 +57,40 @@
     }
 
     function setMessage(message) {
-      currentSource = '';
-      loadedSource = '';
-      currentPath = '';
+      clearLoadedPreviewState();
+      setCurrentPath('');
       history = [];
       historyIndex = -1;
       if (title) title.textContent = 'Markdown Preview';
-      editButton.disabled = true;
       if (revealButton) revealButton.disabled = true;
-      if (proposeButton) proposeButton.disabled = true;
-      mode = 'preview';
-      editor.value = '';
       preview.textContent = String(message || 'No file selected.');
       clearPreviewStatus();
       setVisibleMode();
       updateHistoryButtons();
+    }
+
+    function setImageAsset(path) {
+      const targetPath = String(path || '');
+      clearLoadedPreviewState();
+      setCurrentPath(targetPath);
+      history = [];
+      historyIndex = -1;
+      if (title) title.textContent = targetPath || 'Image Preview';
+      if (revealButton) revealButton.disabled = !targetPath;
+      preview.innerHTML = '<figure class="markdown-standalone-image"><img class="markdown-image-embed" data-image-target="' + escapeHtml(targetPath) + '" alt="" data-image-state="pending"></figure>';
+      resolveMarkdownImages();
+      clearPreviewStatus();
+      setVisibleMode();
+      updateHistoryButtons();
+    }
+
+    function clearLoadedPreviewState() {
+      currentSource = '';
+      loadedSource = '';
+      editButton.disabled = true;
+      if (proposeButton) proposeButton.disabled = true;
+      mode = 'preview';
+      editor.value = '';
     }
 
     async function handlePreviewClick(event) {
@@ -82,12 +100,91 @@
       if (!link || !preview.contains(link)) return;
 
       const target = link.dataset.linkTarget || '';
-      if (!target || !onOpenLink) return;
+      if (!target) return;
 
       event.preventDefault();
       clearLinkFeedback();
+      if (isExternalLinkTarget(target)) {
+        showExternalLinkDialog(target);
+        return;
+      }
+      if (!onOpenLink) return;
       const result = await onOpenLink({ target, currentPath });
       if (result && result.ok === false) showLinkFeedback(result.message || 'Linked note not found.');
+    }
+
+    function showExternalLinkDialog(url) {
+      const normalizedUrl = String(url || '').trim();
+      if (!normalizedUrl || typeof document === 'undefined') {
+        showLinkFeedback('External link blocked.');
+        return;
+      }
+      const existing = document.querySelector('.markdown-external-link-dialog');
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+      const dialog = document.createElement('div');
+      dialog.className = 'markdown-external-link-dialog';
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-label', 'Open external link');
+
+      const label = document.createElement('div');
+      label.className = 'markdown-external-link-label';
+      label.textContent = 'External link';
+      const value = document.createElement('div');
+      value.className = 'markdown-external-link-value';
+      value.textContent = normalizedUrl;
+
+      const actions = document.createElement('div');
+      actions.className = 'markdown-external-link-actions';
+      const open = createExternalLinkButton('Open in browser', async () => {
+        const result = api && typeof api.openExternal === 'function'
+          ? await api.openExternal(normalizedUrl)
+          : { ok: false, message: 'External browser service unavailable.' };
+        if (!result || result.ok === false) showPreviewStatus((result && result.message) || 'Could not open external link.');
+        closeExternalDialog(dialog);
+      });
+      const copy = createExternalLinkButton('Copy link', async () => {
+        await writeClipboard(normalizedUrl);
+        showPreviewStatus('External link copied.');
+        closeExternalDialog(dialog);
+      });
+      const cancel = createExternalLinkButton('Cancel', () => closeExternalDialog(dialog));
+      actions.appendChild(open);
+      actions.appendChild(copy);
+      actions.appendChild(cancel);
+
+      dialog.appendChild(label);
+      dialog.appendChild(value);
+      dialog.appendChild(actions);
+      app.appendChild(dialog);
+      showPreviewStatus('External link requires confirmation.');
+    }
+
+    function createExternalLinkButton(label, onClick) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = label;
+      button.addEventListener('click', (event) => {
+        event.preventDefault();
+        Promise.resolve(onClick()).catch(() => showPreviewStatus('External link action failed.'));
+      });
+      return button;
+    }
+
+    function closeExternalDialog(dialog) {
+      if (dialog && dialog.parentNode) dialog.parentNode.removeChild(dialog);
+    }
+
+    async function writeClipboard(value) {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(value);
+        return true;
+      }
+      return false;
+    }
+
+    function isExternalLinkTarget(target) {
+      return /^https?:\/\//i.test(String(target || '').trim());
     }
 
     async function handleRevealClick() {
@@ -127,7 +224,7 @@
     function setSourceInternal(source, path) {
       currentSource = source;
       loadedSource = source;
-      currentPath = path;
+      setCurrentPath(path);
       if (title) title.textContent = currentPath || 'Markdown Preview';
       editButton.disabled = false;
       if (revealButton) revealButton.disabled = !currentPath;
@@ -172,6 +269,13 @@
       return mode === 'source' ? String(editor.value || '') : currentSource;
     }
 
+    function setCurrentPath(path) {
+      currentPath = String(path || '');
+      if (!preview || !preview.dataset) return;
+      if (currentPath) preview.dataset.previewCurrentPath = currentPath;
+      else delete preview.dataset.previewCurrentPath;
+    }
+
     function updateProposeButton() {
       if (proposeButton) proposeButton.disabled = !hasLocalChanges();
     }
@@ -211,17 +315,12 @@
     }
 
     function showLinkFeedback(message) {
-      if (linkFeedback) {
-        linkFeedback.textContent = String(message || 'Linked note not found.');
-        linkFeedback.hidden = false;
-      }
-      setStatus(message || 'Linked note not found.');
+      const nextMessage = message || 'Linked note not found.';
+      showPreviewStatus(nextMessage);
     }
 
     function clearLinkFeedback() {
-      if (!linkFeedback) return;
-      linkFeedback.textContent = '';
-      linkFeedback.hidden = true;
+      clearPreviewStatus();
     }
     function renderPreview(source) {
       if (!window.ZeusMarkdownRenderer || !window.ZeusMarkdownRenderer.renderMarkdown) {
@@ -262,21 +361,25 @@
     }
 
     function showPreviewStatus(message) {
-      if (previewStatus) {
-        previewStatus.textContent = String(message || '');
-        previewStatus.hidden = !message;
-      }
-      if (message) setStatus(message);
+      if (!previewStatus) return;
+      const hasMessage = Boolean(message);
+      previewStatus.textContent = String(message || '');
+      if (previewStatus.removeAttribute) previewStatus.removeAttribute('hidden');
+      if (previewStatus.classList) previewStatus.classList.toggle('is-empty', !hasMessage);
     }
 
     function clearPreviewStatus() {
       if (!previewStatus) return;
       previewStatus.textContent = '';
-      previewStatus.hidden = true;
+      if (previewStatus.removeAttribute) previewStatus.removeAttribute('hidden');
+      if (previewStatus.classList) previewStatus.classList.add('is-empty');
     }
 
     function setStatus(value) {
-      if (status) status.textContent = value;
+      if (!status) return;
+      const globalStatus = status.querySelector ? status.querySelector('#status-bar-global') : null;
+      if (globalStatus) globalStatus.textContent = value;
+      else status.textContent = value;
     }
 
     setMessage('No file selected.');
@@ -284,10 +387,20 @@
     return {
       setSource,
       setMessage,
+      setImageAsset,
       getMode: () => mode,
       getCurrentPath: () => currentPath,
       getCurrentSource: () => currentSource
     };
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
   function setButtonIcon(button, iconName) {
     if (!button) return;

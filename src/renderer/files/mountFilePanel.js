@@ -314,7 +314,7 @@
       renderTree();
       focusRenderedPath(entry.path);
       if (entry.kind === 'image') {
-        setPreviewMessage('Image file selected. Image file preview is planned after Markdown image embeds.');
+        setPreviewImage(entry.path);
         if (contextState) contextState.setFile(entry.path, createFileSelectionDetails(entry.path));
         else setText(context, 'Selection image: ' + entry.path);
         setStatus('Image selected: ' + entry.path);
@@ -674,6 +674,14 @@
 
     function setPreviewMessage(message) {
       if (previewController && previewController.setMessage) previewController.setMessage(message);
+    }
+
+    function setPreviewImage(path) {
+      if (previewController && typeof previewController.setImageAsset === 'function') {
+        previewController.setImageAsset(path);
+        return;
+      }
+      setPreviewMessage('Image file selected. Image preview unavailable.');
     }
 
     function setStatus(value) {

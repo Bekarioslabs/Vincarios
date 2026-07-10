@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 const {
   getContextMenuActionsForRegion,
   getCopyTextForRegion,
+  getPreviewLinkForPath,
   getScopedSelectionRegionForClassNames,
   isCopyShortcut,
   isSelectAllShortcut
@@ -48,4 +49,20 @@ test('scoped selection offers edit actions only for editable text inputs', () =>
 
   assert.deepEqual(getContextMenuActionsForRegion(editable), ['cut', 'copy', 'paste', 'select-area']);
   assert.deepEqual(getContextMenuActionsForRegion(readonly), ['copy', 'select-area']);
+});
+test('scoped selection offers copy-as-link for loaded preview targets only', () => {
+  assert.deepEqual(
+    getContextMenuActionsForRegion({ id: 'markdown-preview', menuActions: ['copy', 'select-area'], element: { dataset: { previewCurrentPath: 'Folder/Image.png' } } }),
+    ['copy-link', 'copy', 'select-area']
+  );
+  assert.deepEqual(
+    getContextMenuActionsForRegion({ id: 'markdown-preview', menuActions: ['copy', 'select-area'], element: { dataset: {} } }),
+    ['copy', 'select-area']
+  );
+});
+
+test('preview link formatter creates Obsidian links for Markdown and images', () => {
+  assert.equal(getPreviewLinkForPath('Folder/Note.md'), '[[Folder/Note]]');
+  assert.equal(getPreviewLinkForPath('Folder/Image.PNG'), '![[Folder/Image.PNG]]');
+  assert.equal(getPreviewLinkForPath('Folder\\Nested\\Image.jpg'), '![[Folder/Nested/Image.jpg]]');
 });

@@ -133,3 +133,11 @@ test('renders Markdown and Obsidian image embeds as safe preview placeholders', 
   assert.match(html, /alt="Portrait"/);
   assert.doesNotMatch(html, /src="assets\/hero\.png"/);
 });
+
+test('renders safe mark HTML as highlight without allowing arbitrary HTML', () => {
+  const html = renderMarkdown('Here is <mark style="background:#d3f8b6">marked text</mark> and <span>raw</span>.');
+
+  assert.match(html, /<mark>marked text<\/mark>/);
+  assert.match(html, /&lt;span&gt;raw&lt;\/span&gt;/);
+  assert.doesNotMatch(html, /background:#d3f8b6/);
+});

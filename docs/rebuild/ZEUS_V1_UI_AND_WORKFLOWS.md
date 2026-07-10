@@ -216,7 +216,19 @@ Assistant chat messages render through the shared Markdown renderer so chat and 
 User messages stay plain text to preserve exactly what the user typed.
 
 `Save as Note` keeps the raw assistant Markdown content, not rendered HTML.
+## Preview Status Decisions
+
+Preview-local messages live below the Markdown/Image Preview, not in the global status bar and not inside the File Tree header. This includes missing internal links, blocked external links, unresolved image assets, and local source-edit notices.
+
+The global status bar remains reserved for app-wide events such as vault opening, file reads, folder listings, renames, provider state, and reviewed proposal execution.
 ## Markdown Preview Rendering Decisions
+
+Markdown Preview supports a preview context-menu action `Copy as link` for the currently loaded preview target. Markdown files copy as Obsidian wikilinks such as `[[Folder/Note]]`; images copy as embeds such as `![[Folder/Image.png]]`.
+
+External Markdown links do not open directly. Clicking an `http` or `https` link shows a confirmation dialog with `Open in browser`, `Copy link`, and `Cancel`. The OS-browser open action goes through a small app IPC channel and accepts only validated `http` and `https` URLs.
+
+HTML remains escaped by default. V1 allows only a narrow safe `<mark>...</mark>` compatibility case for copied/exported Markdown highlights; arbitrary inline styles are not preserved.
+
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
 
@@ -232,7 +244,7 @@ Markdown image embeds:
 - V1 resolves Markdown image syntax and Obsidian image embeds through the main-process vault read service, not through renderer filesystem access.
 - Supported V1 image extensions are `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.svg`, `.bmp`, and `.ico`.
 - The renderer first creates safe image placeholders. The preview controller then asks `api.vault.readImageAsset` for a validated Data URL scoped to the opened vault.
-- File Tree lists supported image files with image icons, but standalone image-file preview and image Selection Actions are a separate follow-up block.
+- File Tree lists supported image files with image icons. Selecting a supported image file shows the image in Markdown Preview through the same validated asset pipeline used by Markdown embeds. Image Selection Actions remain a separate follow-up block.
 - Image editing, importing, tagging, vision analysis, and automatic media organization remain out of this Markdown renderer block.
 ## Markdown Link Navigation Decisions
 

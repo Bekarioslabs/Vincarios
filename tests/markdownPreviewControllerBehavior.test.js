@@ -4,6 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 function createNode() {
+  const classes = new Set();
   return {
     disabled: false,
     hidden: false,
@@ -11,6 +12,28 @@ function createNode() {
     innerHTML: '',
     value: '',
     listeners: {},
+    attributes: {},
+    classList: {
+      add(name) { classes.add(name); },
+      remove(name) { classes.delete(name); },
+      contains(name) { return classes.has(name); },
+      toggle(name, force) {
+        if (force === true) classes.add(name);
+        else if (force === false) classes.delete(name);
+        else if (classes.has(name)) classes.delete(name);
+        else classes.add(name);
+      }
+    },
+    setAttribute(name, value) {
+      this.attributes[name] = String(value);
+    },
+    getAttribute(name) {
+      return this.attributes[name];
+    },
+    removeAttribute(name) {
+      delete this.attributes[name];
+      if (name === 'hidden') this.hidden = false;
+    },
     addEventListener(type, handler) {
       this.listeners[type] = handler;
     },
@@ -19,6 +42,9 @@ function createNode() {
     },
     querySelectorAll() {
       return [];
+    },
+    querySelector() {
+      return null;
     },
     appendChild(child) {
       this.child = child;
@@ -156,7 +182,7 @@ test('preview controller tracks note history for back and forward navigation', a
   assert.equal(title.textContent, 'Folder/Third.md');
   delete global.window;
 });
-test('preview controller shows missing link feedback near the preview toolbar', async () => {
+test('preview controller shows missing link feedback in the preview status area', async () => {
   global.window = {
     ZeusMarkdownRenderer: {
       renderMarkdown() {
@@ -173,8 +199,7 @@ test('preview controller shows missing link feedback near the preview toolbar', 
     '#markdown-source-editor': createNode(),
     '#markdown-edit-toggle': createNode(),
     '#markdown-reveal-current': createNode(),
-    '#markdown-link-feedback': feedback,
-    '#markdown-preview-status': createNode(),
+    '#markdown-preview-status': feedback,
     '#markdown-preview-title': createNode()
   };
   const controller = mountMarkdownPreview({
@@ -194,6 +219,7 @@ test('preview controller shows missing link feedback near the preview toolbar', 
   });
 
   assert.equal(feedback.hidden, false);
+  assert.equal(feedback.classList.contains('is-empty'), false);
   assert.equal(feedback.textContent, 'Linked note not found: Missing_Target');
   delete global.window;
 });
@@ -246,7 +272,7 @@ test('preview controller turns local source edits into update proposals', async 
   delete global.window;
 });
 
-test('preview controller shows update proposal failures near the preview toolbar', async () => {
+test('preview controller shows update proposal failures in the preview status area', async () => {
   global.window = {
     ZeusMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
@@ -265,8 +291,7 @@ test('preview controller shows update proposal failures near the preview toolbar
     '#markdown-edit-toggle': editButton,
     '#markdown-propose-update': proposeButton,
     '#markdown-reveal-current': createNode(),
-    '#markdown-link-feedback': feedback,
-    '#markdown-preview-status': createNode(),
+    '#markdown-preview-status': feedback,
     '#markdown-preview-title': createNode()
   };
   const controller = mountMarkdownPreview({
@@ -284,10 +309,10 @@ test('preview controller shows update proposal failures near the preview toolbar
   proposeButton.listeners.click();
 
   const previewStatus = nodes['#markdown-preview-status'];
-  assert.equal(feedback.hidden, true);
   assert.equal(previewStatus.hidden, false);
+  assert.equal(previewStatus.classList.contains('is-empty'), false);
   assert.equal(previewStatus.textContent, 'Please enable W for this file before updating: Folder/Note.md');
-  assert.equal(status.textContent, 'Please enable W for this file before updating: Folder/Note.md');
+  assert.equal(status.textContent, '');
   delete global.window;
 });
 test('preview controller shows local-edit status only after content changes', () => {
@@ -314,10 +339,14 @@ test('preview controller shows local-edit status only after content changes', ()
 
   controller.setSource('# Original', 'Folder/Note.md');
   editButton.listeners.click();
-  assert.equal(previewStatus.hidden, true);
+  assert.equal(previewStatus.hidden, false);
+  assert.equal(previewStatus.classList.contains('is-empty'), true);
+  assert.equal(previewStatus.textContent, '');
 
   editButton.listeners.click();
-  assert.equal(previewStatus.hidden, true);
+  assert.equal(previewStatus.hidden, false);
+  assert.equal(previewStatus.classList.contains('is-empty'), true);
+  assert.equal(previewStatus.textContent, '');
 
   editButton.listeners.click();
   editor.value = '# Changed';
@@ -372,5 +401,56 @@ test('preview controller resolves Markdown image placeholders through the vault 
   assert.equal(imageNode.src, 'data:image/png;base64,AAAA');
   assert.equal(imageNode.dataset.imageState, 'loaded');
   assert.equal(imageNode['data-image-path'], 'Folder/assets/hero.png');
+  delete global.window;
+});
+
+test('preview controller displays a standalone selected image through the vault API', async () => {
+  global.window = {
+    ZeusMarkdownRenderer: {
+      renderMarkdown(source) { return '<p>' + source + '</p>'; }
+    }
+  };
+  delete require.cache[require.resolve('../src/renderer/markdown/markdownPreviewController')];
+  const { mountMarkdownPreview } = require('../src/renderer/markdown/markdownPreviewController');
+  const preview = createNode();
+  const imageNode = {
+    dataset: { imageTarget: 'Images/Hero.png' },
+    setAttribute(name, value) { this[name] = value; },
+    removeAttribute(name) { delete this[name]; }
+  };
+  preview.querySelectorAll = () => [imageNode];
+  const editButton = createNode();
+  const revealButton = createNode();
+  const title = createNode();
+  const nodes = {
+    '#markdown-preview': preview,
+    '#markdown-source-editor': createNode(),
+    '#markdown-edit-toggle': editButton,
+    '#markdown-propose-update': createNode(),
+    '#markdown-reveal-current': revealButton,
+    '#markdown-preview-title': title
+  };
+  const requests = [];
+  const controller = mountMarkdownPreview({
+    app: createApp(nodes),
+    api: {
+      vault: {
+        readImageAsset(payload) {
+          requests.push(payload);
+          return Promise.resolve({ ok: true, path: 'Images/Hero.png', dataUrl: 'data:image/png;base64,AAAA' });
+        }
+      }
+    }
+  });
+
+  controller.setImageAsset('Images/Hero.png');
+  await Promise.resolve();
+
+  assert.equal(title.textContent, 'Images/Hero.png');
+  assert.equal(editButton.disabled, true);
+  assert.equal(revealButton.disabled, false);
+  assert.deepEqual(requests, [{ targetPath: 'Images/Hero.png', currentPath: 'Images/Hero.png' }]);
+  assert.equal(imageNode.src, 'data:image/png;base64,AAAA');
+  assert.equal(imageNode.dataset.imageState, 'loaded');
   delete global.window;
 });

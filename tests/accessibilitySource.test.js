@@ -19,8 +19,7 @@ test('shell exposes live regions and accessible control relationships', () => {
   assert.match(source, /aria-controls="context-basket-items"/);
   assert.match(source, /id="chat-input"[^>]*aria-label="Chat message"/);
   assert.match(source, /id="chat-send"[^>]*aria-label="Send message"/);
-  assert.match(source, /status\.setAttribute\('role', 'status'\)/);
-  assert.match(source, /status\.setAttribute\('aria-live', 'polite'\)/);
+  assert.match(source, /id="status-bar-global"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(source, /id="provider-refresh"[^>]*aria-label="Refresh provider status"/);
 });
 
@@ -39,7 +38,6 @@ test('Markdown preview controls expose accessible labels and status regions', ()
   assert.match(source, /markdown-history-forward[^>]*aria-label="Forward in preview history"/);
   assert.match(source, /markdown-reveal-current[^>]*aria-label="Reveal current note in Files"/);
   assert.match(source, /markdown-source-editor[^>]*aria-label="Markdown source editor"/);
-  assert.match(source, /markdown-link-feedback[^>]*aria-live="polite"/);
   assert.match(source, /markdown-preview-status[^>]*aria-live="polite"/);
 });
 

@@ -50,7 +50,7 @@ test('index loads Markdown preview controller before the file panel and shell', 
 });
 test('shell creates status bar before mounting Markdown preview controller', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
-  const statusIndex = source.indexOf("const statusBar = app.querySelector('#status-bar');");
+  const statusIndex = source.indexOf("const statusBar = app.querySelector('#status-bar-global');");
   const previewControllerIndex = source.indexOf('const previewController = window.ZeusMarkdownPreview');
 
   assert.equal(statusIndex > -1, true);

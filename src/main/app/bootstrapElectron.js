@@ -58,7 +58,8 @@ function bootstrapElectron(electron, options) {
   registerChatIpc(ipcMain, chatService);
   registerAppIpc(ipcMain, {
     appName: 'ZEUS Agent',
-    version: app.getVersion ? app.getVersion() : '0.1.0'
+    version: app.getVersion ? app.getVersion() : '0.1.0',
+    shell: electron.shell
   });
   registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);

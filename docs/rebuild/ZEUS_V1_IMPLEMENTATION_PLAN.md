@@ -306,7 +306,7 @@ Status: complete for V1-light.
 
 - [x] Expand Markdown Preview toward Obsidian-core rendering where practical for current V1 subset: strikethrough, task lists, wikilinks/Markdown links, code fences, tables through markdown-it, and safe HTML escaping.
 - [x] Add local image embeds for Markdown Preview through validated Main/Preload asset reads. V1 supports .png, .jpg, .jpeg, .webp, .gif, .svg, .bmp, and .ico as Markdown embeds and file-tree image entries.
-- [ ] Add standalone image-file preview after Markdown embeds if it stays small: selecting an image file should show the image in Preview without adding vision analysis or write actions.
+- [x] Add standalone image-file preview: selecting a supported image in Files shows it in Preview through the same validated asset read path as Markdown embeds. No vision analysis or write actions are included.
 - [x] Keep this as renderer support only. No image editing, import automation, tagging, or vision analysis in this block.
 - [ ] Compare against Obsidian's default Markdown behavior and document intentional V1 differences instead of chasing plugin behavior.
 - [ ] Evaluate Editor Light only if it stays small: basic Markdown editing affordances such as bold, italic, headings, and task-list insertion. Full toolbar, color styling, live preview editing, and detachable editor remain V1.1/V1.2 unless reclassified by the V1 necessity gate.

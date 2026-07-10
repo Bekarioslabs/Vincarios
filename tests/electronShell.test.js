@@ -24,6 +24,7 @@ test('main window options keep the renderer sandboxed', () => {
 test('IPC channels expose app info, provider, chat, and reviewed vault actions', () => {
   assert.deepEqual(Object.keys(IPC_CHANNELS).sort(), [
     'APP_INFO',
+    'APP_OPEN_EXTERNAL',
     'CHAT_CANCEL',
     'CHAT_SEND',
     'EMBEDDINGS_FIND_SIMILAR_NOTES',
@@ -50,6 +51,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'VAULT_UPDATE_NOTE'
   ]);
   assert.equal(IPC_CHANNELS.APP_INFO, 'app:info');
+  assert.equal(IPC_CHANNELS.APP_OPEN_EXTERNAL, 'app:open-external');
   assert.equal(IPC_CHANNELS.CHAT_SEND, 'chat:send');
   assert.equal(IPC_CHANNELS.CHAT_CANCEL, 'chat:cancel');
   assert.equal(IPC_CHANNELS.EMBEDDINGS_FIND_SIMILAR_NOTES, 'embeddings:find-similar-notes');
@@ -136,4 +138,11 @@ test('preload exposes embedding settings without filesystem access', () => {
   assert.match(source, /setEmbeddings\(payload\)/);
   assert.match(source, /SETTINGS_SET_EMBEDDINGS/);
   assert.doesNotMatch(source, /require('node:fs')/);
+});
+
+test('preload exposes external link opening without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /openExternal\(url\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.APP_OPEN_EXTERNAL, url\)/);
 });

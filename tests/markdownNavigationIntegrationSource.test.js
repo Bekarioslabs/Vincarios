@@ -16,8 +16,6 @@ test('index loads Markdown link resolver before preview controller', () => {
 
 test('preview toolbar exposes reveal without coupling it to edit mode', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
-
-  assert.match(shell, /id="markdown-link-feedback"/);
   assert.match(shell, /id="markdown-history-back"/);
   assert.match(shell, /id="markdown-history-forward"/);
   assert.match(shell, /id="markdown-reveal-current"/);
