@@ -293,16 +293,18 @@ test('template preset edit modal shows folders and files in the read-only plan p
 
 test('shell executes template folder creation before template files', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
-  const branchStart = source.indexOf("proposal.type === 'create_from_template'");
-  const branchEnd = source.indexOf("proposal.type === 'update_note'", branchStart);
+  const executionStart = source.indexOf('async function executeReviewProposal(api, proposal, vaultUi)');
+  const branchStart = source.indexOf("if (proposal.type === 'create_from_template')", executionStart);
+  const branchEnd = source.indexOf("if (proposal.type === 'update_note')", branchStart);
   const branch = source.slice(branchStart, branchEnd);
-  const folderIndex = branch.indexOf('api.vault.createFolder');
-  const noteIndex = branch.indexOf('api.vault.createNote');
+  const folderLoopIndex = branch.indexOf('for (const folder of folders)');
+  const fileLoopIndex = branch.indexOf('for (const file of files)');
 
   assert.equal(branchStart > -1, true);
   assert.equal(branchEnd > branchStart, true);
-  assert.equal(folderIndex > -1, true);
-  assert.equal(noteIndex > -1, true);
-  assert.equal(folderIndex < noteIndex, true);
+  assert.equal(folderLoopIndex > -1, true);
+  assert.equal(fileLoopIndex > folderLoopIndex, true);
+  assert.equal(branch.includes('api.vault.createFolder({ targetFolder: folder })'), true);
+  assert.equal(branch.includes('api.vault.createNote({'), true);
   assert.match(branch, /createdFolders/);
 });

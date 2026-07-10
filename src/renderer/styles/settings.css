@@ -5,7 +5,7 @@
   display: grid;
   place-items: center;
   padding: 28px;
-  background: rgba(0, 0, 0, .62);
+  background: var(--overlay-backdrop-background);
 }
 
 .settings-backdrop[hidden] { display: none; }
@@ -16,9 +16,9 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   background: var(--background-secondary);
-  box-shadow: 0 22px 70px rgba(0, 0, 0, .5);
+  box-shadow: var(--shadow-settings);
   overflow: hidden;
 }
 
@@ -74,7 +74,7 @@
   width: 100%;
   min-height: 30px;
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   background: transparent;
   color: var(--text-muted);
   padding: 6px 9px;
@@ -128,7 +128,7 @@
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--background-primary);
 }
 
@@ -154,7 +154,7 @@
 .settings-future-note {
   padding: 12px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--background-primary);
 }
 
@@ -164,7 +164,7 @@
   margin: 0;
   padding: 12px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--background-primary);
 }
 
@@ -194,7 +194,7 @@
   width: 100%;
   height: 32px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   outline: none;
   background: var(--background-modifier-form-field);
   color: var(--text-normal);
@@ -216,7 +216,7 @@
 .settings-primary-button,
 .settings-secondary-button {
   border: 1px solid var(--background-modifier-border);
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   font-size: 11px;
 }
 
@@ -311,7 +311,7 @@
   width: 100%;
   height: 32px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   outline: none;
   background: var(--background-modifier-form-field);
   color: var(--text-normal);
@@ -338,7 +338,7 @@
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--background-primary);
 }
 

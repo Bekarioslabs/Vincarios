@@ -170,6 +170,56 @@ Do not use for:
 - hidden whole-vault ingestion
 - irreversible decisions
 
+## Structured Metadata Index Direction V1.1
+
+The metadata index is a future structured companion to the embedding index. It is not implemented in V1.
+
+Purpose:
+
+- store deterministic vault facts that should not be inferred repeatedly from embeddings or chat history.
+- support future suggestions for tags, links, project context, folder destinations, duplicate/merge workflows, and cleanup reports.
+- keep semantic vector search and structured metadata separate so each can evolve independently.
+
+Storage target:
+
+```text
+<selected-vault>/.zeus/index/metadata/
+  manifest.json
+  notes.jsonl
+  links.jsonl
+  tags.jsonl
+  roles.jsonl
+```
+
+`.zeus` remains blocked from normal AI context, File Tree context, and user note workflows. Only internal main-process services may read or write this folder.
+
+Planned record fields:
+
+- `schemaVersion`
+- vault-relative `path`
+- `pathHash`
+- source `mtimeMs` and content hash
+- parsed frontmatter keys and normalized tags
+- outgoing Markdown links and unresolved links
+- detected template role, project role, and folder role hints
+- short deterministic note summary when available from a reviewed/indexing flow
+- stale marker when the source file changed after indexing
+
+Design rules:
+
+- Metadata index writes are internal cache writes, not vault-note writes and not Review Basket actions.
+- Metadata index data must never be treated as authority for changing files. It can only create suggestions or improve ranking.
+- Executable changes still require concrete Review Basket proposals with current/proposed content, diff, backup, stale check, and audit.
+- Embeddings may rank semantic similarity; metadata may explain structure. Merging both should happen in suggestion builders, not inside provider modules.
+- The index must be rebuildable from the selected vault. It must not contain private data that is not derivable from the opened vault.
+- The index must be schema-versioned so V1.1/V1.2 can rebuild or migrate safely.
+
+First V1.1 consumers:
+
+- link candidates from known unresolved/outgoing links plus embedding similarity.
+- folder/destination candidates from role hints, existing paths, tags, and semantic similarity.
+- richer tag/YAML suggestions using existing vault tag patterns without broad stopword lists.
+- duplicate and merge reports that can show why files are related before proposing any write action.
 ## First Audits
 
 Run a focused audit after each block:

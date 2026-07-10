@@ -74,6 +74,25 @@ Resolution order for `![alt](path)` and `![[image.png]]`:
 Remote images remain blocked by default in V1.
 
 Future ambiguous-link resolution must stay review-based: choosing one of multiple matching images should create a visible Markdown update proposal, not silently rewrite the note.
+## Final V1 Rendering Subset
+
+V1 supports the practical Obsidian-core subset needed for readable vault review:
+
+- CommonMark/GFM basics: headings, paragraphs, emphasis, strikethrough, lists, horizontal rules, code spans, fenced code, blockquotes, tables, and escapes.
+- YAML frontmatter as a visible Properties block for flat values and simple lists.
+- Markdown task boxes as disabled preview checkboxes.
+- Internal Markdown links and wikilinks for navigation.
+- Safe external-link confirmation instead of direct opening.
+- Obsidian highlights and comments in the focused subset already covered by tests.
+- Local Markdown image embeds and standalone image preview for supported V1 image types through validated vault asset reads.
+
+Intentional V1 differences:
+
+- Raw HTML stays escaped except for the narrow safe highlight compatibility case.
+- Remote images stay blocked by default.
+- Plugin code is never executed.
+- Mermaid, math, Dataview, Templater, Kanban board rendering, note/PDF/audio/video embeds, block IDs, and full callout behavior stay V1.1/V1.2 unless the V1 freeze review reclassifies one as must-have.
+- The source editor remains plain Markdown source with reviewed full-note `update_note` proposals. Formatting toolbar, live split preview editing, color tools, and detachable editor are later work.
 ## Plugin Compatibility Boundary
 
 Obsidian community plugins do not share one renderer standard. Plugins may register Markdown post-processors, custom code blocks, metadata conventions, JavaScript, filesystem access, or network behavior. ZEUS does not load or execute Obsidian plugins.
@@ -117,7 +136,8 @@ Phase 7.6 uses pinned `markdown-it` 14.3.0 under an isolated renderer boundary:
 - `markdownEngine.js` owns CommonMark/GFM engine configuration.
 - `obsidianMarkdownExtension.js` owns only Obsidian-specific inline syntax and safe link/task rendering.
 - `markdownProperties.js` owns frontmatter extraction and Properties presentation.
-- `markdownRenderer.js` is the small public facade used by Chat and Markdown Preview.`n- `vaultAssetResolver.js` owns safe vault asset target resolution for Markdown embeds and future previewable asset types; `vaultReadService.js` consumes it and serializes validated assets.
+- `markdownRenderer.js` is the small public facade used by Chat and Markdown Preview.
+- `vaultAssetResolver.js` owns safe vault asset target resolution for Markdown embeds and future previewable asset types; `vaultReadService.js` consumes it and serializes validated assets.
 - `third_party/markdown-it/` contains the browser build and MIT license; Node tests use the exact pinned npm dependency.
 
 Raw HTML remains disabled. Missing engine modules fail during renderer startup instead of failing later during preview rendering.

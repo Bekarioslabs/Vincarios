@@ -77,7 +77,7 @@ test('review basket polish stays isolated in review stylesheet', () => {
   assert.match(reviewCss, /\.review-clear-button\s*\{[\s\S]*background:\s*transparent;[\s\S]*color:\s*var\(--text-muted\);/);
   assert.match(reviewCss, /\.review-execute-button\s*\{[\s\S]*background:\s*rgba\(var\(--interactive-accent-rgb\), \.1\);[\s\S]*color:\s*var\(--text-accent\);/);
   assert.match(reviewCss, /\.review-execute-button:disabled,[\s\S]*\.review-clear-button:disabled\s*\{[\s\S]*opacity:\s*\.45;/);
-  assert.match(reviewCss, /\.review-basket-item-status\s*\{[\s\S]*display:\s*inline-grid;[\s\S]*border-radius:\s*999px;/);
+  assert.match(reviewCss, /\.review-basket-item-status\s*\{[\s\S]*display:\s*inline-grid;[\s\S]*border-radius:\s*var\(--radius-pill\);/);
   assert.match(reviewCss, /\.review-basket-item\[data-status="failed"\] \.review-basket-item-status/);
   assert.match(reviewCss, /\.review-status-icon/);
   assert.match(reviewCss, /\.review-status-dot/);
@@ -131,7 +131,7 @@ test('file tree uses local SVG icon sizing instead of unicode pseudo icons', () 
 test('Markdown history icons are filtered for dark UI visibility', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
 
-  assert.match(css, /\.markdown-history-icon\s*\{[\s\S]*filter:\s*brightness\(0\) invert\(1\)/);
+  assert.match(css, /\.markdown-history-icon\s*\{[\s\S]*filter:\s*var\(--icon-inverse-filter\)/);
 });
 
 test('Markdown properties use dedicated metadata styling tokens', () => {
@@ -202,4 +202,15 @@ test('similar notes detail panel uses compact score styling', () => {
   assert.match(css, /\.selection-action-score\.is-medium/);
   assert.match(css, /\.selection-action-score\.is-weak/);
   assert.match(css, /\.selection-action-score\.is-noisy/);
+});
+
+test('chat baskets scroll locally instead of expanding the workspace', () => {
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
+
+  assert.match(layoutCss, /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(42px, min-content\) minmax\(42px, min-content\) auto;/);
+  assert.match(layoutCss, /\.review-slot\s*\{[\s\S]*max-height:\s*min\(24vh, 220px\);[\s\S]*overflow:\s*hidden;/);
+  assert.match(layoutCss, /\.context-slot\s*\{[\s\S]*max-height:\s*min\(18vh, 160px\);[\s\S]*overflow:\s*hidden;/);
+  assert.match(layoutCss, /\.context-basket-items\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*auto;/);
+  assert.match(reviewCss, /\.review-basket-items\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*auto;/);
 });

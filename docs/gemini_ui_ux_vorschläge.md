@@ -1,0 +1,31 @@
+# ZEUS V1 – Master-Guideline für UI, UX & Architektur Refactoring
+
+Bitte überarbeite die bestehende Vanilla-JS und CSS-Codebasis der ZEUS Electron-App basierend auf den folgenden 20 Optimierungspunkten. Das Ziel ist eine konsistente, sichere und performante Desktop-Erfahrung. 
+
+## A. Visuelles Feedback & Komponenten-Status
+1. [cite_start]**Fehlende Berechtigungen kennzeichnen:** Die Klasse `.is-soft-disabled` ändert aktuell nur die Transparenz[cite: 52, 53]. [cite_start]Füge ein visuelles Indiz hinzu (z. B. ein Schloss-Icon oder gestrichelter Rand), damit der Nutzer sofort sieht, dass die Aktion mangels R/W-Freigabe blockiert ist[cite: 54, 55].
+2. [cite_start]**Leere Zustände (Empty States) designen:** Reine Text-Divs wie "No suggestions yet" wirken unfertig[cite: 57, 58]. [cite_start]Setze hier ein Flexbox-Layout mit einem passenden Lucide-Icon (z.B. leerer Ordner) und gedimmtem Text (`var(--text-muted)`) ein[cite: 59].
+3. [cite_start]**Visuelle Hierarchie im Workspace:** Der Chat-Input muss im `.workspace-stack` visuell im Fokus stehen[cite: 66, 68]. [cite_start]Der `Context Basket` soll optisch zurücktreten (`var(--background-subtle)`), während der primäre `Review Basket` eine klare Begrenzung oder einen sanften Schatten erhält[cite: 69].
+4. [cite_start]**Destruktive Aktionen trennen:** Buttons wie "Clear pending" sehen aktuell aus wie neutrale Aktionen[cite: 134, 135]. [cite_start]Erstelle eine `.button-danger` Klasse, die bei Hover einen roten Rand/Hintergrund (`var(--status-danger)`) zeigt, um versehentliches Löschen zu verhindern[cite: 137, 138].
+5. **Double-Submit Prevention:** Sobald ein Nutzer ein Formular absendet oder eine API-Aktion triggert (z. B. "Create proposal"), muss der auslösende Button sofort auf `disabled` gesetzt und visuell in einen Ladezustand versetzt werden.
+
+## B. DOM-Performance & Interaktion
+6. [cite_start]**Flickerfreie DOM-Updates:** In `mountSuggestionsWorkspace.js` wird bei jedem Checkbox-Klick die gesamte Liste per `innerHTML = ''` neu gerendert[cite: 61, 62]. [cite_start]Passe die Logik so an, dass State-Updates nur die spezifische Klasse `.is-selected` am jeweiligen Element toggeln[cite: 64, 65].
+7. [cite_start]**Chat-Input "Auto-Grow":** Das `<textarea>`-Feld wächst trotz CSS `max-height` nicht automatisch mit[cite: 76, 77]. [cite_start]Implementiere einen `input`-Event-Listener, der die Höhe dynamisch an `element.scrollHeight` anpasst, bis das CSS-Maximum greift[cite: 78, 79].
+8. [cite_start]**Stabiles Resizing:** Wenn beim `.pane-resizer` die Maus zu schnell bewegt wird, bricht der Drag-Vorgang ab[cite: 84, 85]. [cite_start]Füge bei `mousedown` dem `<body>` die Klasse `.is-resizing` hinzu (setzt global `cursor: col-resize;` und `pointer-events: none;` für IFrames/Texte) und entferne sie bei `mouseup`[cite: 87, 88, 90].
+9. [cite_start]**Hover-Übergänge (Micro-Interaktionen):** Buttons ändern ihre Farbe aktuell abrupt[cite: 102, 103]. [cite_start]Führe eine Variable `--transition-fast: 0.15s ease-in-out;` ein und wende sie global auf `background-color`, `border-color` und `color` bei interaktiven Elementen an[cite: 104, 105].
+
+## C. Systemweite Standardisierung (CSS-Architektur)
+10. [cite_start]**CSS-Variablen strikt durchziehen:** Ersetze alle hartcodierten Farbwerte (wie `#9be29b` oder `rgba(34, 197, 94, .45)`) in Detail-Dateien durch semantische Token-Variablen in der `tokens.css`[cite: 80, 81, 82, 83].
+11. [cite_start]**Eckenradien (Border-Radius) vereinheitlichen:** Die aktuellen Radien schwanken zwischen 4px und 8px[cite: 96, 97, 98]. [cite_start]Definiere `--radius-sm: 4px;`, `--radius-md: 6px;` und `--radius-lg: 8px;` in der `tokens.css` und wende sie konsequent an[cite: 98, 99].
+12. [cite_start]**Konsistente Typografie:** Die Schriftgrößen variieren zu stark (9px bis 12px)[cite: 106, 107]. [cite_start]Definiere Variablen (`--text-ui-sm`, `--text-ui-base`)[cite: 110]. [cite_start]Setze Buttons strikt auf 11px (Font-Weight 650) und Navigation auf 12px[cite: 111].
+13. [cite_start]**Transparente Status-Farben vereinheitlichen:** Ziehe die RGB-Werte für Success, Warning und Danger in die `tokens.css` aus (z.B. `--status-success-rgb: 22, 163, 74;`), um konsistente transparente Hover-Hintergründe per `rgba()` zu ermöglichen[cite: 113, 114, 115].
+14. [cite_start]**Theming der Textmarkierung:** Überschreibe global den `::selection`-Selektor (z. B. `background: rgba(var(--interactive-accent-rgb), 0.3); color: inherit;`), damit markierter Text nicht im nativen, grellen OS-Blau erscheint[cite: 140, 142, 143].
+15. **Globale Scrollbar-Kontrolle:** Stelle sicher, dass `::-webkit-scrollbar` und Firefox-Äquivalente auf allen dynamischen Paneln und Textfeldern greifen, um native, helle System-Scrollbars im Dark Theme zu unterdrücken.
+16. **Inline-Code hervorheben:** Verpasse `` `code` `` Elementen in der UI einen dedizierten, leicht helleren Hintergrund und einen dezenten Rahmen, um sie vom normalen Fließtext visuell abzuheben.
+
+## D. Sicherheit, Schutz & Modals (UX-Safety)
+17. [cite_start]**Modals schützen:** Versehentliche Klicks auf das Overlay (`.review-modal-overlay`) schließen aktuell kritische Fenster[cite: 124, 126]. Der Schließen-Trigger darf nur auf explizite Buttons reagieren; [cite_start]Klicks auf den Hintergrund rufen `event.stopPropagation()` auf[cite: 127, 128].
+18. [cite_start]**Tastatur-Fokus einsperren (Focus Trapping):** Solange ein Modal offen ist, kann per Tab-Taste weiterhin der Hintergrund bedient werden[cite: 129, 130]. [cite_start]Setze ein Focus-Trap um oder nutze das `inert`-Attribut für den Hintergrund-Container[cite: 131, 133].
+19. [cite_start]**Sicherungsabfrage bei Dateneingabe:** Wenn ein Nutzer in das `renderUpdateInstructionForm` Text eingibt und auf "Cancel" klickt, geht der Text sofort verloren[cite: 145, 146]. [cite_start]Implementiere einen Check: Ist das Feld nicht leer, fordere eine Bestätigung (`window.confirm`) vor dem Löschen[cite: 147, 148].
+20. **Tastatur-Kürzel:** Erlaube Power-Usern das Schließen von Modals per `Esc` und das Absenden von Formular-Textareas (Chat, Update-Instruction) via `Ctrl + Enter` (bzw. `Cmd + Enter`).

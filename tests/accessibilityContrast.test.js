@@ -9,10 +9,17 @@ function readTokens() {
   return fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
 }
 
-function token(css, name) {
-  const match = css.match(new RegExp(name + ':\\s*(#[0-9a-fA-F]{6})'));
+function token(css, name, seen = new Set()) {
+  assert.ok(!seen.has(name), 'Circular token reference ' + name);
+  const match = css.match(new RegExp(name + ':\\s*([^;]+);'));
   assert.ok(match, 'Missing token ' + name);
-  return match[1];
+  const value = match[1].trim();
+  const hexMatch = value.match(/^#[0-9a-fA-F]{6}$/);
+  if (hexMatch) return value;
+  const varMatch = value.match(/^var\((--[a-zA-Z0-9-]+)\)$/);
+  assert.ok(varMatch, 'Token ' + name + ' must resolve to a hex color for contrast checks');
+  seen.add(name);
+  return token(css, varMatch[1], seen);
 }
 
 function hexToRgb(hex) {

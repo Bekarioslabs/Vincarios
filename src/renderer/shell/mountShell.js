@@ -39,7 +39,7 @@
         '        <div class="left-section-title">Workspace</div>',
         '        <button type="button" class="left-button left-button-current" data-workspace-tab="chat" aria-current="page">Chat</button>',
         '        <button type="button" class="left-button" data-workspace-tab="suggestions"><span>Suggestions</span><span class="left-button-count" data-suggestions-count hidden>0</span></button>',
-        '        <button type="button" class="left-button left-button-placeholder" data-workspace-tab="sessionLog" data-future-slot="session-log" disabled>Session Log</button>',
+        '        <button type="button" class="left-button" data-workspace-tab="sessionLog">Session Log</button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-create" aria-label="Create">',
         '        <div class="left-section-title">Create</div>',
@@ -104,6 +104,7 @@
         '    </div>',
         '    </section>',
         '    <section id="suggestions-workspace" class="workspace-panel" data-workspace-panel="suggestions" hidden></section>',
+        '    <section id="session-log-workspace" class="workspace-panel" data-workspace-panel="sessionLog" hidden></section>',
         '  </section>',
         '  <div class="pane-resizer" data-resize="vault" title="Resize chat and vault" role="separator" aria-label="Resize chat and vault" aria-orientation="vertical"></div>',
         '  <aside class="vault-panel">',
@@ -147,12 +148,14 @@
       wireShellInteractions(app);
       const workspaceState = createWorkspaceState();
       wireWorkspaceTabs(app, workspaceState);
+      const activityState = createActivityState();
+      app.__zeusActivityState = activityState;
       const contextState = createContextState();
       const suggestionState = createSuggestionState();
       wireSuggestionIndicator(app, suggestionState);
       const vaultUi = { filePanel: null };
       const reviewBasket = mountOptional('review basket', status, () => window.ZeusReviewBasket
-        ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposal(api, proposal, vaultUi) })
+        ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
         : null);
       mountOptional('creation presets', status, () => window.ZeusCreationPresets && window.ZeusCreationPresets.mountCreationPresets({ app, api, reviewBasket, status }));
       wireVaultShell(api, app, contextState, vaultUi, reviewBasket);
@@ -163,6 +166,7 @@
       mountOptional('chat', status, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState }));
       mountOptional('context basket', status, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
       mountOptional('suggestions workspace', status, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status }));
+      mountOptional('session log', status, () => window.ZeusSessionLog && window.ZeusSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
       mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status, suggestionState }));
       mountOptional('pane resize', status, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
       mountOptional('scoped selection', status, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));
@@ -178,6 +182,11 @@
   function createSuggestionState() {
     if (!window.ZeusSuggestionState) return null;
     return window.ZeusSuggestionState.createSuggestionState();
+  }
+
+  function createActivityState() {
+    if (!window.ZeusActivityState) return null;
+    return window.ZeusActivityState.createActivityState();
   }
 
   function wireWorkspaceTabs(app, workspaceState) {
@@ -342,6 +351,30 @@
     if (item.kind === 'file' && typeof filePanel.revealPath === 'function') filePanel.revealPath(item.path);
     if (item.kind === 'folder' && typeof filePanel.revealFolder === 'function') filePanel.revealFolder(item.path);
   }
+  async function executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) {
+    const result = await executeReviewProposal(api, proposal, vaultUi);
+    recordReviewActivity(activityState, proposal, result);
+    return result;
+  }
+
+  function recordReviewActivity(activityState, proposal, result) {
+    if (!activityState || typeof activityState.record !== 'function' || !proposal || !result) return;
+    const ok = result.ok === true;
+    activityState.record({
+      type: ok ? 'success' : 'error',
+      action: reviewActivityLabel(proposal),
+      targetPath: result.path || proposal.targetPath || proposal.targetFolder || '',
+      detail: ok ? 'Review action executed.' : (result.message || 'Review action failed.')
+    });
+  }
+
+  function reviewActivityLabel(proposal) {
+    if (proposal.type === 'create_note') return 'Created note';
+    if (proposal.type === 'create_from_template') return 'Created template';
+    if (proposal.type === 'update_note') return 'Updated note';
+    return 'Review action';
+  }
+
   async function executeReviewProposal(api, proposal, vaultUi) {
     if (!proposal) {
       return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
@@ -516,6 +549,7 @@
 
       const vaultName = baseName(selected.root);
       setText(statusBar, 'Vault opened.');
+      recordActivityFromStatus(app, 'success', 'Vault opened', vaultName || 'Vault', '');
       app.classList.remove('is-start');
       filePanel.setVaultName(vaultName || 'Vault');
       await filePanel.openRoot();
@@ -525,6 +559,12 @@
   function baseName(value) {
     const normalized = String(value || '').replace(/\\/g, '/').replace(/\/+$/g, '');
     return normalized.split('/').pop() || normalized;
+  }
+
+  function recordActivityFromStatus(app, type, action, targetPath, detail) {
+    const state = app && app.__zeusActivityState;
+    if (!state || typeof state.record !== 'function') return;
+    state.record({ type, action, targetPath, detail });
   }
 
   function setText(node, value) {

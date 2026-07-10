@@ -223,20 +223,29 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 
 ### Phase 7.2 - Manual File Operations V1-Light
 
+Status: complete for V1-light.
+
 - [x] F2 Rename Light for one selected Markdown file in the File Tree.
 - [x] Rename Light stays manual and same-folder only; it does not move files.
 - [x] Rename Light reports clearly that links are not updated in V1.
 - [x] Rename Light writes through main-process vault validation and audit logging, not renderer filesystem access.
-- [ ] Drag-and-drop move is deferred to V1.1 with automatic link-update planning and review.
-- [ ] AI rename/move/archive actions stay non-executable until V1.1 services exist.
+- [x] Move drag-and-drop is explicitly V1.1: it must include deterministic Markdown link-update planning and review before it becomes useful enough for ZEUS.
+- [x] AI rename/move/archive actions are explicitly V1.1: they need safe services, backlink warnings, undo/repair, and batch review before execution.
 
 ### Phase 7.2.5 - Session Activity And Status Messages
 
-- [ ] Add a session-only Activity/Status Messages view under `WORKSPACE`.
-- [ ] Keep the bottom status bar as the latest-message surface, but also record structured in-memory status events for the current app session.
-- [ ] Activity entries include local time, type (`info`, `success`, `warning`, `error`), action label, target path when relevant, and detail text.
-- [ ] Render important parts with visual hierarchy, e.g. action `Renamed` and warning `Links were not updated in V1` can use distinct status colors.
-- [ ] Do not persist this V1 activity list to the vault. Long-term audit/history UI remains separate from `.zeus/audit.jsonl` work.
+Status: complete for V1-light.
+
+Goal: add a lightweight session-only view so important status messages do not disappear after the bottom status bar changes.
+
+- [x] Add `Session Log` under `WORKSPACE` as a main workspace tab/view, reusing the workspace foundation created for Chat and Suggestions.
+- [x] Keep the bottom status bar as the latest-message surface only.
+- [x] Add an in-memory activity state module for the current app session. It clears on restart and does not write to the vault.
+- [x] Route initial app-wide status events through the activity state: vault open and reviewed create/update/template execution. File reads, folder listings, renames, provider errors, and warnings can join the same state when their owning modules are touched.
+- [x] Activity entries include local time, type (`info`, `success`, `warning`, `error`), action label, target path when relevant, and detail text.
+- [x] Render important parts with visual hierarchy using scoped Session Log styles.
+- [x] Keep `.zeus/audit.jsonl`, backup history, restore UI, and persistent event history in V1.1/V1.2. Session Log is not audit history.
+- [x] Test that activity state is renderer-local, session-only, and does not replace safety/audit services.
 ### Phase 7.3 - Inbox Cleanup Light
 
 Status: complete for V1-light.
@@ -265,17 +274,18 @@ Status: complete for V1-light.
 
 ### Phase 7.5 - Embedding-Backed Suggestions
 
+Status: complete for V1-light. Metadata index remains a documented V1.1 architecture target, not a V1 implementation.
+
 - [x] Similar notes candidates: local index search returns ranked `similar_note` candidates from stored embeddings only. V1 includes percent scores, strong/medium/weak/noisy labels, threshold filtering, max-results defaults, content/metadata/mixed modes, a content/metadata weight slider, session-remembered per-run values, a compact chat summary, a detailed Selection Actions result panel, low-content target warnings, and an explicit `Refresh index first` option for newly added or changed Markdown files. No Review Basket actions are created yet.
-- [ ] Link candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
+- [x] Link candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
 - [x] Tag candidates: selected Markdown files expose `Suggest tags`, which creates local heuristic `metadata_candidate` suggestions with full `currentContent` and `proposedContent`. Selected candidates can enter the Review Basket as reviewed `update_note` proposals. The V1 heuristic is role-aware, avoids hard-coded project-folder names, ignores sentence-like chat filenames, prefers strong project/file-role/structural-folder/title signals, and avoids broad stopword-list growth. AI/embedding-generated tag candidates remain later refinement work.
 - [x] Metadata/YAML assist for V1 create flows: Save as Note, summaries, new-note/project presets, and Markdown imports attach deterministic YAML through the shared generated-note metadata policy. The Create Edit view exposes the full YAML before execution. Existing-note update metadata continues through the separate reviewed `update_note` diff path.
-- [ ] Metadata index planning: add a future structured index under selected-vault `.zeus/index/metadata/` for notes, tags, links, template metadata, and project/file-role summaries. Do not overload the embedding index with this data. V1 tag suggestions are designed so this metadata index can become an input later without changing the Review Basket boundary.
-- [ ] Folder candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
+- [x] Metadata index planning only: future structured index is documented under selected-vault `.zeus/index/metadata/` for notes, tags, links, template metadata, project/file-role summaries, and source hashes. Do not implement the index in V1 and do not overload the embedding index with this data.
+- [x] Folder candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
 - [x] Suggestions enter grouped reports or Review Basket proposals only through registered suggestion/action types. Current conversion path supports `metadata_candidate` only.
-- [ ] Opening a cleanup/suggestion group shows concrete previews: tag/property diff, Markdown-line diff, move plan, duplicate comparison, or new-note preview depending on suggestion type.
+- [x] Concrete suggestion previews are V1-ready for `metadata_candidate` through the shared Markdown diff preview. Move plans, duplicate comparison, link diffs, and merge previews are V1.1 because their executable services are not V1 scope.
 - [x] Only selected concrete suggestions are added to the Review Basket.
 - [x] Suggestion types must be extensible without rewriting the cleanup/report/review pipeline. Current renderer state/converter boundary supports this for `similar_note` and `metadata_candidate`; planned later types remain `near_duplicate`, `complementary_note`, `related_note`, `version_conflict`, `name_conflict`, `destination_candidate`, and `link_candidate`.
-
 
 ### Phase 7.5.5 - Suggestions Workspace Foundation
 
@@ -296,29 +306,39 @@ Status: complete for V1-light.
 - [x] LLM-generated extra metadata remains optional and reviewed; the Create Edit view keeps the final Markdown/YAML editable before execution.
 ### Phase 7.6 - Markdown Render And Editor Light
 
+Status: complete for V1 rendering scope. Further plugin rendering, callouts, math/Mermaid, and editor-toolbar work are V1.1/V1.2 unless the Phase 7.7 necessity gate reclassifies a specific item.
+
 - [x] Audit current preview behavior against Obsidian core Markdown and record Full/Partial/Missing/Intentional Difference status in ZEUS_V1_MARKDOWN_COMPATIBILITY.md.
 - [x] Add a non-executed compatibility fixture covering core syntax and explicit plugin-code-block examples.
-- [ ] Confirm the remaining V1 rendering subset with Beka before each parser/asset block.
+- [x] Confirm the final V1 rendering subset once: CommonMark basics, YAML properties display, wikilinks/Markdown links, task boxes, highlights/comments, image embeds, standalone image preview, and safe external-link confirmation. The subset is documented in `ZEUS_V1_MARKDOWN_COMPATIBILITY.md`.
 - [x] Replace the hand-written block/inline regex renderer with pinned `markdown-it` 14.3.0 behind focused engine, Obsidian-extension, Properties, and facade modules.
 - [x] Support standards-based soft line breaks, emphasis variants, strikethrough, nested lists, horizontal rules, inline code, and escapes; add basic Obsidian highlight and inline-comment handling.
 - [x] Bundle the browser engine and MIT license locally, require all Markdown submodules at startup, and keep raw HTML disabled.
-- [ ] Add a data-driven safe fallback registry for explicitly identified plugin blocks; preserve source and never execute plugin code.
-
+- [x] Plugin block fallback registry decision: do not add a renderer registry in V1. Plugin code remains visible as safe source/code and full plugin fallback rendering stays V1.1/V1.2 unless freeze review reclassifies it as must-have.
 - [x] Expand Markdown Preview toward Obsidian-core rendering where practical for current V1 subset: strikethrough, task lists, wikilinks/Markdown links, code fences, tables through markdown-it, and safe HTML escaping.
 - [x] Add local image embeds for Markdown Preview through validated Main/Preload asset reads. V1 supports .png, .jpg, .jpeg, .webp, .gif, .svg, .bmp, and .ico as Markdown embeds and file-tree image entries.
 - [x] Add standalone image-file preview: selecting a supported image in Files shows it in Preview through the same validated asset read path as Markdown embeds. No vision analysis or write actions are included.
 - [x] Keep this as renderer support only. No image editing, import automation, tagging, or vision analysis in this block.
-- [ ] Compare against Obsidian's default Markdown behavior and document intentional V1 differences instead of chasing plugin behavior.
-- [ ] Evaluate Editor Light only if it stays small: basic Markdown editing affordances such as bold, italic, headings, and task-list insertion. Full toolbar, color styling, live preview editing, and detachable editor remain V1.1/V1.2 unless reclassified by the V1 necessity gate.
+- [x] Compare against Obsidian's default Markdown behavior and document intentional V1 differences instead of chasing plugin behavior.
+- [x] Editor Light decision: keep formatting buttons, color styling, live preview editing, and detachable editor out of V1. Current V1 editor remains local source editing plus reviewed full-note update proposals.
 
-### Phase 7.7 - V1 Necessity Review Gate
+### Phase 7.7 - V1 UI/UX Hardening And Polish Gate
 
-- [ ] Review the five external UI/UX proposal files currently under docs/ together with Beka before accepting any recommendation. Treat them as design input only; do not implement or commit them implicitly.
+Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work in small testable slices. The five external UI/UX proposal files are design input, but the accepted goal is to bring their useful fixes and polish into V1 iteratively instead of deferring them wholesale to V1.1.
+
+- [x] Review the five external UI/UX proposal files currently under `docs/` together with Beka. Treat them as design input, map every item through ZEUS ownership boundaries, and implement only through focused app modules/styles.
+- [x] 7.7.1 Token/CSS foundation: `tokens.css` now owns primitive/semantic palette comments, status `-rgb` tokens, `--status-warning`, action color tokens, diff/score tokens, radius tokens, `--transition-fast`, and selection/scrollbar theming. Status/diff/suggestion score colors now use tokens without layout behavior changes.
+- [x] 7.7.2 CSS hardcode cleanup: raw status/action colors, score colors, diff colors, common radii, icon filters, modal backdrops, and shared shadows are centralized through `tokens.css`. Intentional exceptions remain for geometric values such as `border-radius: 0` on flat file rows and `50%` for circular dots/spinners.
+- [x] 7.7.3 Local scrolling and containment: Review Basket and Context Basket now have bounded local scroll areas so long lists do not push the chat input out of view.
+- [ ] 7.7.4 Permission and disabled-action clarity: make `is-soft-disabled` actions visibly blocked without relying on opacity alone; verify the three R/W states direct/inherited/off before changing file-tree permission visuals.
+- [ ] 7.7.5 Review safety polish: distinguish destructive clear actions, protect unsaved update-instruction text on cancel, and verify modal overlay/focus/keyboard behavior before changing modal code.
+- [ ] 7.7.6 Empty states and compact feedback: improve empty states with existing Lucide icons, keep copy short, preserve accessibility labels, and avoid fake functionality.
+- [ ] 7.7.7 Visual polish pass: add Settings category icons, subtle active-state ember glow, file-row update flash, Local Only trust badge, and consistent hover/micro-transition behavior using the token system.
+- [ ] 7.7.8 Loading and score presentation: evaluate and implement skeleton/loading polish where local provider or embedding waits benefit from it; evaluate score-ring presentation for Similar Notes/Suggestions and keep it only if it improves scanability over current score badges.
+- [ ] 7.7.9 Final visual reference alignment: compare the app against `docs/Design_index.html`, keep ZEUS compact and utilitarian, and avoid copying demo-only structures that do not fit the real app.
 - [ ] Create a concise dependency/flow overview (preferably graphical) showing how UI actions, policies, Review Basket, main services, and providers connect.
-
 - [ ] Re-check whether Recent Files/Homepage light, broken-link/orphan scan, and project note maintenance are V1-must or V1.1.
 - [ ] Anything not needed for a presentable V1 moves to the V1.1/V1.2 Backlog before Phase 8 freeze work.
-
 ## Phase 8 - V1 Freeze And Release Baseline
 
 V1 is done when all current V1 phases are complete and a sober freeze review finds no remaining must-have gaps. New findings are classified as V1-must only when they block safety, core usefulness, or external testing; otherwise they move to V1.1 or the Parking Lot.
@@ -369,6 +389,11 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 
 - [ ] Persistent Suggestion Sessions: optionally store open suggestion groups under selected-vault `.zeus/` with created time, source target, index/model version or file hashes, status, and stale validation. Current V1 Suggestions remain intentionally session-only and disappear on reload/restart.
 - [ ] Merge Workspace for similar/complementary notes: compare two source notes, show A/B diff, create a reviewed third merged file, and optionally archive the sources only after explicit confirmation. This must become a dedicated `merge_notes` action, not an overloaded `update_note`.
+- [ ] Link candidates from embeddings/metadata: suggest exact Markdown link insertions with a visible line diff before converting to reviewed `update_note` proposals.
+- [ ] Folder/destination candidates: suggest target folders using embeddings plus metadata index signals, but execute only through future reviewed move/link-update services.
+- [ ] Structured metadata index under selected-vault `.zeus/index/metadata/`: store schema-versioned note facts, tags, parsed links/unresolved links, template roles, project/file-role hints, source hashes, stale markers, and optional reviewed summaries separate from vector embeddings. Rebuild from the vault; never use it as authority for unreviewed writes.
+- [ ] Plugin block fallback registry: detect common unsupported Obsidian plugin blocks, preserve source, and render a clear unsupported-plugin notice without executing plugin code.
+- [ ] Editor Light expansion if needed: formatting buttons, Markdown-safe insertions, optional detached editor/preview workflows, and later style helpers.
 ## Parking Lot
 
 - [ ] Voice input.

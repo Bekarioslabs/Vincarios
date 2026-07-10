@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZEUS — Design Reference</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  /* ============================================================
+     TOKENS — primitives (Rohwerte) -> semantic (das Components nutzen)
+     Gleiche Struktur wie im Token-Architektur-Vorschlag.
+     ============================================================ */
+  :root{
+    /* --- primitives --- */
+    --amber-500:#f59e0b;
+    --amber-600:#d97706;
+    --neutral-950:#0a0a0a;
+    --neutral-900:#111111;
+    --neutral-850:#161616;
+    --neutral-800:#1a1a1a;
+    --neutral-700:#2a2a2a;
+    --green-600:#16a34a;
+    --red-600:#dc2626;
+    --orange-500:#fb923c;
+    --blue-500:#38bdf8;
+    --violet-400:#a78bfa;
+
+    /* --- semantic --- */
+    --background-primary:var(--neutral-950);
+    --background-secondary:var(--neutral-900);
+    --background-tertiary:var(--neutral-850);
+    --background-modifier-form-field:var(--neutral-800);
+    --background-modifier-border:var(--neutral-700);
+    --background-subtle:rgba(255,255,255,.018);
+    --background-subtle-strong:rgba(255,255,255,.035);
+
+    --text-normal:#e8e8e8;
+    --text-muted:#8a8a8a;
+    --text-faint:#666666;
+    --text-strong:#ffffff;
+    --text-readable:#dddddd;
+    --text-on-accent:#050505;
+    --text-accent:var(--amber-500);
+    --text-accent-rgb:245,158,11;
+
+    --interactive-accent:var(--amber-600);
+    --interactive-accent-rgb:217,119,6;
+
+    --status-success:var(--green-600);
+    --status-success-rgb:22,163,74;
+    --status-danger:var(--red-600);
+    --status-danger-rgb:220,38,38;
+    --status-warning:var(--orange-500);
+    --status-warning-rgb:251,146,60;
+
+    --action-context:var(--blue-500);
+    --action-read:#4ade80;
+    --action-write:var(--amber-500);
+    --action-organize:var(--violet-400);
+
+    --radius-sm:4px;
+    --radius-md:6px;
+    --radius-lg:8px;
+    --transition-fast:.15s ease-in-out;
+
+    --font-interface:'Inter','Segoe UI',system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+    --font-monospace:'JetBrains Mono','Fira Code',Consolas,monospace;
+    --font-weight-ui-strong:700;
+    --font-weight-ui-semibold:650;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--background-primary);
+    color:var(--text-normal);
+    font-family:var(--font-interface);
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+  }
+  /* Empfehlung #2: subtile Noise-Textur statt Flat-Black */
+  body::before{
+    content:'';
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    opacity:.035;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  ::selection{ background:rgba(var(--interactive-accent-rgb),.3); color:inherit; }
+  a{color:inherit;}
+  :focus-visible{ outline:2px solid var(--interactive-accent); outline-offset:2px; border-radius:var(--radius-sm); }
+  code{ font-family:var(--font-monospace); }
+
+  .ref-shell{ position:relative; z-index:1; display:grid; grid-template-columns:220px minmax(0,1fr); min-height:100vh; }
+
+  /* ---- linke Nav, mirrort das "Actions"-Panel-Konzept aus ZEUS ---- */
+  .ref-nav{
+    position:sticky; top:0; height:100vh; overflow:auto;
+    padding:24px 14px; border-right:1px solid var(--background-modifier-border);
+    background:var(--background-secondary);
+  }
+  .ref-nav-eyebrow{
+    font:var(--font-weight-ui-semibold) 10px/1.3 var(--font-monospace);
+    letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted);
+    margin:0 6px 14px;
+  }
+  .ref-nav-list{ list-style:none; margin:0; padding:0; display:grid; gap:2px; }
+  .ref-nav-list a{
+    display:block; padding:6px 8px; border-radius:var(--radius-sm);
+    font-size:11.5px; color:var(--text-muted); text-decoration:none;
+    transition:background var(--transition-fast), color var(--transition-fast);
+  }
+  .ref-nav-list a:hover{ background:var(--background-subtle-strong); color:var(--text-normal); }
+
+  .ref-main{ padding:48px 56px 120px; max-width:920px; }
+
+  .ref-hero{ margin-bottom:56px; }
+  .ref-eyebrow{
+    display:inline-block; font:var(--font-weight-ui-semibold) 11px/1 var(--font-monospace);
+    letter-spacing:.08em; color:var(--text-accent); margin-bottom:14px;
+  }
+  .ref-hero h1{
+    margin:0 0 10px; font-size:34px; font-weight:800; letter-spacing:-.01em; color:var(--text-strong);
+  }
+  .ref-hero p{ margin:0 0 18px; color:var(--text-muted); font-size:14px; line-height:1.6; max-width:56ch; }
+
+  section{ margin:0 0 64px; scroll-margin-top:24px; }
+  section h2{
+    display:flex; align-items:center; gap:10px;
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-accent); font-weight:var(--font-weight-ui-strong);
+    margin:0 0 6px;
+  }
+  section h2::before{ content:''; width:14px; height:1px; background:var(--interactive-accent); }
+  .section-note{ color:var(--text-muted); font-size:12.5px; line-height:1.55; margin:0 0 20px; max-width:64ch; }
+  .demo-row{ display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start; }
+  .demo-card{
+    border:1px solid var(--background-modifier-border); border-radius:var(--radius-lg);
+    background:var(--background-secondary); padding:16px;
+  }
+  .demo-label{ font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--text-faint); margin-bottom:10px; }
+
+  /* ============ icons ============ */
+  .ic{ width:15px; height:15px; stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; }
+
+  /* ============================================================
+     1. TOKEN-ARCHITEKTUR — primitives vs semantic, rgb-Zwillinge, radius
+     ============================================================ */
+  .swatch-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:10px; }
+  .swatch{ border-radius:var(--radius-md); overflow:hidden; border:1px solid var(--background-modifier-border); }
+  .swatch-fill{ height:52px; }
+  .swatch-label{ padding:7px 8px; background:var(--background-secondary); font:11px var(--font-monospace); color:var(--text-muted); }
+
+  .rgb-strip{ display:flex; gap:0; border-radius:var(--radius-md); overflow:hidden; border:1px solid var(--background-modifier-border); width:fit-content; }
+  .rgb-strip div{ width:64px; height:44px; display:grid; place-items:center; font:10px var(--font-monospace); color:var(--text-muted); }
+
+  .radius-demo{ display:flex; gap:16px; align-items:flex-end; }
+  .radius-box{ width:64px; height:64px; background:var(--background-modifier-form-field); border:1px solid var(--background-modifier-border); display:grid; place-items:center; font:10px var(--font-monospace); color:var(--text-muted); }
+
+  /* ============================================================
+     2. EMBER-GLOW bei aktiven Elementen
+     ============================================================ */
+  .glow-item{
+    display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:var(--radius-md);
+    border:1px solid var(--background-modifier-border); background:var(--background-secondary);
+    font-size:12px; color:var(--text-normal); width:200px;
+    transition:box-shadow var(--transition-fast), border-color var(--transition-fast);
+  }
+  .glow-item.is-active{
+    border-color:rgba(var(--interactive-accent-rgb),.55);
+    box-shadow:0 0 12px rgba(var(--interactive-accent-rgb),.25);
+    color:var(--text-accent);
+  }
+  .glow-dot{ width:6px; height:6px; border-radius:999px; background:var(--text-faint); flex:0 0 auto; }
+  .glow-item.is-active .glow-dot{ background:var(--interactive-accent); }
+
+  /* ============================================================
+     3. SCORE-RING statt Text-Pill
+     ============================================================ */
+  .score-ring-wrap{ display:flex; align-items:center; gap:10px; }
+  .score-ring{ position:relative; width:40px; height:40px; }
+  .score-ring svg{ transform:rotate(-90deg); }
+  .score-ring-track{ fill:none; stroke:var(--background-modifier-border); stroke-width:3; }
+  .score-ring-fill{ fill:none; stroke-width:3; stroke-linecap:round; transition:stroke-dasharray .5s ease; }
+  .score-ring-value{
+    position:absolute; inset:0; display:grid; place-items:center;
+    font:600 10px var(--font-monospace); color:var(--text-normal);
+  }
+  .score-tone-green .score-ring-fill{ stroke:var(--status-success); }
+  .score-tone-amber .score-ring-fill{ stroke:var(--text-accent); }
+  .score-tone-red .score-ring-fill{ stroke:var(--status-danger); }
+  .score-caption{ font-size:11px; color:var(--text-muted); }
+
+  /* ============================================================
+     4. FOLDER-ROLE Farbpunkte im File Tree
+     ============================================================ */
+  .mock-tree{ display:grid; gap:2px; width:260px; }
+  .mock-tree-row{
+    display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:var(--radius-sm);
+    font-size:12px; color:var(--text-normal); transition:background .9s ease;
+  }
+  .role-dot{ width:7px; height:7px; border-radius:999px; flex:0 0 auto; }
+  .role-inbox{ background:var(--blue-500); }
+  .role-projects{ background:var(--violet-400); }
+  .role-knowledge{ background:var(--status-success); }
+  .role-archive{ background:var(--text-faint); }
+  .role-brain{ background:var(--interactive-accent); }
+
+  /* ============================================================
+     5. ACCENT-FLASH bei geänderten Dateien (interaktiv)
+     ============================================================ */
+  .mock-tree-row.is-flash{ background:rgba(var(--interactive-accent-rgb),.35); animation:emberFade .9s ease-out; }
+  @keyframes emberFade{ from{ background:rgba(var(--interactive-accent-rgb),.45);} to{ background:transparent; } }
+  .flash-trigger{
+    margin-top:12px; border:1px solid var(--background-modifier-border); border-radius:var(--radius-md);
+    background:var(--background-modifier-form-field); color:var(--text-normal); padding:6px 12px;
+    font:11px var(--font-interface); cursor:pointer; transition:border-color var(--transition-fast), color var(--transition-fast);
+  }
+  .flash-trigger:hover{ border-color:var(--interactive-accent); color:var(--text-accent); }
+
+  /* ============================================================
+     6. SETTINGS-Icons pro Kategorie
+     ============================================================ */
+  .settings-list{ display:grid; gap:2px; width:280px; }
+  .settings-row{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:var(--radius-sm);
+    color:var(--text-normal); font-size:12.5px;
+  }
+  .settings-row .ic{ color:var(--text-accent); }
+  .settings-row span.hint{ margin-left:auto; color:var(--text-faint); font-size:10.5px; }
+
+  /* ============================================================
+     7. "Local Only" Trust-Badge
+     ============================================================ */
+  .provider-row{ display:flex; align-items:center; gap:8px; }
+  .provider-pill{
+    display:flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px;
+    border:1px solid var(--background-modifier-border); background:var(--background-modifier-form-field);
+    font:11px var(--font-interface); color:var(--text-normal);
+  }
+  .provider-pill .dot{ width:6px; height:6px; border-radius:999px; background:var(--status-success); }
+  .trust-badge{
+    display:flex; align-items:center; gap:5px; padding:4px 9px; border-radius:999px;
+    border:1px solid rgba(var(--interactive-accent-rgb),.4); background:rgba(var(--interactive-accent-rgb),.08);
+    color:var(--text-accent); font:var(--font-weight-ui-semibold) 10.5px var(--font-interface);
+    cursor:default;
+  }
+  .trust-badge .ic{ width:12px; height:12px; }
+
+  /* ============================================================
+     8. SKELETON-Loading statt Spinner
+     ============================================================ */
+  .skeleton-card{ width:320px; display:grid; gap:8px; padding:12px; border:1px solid var(--background-modifier-border); border-radius:var(--radius-md); background:var(--background-secondary); }
+  .skeleton-line{
+    height:9px; border-radius:999px;
+    background:linear-gradient(90deg, var(--background-modifier-form-field) 25%, var(--background-tertiary) 37%, var(--background-modifier-form-field) 63%);
+    background-size:400% 100%;
+    animation:shimmer 1.6s ease-in-out infinite;
+  }
+  @keyframes shimmer{ 0%{background-position:100% 0;} 100%{background-position:0 0;} }
+  .skeleton-line.w60{ width:60%; }
+  .skeleton-line.w80{ width:80%; }
+  .skeleton-line.w40{ width:40%; }
+
+  /* ============================================================
+     9. Destruktive Buttons (.button-danger)
+     ============================================================ */
+  .btn{
+    border:1px solid var(--background-modifier-border); border-radius:var(--radius-md);
+    background:transparent; color:var(--text-muted); padding:6px 11px;
+    font:var(--font-weight-ui-semibold) 11px var(--font-interface); cursor:pointer;
+    transition:border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+  }
+  .btn:hover{ border-color:rgba(var(--interactive-accent-rgb),.4); color:var(--text-normal); }
+  .btn-danger:hover{
+    border-color:rgba(var(--status-danger-rgb),.55);
+    background:rgba(var(--status-danger-rgb),.1);
+    color:#f87171;
+  }
+
+  /* ============================================================
+     10. EMPTY STATE mit Icon
+     ============================================================ */
+  .empty-state{
+    display:grid; place-items:center; gap:8px; min-height:120px; width:320px;
+    border:1px dashed var(--background-modifier-border); border-radius:var(--radius-lg);
+    color:var(--text-muted); text-align:center; padding:16px;
+  }
+  .empty-state .ic{ width:22px; height:22px; color:var(--text-faint); }
+  .empty-state .msg{ font-size:12px; }
+
+  /* ============================================================
+     11. is-soft-disabled mit Lock-Icon
+     ============================================================ */
+  .action-btn{
+    display:flex; align-items:center; gap:7px; padding:7px 10px; border-radius:var(--radius-md);
+    border:1px solid var(--background-modifier-border); background:var(--background-modifier-form-field);
+    color:var(--text-normal); font-size:12px; width:200px;
+  }
+  .action-btn.is-soft-disabled{
+    opacity:.55; cursor:help;
+    border-style:dashed;
+    border-color:var(--background-modifier-border);
+  }
+  .action-btn.is-soft-disabled .ic{ color:var(--text-faint); margin-left:auto; }
+
+  /* ============================================================
+     12. Diff-View mit Tokens statt Hardcode
+     ============================================================ */
+  .diff-block{ width:100%; max-width:420px; border:1px solid var(--background-modifier-border); border-radius:var(--radius-md); background:var(--background-primary); padding:10px; font:12px var(--font-monospace); }
+  .diff-line{ padding:2px 6px; border-radius:var(--radius-sm); white-space:pre-wrap; color:var(--text-muted); }
+  .diff-add{ color:var(--status-success); background:rgba(var(--status-success-rgb),.1); }
+  .diff-remove{ color:var(--status-danger); background:rgba(var(--status-danger-rgb),.1); }
+
+  footer{ margin-top:80px; padding-top:20px; border-top:1px solid var(--background-modifier-border); color:var(--text-faint); font-size:11px; }
+</style>
+</head>
+<body>
+<div class="ref-shell">
+
+  <nav class="ref-nav">
+    <div class="ref-nav-eyebrow">/zeus/design/reference</div>
+    <ul class="ref-nav-list">
+      <li><a href="#tokens">01 · Token-Architektur</a></li>
+      <li><a href="#glow">02 · Ember-Glow</a></li>
+      <li><a href="#score-ring">03 · Score-Ring</a></li>
+      <li><a href="#folder-roles">04 · Folder-Role-Dots</a></li>
+      <li><a href="#accent-flash">05 · Accent-Flash</a></li>
+      <li><a href="#settings-icons">06 · Settings-Icons</a></li>
+      <li><a href="#trust-badge">07 · Local-Only-Badge</a></li>
+      <li><a href="#skeleton">08 · Skeleton-Loading</a></li>
+      <li><a href="#danger-button">09 · Destruktive Buttons</a></li>
+      <li><a href="#empty-state">10 · Empty State</a></li>
+      <li><a href="#soft-disabled">11 · Soft-Disabled</a></li>
+      <li><a href="#diff-view">12 · Diff-View Tokens</a></li>
+    </ul>
+  </nav>
+
+  <main class="ref-main">
+    <header class="ref-hero">
+      <span class="ref-eyebrow">DESIGN REFERENCE — NICHT V1-KRITISCH</span>
+      <h1>ZEUS Design Reference</h1>
+      <p>Lebendes Muster-Blatt zu den besprochenen UI/UX-Vorschlägen. Alle Werte kommen aus den echten <code>tokens.css</code>-Variablen (Amber/Ember-Schema, Inter, JetBrains Mono) — nichts hier ist eine neue Farbwelt, nur konsequent zu Ende gedacht.</p>
+      <div class="provider-row">
+        <span class="provider-pill"><span class="dot"></span> LM Studio · connected</span>
+        <span class="trust-badge">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+          Runs 100% local
+        </span>
+      </div>
+    </header>
+
+    <section id="tokens">
+      <h2>01 · Token-Architektur</h2>
+      <p class="section-note">Primitives (Rohwerte) → Semantic (das nutzen Components). Jede Farbe, die je mit Alpha gebraucht wird, hat einen <code>-rgb</code>-Zwilling — sonst bleibt ein Theme-Wechsel bei Component-CSS wirkungslos.</p>
+
+      <div class="demo-label">Primitives</div>
+      <div class="swatch-grid" style="margin-bottom:18px;">
+        <div class="swatch"><div class="swatch-fill" style="background:var(--amber-500)"></div><div class="swatch-label">--amber-500</div></div>
+        <div class="swatch"><div class="swatch-fill" style="background:var(--amber-600)"></div><div class="swatch-label">--amber-600</div></div>
+        <div class="swatch"><div class="swatch-fill" style="background:var(--neutral-950);border-bottom:1px solid var(--background-modifier-border)"></div><div class="swatch-label">--neutral-950</div></div>
+        <div class="swatch"><div class="swatch-fill" style="background:var(--green-600)"></div><div class="swatch-label">--green-600</div></div>
+        <div class="swatch"><div class="swatch-fill" style="background:var(--red-600)"></div><div class="swatch-label">--red-600</div></div>
+        <div class="swatch"><div class="swatch-fill" style="background:var(--orange-500)"></div><div class="swatch-label">--orange-500</div></div>
+      </div>
+
+      <div class="demo-label">Semantic → Alpha via -rgb-Zwilling</div>
+      <div class="rgb-strip" style="margin-bottom:18px;">
+        <div style="background:rgba(var(--status-success-rgb),.1)">.1</div>
+        <div style="background:rgba(var(--status-success-rgb),.3)">.3</div>
+        <div style="background:rgba(var(--status-success-rgb),.6)">.6</div>
+        <div style="background:var(--status-success)">1.0</div>
+      </div>
+
+      <div class="demo-label">Radius-Skala</div>
+      <div class="radius-demo">
+        <div class="radius-box" style="border-radius:var(--radius-sm)">sm · 4px</div>
+        <div class="radius-box" style="border-radius:var(--radius-md)">md · 6px</div>
+        <div class="radius-box" style="border-radius:var(--radius-lg)">lg · 8px</div>
+      </div>
+    </section>
+
+    <section id="glow">
+      <h2>02 · Ember-Glow bei aktiven Elementen</h2>
+      <p class="section-note">Statt nur Border: <code>box-shadow: 0 0 12px rgba(var(--interactive-accent-rgb),.25)</code> zusätzlich zum Accent-Border.</p>
+      <div class="demo-row">
+        <div class="glow-item"><span class="glow-dot"></span> File-Tree-Row (default)</div>
+        <div class="glow-item is-active"><span class="glow-dot"></span> File-Tree-Row (aktiv)</div>
+      </div>
+    </section>
+
+    <section id="score-ring">
+      <h2>03 · Score-Ring statt Text-Pill</h2>
+      <p class="section-note">Kompaktes SVG-Donut mit Fill-Prozentsatz statt farbiger Text-Badge bei Similar-Notes/Suggestions.</p>
+      <div class="demo-row">
+        <div class="score-ring-wrap">
+          <div class="score-ring score-tone-green" data-score="92">
+            <svg viewBox="0 0 40 40"><circle class="score-ring-track" cx="20" cy="20" r="16"/><circle class="score-ring-fill" cx="20" cy="20" r="16"/></svg>
+            <div class="score-ring-value">92%</div>
+          </div>
+          <span class="score-caption">Strong match</span>
+        </div>
+        <div class="score-ring-wrap">
+          <div class="score-ring score-tone-amber" data-score="61">
+            <svg viewBox="0 0 40 40"><circle class="score-ring-track" cx="20" cy="20" r="16"/><circle class="score-ring-fill" cx="20" cy="20" r="16"/></svg>
+            <div class="score-ring-value">61%</div>
+          </div>
+          <span class="score-caption">Possible match</span>
+        </div>
+        <div class="score-ring-wrap">
+          <div class="score-ring score-tone-red" data-score="34">
+            <svg viewBox="0 0 40 40"><circle class="score-ring-track" cx="20" cy="20" r="16"/><circle class="score-ring-fill" cx="20" cy="20" r="16"/></svg>
+            <div class="score-ring-value">34%</div>
+          </div>
+          <span class="score-caption">Weak match</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="folder-roles">
+      <h2>04 · Folder-Role-Farbpunkte im File Tree</h2>
+      <p class="section-note">Jede Vault-Profile-Rolle bekommt einen winzigen Dot — Struktur auf einen Blick lesbar, ohne Rollen-Labels zu lesen.</p>
+      <div class="mock-tree">
+        <div class="mock-tree-row"><span class="role-dot role-inbox"></span> 00_Inbox</div>
+        <div class="mock-tree-row"><span class="role-dot role-projects"></span> 01_Projects</div>
+        <div class="mock-tree-row"><span class="role-dot role-knowledge"></span> 02_Knowledge</div>
+        <div class="mock-tree-row"><span class="role-dot role-archive"></span> 03_Archive</div>
+        <div class="mock-tree-row"><span class="role-dot role-brain"></span> Brain_OS</div>
+      </div>
+    </section>
+
+    <section id="accent-flash">
+      <h2>05 · Accent-Flash bei geänderten Dateien</h2>
+      <p class="section-note">Nach <code>update_note</code> blitzt die betroffene Zeile kurz in Akzentfarbe auf — räumliches Feedback ohne Status-Bar-Text lesen zu müssen. Klick zum Testen:</p>
+      <div class="mock-tree" style="width:220px;">
+        <div class="mock-tree-row" id="flash-target"><span class="role-dot role-projects"></span> Meeting_Notes.md</div>
+      </div>
+      <button class="flash-trigger" id="flash-btn">Simulate file update</button>
+    </section>
+
+    <section id="settings-icons">
+      <h2>06 · Icons für Settings-Kategorien</h2>
+      <p class="section-note">Wiederverwendung der vorhandenen Icon-Registry, keine neuen Assets nötig.</p>
+      <div class="settings-list">
+        <div class="settings-row"><svg class="ic" viewBox="0 0 24 24"><path d="M9 2v6M15 2v6M6 8h12v3a6 6 0 0 1-12 0V8Z"/><path d="M12 17v5"/></svg> Providers <span class="hint">LM Studio, Ollama</span></div>
+        <div class="settings-row"><svg class="ic" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 1 18 0"/><path d="M12 12 16 8"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg> Limits <span class="hint">Max size, rate</span></div>
+        <div class="settings-row"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.5 9 8 11 4.5-2 8-6 8-11V5l-8-3Z"/></svg> Safety <span class="hint">Backups, audit log</span></div>
+        <div class="settings-row"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3Z"/></svg> Embeddings <span class="hint">Local model</span></div>
+        <div class="settings-row"><svg class="ic" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6Z"/></svg> Vault Profile <span class="hint">Roles, folders</span></div>
+      </div>
+    </section>
+
+    <section id="trust-badge">
+      <h2>07 · "Local Only" Trust-Badge</h2>
+      <p class="section-note">Kern-Differenzierungsmerkmal gegenüber Cloud-Plugins — bisher nur in Docs, nicht in der UI. Permanent sichtbar neben dem Provider-Status-Pill (siehe Hero oben).</p>
+      <div class="demo-row">
+        <span class="trust-badge">
+          <svg class="ic" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+          Runs 100% local
+        </span>
+      </div>
+    </section>
+
+    <section id="skeleton">
+      <h2>08 · Skeleton-Loading statt Spinner</h2>
+      <p class="section-note">Schimmernde Platzhalter statt Kreis-Spinner, während lokale Inferenz läuft.</p>
+      <div class="skeleton-card">
+        <div class="skeleton-line w80"></div>
+        <div class="skeleton-line w60"></div>
+        <div class="skeleton-line w40"></div>
+      </div>
+    </section>
+
+    <section id="danger-button">
+      <h2>09 · Destruktive Buttons erkennbar machen</h2>
+      <p class="section-note">Hover über die Buttons — <code>.btn-danger</code> reagiert rot, neutrale Buttons bleiben gedämpft. Nur auf echt-destruktive Aktionen anwenden (z. B. „Clear pending", nicht „Clear executed").</p>
+      <div class="demo-row">
+        <button class="btn">Clear executed</button>
+        <button class="btn btn-danger">Clear pending</button>
+      </div>
+    </section>
+
+    <section id="empty-state">
+      <h2>10 · Empty States mit Icon</h2>
+      <p class="section-note">Flexbox-Layout mit passendem Icon statt reinem Text-Div.</p>
+      <div class="empty-state">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M3 8a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2l-1.5 7a2 2 0 0 1-2 1.6H6.5A2 2 0 0 1 4.5 17L3 8Z"/></svg>
+        <div class="msg">No suggestions yet.</div>
+      </div>
+    </section>
+
+    <section id="soft-disabled">
+      <h2>11 · is-soft-disabled mit Lock-Icon</h2>
+      <p class="section-note">Gestrichelter Rand + Lock-Icon statt nur reduzierter Opacity — sofort erkennbar, dass R/W-Freigabe fehlt.</p>
+      <div class="demo-row">
+        <div class="action-btn">Summarize note</div>
+        <div class="action-btn is-soft-disabled" title="Read permission required">
+          Rewrite section
+          <svg class="ic" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        </div>
+      </div>
+    </section>
+
+    <section id="diff-view">
+      <h2>12 · Diff-View mit Tokens statt Hardcode</h2>
+      <p class="section-note">Ersetzt die hardcodierten <code>#9be29b</code>/<code>#ff9b9b</code>-Werte aus <code>review.css</code> durch <code>var(--status-success)</code>/<code>var(--status-danger)</code> + die neuen <code>-rgb</code>-Tokens.</p>
+      <div class="diff-block">
+        <div class="diff-line">## Meeting Notes</div>
+        <div class="diff-line diff-remove">- status: draft</div>
+        <div class="diff-line diff-add">+ status: reviewed</div>
+        <div class="diff-line">Discussed Q3 roadmap and next steps.</div>
+      </div>
+    </section>
+
+    <footer>ZEUS · Bekarios Labs — Referenz zu ZEUS_V1_Design_Polish_Ideen.md &amp; ZEUS_V1_Token_Architektur.md</footer>
+  </main>
+</div>
+
+<script>
+  // Score-Ringe: stroke-dasharray dynamisch aus data-score berechnen
+  document.querySelectorAll('.score-ring').forEach(function(el){
+    var score = parseFloat(el.dataset.score) || 0;
+    var circle = el.querySelector('.score-ring-fill');
+    var r = circle.r.baseVal.value;
+    var c = 2 * Math.PI * r;
+    circle.style.strokeDasharray = (score/100*c) + ' ' + c;
+  });
+
+  // Accent-Flash Demo
+  var flashBtn = document.getElementById('flash-btn');
+  var flashTarget = document.getElementById('flash-target');
+  flashBtn.addEventListener('click', function(){
+    flashTarget.classList.remove('is-flash');
+    void flashTarget.offsetWidth; // reflow, damit die Animation neu startet
+    flashTarget.classList.add('is-flash');
+  });
+</script>
+</body>
+</html>

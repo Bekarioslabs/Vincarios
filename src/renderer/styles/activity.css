@@ -1,0 +1,91 @@
+.session-log-workspace {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+  background: var(--background-primary);
+}
+
+.session-log-header {
+  flex: 0 0 auto;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  color: var(--text-accent);
+  font: var(--font-weight-ui-strong) 12px/1.2 var(--font-interface);
+  text-transform: uppercase;
+}
+
+.session-log-empty {
+  padding: 16px;
+  color: var(--text-muted);
+  font: 12px/1.5 var(--font-interface);
+}
+
+.session-log-list {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  overflow: auto;
+  padding: 12px;
+}
+
+.session-log-entry {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-md);
+  background: var(--background-secondary);
+}
+
+.session-log-time {
+  color: var(--text-faint);
+  font: 11px/1.4 var(--font-monospace);
+}
+
+.session-log-content {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--text-muted);
+  font: 12px/1.4 var(--font-interface);
+}
+
+.session-log-action {
+  color: var(--text-normal);
+  font-weight: var(--font-weight-ui-semibold);
+}
+
+.session-log-entry-success .session-log-action {
+  color: var(--status-success);
+}
+
+.session-log-entry-warning .session-log-action,
+.session-log-entry-warning .session-log-detail {
+  color: var(--status-warning);
+}
+
+.session-log-entry-error .session-log-action,
+.session-log-entry-error .session-log-detail {
+  color: var(--status-error);
+}
+
+.session-log-path {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-normal);
+  font-family: var(--font-monospace);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-log-detail {
+  color: var(--text-muted);
+}
+
+
+

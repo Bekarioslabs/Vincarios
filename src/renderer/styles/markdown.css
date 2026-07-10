@@ -50,7 +50,7 @@
   flex: 0 0 auto;
   padding: 4px 10px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
+  border-radius: var(--radius-compact);
   color: var(--text-normal);
   background: var(--background-modifier-form-field);
   font: 11px/1 var(--font-interface);
@@ -165,7 +165,7 @@
 
 .markdown-preview mark {
   padding: .04em .14em;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   color: var(--markdown-highlight-text);
   background: var(--markdown-highlight-background);
 }
@@ -173,7 +173,7 @@
 .markdown-preview code {
   padding: .12em .34em;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   color: var(--text-normal);
   background: var(--background-secondary);
   font: .92em/1.5 var(--font-monospace);
@@ -183,7 +183,7 @@
   padding: 14px 16px;
   overflow: auto;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--background-secondary);
 }
 
@@ -240,7 +240,7 @@
   margin: 0 0 18px;
   padding: 10px 12px;
   border: 1px solid var(--metadata-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--metadata-background);
 }
 
@@ -277,7 +277,7 @@
 .markdown-history-icon {
   width: 13px;
   height: 13px;
-  filter: brightness(0) invert(1);
+  filter: var(--icon-inverse-filter);
   opacity: .8;
 }
 .markdown-preview img.markdown-image-embed {
@@ -286,7 +286,7 @@
   height: auto;
   margin: 12px 0 18px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--background-secondary);
 }
 
@@ -321,10 +321,10 @@
   width: min(420px, calc(100vw - 48px));
   padding: 12px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   color: var(--text-normal);
   background: var(--background-secondary);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, .45);
+  box-shadow: var(--shadow-popover);
 }
 
 .markdown-external-link-label {
@@ -352,7 +352,7 @@
 .markdown-external-link-actions button {
   padding: 5px 9px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 5px;
+  border-radius: var(--radius-compact);
   color: var(--text-normal);
   background: var(--background-modifier-form-field);
   font: 11px/1 var(--font-interface);

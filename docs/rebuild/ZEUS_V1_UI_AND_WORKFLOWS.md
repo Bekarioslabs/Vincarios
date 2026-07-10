@@ -63,11 +63,21 @@ Keep settings minimal and focused. The confirmed V1 sections are defined below i
 
 ## Session Activity Status
 
-The status bar currently shows the latest app status only. V1 should add a lightweight session Activity/Status Messages view under `WORKSPACE` if it stays small.
+V1 includes a lightweight `Session Log` workspace under `WORKSPACE`. The bottom status bar remains a compact latest-message surface; it is not a history view.
 
-Activity is not audit history. It is an in-memory per-session UI list that clears when the app restarts. Each entry should carry structured fields such as time, type, action, target path, and detail. This allows messages such as `Renamed: 00_Inbox/01_TODO_TEST.md. Links were not updated in V1.` to render with clearer hierarchy: the action can be success-colored, the path neutral, and the warning amber.
+Session Log is renderer-local and in-memory only. It clears when the app restarts and must not write to normal vault notes. V1-light records vault opening and reviewed create/update/template execution. File reads, folder listings, renames, provider errors, and warnings should join the same activity state when those owning modules are touched.
 
-Persistent audit and restore-oriented history belong to `.zeus/audit.jsonl` and later backup/history UI work, not this session activity view.
+Each entry should carry structured fields:
+
+- local time
+- type: `info`, `success`, `warning`, or `error`
+- action label
+- target path when relevant
+- detail text
+
+The UI should make the action and warning readable without turning the list into a second audit system. Example: `Renamed` can use success color, the path stays neutral, and `Links were not updated in V1` can use warning color.
+
+Session Log is not audit history. Persistent audit and restore-oriented history belong to `.zeus/audit.jsonl` and later backup/history UI work, not this session activity view.
 ## Review Basket
 
 The review basket is the central V1 UX.
@@ -483,6 +493,25 @@ Find similar notes uses the local embedding index and keeps the chat output comp
 Future actions can be added through the same registry and handler structure, for example `Find related notes`, `Inbox Review`, move/rename, image actions, or later custom actions. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
 
 
+## Metadata Index Planning
+
+The future metadata index is a V1.1 support layer for Suggestions, not a visible editing surface by itself.
+
+User-facing rule:
+
+- embeddings answer "what is semantically similar?"
+- metadata answers "what does the vault structure already know?"
+- Suggestions combine both into explainable candidates.
+- Review Basket remains the only path from candidate to write.
+
+Planned V1.1 examples:
+
+- `Find related notes` can explain matches with tags, links, role hints, and semantic similarity.
+- link candidates can use known unresolved/outgoing links plus similarity, then show an exact insertion diff before review.
+- folder candidates can use configured folder roles, project paths, tags, and semantic similarity, then propose a reviewed move/link-update action only after future move services exist.
+- richer tag suggestions can prefer tag patterns already present in the vault instead of growing broad word/stopword lists.
+
+The metadata index must live under selected-vault `.zeus/index/metadata/`, remain hidden from normal vault context, and be rebuildable. It must not produce automatic cleanup or silent file edits.
 ## Workspace Tabs Direction
 
 The main work area should support three V1/V1.x workspaces:
