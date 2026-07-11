@@ -238,3 +238,10 @@ test('find similar notes opens a settings-backed mini form', () => {
   assert.match(source, /addSimilarNotesSuggestionGroup/);
   assert.doesNotMatch(source, /reviewBasket.addProposal[sS]{0,500}file.findSimilar/);
 });
+
+test('similar note suggestions carry numeric scores for workspace presentation', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /scorePercent: candidate.scorePercent/);
+  assert.match(source, /scoreTone:\s*scoreToneForPercent\(candidate\.scorePercent\)/);
+});

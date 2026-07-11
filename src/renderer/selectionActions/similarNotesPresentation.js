@@ -5,9 +5,9 @@
 
   function classifySimilarScore(scorePercent) {
     const score = Number(scorePercent);
-    if (Number.isFinite(score) && score >= 80) return { label: 'strong', className: 'is-strong' };
-    if (Number.isFinite(score) && score >= 65) return { label: 'medium', className: 'is-medium' };
-    if (Number.isFinite(score) && score >= 50) return { label: 'weak', className: 'is-weak' };
+    if (Number.isFinite(score) && score >= 90) return { label: 'strong', className: 'is-strong' };
+    if (Number.isFinite(score) && score >= 80) return { label: 'medium', className: 'is-medium' };
+    if (Number.isFinite(score) && score >= 60) return { label: 'weak', className: 'is-weak' };
     return { label: 'noisy', className: 'is-noisy' };
   }
 

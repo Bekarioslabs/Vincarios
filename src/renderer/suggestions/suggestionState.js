@@ -103,12 +103,19 @@
       detail: String(item && item.detail || ''),
       scoreLabel: String(item && item.scoreLabel || ''),
       scoreText: String(item && item.scoreText || ''),
+      scorePercent: normalizeScorePercent(item && item.scorePercent),
       scoreTone: String(item && item.scoreTone || ''),
       kind: String(item && item.kind || ''),
       checked: item && item.checked === true,
       dismissed: item && item.dismissed === true,
       data: item && item.data ? item.data : null
     });
+  }
+
+  function normalizeScorePercent(value) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return null;
+    return Math.max(0, Math.min(100, Math.round(number)));
   }
 
   function cloneGroup(group) {

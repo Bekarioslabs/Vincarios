@@ -36,7 +36,7 @@
 
 .suggestions-empty-copy {
   display: grid;
-  gap: 2px;
+  gap: 3px;
 }
 
 .suggestions-empty-title {
@@ -127,39 +127,102 @@
   color: var(--text-muted);
 }
 
-.suggestions-item-score {
-  padding: 1px 5px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--background-modifier-border);
-  font-size: 10px;
-  line-height: 1.35;
+.suggestions-score-ring-wrap {
+  display: inline-flex;
+  align-items: center;
   color: var(--text-muted);
-  background: var(--background-subtle);
-  white-space: nowrap;
 }
 
-.suggestions-item-score.is-score-green {
-  color: var(--status-success);
-  border-color: rgba(var(--score-strong-rgb), .45);
-  background: rgba(var(--score-strong-rgb), .08);
+.suggestions-score-ring-wrap-list {
+  justify-content: center;
 }
 
-.suggestions-item-score.is-score-yellow {
+.suggestions-score-ring-wrap-detail {
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.suggestions-score-ring-wrap.is-score-green {
+  color: var(--score-strong);
+}
+
+.suggestions-score-ring-wrap.is-score-yellow {
   color: var(--score-medium);
-  border-color: rgba(var(--score-medium-rgb), .45);
-  background: rgba(var(--score-medium-rgb), .08);
 }
 
-.suggestions-item-score.is-score-orange {
+.suggestions-score-ring-wrap.is-score-orange {
   color: var(--score-weak);
-  border-color: rgba(var(--score-weak-rgb), .45);
-  background: rgba(var(--score-weak-rgb), .08);
 }
 
-.suggestions-item-score.is-score-red {
-  color: var(--status-danger);
-  border-color: rgba(var(--score-noisy-rgb), .45);
-  background: rgba(var(--score-noisy-rgb), .08);
+.suggestions-score-ring-wrap.is-score-red {
+  color: var(--score-noisy);
+}
+
+.suggestions-score-ring {
+  width: 34px;
+  height: 34px;
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.suggestions-score-ring-wrap-detail .suggestions-score-ring {
+  width: 40px;
+  height: 40px;
+}
+
+.suggestions-score-ring-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: rotate(-90deg);
+}
+
+.suggestions-score-ring-track,
+.suggestions-score-ring-fill {
+  fill: none;
+  stroke-width: 3;
+}
+
+.suggestions-score-ring-track {
+  stroke: rgba(255, 255, 255, .14);
+}
+
+.suggestions-score-ring-fill {
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+
+.suggestions-score-ring-value {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--text-normal);
+  font-size: 9px;
+  font-weight: var(--font-weight-ui-strong);
+  line-height: 1;
+}
+
+.suggestions-score-ring-wrap-detail .suggestions-score-ring-value {
+  font-size: 10px;
+}
+
+.suggestions-score-ring-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.suggestions-score-ring-label {
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: var(--font-weight-ui-semibold);
+}
+
+.suggestions-score-ring-detail {
+  color: var(--text-muted);
+  font-size: 10px;
 }
 
 .suggestions-item-dismiss {

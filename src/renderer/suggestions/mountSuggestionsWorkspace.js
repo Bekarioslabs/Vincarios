@@ -95,11 +95,7 @@
       text.appendChild(name);
       if (parent.textContent) text.appendChild(parent);
       row.appendChild(text);
-
-      const score = document.createElement('span');
-      score.className = 'suggestions-item-score ' + scoreToneClass(item);
-      score.textContent = [item.scoreText, item.scoreLabel].filter(Boolean).join(' ');
-      row.appendChild(score);
+      row.appendChild(renderScoreRing(item, 'list'));
 
       const dismiss = document.createElement('span');
       dismiss.className = 'suggestions-item-dismiss';
@@ -113,6 +109,88 @@
       return row;
     }
 
+    function renderScoreRing(item, variant) {
+      const percent = normalizeScorePercent(item && item.scorePercent);
+      const wrap = document.createElement('span');
+      wrap.className = 'suggestions-score-ring-wrap suggestions-score-ring-wrap-' + (variant || 'list') + ' ' + scoreToneClass(item);
+      if (percent === null) {
+        wrap.textContent = 'n/a';
+        return wrap;
+      }
+
+      const circumference = 100.531;
+      const fill = Math.max(0, Math.min(circumference, circumference * percent / 100));
+      const label = scoreMatchLabel(item) + ': ' + String(percent) + '%';
+
+      const ring = document.createElement('span');
+      ring.className = 'suggestions-score-ring';
+      ring.setAttribute('aria-label', label);
+      ring.title = label;
+
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 40 40');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.classList.add('suggestions-score-ring-svg');
+
+      const track = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      track.classList.add('suggestions-score-ring-track');
+      track.setAttribute('cx', '20');
+      track.setAttribute('cy', '20');
+      track.setAttribute('r', '16');
+
+      const progress = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      progress.classList.add('suggestions-score-ring-fill');
+      progress.setAttribute('cx', '20');
+      progress.setAttribute('cy', '20');
+      progress.setAttribute('r', '16');
+      progress.style.strokeDasharray = fill.toFixed(4) + ' ' + circumference;
+
+      svg.appendChild(track);
+      svg.appendChild(progress);
+      ring.appendChild(svg);
+
+      const value = document.createElement('span');
+      value.className = 'suggestions-score-ring-value';
+      value.textContent = String(percent) + '%';
+      ring.appendChild(value);
+      wrap.appendChild(ring);
+
+      if (variant === 'detail') {
+        const copy = document.createElement('span');
+        copy.className = 'suggestions-score-ring-copy';
+        const title = document.createElement('span');
+        title.className = 'suggestions-score-ring-label';
+        title.textContent = scoreMatchLabel(item);
+        const detail = document.createElement('span');
+        detail.className = 'suggestions-score-ring-detail';
+        detail.textContent = [item.scoreText, item.scoreLabel].filter(Boolean).join(' ');
+        copy.appendChild(title);
+        if (detail.textContent) copy.appendChild(detail);
+        wrap.appendChild(copy);
+      }
+
+      return wrap;
+    }
+
+    function renderDetailScore(item) {
+      return renderScoreRing(item, 'detail');
+    }
+
+    function scoreMatchLabel(item) {
+      const tone = String(item && item.scoreTone || 'neutral');
+      if (tone === 'green') return 'Strong match';
+      if (tone === 'yellow') return 'Medium match';
+      if (tone === 'orange') return 'Possible match';
+      if (tone === 'red') return 'Weak match';
+      return 'Match';
+    }
+
+    function normalizeScorePercent(value) {
+      const score = Number(value);
+      if (!Number.isFinite(score)) return null;
+      return Math.max(0, Math.min(100, Math.round(score)));
+    }
+
     function renderDetail(container, item) {
       container.classList.add('suggestions-detail-grid');
       if (!item) {
@@ -122,6 +200,9 @@
 
       const info = document.createElement('section');
       info.className = 'suggestions-detail-info';
+
+      const scoreSummary = renderDetailScore(item);
+      if (scoreSummary) info.appendChild(scoreSummary);
 
       const title = document.createElement('div');
       title.className = 'suggestions-detail-title';

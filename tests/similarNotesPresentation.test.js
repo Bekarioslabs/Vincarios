@@ -9,9 +9,9 @@ const {
 } = require('../src/renderer/selectionActions/similarNotesPresentation');
 
 test('classifySimilarScore labels embedding scores for user-facing confidence', () => {
-  assert.deepEqual(classifySimilarScore(82), { label: 'strong', className: 'is-strong' });
-  assert.deepEqual(classifySimilarScore(70), { label: 'medium', className: 'is-medium' });
-  assert.deepEqual(classifySimilarScore(52), { label: 'weak', className: 'is-weak' });
+  assert.deepEqual(classifySimilarScore(92), { label: 'strong', className: 'is-strong' });
+  assert.deepEqual(classifySimilarScore(84), { label: 'medium', className: 'is-medium' });
+  assert.deepEqual(classifySimilarScore(71), { label: 'weak', className: 'is-weak' });
   assert.deepEqual(classifySimilarScore(33), { label: 'noisy', className: 'is-noisy' });
 });
 
@@ -21,7 +21,7 @@ test('formatSimilarNotesSummary stays compact and warns for low-content targets'
     mode: 'content',
     minimumScorePercent: 30,
     candidates: [
-      { path: 'A.md', scorePercent: 52 },
+      { path: 'A.md', scorePercent: 62 },
       { path: 'B.md', scorePercent: 41 }
     ]
   }, '# TODO\n\n- [ ]');
@@ -34,8 +34,8 @@ test('formatSimilarNotesSummary stays compact and warns for low-content targets'
 
 test('normalizeSimilarNotesCandidates prepares compact panel entries', () => {
   const entries = normalizeSimilarNotesCandidates([
-    { path: 'A.md', scorePercent: 82, contentScorePercent: 85, metadataScorePercent: 10 },
-    { path: 'B.md', scorePercent: 52, contentScorePercent: 52, metadataScorePercent: null }
+    { path: 'A.md', scorePercent: 92, contentScorePercent: 95, metadataScorePercent: 10 },
+    { path: 'B.md', scorePercent: 71, contentScorePercent: 71, metadataScorePercent: null }
   ]);
 
   assert.equal(entries[0].scoreLabel, 'strong');

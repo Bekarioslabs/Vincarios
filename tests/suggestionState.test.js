@@ -10,8 +10,8 @@ function sampleGroup() {
     title: 'Similar Notes',
     source: 'file.findSimilar',
     items: [
-      { id: 'a', title: 'A.md', detail: 'Strong match', scoreLabel: 'strong', scoreText: '82%' },
-      { id: 'b', title: 'B.md', detail: 'Weak match', scoreLabel: 'weak', scoreText: '52%' }
+      { id: 'a', title: 'A.md', detail: 'Strong match', scoreLabel: 'strong', scoreText: '82%', scorePercent: 82 },
+      { id: 'b', title: 'B.md', detail: 'Weak match', scoreLabel: 'weak', scoreText: '52%', scorePercent: 52 }
     ]
   };
 }
@@ -34,6 +34,7 @@ test('suggestion state adds a group and exposes selected detail', () => {
   assert.equal(snapshot.groups[0].items.length, 2);
   assert.equal(snapshot.selectedItem.id, 'a');
   assert.equal(snapshot.selectedItem.detail, 'Strong match');
+  assert.equal(snapshot.selectedItem.scorePercent, 82);
 });
 
 test('suggestion state selects toggles and dismisses items without deleting files', () => {

@@ -7,11 +7,13 @@
 }
 :root {
   /* Primitive palette */
+  --color-amber-200: #fde68a;
   --color-amber-500: #f59e0b;
   --color-amber-600: #d97706;
   --color-green-400: #4ade80;
   --color-green-600: #16a34a;
   --color-orange-400: #fb923c;
+  --color-orange-500: #f97316;
   --color-red-400: #f87171;
   --color-red-600: #dc2626;
   --color-sky-400: #38bdf8;
@@ -78,14 +80,14 @@
   --diff-remove-text: var(--status-danger-soft);
   --diff-remove-background: rgba(var(--status-danger-rgb), .1);
 
-  --score-strong: var(--status-success-soft);
-  --score-strong-rgb: 74,222,128;
-  --score-medium: var(--text-accent);
-  --score-medium-rgb: var(--text-accent-rgb);
-  --score-weak: var(--status-warning);
-  --score-weak-rgb: var(--status-warning-rgb);
-  --score-noisy: var(--status-danger-soft);
-  --score-noisy-rgb: 248,113,113;
+  --score-strong: var(--color-green-600);
+  --score-strong-rgb: 22,163,74;
+  --score-medium: var(--color-amber-200);
+  --score-medium-rgb: 253,230,138;
+  --score-weak: var(--color-orange-500);
+  --score-weak-rgb: 249,115,22;
+  --score-noisy: var(--color-red-600);
+  --score-noisy-rgb: 220,38,38;
 
   --radius-xs: 2px;
   --radius-sm: 4px;

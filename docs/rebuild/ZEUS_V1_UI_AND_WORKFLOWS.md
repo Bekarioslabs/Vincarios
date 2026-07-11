@@ -535,7 +535,7 @@ analysis action -> grouped suggestions -> user selects suggestions -> preview/di
 
 Recommended layout for the Suggestions workspace:
 
-- left side: compact suggestion groups/items with checkboxes, status/score labels, dismiss controls, and per-item preview controls.
+- left side: compact suggestion groups/items with checkboxes, score rings for similarity items, dismiss controls, and per-item preview controls. Similarity scores should not render as oval pills.
 - right side: detail preview for the selected suggestion. Preview type depends on suggestion kind: text detail, Markdown-line diff, property/tag diff, move plan, duplicate comparison, or create-note preview.
 - top or footer action bar: `Add selected to Review Basket` only becomes active when selected suggestions can become concrete actions. It must not mean execute.
 
@@ -629,6 +629,8 @@ Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with
 Phase 7.7 polish: settings category buttons may use existing semantic Lucide icons. Icons are decorative, rendered by the settings module through ZeusIconRenderer, and styled through shared icon filter tokens so themes can adjust them later.
 
 Phase 7.7 polish keeps micro-interactions tokenized: active navigation/settings states use subtle inset glow, recently written file rows can flash after reviewed writes, and reduced-motion users keep instant file-row state changes.
+
+Phase 7.7 loading/score decision: local provider and embedding operations use the existing pending chat message with spinner as the canonical wait state. Suggestions use a compact score-ring component for similarity scores, inspired by `docs/Design_index.html` and implemented through ZEUS modules/tokens rather than copied demo markup. Do not use oval score pills or inline list meter bars for similarity scores. The ring shows the percentage inside the circle; optional explanatory text such as `Strong match`, `Medium match`, `Possible match`, or `Weak match` may appear beside it. Later Appearance/Settings can hide that explanatory text for users who only need the ring. Medium/yellow must use a visibly brighter amber/yellow token than weak/orange.
 
 Vault Profile and Templates relationship:
 

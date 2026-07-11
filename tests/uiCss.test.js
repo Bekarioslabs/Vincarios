@@ -276,3 +276,26 @@ test('visual polish uses tokenized transitions and file-row update flash', () =>
   assert.match(fileCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(settingsCss, /\.settings-category-button\.is-active\s*\{[\s\S]*box-shadow: inset 0 0 0 1px rgba\(var\(--interactive-accent-rgb\), \.06\);/);
 });
+
+test('suggestions similarity scores use compact token-driven rings', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
+
+  assert.match(css, /\.suggestions-score-ring\s*{[\s\S]*width:\s*34px;/);
+  assert.match(css, /\.suggestions-score-ring-track,[\s\S]*\.suggestions-score-ring-fill\s*{[\s\S]*stroke-width:\s*3;/);
+  assert.match(css, /\.suggestions-score-ring-fill\s*{[\s\S]*stroke:\s*currentColor;/);
+  assert.doesNotMatch(css, /suggestions-item-score-meter/);
+  assert.doesNotMatch(css, /\.suggestions-item-score\s*{/);
+});
+
+
+test('suggestions score rings use shared score tokens', () => {
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
+
+  assert.match(tokensCss, /--color-amber-200:\s*#fde68a;/);
+  assert.match(tokensCss, /--color-orange-500:\s*#f97316;/);
+  assert.match(tokensCss, /--score-medium:\s*var\(--color-amber-200\);/);
+  assert.match(tokensCss, /--score-weak:\s*var\(--color-orange-500\);/);
+  assert.match(css, /\.suggestions-score-ring-wrap\.is-score-yellow\s*{[\s\S]*color:\s*var\(--score-medium\);/);
+  assert.match(css, /\.suggestions-score-ring-wrap\.is-score-orange\s*{[\s\S]*color:\s*var\(--score-weak\);/);
+});

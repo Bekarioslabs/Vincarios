@@ -718,6 +718,7 @@
         path: candidate.path,
         kind: 'similar_note',
         scoreLabel: candidate.scoreText + ' ' + candidate.scoreLabel,
+        scorePercent: candidate.scorePercent,
         scoreTone: scoreToneForPercent(candidate.scorePercent),
         detail: [
           candidate.path,

@@ -63,7 +63,7 @@ test('suggestions workspace hides empty dismissed groups and keeps nested paths 
   assert.match(source, /row\.title = item\.path \|\| item\.title/);
 });
 
-test('suggestions score colors are scoped to score badges', () => {
+test('suggestions score colors are scoped to score rings', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
 
@@ -71,10 +71,10 @@ test('suggestions score colors are scoped to score badges', () => {
   assert.match(source, /score >= 90/);
   assert.match(source, /score >= 80/);
   assert.match(source, /score >= 60/);
-  assert.match(css, /\.suggestions-item-score\.is-score-green/);
-  assert.match(css, /\.suggestions-item-score\.is-score-yellow/);
-  assert.match(css, /\.suggestions-item-score\.is-score-orange/);
-  assert.match(css, /\.suggestions-item-score\.is-score-red/);
+  assert.match(css, /\.suggestions-score-ring-wrap\.is-score-green/);
+  assert.match(css, /\.suggestions-score-ring-wrap\.is-score-yellow/);
+  assert.match(css, /\.suggestions-score-ring-wrap\.is-score-orange/);
+  assert.match(css, /\.suggestions-score-ring-wrap\.is-score-red/);
 });
 test('similar notes does not open suggestions workspace for empty result groups', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
@@ -148,4 +148,22 @@ test('suggestions workspace empty states use compact icon feedback', () => {
   assert.match(source, /createEmptyState\('warning', 'No change preview yet\.'/);
   assert.match(source, /getIconRenderer/);
   assert.match(source, /empty-state-icon/);
+});
+
+test('suggestions score presentation uses real SVG rings instead of pills or meters', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
+
+  assert.match(source, /function renderScoreRing\(item, variant\)/);
+  assert.match(source, /document\.createElementNS\('http:\/\/www\.w3\.org\/2000\/svg', 'svg'\)/);
+  assert.match(source, /suggestions-score-ring-fill/);
+  assert.match(source, /strokeDasharray/);
+  assert.match(source, /renderScoreRing\(item, 'list'\)/);
+  assert.match(source, /renderScoreRing\(item, 'detail'\)/);
+  assert.doesNotMatch(source, /renderScoreBadge/);
+  assert.doesNotMatch(source, /suggestions-item-score-meter/);
+  assert.doesNotMatch(css, /suggestions-item-score-meter/);
+  assert.doesNotMatch(css, /suggestions-item-score\s*\{/);
+  assert.match(css, /.suggestions-score-ring/);
+  assert.match(css, /.suggestions-score-ring-fill/);
 });
