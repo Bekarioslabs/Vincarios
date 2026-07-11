@@ -158,12 +158,30 @@ test('suggestions score presentation uses real SVG rings instead of pills or met
   assert.match(source, /document\.createElementNS\('http:\/\/www\.w3\.org\/2000\/svg', 'svg'\)/);
   assert.match(source, /suggestions-score-ring-fill/);
   assert.match(source, /strokeDasharray/);
-  assert.match(source, /renderScoreRing\(item, 'list'\)/);
-  assert.match(source, /renderScoreRing\(item, 'detail'\)/);
+  assert.match(source, /renderSuggestionSignal\(item, 'list'\)/);
+  assert.match(source, /renderSuggestionSignal\(item, 'detail'\)/);
+  assert.match(source, /if \(hasSimilarityScore\(item\)\) return renderScoreRing\(item, variant\)/);
   assert.doesNotMatch(source, /renderScoreBadge/);
   assert.doesNotMatch(source, /suggestions-item-score-meter/);
   assert.doesNotMatch(css, /suggestions-item-score-meter/);
   assert.doesNotMatch(css, /suggestions-item-score\s*\{/);
   assert.match(css, /.suggestions-score-ring/);
   assert.match(css, /.suggestions-score-ring-fill/);
+});
+
+
+test('suggestions metadata candidates use type badges and icon dismiss controls', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
+
+  assert.match(source, /function renderSuggestionSignal\(item, variant\)/);
+  assert.match(source, /hasSimilarityScore\(item\)/);
+  assert.match(source, /kind \|\| ''\) !== 'similar_note'\) return false/);
+  assert.match(source, /return renderTypeBadge\(item, variant\)/);
+  assert.match(source, /metadata_candidate'\) return 'TAG'/);
+  assert.match(source, /function renderDismissButton\(group, item\)/);
+  assert.match(source, /review-basket-remove/);
+  assert.match(source, /createIconElement\('close', 'review-remove-icon'\)/);
+  assert.match(css, /\.suggestions-type-badge\s*{/);
+  assert.match(css, /\.suggestions-item-dismiss\.review-basket-remove\s*{/);
 });

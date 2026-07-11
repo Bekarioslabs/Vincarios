@@ -225,9 +225,28 @@
   font-size: 10px;
 }
 
-.suggestions-item-dismiss {
+.suggestions-type-badge {
+  min-width: 34px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-sm);
+  background: var(--background-subtle);
   color: var(--text-muted);
-  font-size: 10px;
+  padding: 2px 4px;
+  font: var(--font-weight-ui-strong) 9px/1 var(--font-interface);
+  letter-spacing: .04em;
+}
+
+.suggestions-type-badge-detail {
+  width: fit-content;
+  margin-bottom: 10px;
+}
+
+.suggestions-item-dismiss.review-basket-remove {
+  width: 24px;
+  height: 24px;
+  padding: 0;
 }
 
 .suggestions-detail {

@@ -95,18 +95,58 @@
       text.appendChild(name);
       if (parent.textContent) text.appendChild(parent);
       row.appendChild(text);
-      row.appendChild(renderScoreRing(item, 'list'));
+      row.appendChild(renderSuggestionSignal(item, 'list'));
+      row.appendChild(renderDismissButton(group, item));
 
-      const dismiss = document.createElement('span');
-      dismiss.className = 'suggestions-item-dismiss';
-      dismiss.textContent = 'Dismiss';
-      dismiss.addEventListener('click', (event) => {
+      return row;
+    }
+
+    function renderSuggestionSignal(item, variant) {
+      if (hasSimilarityScore(item)) return renderScoreRing(item, variant);
+      return renderTypeBadge(item, variant);
+    }
+
+    function hasSimilarityScore(item) {
+      if (String(item && item.kind || '') !== 'similar_note') return false;
+      return normalizeScorePercent(item && item.scorePercent) !== null;
+    }
+
+    function renderTypeBadge(item, variant) {
+      const badge = document.createElement('span');
+      badge.className = 'suggestions-type-badge suggestions-type-badge-' + (variant || 'list');
+      badge.textContent = formatTypeBadgeLabel(item);
+      badge.title = formatTypeBadgeTitle(item);
+      return badge;
+    }
+
+    function formatTypeBadgeLabel(item) {
+      const kind = String(item && item.kind || 'suggestion');
+      if (kind === 'metadata_candidate') return 'TAG';
+      return 'INFO';
+    }
+
+    function formatTypeBadgeTitle(item) {
+      const text = [item && item.scoreText, item && item.scoreLabel].filter(Boolean).join(' ');
+      return text || 'Suggestion';
+    }
+
+    function renderDismissButton(group, item) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'suggestions-item-dismiss review-basket-remove';
+      button.title = 'Dismiss';
+      button.setAttribute('aria-label', 'Dismiss suggestion: ' + (item.title || item.path || 'suggestion'));
+      const renderer = getIconRenderer();
+      if (renderer && typeof renderer.createIconElement === 'function') {
+        button.appendChild(renderer.createIconElement('close', 'review-remove-icon'));
+      } else {
+        button.textContent = 'x';
+      }
+      button.addEventListener('click', (event) => {
         event.stopPropagation();
         suggestionState.dismissItem(group.id, item.id);
       });
-      row.appendChild(dismiss);
-
-      return row;
+      return button;
     }
 
     function renderScoreRing(item, variant) {
@@ -172,9 +212,6 @@
       return wrap;
     }
 
-    function renderDetailScore(item) {
-      return renderScoreRing(item, 'detail');
-    }
 
     function scoreMatchLabel(item) {
       const tone = String(item && item.scoreTone || 'neutral');
@@ -201,7 +238,7 @@
       const info = document.createElement('section');
       info.className = 'suggestions-detail-info';
 
-      const scoreSummary = renderDetailScore(item);
+      const scoreSummary = renderSuggestionSignal(item, 'detail');
       if (scoreSummary) info.appendChild(scoreSummary);
 
       const title = document.createElement('div');
