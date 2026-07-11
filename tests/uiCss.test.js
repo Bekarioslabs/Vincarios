@@ -272,7 +272,9 @@ test('visual polish uses tokenized transitions and file-row update flash', () =>
 
   assert.match(layoutCss, /\.left-button\s*\{[\s\S]*transition: border-color var\(--transition-fast\)/);
   assert.match(layoutCss, /\.left-button-current\s*\{[\s\S]*box-shadow: inset 0 0 0 1px rgba\(var\(--interactive-accent-rgb\), \.06\);/);
-  assert.match(fileCss, /\.file-row\.is-recently-updated\s*\{[\s\S]*box-shadow: inset 3px 0 0 rgba\(var\(--interactive-accent-rgb\), \.72\);/);
+  assert.match(fileCss, /\.file-row\.is-recently-updated\s*\{[\s\S]*animation: file-row-update-flash \.85s ease-out;/);
+  assert.match(fileCss, /\.file-row\.is-recently-updated\s*\{[\s\S]*outline: 1px solid rgba\(var\(--interactive-accent-rgb\), \.36\);/);
+  assert.match(fileCss, /@keyframes file-row-update-flash/);
   assert.match(fileCss, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(settingsCss, /\.settings-category-button\.is-active\s*\{[\s\S]*box-shadow: inset 0 0 0 1px rgba\(var\(--interactive-accent-rgb\), \.06\);/);
 });

@@ -37,6 +37,7 @@
     { name: 'ZeusMarkdownProperties', globalName: 'ZeusMarkdownProperties', methods: ['splitFrontmatter', 'renderProperties'] },
     { name: 'ZeusMarkdownRenderer', globalName: 'ZeusMarkdownRenderer', methods: ['renderMarkdown'] },
     { name: 'ZeusMarkdownPreview', globalName: 'ZeusMarkdownPreview' },
+    { name: 'ZeusUpdateFlashState', globalName: 'ZeusUpdateFlashState', methods: ['createUpdateFlashState'] },
     { name: 'ZeusFilePanel', globalName: 'ZeusFilePanel' },
     { name: 'ZeusReviewBasketState', globalName: 'ZeusReviewBasketState' },
     { name: 'ZeusReviewBasket', globalName: 'ZeusReviewBasket' },

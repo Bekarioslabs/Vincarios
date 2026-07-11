@@ -10,13 +10,13 @@
     const context = options.context;
     const contextState = options.contextState || null;
     const permissionState = options.permissionState || null;
+    const updateFlashState = options.updateFlashState || null;
     const navigator = options.navigator || window.ZeusFileNavigator.createFileNavigator();
     const keyboard = options.keyboard || window.ZeusFileTreeKeyboard || null;
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
+    const visibleRows = new Map();
     let activeRename = null;
-    let flashPathValue = '';
-    let flashTimer = null;
 
     if (!root) return null;
 
@@ -39,6 +39,7 @@
 
     attachRefreshIcon();
     refreshButton.addEventListener('click', refreshTree);
+    subscribeToUpdateFlashState();
 
     function setVaultName(name) {
       setText(vaultName, name || 'Vault');
@@ -87,6 +88,7 @@
       const state = navigator.snapshot();
       updateNavigation(state);
       tree.innerHTML = '';
+      visibleRows.clear();
       tree.className = 'file-tree';
 
       const rootData = entriesByFolder.get('');
@@ -146,6 +148,7 @@
         row.className = 'file-row file-row-' + entry.kind;
         row.dataset.path = entry.path;
         row.style.setProperty('--tree-depth', String(depth));
+        visibleRows.set(normalizePath(entry.path), row);
 
         const icon = createFileRowIcon(entry);
 
@@ -156,9 +159,7 @@
         row.appendChild(createPermissionControls(entry.path));
         row.appendChild(icon);
         row.appendChild(label);
-        if (window.ZeusFileNavigator.normalizePath(flashPathValue) === window.ZeusFileNavigator.normalizePath(entry.path)) {
-          row.classList.add('is-recently-updated');
-        }
+        applyFlashClass(row, entry.path);
 
 
         const selected = navigator.snapshot().selectedPath === entry.path;
@@ -339,16 +340,25 @@
       setStatus('Read: ' + read.path);
     }
 
+    function subscribeToUpdateFlashState() {
+      if (!updateFlashState || typeof updateFlashState.subscribe !== 'function') return;
+      updateFlashState.subscribe(applyFlashSnapshot);
+    }
+
+    function applyFlashSnapshot() {
+      visibleRows.forEach((row, path) => {
+        row.classList.toggle('is-recently-updated', updateFlashState.isFlashing(path));
+      });
+    }
+
+    function applyFlashClass(row, path) {
+      if (!row || !updateFlashState || typeof updateFlashState.isFlashing !== 'function') return;
+      row.classList.toggle('is-recently-updated', updateFlashState.isFlashing(normalizePath(path)));
+    }
+
     function flashPath(path) {
-      flashPathValue = window.ZeusFileNavigator.normalizePath(path || '');
-      if (!flashPathValue) return;
-      if (flashTimer) clearTimeout(flashTimer);
-      renderTree();
-      flashTimer = setTimeout(() => {
-        flashPathValue = '';
-        flashTimer = null;
-        renderTree();
-      }, 1400);
+      if (!updateFlashState || typeof updateFlashState.flashTargets !== 'function') return;
+      updateFlashState.flashTargets({ path, kind: 'file', reason: 'updated' });
     }
 
     async function refreshLoadedMarkdown(path) {
@@ -684,6 +694,10 @@
       breadcrumb.textContent = state.selectedKind === 'markdown'
         ? parts + ' / ' + state.selectedPath.split('/').pop()
         : parts;
+    }
+
+    function normalizePath(value) {
+      return window.ZeusFileNavigator.normalizePath(value || '');
     }
 
     function setPreviewSource(content, path, behavior) {

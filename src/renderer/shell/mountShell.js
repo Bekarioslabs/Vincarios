@@ -155,7 +155,8 @@
       const contextState = createContextState();
       const suggestionState = createSuggestionState();
       wireSuggestionIndicator(app, suggestionState);
-      const vaultUi = { filePanel: null };
+      const updateFlashState = createUpdateFlashState();
+      const vaultUi = { filePanel: null, updateFlashState };
       const reviewBasket = mountOptional('review basket', status, () => window.ZeusReviewBasket
         ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
         : null);
@@ -189,6 +190,11 @@
   function createActivityState() {
     if (!window.ZeusActivityState) return null;
     return window.ZeusActivityState.createActivityState();
+  }
+
+  function createUpdateFlashState() {
+    if (!window.ZeusUpdateFlashState || typeof window.ZeusUpdateFlashState.createUpdateFlashState !== 'function') return null;
+    return window.ZeusUpdateFlashState.createUpdateFlashState({ normalizePath });
   }
 
   function wireWorkspaceTabs(app, workspaceState) {
@@ -409,7 +415,7 @@
       });
       if (result && result.ok) {
         await refreshFilePanelAfterWrite(vaultUi);
-        flashFilePanelPath(vaultUi, result.path || proposal.targetPath);
+        flashReviewedWriteResult(vaultUi, proposal, result);
       }
       return result;
     }
@@ -457,8 +463,9 @@
         created.push(result.path);
       }
       await refreshFilePanelAfterWrite(vaultUi);
-      flashFilePanelPath(vaultUi, created[0] || proposal.targetPath || proposal.templatePlanRootPath);
-      return { ok: true, action: 'create_from_template', path: proposal.targetPath || proposal.templatePlanRootPath || '', createdFolders, created };
+      const result = { ok: true, action: 'create_from_template', path: proposal.targetPath || proposal.templatePlanRootPath || '', createdFolders, created };
+      flashReviewedWriteResult(vaultUi, proposal, result);
+      return result;
     }
     if (proposal.type === 'update_note') {
       if (typeof api.vault.updateNote !== 'function') {
@@ -471,7 +478,7 @@
       });
       if (result && result.ok) {
         await refreshCurrentPreviewAfterUpdate(vaultUi, proposal.targetPath);
-        flashFilePanelPath(vaultUi, proposal.targetPath);
+        flashReviewedWriteResult(vaultUi, proposal, result);
       }
       return result;
     }
@@ -482,10 +489,39 @@
     return String(value || '').replace(/\\/g, '/').split('/').map((part) => part.trim()).filter(Boolean);
   }
 
-  function flashFilePanelPath(vaultUi, targetPath) {
-    const filePanel = vaultUi && vaultUi.filePanel;
-    if (!filePanel || typeof filePanel.flashPath !== 'function' || !targetPath) return;
-    filePanel.flashPath(targetPath);
+  function flashReviewedWriteResult(vaultUi, proposal, result) {
+    const flashState = vaultUi && vaultUi.updateFlashState;
+    if (!flashState || typeof flashState.flashTargets !== 'function') return;
+    const targets = reviewedWriteFlashTargets(proposal, result);
+    if (targets.length) flashState.flashTargets(targets);
+  }
+
+  function reviewedWriteFlashTargets(proposal, result) {
+    if (!proposal || !result || result.ok !== true) return [];
+    if (proposal.type === 'create_note') {
+      return compactFlashTargets([{ path: result.path || proposal.targetPath, kind: 'file', reason: 'created' }]);
+    }
+    if (proposal.type === 'update_note') {
+      return compactFlashTargets([{ path: proposal.targetPath, kind: 'file', reason: 'updated' }]);
+    }
+    if (proposal.type === 'create_from_template') {
+      return compactFlashTargets([
+        { path: result.path || proposal.templatePlanRootPath || proposal.targetPath, kind: 'folder', reason: 'template_created' },
+        { path: Array.isArray(result.created) ? result.created[0] : '', kind: 'file', reason: 'created' }
+      ]);
+    }
+    return [];
+  }
+
+  function compactFlashTargets(targets) {
+    const seen = new Set();
+    return (Array.isArray(targets) ? targets : []).filter((target) => {
+      const path = normalizePath(target && target.path);
+      if (!path || seen.has(path)) return false;
+      seen.add(path);
+      target.path = path;
+      return true;
+    });
   }
 
   async function refreshFilePanelAfterWrite(vaultUi) {
@@ -554,7 +590,8 @@
         previewController,
         status: statusBar,
         contextState,
-        permissionState
+        permissionState,
+        updateFlashState: vaultUi && vaultUi.updateFlashState
       });
       if (vaultUi) vaultUi.filePanel = filePanel;
     }

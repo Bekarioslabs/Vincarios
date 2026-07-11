@@ -137,7 +137,8 @@ test('review basket confirms update note proposals before execution', () => {
 test('shell refreshes the file panel after a successful create note proposal', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /const vaultUi = \{ filePanel: null \}/);
+  assert.match(source, /const updateFlashState = createUpdateFlashState\(\)/);
+  assert.match(source, /const vaultUi = \{ filePanel: null, updateFlashState \}/);
   assert.match(source, /executeReviewProposal\(api, proposal, vaultUi\)/);
   assert.match(source, /vaultUi\.filePanel = filePanel/);
   assert.match(source, /refreshFilePanelAfterWrite\(vaultUi\)/);
@@ -333,8 +334,14 @@ test('review basket empty state uses compact icon feedback', () => {
 test('shell flashes written file rows after successful reviewed writes', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /function flashFilePanelPath\(vaultUi, targetPath\)/);
-  assert.match(source, /filePanel\.flashPath\(targetPath\)/);
-  assert.match(source, /flashFilePanelPath\(vaultUi, result\.path \|\| proposal\.targetPath\)/);
-  assert.match(source, /flashFilePanelPath\(vaultUi, proposal\.targetPath\)/);
+  assert.match(source, /function createUpdateFlashState\(\)/);
+  assert.match(source, /updateFlashState: vaultUi && vaultUi\.updateFlashState/);
+  assert.match(source, /function flashReviewedWriteResult\(vaultUi, proposal, result\)/);
+  assert.match(source, /function reviewedWriteFlashTargets\(proposal, result\)/);
+  assert.match(source, /flashState\.flashTargets\(targets\)/);
+  assert.match(source, /proposal\.type === 'create_note'/);
+  assert.match(source, /proposal\.type === 'update_note'/);
+  assert.match(source, /proposal\.type === 'create_from_template'/);
+  assert.doesNotMatch(source, /function flashFilePanelPath/);
+  assert.doesNotMatch(source, /filePanel\.flashPath\(targetPath\)/);
 });

@@ -136,10 +136,14 @@ test('file panel treats selected image files as image selections instead of Mark
   assert.match(source, /createIconElement\(entry\.kind === 'image' \? 'image'/);
 });
 
-test('file panel exposes a visible flash hook for recently written paths', () => {
+test('file panel applies update flash through visible row state without rebuilding the tree', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
+  assert.match(source, /const updateFlashState = options\.updateFlashState \|\| null/);
+  assert.match(source, /const visibleRows = new Map\(\)/);
+  assert.match(source, /function subscribeToUpdateFlashState\(\)/);
+  assert.match(source, /visibleRows\.forEach\(\(row, path\) => \{/);
+  assert.match(source, /row\.classList\.toggle\('is-recently-updated', updateFlashState\.isFlashing\(path\)\)/);
   assert.match(source, /function flashPath\(path\)/);
-  assert.match(source, /row\.classList\.add\('is-recently-updated'\)/);
-  assert.match(source, /flashPath,/);
+  assert.match(source, /updateFlashState\.flashTargets\(\{ path, kind: 'file', reason: 'updated' \}\)/);
 });
