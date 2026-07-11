@@ -25,8 +25,8 @@ ZEUS helps users clean up and maintain their vault without hidden file access, c
 5. Preview every write with a diff before applying.
 6. Create Markdown notes and update existing Markdown notes through reviewed whole-note proposals.
 7. Create new notes and projects through deterministic template/preset logic.
-8. Provide inbox cleanup and folder-organization suggestions through grouped reports before adding selected actions to the Review Basket.
-9. Use local embeddings V1-light with a bundled multilingual-capable model for similar notes, link candidates, tag candidates, and folder candidates.
+8. Provide inbox cleanup reports and grouped suggestions before adding selected concrete actions to the Review Basket.
+9. Use local embeddings V1-light with a bundled multilingual-capable model for similar-note discovery. V1 tag/YAML candidates use conservative local metadata heuristics; link and folder/destination candidates are V1.1.
 10. Keep backups and audit logs for risky actions.
 
 ## V1 Manual File Operations

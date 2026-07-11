@@ -33,7 +33,7 @@ These fit V1 if they can be implemented without destabilizing the action model.
 
 - Minimal template/preset support for new notes and new projects.
 - Basic image handling foundation: image display/import/move/rename through safe IPC, with vision analysis gated by model capability.
-- Local embeddings V1-light for similar-note, tag, link, and folder suggestions. This should support reviewable suggestions, not autonomous cleanup.
+- Local embeddings V1-light for similar-note discovery plus conservative local tag/YAML candidates. Link and folder/destination candidates are V1.1 unless the freeze review reclassifies them.
 - PendingActionState plus FolderContextController for robust folder-scope decisions before larger folder cleanup/scan workflows.
 
 ## V1.1 / V1.2 Backlog

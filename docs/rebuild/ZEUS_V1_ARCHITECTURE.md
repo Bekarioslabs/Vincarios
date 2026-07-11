@@ -214,7 +214,7 @@ Design rules:
 - The index must be rebuildable from the selected vault. It must not contain private data that is not derivable from the opened vault.
 - The index must be schema-versioned so V1.1/V1.2 can rebuild or migrate safely.
 
-First V1.1 consumers:
+First planned V1.1 consumers:
 
 - link candidates from known unresolved/outgoing links plus embedding similarity.
 - folder/destination candidates from role hints, existing paths, tags, and semantic similarity.

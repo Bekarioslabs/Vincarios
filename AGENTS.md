@@ -223,6 +223,10 @@ If any answer is unclear, update the relevant V1 doc and ask Beka before impleme
 
 Important features must be visible in the app flow. Prefer action cards, review baskets, previews, context bars, and status messages over hidden behavior.
 
+### Component Rules
+
+Before adding or changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls, follow `docs/rebuild/ZEUS_V1_UI_COMPONENT_RULES.md`.
+
 ### Accessibility Rules
 
 New UI controls must be accessible when they are introduced, not retrofitted later.

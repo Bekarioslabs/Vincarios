@@ -33,8 +33,8 @@ ZEUS V1 is not:
 5. Read/Write permissions with direct, inherited, and blocked/off states.
 6. Review Basket for grouped, selectable proposals.
 7. Diff and safe Markdown actions.
-8. Inbox/project/knowledge cleanup suggestions.
-9. Local embeddings V1-light.
+8. Inbox cleanup reports and grouped Suggestions workspace.
+9. Local embeddings V1-light for similar-note discovery.
 10. New Project workflow from templates.
 11. Minimal settings foundation.
 12. Basic image file handling foundation only if it remains safe, small, and does not delay core Markdown workflows.
@@ -134,7 +134,7 @@ Future Folder Context Index: selected folders can be counted first, then listed 
 
 Context package sources are visibly separated with source labels such as `context_basket`; future dropped Markdown and embedding candidate sources must use their own labels instead of blending into the active selection. Dropped `.md` files become temporary context immediately. They are not automatically imported into the vault. External dropped Markdown files get an `Import to Inbox` action.
 
-Selection Actions are deterministic app buttons for selected targets. Action colors represent behavior categories (`Context`, `Read`, `Write`, later `Organize`); target types use neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`. The first active actions are `Use as context` for readable folders/readable loaded Markdown files and `List folder` for readable folders. Folder context is path-only; Markdown file context includes loaded note content. Other initial actions remain visible V1 slots until their app flows are wired.
+Selection Actions are deterministic app buttons for selected targets. Action colors represent behavior categories (`Context`, `Read`, `Write`, later `Organize`); target types use neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`. Current V1 actions include folder context/list/analyze/summarize flows and Markdown summarize/context/similar-notes/tag/update flows. Folder context is path-only; Markdown file context includes loaded note content. Future actions must enter through the same action registry and permission checks.
 ## Actions
 
 Read/search:
@@ -166,12 +166,7 @@ Suggestions:
 
 Embeddings are local search support, not automation authority.
 
-They provide:
-
-- similar notes
-- link candidates
-- tag candidates
-- folder candidates
+V1 provides similar-note discovery from the local vector index. Tag/YAML suggestions in V1 use conservative local metadata heuristics and may later be improved by metadata-index inputs. Link candidates and folder/destination candidates move to V1.1 because they need exact diff/review and safe move/link-update services before they can become executable.
 
 Indexing is automatic by default, can be disabled in Options, and can be rebuilt manually.
 

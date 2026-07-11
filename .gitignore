@@ -31,3 +31,10 @@ out/
 
 # local development vault
 dev-vault/
+
+# private planning notes
+docs/ZEUS_Book_Project_Guide_Template.md
+docs/ZEUS_V1.1_Book_Project_Feature_Spec.md
+
+# local historical docs export
+_docs_to_external_backup/

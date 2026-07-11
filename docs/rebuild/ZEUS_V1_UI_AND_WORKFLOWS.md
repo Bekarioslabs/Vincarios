@@ -5,6 +5,7 @@
 - V1 bundles Inter locally from `src/renderer/assets/fonts/InterVariable.woff2`; third-party font licenses live under `third_party/inter/` and must ship with release builds.
 - Lucide SVG icons are bundled locally under `src/renderer/assets/icons/lucide/`; semantic mappings live in `src/renderer/icons/iconRegistry.js`, so individual icons can be replaced without touching UI components. License notices live under `third_party/lucide/`.
 - `docs/Design_index.html` is the active visual reference for Phase 7.7 polish patterns such as soft-disabled locks, empty states, trust badges, score presentation, hover behavior, and token usage. Use it as design direction, but adapt patterns through existing ZEUS modules and tokens instead of copying demo markup blindly.
+- Repeated UI element rules live in `docs/rebuild/ZEUS_V1_UI_COMPONENT_RULES.md`. Use that file before changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls.
 
 ## Main Layout
 
@@ -101,7 +102,7 @@ Each item can be checked or unchecked. The final execute button applies only sel
 Select Inbox
 -> Ask ZEUS to analyze
 -> ZEUS reads allowed files
--> embeddings provide similar notes and folder candidates
+-> embeddings provide similar-note candidates
 -> AI creates proposal plan
 -> user reviews grouped suggestions
 -> selected actions execute
@@ -359,6 +360,52 @@ Non-V1 drag and drop:
 - automatic media organization
 
 
+
+## UI Density And Collapse Direction
+
+This is planned as a focused pre-freeze UI-density pass, not a redesign.
+
+Icon-first direction: users should feel at home coming from Obsidian. Repeated actions should prefer compact icons with hover/focus text or context-menu entries instead of always-visible text labels, while safety-critical state remains visible and accessible.
+
+Collapse candidates:
+
+- Left navigation rail: full label mode can collapse to icon-only mode around 48px. The toggle lives at the top of the rail. Labels remain available through tooltips or accessible names.
+- File Tree: snap-collapse can temporarily hide the tree in addition to drag-resize, especially while working in Chat or Suggestions.
+- Context Basket: default-collapsed is acceptable when empty or inactive. When context exists, show a compact header/count so active context is not hidden.
+- Review Basket: remains primary attention when proposals exist; it may stay collapsible, but it should not be hidden automatically while actionable items exist.
+- Selection Actions: later categories may be collapsible when action count grows, but V1 should keep available actions easy to discover.
+- Suggestions: groups should be collapsible by type, especially once Similar Notes, Metadata/Tags, and future cleanup/link candidates coexist.
+
+Visual noise reduction:
+
+- File Tree permission controls should not create permanent row noise across large trees. Prefer showing `R`/`W` controls on row hover/focus while preserving visible state, tooltips, keyboard access, and accessibility labels.
+- Check whether `.file-vault-name` and breadcrumb repeat the same information. If they overlap, keep one primary path signal and make the other quieter or remove it.
+
+Bottom bar / activity direction:
+
+- The Session Log can remain a workspace internally, but the UI may expose it through a compact bottom-bar activity drawer instead of a large `WORKSPACE` button.
+- Preview-local messages may use a dedicated preview segment in the bottom status bar instead of a separate preview-local block. Ownership stays preview-local even if the visual surface is shared.
+- Global status, preview status, and activity history must remain distinguishable in state/code even when presented in one bottom bar.
+
+Focus Mode:
+
+- A Focus Mode can collapse the left icon rail, File Tree, and Context Basket together.
+- It is intended for writing-heavy workflows such as book or long-form note work.
+- It should be a small layout-state feature, not a new editor or workspace.
+
+Persistence:
+
+- Collapse states and Focus Mode are app-local user preferences.
+- Store them in app settings, not selected-vault `.zeus/` metadata.
+- Folder Visual Identity remains different: it is vault metadata because it describes that vault's top-level folder appearance.
+
+Implementation ownership:
+
+- Shell owns global layout/collapse state and Focus Mode composition.
+- Files owns File Tree snap-collapse and permission-row hover/focus controls.
+- Context Basket owns its collapsed/default-collapsed behavior.
+- Activity/session log owns the bottom-bar drawer.
+- Settings owns persistence and defaults.
 ## Settings UI Decisions
 
 The Settings screen is a dedicated renderer module, not shell logic. Settings category icons use semantic Lucide assets through the shared icon registry; Providers uses `plug`, while the main-screen Settings entry uses the gear/settings icon.
@@ -524,7 +571,7 @@ The metadata index must live under selected-vault `.zeus/index/metadata/`, remai
 The main work area should support three V1/V1.x workspaces:
 
 - `Chat`: normal conversation, assistant responses, Save as Note, Review Basket, Context Basket, and prompt input.
-- `Suggestions`: grouped analysis results such as similar notes, link candidates, tag candidates, folder candidates, and cleanup findings. Suggestions are not writes. They can be dismissed, previewed, or converted into concrete Review Basket actions only when the user selects them.
+- `Suggestions`: grouped analysis results such as similar notes, tag/YAML candidates, and cleanup findings. Suggestions are not writes. They can be dismissed, previewed, or converted into concrete Review Basket actions only when the selected suggestion type has a supported converter. Link and folder/destination candidates are V1.1.
 - `Session Log`: per-session status/audit-style messages for visible app activity such as reads, writes, renames, failures, and warnings. This is a UI convenience layer over the current status stream, not a replacement for persistent audit logs.
 
 Suggestions should behave as an intermediate review layer between analysis and the Review Basket. Current V1 conversion foundation supports `metadata_candidate` only when the suggestion already contains `currentContent` and `proposedContent`; local `Suggest tags` creates that shape for conservative YAML tag updates, including AI response notes when useful title/content signals exist. Generated summaries should later receive deterministic YAML during creation, but existing or manually created files with a structured `Summary - ...` filename may still receive a conservative `summary` tag proposal. Files under the configured `AI Responses` folder may also receive `ai-responses` as a structural folder tag when it is missing; this is path metadata, not prompt-word matching. It converts into a reviewed `update_note` proposal and still uses the normal diff, backup, stale check, and audit path. Similar-note suggestions remain report-only. Suggestions preview uses the shared diff-line renderer so add/remove lines match the Review Basket diff colors:

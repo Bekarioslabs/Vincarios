@@ -324,9 +324,9 @@ Status: complete for V1 rendering scope. Further plugin rendering, callouts, mat
 
 ### Phase 7.7 - V1 UI/UX Hardening And Polish Gate
 
-Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work in small testable slices. The five external UI/UX proposal files are design input, but the accepted goal is to bring their useful fixes and polish into V1 iteratively instead of deferring them wholesale to V1.1.
+Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work in small testable slices. The external UI/UX proposal files were reviewed as design input and then archived outside the active docs. The accepted goal is to bring their useful fixes and polish into V1 iteratively instead of deferring them wholesale to V1.1.
 
-- [x] Review the five external UI/UX proposal files currently under `docs/` together with Beka. Treat them as design input, map every item through ZEUS ownership boundaries, and implement only through focused app modules/styles.
+- [x] Review the external UI/UX proposal files together with Beka. Treat them as design input, map every item through ZEUS ownership boundaries, archive them out of active docs, and implement only through focused app modules/styles.
 - [x] 7.7.1 Token/CSS foundation: `tokens.css` now owns primitive/semantic palette comments, status `-rgb` tokens, `--status-warning`, action color tokens, diff/score tokens, radius tokens, `--transition-fast`, and selection/scrollbar theming. Status/diff/suggestion score colors now use tokens without layout behavior changes.
 - [x] 7.7.2 CSS hardcode cleanup: raw status/action colors, score colors, diff colors, common radii, icon filters, modal backdrops, and shared shadows are centralized through `tokens.css`. Intentional exceptions remain for geometric values such as `border-radius: 0` on flat file rows and `50%` for circular dots/spinners.
 - [x] 7.7.3 Local scrolling and containment: Review Basket and Context Basket now have bounded local scroll areas so long lists do not push the chat input out of view.
@@ -341,6 +341,35 @@ Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work i
 - [ ] Create a concise dependency/flow overview (preferably graphical) showing how UI actions, policies, Review Basket, main services, and providers connect.
 - [ ] Re-check whether Recent Files/Homepage light, broken-link/orphan scan, and project note maintenance are V1-must or V1.1.
 - [ ] Anything not needed for a presentable V1 moves to the V1.1/V1.2 Backlog before Phase 8 freeze work.
+
+### Phase 7.8 - Folder Visual Identity
+
+Status: planned for V1 consideration before Phase 8. This replaces the earlier "Folder-Role color dots" idea with a fuller but still small navigation aid.
+
+- [ ] Support visual identity only for top-level folders in V1: icon plus color.
+- [ ] Store ZEUS-owned folder visual settings under selected-vault `.zeus/`, not `.obsidian`.
+- [ ] Treat folder visuals as manual low-risk UI configuration writes, not Markdown/content writes. They intentionally bypass Review Basket, content diff, and note-backup pipeline.
+- [ ] Keep `.obsidian` read-only for future compatibility/import layers such as Iconize; do not write ZEUS UI state there.
+- [ ] Use a fixed V1 icon/color set from the existing Lucide/icon and token systems.
+- [ ] Design the data shape so future Templates and Vault Profiles can provide folder roles, icons, and colors when creating/importing project structures.
+- [ ] Keep full Iconize compatibility, per-file visuals, custom SVGs, and deep-folder styling in V1.1/V1.2 unless reclassified by freeze review.
+
+### Phase 7.9 - UI Density And Collapse
+
+Status: planned before Phase 8 if it stays a focused UI-density pass. Goal: reduce visible clutter without hiding core safety state or changing action semantics.
+
+- [ ] Left navigation rail can collapse from full labels to icon-only width. Toggle lives at the top of the rail. Workspace/Create/Vault groups remain available and keyboard accessible.
+- [ ] Move dense repeated actions toward icon-first controls with hover/focus text, following Obsidian familiarity, while keeping safety-critical state discoverable.
+- [ ] File Tree supports snap-collapse in addition to existing drag resize, so Chat/Suggestions work can temporarily reclaim the vault-panel width.
+- [ ] Context Basket starts collapsed by default when empty or not actively used; it remains visible when context exists through a compact count/summary header.
+- [ ] File Tree permission controls (`R`/`W`) should appear on row hover/focus instead of permanently on every row, while active/inherited/off state remains discoverable and keyboard reachable.
+- [ ] Remove or reduce vault-name/path redundancy between file toolbar and breadcrumb if they overlap.
+- [ ] Session Log should not require a large Workspace button if a cleaner bottom-bar drawer works better. The bottom status/activity area may open a compact activity drawer.
+- [ ] Preview-local messages may move into a preview segment of the bottom status bar instead of a dedicated preview message block, as long as ownership remains clear.
+- [ ] Add a Focus Mode / distraction-free toggle: collapse icon rail, File Tree, and Context Basket together, leaving the writing/review surface and input dominant.
+- [ ] Persist collapse and Focus Mode preferences in app-local settings, not in the selected vault `.zeus/`. These are per-user UI layout preferences, unlike folder visual identity which is vault metadata.
+- [ ] Keep implementation modular: shell owns layout state, files owns tree collapse/hover controls, chat/context owns basket collapse, activity owns drawer behavior, settings owns persistence.
+
 ## Phase 8 - V1 Freeze And Release Baseline
 
 V1 is done when all current V1 phases are complete and a sober freeze review finds no remaining must-have gaps. New findings are classified as V1-must only when they block safety, core usefulness, or external testing; otherwise they move to V1.1 or the Parking Lot.
@@ -373,6 +402,7 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Batch AI actions over multiple notes with grouped diffs.
 - [ ] Plugin-style extension points for community contributions.
 - [ ] More complete settings UI, including hotkeys and theme presets.
+- [ ] Template V1.1 planning input: Beka's private Book project notes are local-only and intentionally ignored by Git. Revisit them when designing richer template/preset workflows.
 - [ ] Vault Profile V1.1: multiple named profiles, custom folder roles, and `Choose from Vault folders` path picker with inside-vault validation.
 - [ ] Chat action display setting: allow hover actions such as `Save as Note`, `Copy`, and future message actions to render as text, Lucide SVG icons, or icon+text without changing chat action logic.
 - [ ] Suggestions score display setting: allow the explanatory match text beside score rings to be hidden for users who only want the ring/percentage. This must be a presentation setting only; score thresholds, suggestion ranking, and Review Basket conversion logic stay unchanged.
