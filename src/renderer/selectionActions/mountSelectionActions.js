@@ -36,10 +36,6 @@
         return;
       }
 
-      const target = document.createElement('div');
-      target.className = 'selection-actions-target';
-      target.textContent = snapshot.path;
-      root.appendChild(target);
 
       const actions = getRegistry().getSelectionActions(snapshot);
       if (!actions.length) {
@@ -86,8 +82,15 @@
 
       button.appendChild(tag);
       button.appendChild(label);
+      if (action.softDisabled) renderSoftDisabledLock(button);
       button.addEventListener('click', () => runAction(action, snapshot, host));
       return button;
+    }
+
+    function renderSoftDisabledLock(button) {
+      const renderer = getIconRenderer();
+      if (!renderer || typeof renderer.createIconElement !== 'function') return;
+      button.appendChild(renderer.createIconElement('lock', 'selection-action-lock-icon'));
     }
 
     function runAction(action, snapshot, host) {
@@ -388,7 +391,10 @@
       const cancel = document.createElement('button');
       cancel.type = 'button';
       cancel.textContent = 'Cancel';
-      cancel.addEventListener('click', () => form.remove());
+      cancel.addEventListener('click', () => {
+        if (!confirmDiscardActionForm(textarea, 'Discard update instruction?')) return;
+        form.remove();
+      });
 
       actions.appendChild(submit);
       actions.appendChild(cancel);
@@ -410,6 +416,12 @@
       appendActionForm(host, form);
       textarea.focus();
       setText(status, 'Describe update for: ' + snapshot.path);
+    }
+
+    function confirmDiscardActionForm(input, message) {
+      if (!input || !String(input.value || '').trim()) return true;
+      if (typeof window === 'undefined' || typeof window.confirm !== 'function') return false;
+      return window.confirm(message || 'Discard unsaved changes?');
     }
 
     async function proposeFileUpdate(snapshot, instruction) {
@@ -827,6 +839,10 @@
     if (typeof window !== 'undefined' && window.ZeusSelectionActionCategories) return window.ZeusSelectionActionCategories;
     if (typeof module !== 'undefined' && module.exports) return require('./actionCategories');
     throw new Error('ZEUS selection action categories are not available.');
+  }
+
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
   }
 
   function getFileSummaryAction() {

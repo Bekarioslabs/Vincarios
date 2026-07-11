@@ -140,3 +140,12 @@ test('suggestions preview uses the shared diff line renderer', () => {
   assert.match(source, /review-diff-body/);
   assert.doesNotMatch(source, /formatDiffPreview/);
 });
+test('suggestions workspace empty states use compact icon feedback', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+
+  assert.match(source, /createEmptyState\('search', 'No suggestions yet\.'/);
+  assert.match(source, /createEmptyState\('file', 'Select a suggestion\.'/);
+  assert.match(source, /createEmptyState\('warning', 'No change preview yet\.'/);
+  assert.match(source, /getIconRenderer/);
+  assert.match(source, /empty-state-icon/);
+});

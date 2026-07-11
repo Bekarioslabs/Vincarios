@@ -135,3 +135,11 @@ test('file panel treats selected image files as image selections instead of Mark
   assert.match(source, /Image selected:/);
   assert.match(source, /createIconElement\(entry\.kind === 'image' \? 'image'/);
 });
+
+test('file panel exposes a visible flash hook for recently written paths', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /function flashPath\(path\)/);
+  assert.match(source, /row\.classList\.add\('is-recently-updated'\)/);
+  assert.match(source, /flashPath,/);
+});

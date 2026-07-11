@@ -4,6 +4,7 @@
 
 - V1 bundles Inter locally from `src/renderer/assets/fonts/InterVariable.woff2`; third-party font licenses live under `third_party/inter/` and must ship with release builds.
 - Lucide SVG icons are bundled locally under `src/renderer/assets/icons/lucide/`; semantic mappings live in `src/renderer/icons/iconRegistry.js`, so individual icons can be replaced without touching UI components. License notices live under `third_party/lucide/`.
+- `docs/Design_index.html` is the active visual reference for Phase 7.7 polish patterns such as soft-disabled locks, empty states, trust badges, score presentation, hover behavior, and token usage. Use it as design direction, but adapt patterns through existing ZEUS modules and tokens instead of copying demo markup blindly.
 
 ## Main Layout
 
@@ -152,11 +153,17 @@ Default provider URLs live in the provider registry. The topbar must not expose 
 
 Provider controls never grant vault access. Providers only receive the context package prepared by app logic.
 The topbar also provides a manual provider status refresh button. It reuses the provider status/model refresh flow without polling or changing the selected provider.
+
+The topbar also shows a provider privacy badge driven by the active provider definition. V1 local providers show `Local`; future cloud or external providers can show `Cloud` or `External` without changing the shell layout. The badge is an informational provider-mode indicator, not a blanket app-wide `Local Only` claim.
 ## Review Basket Decisions
 
 Review Basket is a standalone module, not part of chat rendering.
 
 The first implemented flow is `Save as Note` under assistant responses. It adds a selected `create_note` proposal targeting `00_Inbox/AI Responses` to the basket. The basket can execute selected `create_note` proposals after a Create Note preview modal. It must not write directly from chat or renderer filesystem access; execution goes through the preload vault API and main process vault write service.
+
+Review Basket clear actions are cleanup/destructive UI actions. Clear pending and Clear executed stay disabled when unavailable, use subtle danger styling only when active/hovered, and remove basket entries without executing vault writes. Update-instruction forms protect typed text on cancel instead of silently discarding it.
+
+Empty states should stay compact and functional. Review Basket, Context Basket, and Suggestions use existing Lucide icons plus short copy to explain the empty state without implying unavailable functionality.
 
 Identical open proposals are de-duplicated by the basket state. Re-clicking Save as Note for the same assistant response should not create another open item. Visible proposals can be dismissed individually. Pending proposals can be cleared as a group. Dismissing a completed item only removes it from the visible basket; audit history remains separate.
 
@@ -198,7 +205,7 @@ Permission state has three visible levels:
 
 Folder permissions inherit to children. Child files/folders may override inherited permissions. An explicit child off state must block inherited parent access instead of being treated as unset.
 
-The UI must make direct vs inherited state understandable without making inherited permissions look like an error. Direct on is full accent, inherited on is lighter, and off remains visually inactive.
+The UI must make direct vs inherited state understandable without making inherited permissions look like an error. Direct on is full accent with an inner accent signal, inherited on is lighter with a dashed outline, and off remains visually inactive. Selection Actions that are blocked by missing R/W stay clickable so they can show app guidance. Their default state stays neutral/gray with a subtle lock icon. Category accent colors appear only when the action is actually available; hover may show normal subtle feedback and the tooltip explains the blocked reason without adding noisy warning styling.
 
 Dot folders and runtime/private folders such as `.obsidian`, `.zeus`, and `.zeus_backups` remain blocked regardless of UI state.
 
@@ -354,7 +361,7 @@ Non-V1 drag and drop:
 
 ## Settings UI Decisions
 
-The Settings screen is a dedicated renderer module, not shell logic.
+The Settings screen is a dedicated renderer module, not shell logic. Settings category icons use semantic Lucide assets through the shared icon registry; Providers uses `plug`, while the main-screen Settings entry uses the gear/settings icon.
 
 Current V1 Settings implementation:
 
@@ -532,6 +539,8 @@ Recommended layout for the Suggestions workspace:
 - right side: detail preview for the selected suggestion. Preview type depends on suggestion kind: text detail, Markdown-line diff, property/tag diff, move plan, duplicate comparison, or create-note preview.
 - top or footer action bar: `Add selected to Review Basket` only becomes active when selected suggestions can become concrete actions. It must not mean execute.
 
+Suggestions that are report-only must be visually separated from actionable suggestions. Before V1 freeze, the workspace should group or section suggestions by type, such as Similar Notes for report-only embedding findings and Metadata/Tags for suggestions that can become Review Basket actions. This avoids implying that every suggestion can be executed.
+
 Use `Dismiss suggestion` for hiding suggestions. Do not use `Delete` for suggestion rows, because file deletion/archive is a separate vault action with different risk.
 
 ### Left Navigation Cleanup
@@ -616,6 +625,10 @@ Settings Modal
 Current wired categories stay Providers, Limits, and Vault Profile. V1-ready categories are Providers, Limits, Vault Profile, Templates, Appearance, Embeddings, Safety, and About. Future/inactive categories may be visible only if they are clearly marked as not configured yet and do not imply fake functionality. Later hotkeys, plugin compatibility, custom actions, and theme presets must extend this same settings module and store shape instead of creating parallel configuration paths.
 
 Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with a left category menu and one active right-side category panel. Providers, Limits, and Vault Profile remain wired to the existing settings store. Templates, Appearance, Safety, and About are visible info-only slots until real modules exist. Embeddings now shows the V1 default decision: MiniLM multilingual default, Apache-2.0 license, Transformers.js / ONNX runtime target, and vault `.zeus/index` storage. It also owns Similar Notes defaults in the same order as the action form: mode, minimum match, content/metadata weight slider, and max results. Custom model path controls and broader rebuild controls remain pending follow-up work; the per-search form already has explicit refresh before search.
+
+Phase 7.7 polish: settings category buttons may use existing semantic Lucide icons. Icons are decorative, rendered by the settings module through ZeusIconRenderer, and styled through shared icon filter tokens so themes can adjust them later.
+
+Phase 7.7 polish keeps micro-interactions tokenized: active navigation/settings states use subtle inset glow, recently written file rows can flash after reviewed writes, and reduced-motion users keep instant file-row state changes.
 
 Vault Profile and Templates relationship:
 

@@ -14,7 +14,8 @@
       providerName: app.querySelector('#provider-name'),
       refreshButton: app.querySelector('#provider-refresh'),
       providerSelect: app.querySelector('#provider-select'),
-      modelSelect: app.querySelector('#provider-model-select')
+      modelSelect: app.querySelector('#provider-model-select'),
+      privacyBadge: app.querySelector('#provider-privacy-badge')
     };
 
     if (!api || !api.provider || typeof api.provider.status !== 'function') {
@@ -117,7 +118,34 @@
     if (nodes.statusDot) nodes.statusDot.classList.toggle('ok', isAvailable);
     setText(nodes.statusLabel, label);
     setText(nodes.providerName, providerLabel);
+    setProviderPrivacyBadge(nodes.privacyBadge, activeProvider);
     setSelectOptions(nodes.providerSelect, normalizeProviderOptions(providers, activeProvider), providerId);
+  }
+
+  function setProviderPrivacyBadge(node, provider) {
+    if (!node) return;
+    const privacy = normalizeProviderPrivacy(provider && provider.privacy);
+    node.dataset.providerPrivacy = privacy;
+    node.textContent = formatProviderPrivacyLabel(privacy);
+    node.title = formatProviderPrivacyTitle(privacy);
+  }
+
+  function normalizeProviderPrivacy(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'cloud' || normalized === 'external') return normalized;
+    return 'local';
+  }
+
+  function formatProviderPrivacyLabel(privacy) {
+    if (privacy === 'cloud') return 'Cloud';
+    if (privacy === 'external') return 'External';
+    return 'Local';
+  }
+
+  function formatProviderPrivacyTitle(privacy) {
+    if (privacy === 'cloud') return 'Cloud provider';
+    if (privacy === 'external') return 'External provider';
+    return 'Local provider';
   }
 
   function setProviderModels(nodes, result) {
@@ -166,7 +194,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountProviderStatus, setProviderStatus, setProviderModels, setSelectOptions };
+    module.exports = { mountProviderStatus, setProviderStatus, setProviderModels, setSelectOptions, setProviderPrivacyBadge };
   }
 
   if (typeof window !== 'undefined') {

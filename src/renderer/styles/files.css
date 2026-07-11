@@ -29,6 +29,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .file-refresh-button {
@@ -110,6 +111,11 @@
 
 .file-row:hover {
   background: var(--background-modifier-form-field);
+}
+
+.file-row.is-recently-updated {
+  background: rgba(var(--interactive-accent-rgb), .11);
+  box-shadow: inset 3px 0 0 rgba(var(--interactive-accent-rgb), .72);
 }
 
 .file-row.is-selected {
@@ -209,12 +215,15 @@
   border-color: rgba(var(--interactive-accent-rgb), .95);
   background: rgba(var(--interactive-accent-rgb), .18);
   color: var(--text-accent);
+  box-shadow: inset 0 0 0 1px rgba(var(--interactive-accent-rgb), .28);
 }
 
 .file-permission-button.is-inherited {
   border-color: rgba(var(--interactive-accent-rgb), .55);
+  border-style: dashed;
   background: rgba(var(--interactive-accent-rgb), .08);
   color: color-mix(in srgb, var(--text-accent) 72%, var(--text-muted));
+  box-shadow: none;
 }
 
 .file-row.is-renaming {
@@ -231,4 +240,10 @@
   font: inherit;
   padding: 2px 5px;
   outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-row {
+    transition: none;
+  }
 }

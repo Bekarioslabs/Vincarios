@@ -120,3 +120,16 @@ test('settings panel wires similar-note embedding defaults through settings API'
   assert.match(source, /api.settings.setEmbeddings/);
   assert.doesNotMatch(source, /api.embeddings.findSimilarNotes/);
 });
+
+test('settings category buttons use existing semantic icons', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
+
+  assert.match(source, /data-settings-icon="plug"/);
+  assert.match(source, /data-settings-icon="folder"/);
+  assert.match(source, /data-settings-icon="lock"/);
+  assert.match(source, /function renderSettingsCategoryIcons/);
+  assert.match(source, /renderer\.createIconElement\(iconName, 'settings-category-icon'\)/);
+  assert.match(css, /\.settings-category-button\s*\{[\s\S]*display:\s*flex;/);
+  assert.match(css, /\.settings-category-icon\s*\{[\s\S]*filter:\s*var\(--icon-muted-filter, none\);/);
+});

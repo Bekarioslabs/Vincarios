@@ -15,6 +15,8 @@
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
     let activeRename = null;
+    let flashPathValue = '';
+    let flashTimer = null;
 
     if (!root) return null;
 
@@ -154,6 +156,10 @@
         row.appendChild(createPermissionControls(entry.path));
         row.appendChild(icon);
         row.appendChild(label);
+        if (window.ZeusFileNavigator.normalizePath(flashPathValue) === window.ZeusFileNavigator.normalizePath(entry.path)) {
+          row.classList.add('is-recently-updated');
+        }
+
 
         const selected = navigator.snapshot().selectedPath === entry.path;
         if (selected) {
@@ -331,6 +337,18 @@
       if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
       else setText(context, 'Selection file: ' + read.path);
       setStatus('Read: ' + read.path);
+    }
+
+    function flashPath(path) {
+      flashPathValue = window.ZeusFileNavigator.normalizePath(path || '');
+      if (!flashPathValue) return;
+      if (flashTimer) clearTimeout(flashTimer);
+      renderTree();
+      flashTimer = setTimeout(() => {
+        flashPathValue = '';
+        flashTimer = null;
+        renderTree();
+      }, 1400);
     }
 
     async function refreshLoadedMarkdown(path) {
@@ -692,6 +710,7 @@
       openRoot,
       refreshTree,
       refreshLoadedMarkdown,
+      flashPath,
       renderTree,
       ensureFolderLoaded,
       setVaultName,

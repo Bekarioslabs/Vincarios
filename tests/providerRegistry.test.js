@@ -20,6 +20,7 @@ test('provider registry ships LM Studio as the default local chat provider', () 
   assert.equal(settings.providers[0].modelsPath, '/v1/models');
   assert.equal(settings.providers[0].chatPath, '/v1/chat/completions');
   assert.equal(settings.providers[0].selectedModel, 'auto');
+  assert.equal(settings.providers[0].privacy, 'local');
   assert.equal(settings.providers[1].id, 'ollama');
   assert.equal(settings.providers[1].label, 'Ollama');
   assert.equal(settings.providers[1].kind, 'ollama-native');
@@ -27,6 +28,7 @@ test('provider registry ships LM Studio as the default local chat provider', () 
   assert.equal(settings.providers[1].modelsPath, '/api/tags');
   assert.equal(settings.providers[1].chatPath, '/api/chat');
   assert.equal(settings.providers[1].selectedModel, 'auto');
+  assert.equal(settings.providers[1].privacy, 'local');
 });
 
 test('provider registry supports URL overrides without changing provider definitions', () => {
@@ -108,4 +110,14 @@ test('provider registry exposes provider capability flags for UI display', () =>
     embeddings: false
   });
   assert.equal(settings.providers[1].capabilities.chat, true);
+});
+
+test('provider registry preserves explicit cloud privacy for future provider UI', () => {
+  const settings = normalizeProviderSettings({
+    providers: [
+      { id: 'cloud-api', label: 'Cloud API', baseUrl: 'https://api.example.test', privacy: 'cloud' }
+    ]
+  });
+
+  assert.equal(settings.providers[0].privacy, 'cloud');
 });

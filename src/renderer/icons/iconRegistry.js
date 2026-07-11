@@ -7,6 +7,7 @@
     file: 'file.svg',
     image: 'image.svg',
     settings: 'settings.svg',
+    plug: 'plug.svg',
     refresh: 'refresh-cw.svg',
     chevronLeft: 'chevron-left.svg',
     chevronRight: 'chevron-right.svg',
@@ -16,6 +17,7 @@
     close: 'x.svg',
     check: 'check.svg',
     warning: 'triangle-alert.svg',
+    lock: 'lock.svg',
     search: 'search.svg',
     send: 'arrow-up.svg',
     edit: 'square-pen.svg'

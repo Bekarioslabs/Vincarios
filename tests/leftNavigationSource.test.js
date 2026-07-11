@@ -63,3 +63,10 @@ test('create section has separate note and project preset toggles', () => {
   assert.match(createBlock, /data-preset-list="project"/);
   assert.doesNotMatch(createBlock, />Project Presets</);
 });
+test('settings navigation uses the semantic settings icon', () => {
+  const source = readShellSource();
+
+  assert.match(source, /data-open-settings data-left-icon="settings"/);
+  assert.match(source, /function renderLeftNavigationIcons/);
+  assert.match(source, /renderer\.createIconElement\(iconName, 'left-button-icon'\)/);
+});

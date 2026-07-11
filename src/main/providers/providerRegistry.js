@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const DEFAULT_PROVIDER_ID = 'lm-studio';
 const DEFAULT_PROVIDER_CAPABILITIES = Object.freeze({ chat: true, vision: false, embeddings: false });
@@ -12,7 +12,8 @@ const PROVIDER_DEFINITIONS = Object.freeze([
     modelsPath: '/v1/models',
     chatPath: '/v1/chat/completions',
     defaultModel: 'auto',
-    capabilities: DEFAULT_PROVIDER_CAPABILITIES
+    capabilities: DEFAULT_PROVIDER_CAPABILITIES,
+    privacy: 'local'
   }),
   Object.freeze({
     id: 'ollama',
@@ -45,7 +46,8 @@ function normalizeProviderSettings(options) {
       chatPath: definition.chatPath,
       defaultModel: definition.defaultModel,
       selectedModel: normalizeModelName(selectedModels[definition.id] || definition.model || definition.defaultModel),
-      capabilities: normalizeCapabilities(definition.capabilities)
+      capabilities: normalizeCapabilities(definition.capabilities),
+      privacy: normalizeProviderPrivacy(definition.privacy)
     });
   });
   const activeProviderId = providers.some((provider) => provider.id === options.activeProviderId)
@@ -164,10 +166,17 @@ function normalizeProviderDefinition(provider) {
     healthPath: String(provider && (provider.healthPath || provider.modelsPath) ? (provider.healthPath || provider.modelsPath) : '/v1/models').trim() || '/v1/models',
     chatPath: String(provider && provider.chatPath ? provider.chatPath : '/v1/chat/completions').trim() || '/v1/chat/completions',
     defaultModel: normalizeModelName(provider && (provider.defaultModel || provider.model)),
-    capabilities: normalizeCapabilities(provider && provider.capabilities)
+    capabilities: normalizeCapabilities(provider && provider.capabilities),
+    privacy: normalizeProviderPrivacy(provider && provider.privacy)
   });
 }
 
+
+function normalizeProviderPrivacy(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  if (normalized === 'cloud' || normalized === 'external') return normalized;
+  return 'local';
+}
 function normalizeCapabilities(value) {
   const input = value || {};
   return Object.freeze({

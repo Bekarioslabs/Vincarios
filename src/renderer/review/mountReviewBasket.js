@@ -73,10 +73,7 @@
     root.innerHTML = '';
 
     if (items.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'mini-panel-empty';
-      empty.textContent = 'No suggestions yet.';
-      root.appendChild(empty);
+      root.appendChild(createEmptyState('check', 'No review items.'));
       return;
     }
 
@@ -124,6 +121,18 @@
   }
 
 
+  function createEmptyState(iconName, message) {
+    const empty = document.createElement('div');
+    empty.className = 'mini-panel-empty mini-panel-empty-rich';
+    const renderer = getIconRenderer();
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      empty.appendChild(renderer.createIconElement(iconName, 'empty-state-icon'));
+    }
+    const text = document.createElement('span');
+    text.textContent = message;
+    empty.appendChild(text);
+    return empty;
+  }
   function renderStatusBadge(statusValue) {
     const status = String(statusValue || 'open');
     const badge = document.createElement('span');

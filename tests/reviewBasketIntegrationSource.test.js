@@ -253,10 +253,21 @@ test('review basket exposes clear executed and compact dismiss controls', () => 
   const viewSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
 
   assert.match(shellSource, /id="review-clear-done"/);
+  assert.match(shellSource, /review-danger-button/);
+  assert.match(shellSource, /aria-label="Clear pending review items"/);
+  assert.match(shellSource, /aria-label="Clear executed review items"/);
   assert.match(viewSource, /clearDone/);
   assert.match(viewSource, /review-basket-item-actions/);
   assert.match(viewSource, /renderDismissButton/);
   assert.match(viewSource, /review-remove-icon/);
+});
+
+test('update instruction cancel protects typed text before removing the form', () => {
+  const viewSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(viewSource, /confirmDiscardActionForm\(textarea, 'Discard update instruction\?'\)/);
+  assert.match(viewSource, /function confirmDiscardActionForm/);
+  assert.match(viewSource, /window\.confirm\(message \|\| 'Discard unsaved changes\?'\)/);
 });
 
 test('shell refreshes the active preview after a successful update note proposal', () => {
@@ -307,4 +318,23 @@ test('shell executes template folder creation before template files', () => {
   assert.equal(branch.includes('api.vault.createFolder({ targetFolder: folder })'), true);
   assert.equal(branch.includes('api.vault.createNote({'), true);
   assert.match(branch, /createdFolders/);
+});
+
+test('review basket empty state uses compact icon feedback', () => {
+  const viewSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+  const contextSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'context', 'mountContextBasket.js'), 'utf8');
+
+  assert.match(viewSource, /createEmptyState\('check', 'No review items\.'\)/);
+  assert.match(viewSource, /mini-panel-empty-rich/);
+  assert.match(contextSource, /createEmptyState\('file', 'No context items\.'\)/);
+  assert.match(contextSource, /empty-state-icon/);
+});
+
+test('shell flashes written file rows after successful reviewed writes', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /function flashFilePanelPath\(vaultUi, targetPath\)/);
+  assert.match(source, /filePanel\.flashPath\(targetPath\)/);
+  assert.match(source, /flashFilePanelPath\(vaultUi, result\.path \|\| proposal\.targetPath\)/);
+  assert.match(source, /flashFilePanelPath\(vaultUi, proposal\.targetPath\)/);
 });

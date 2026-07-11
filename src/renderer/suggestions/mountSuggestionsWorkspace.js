@@ -29,10 +29,7 @@
         ? snapshot.groups.filter((group) => group.items.some((item) => item.dismissed !== true))
         : [];
       if (!visibleGroups.length) {
-        const empty = document.createElement('div');
-        empty.className = 'suggestions-workspace-empty';
-        empty.textContent = 'No suggestions yet.';
-        root.appendChild(empty);
+        root.appendChild(createEmptyState('search', 'No suggestions yet.', 'Run Find similar notes or Suggest tags from Selection Actions.', 'suggestions-workspace-empty')); 
         return;
       }
 
@@ -119,10 +116,7 @@
     function renderDetail(container, item) {
       container.classList.add('suggestions-detail-grid');
       if (!item) {
-        const empty = document.createElement('div');
-        empty.className = 'suggestions-detail-empty';
-        empty.textContent = 'Select a suggestion to preview details.';
-        container.appendChild(empty);
+        container.appendChild(createEmptyState('file', 'Select a suggestion.', 'Details and preview appear here.', 'suggestions-detail-empty')); 
         return;
       }
 
@@ -181,10 +175,7 @@
     function renderSuggestionPreview(preview, item) {
       const diff = converters.buildSuggestionDiffPreview(item);
       if (!diff || !diff.ok) {
-        const empty = document.createElement('div');
-        empty.className = 'suggestions-preview-empty';
-        empty.textContent = 'No change preview yet. Convert this suggestion to a Review Basket action first.';
-        preview.appendChild(empty);
+        preview.appendChild(createEmptyState('warning', 'No change preview yet.', 'Only actionable suggestions can show a diff.', 'suggestions-preview-empty')); 
         return;
       }
       const body = document.createElement('div');
@@ -204,6 +195,32 @@
     });
   }
 
+  function createEmptyState(iconName, title, detail, className) {
+    const empty = document.createElement('div');
+    empty.className = ['suggestions-empty-state', className || ''].filter(Boolean).join(' ');
+    const renderer = getIconRenderer();
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      empty.appendChild(renderer.createIconElement(iconName, 'empty-state-icon'));
+    }
+    const copy = document.createElement('span');
+    copy.className = 'suggestions-empty-copy';
+    const titleNode = document.createElement('span');
+    titleNode.className = 'suggestions-empty-title';
+    titleNode.textContent = title;
+    copy.appendChild(titleNode);
+    if (detail) {
+      const detailNode = document.createElement('span');
+      detailNode.className = 'suggestions-empty-detail';
+      detailNode.textContent = detail;
+      copy.appendChild(detailNode);
+    }
+    empty.appendChild(copy);
+    return empty;
+  }
+
+  function getIconRenderer() {
+    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
   function getDiffLineRenderer() {
     if (typeof window !== 'undefined' && window.ZeusDiffLineRenderer) return window.ZeusDiffLineRenderer;
     if (typeof require === 'function') {

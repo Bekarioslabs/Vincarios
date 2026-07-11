@@ -51,14 +51,14 @@
       '  </header>',
       '  <div class="settings-body">',
       '    <nav class="settings-category-menu" aria-label="Settings categories">',
-      '      <button type="button" class="settings-category-button is-active" data-settings-category="providers" aria-controls="settings-panel-providers" aria-selected="true">Providers</button>',
-      '      <button type="button" class="settings-category-button" data-settings-category="limits" aria-controls="settings-panel-limits" aria-selected="false">Limits</button>',
-      '      <button type="button" class="settings-category-button" data-settings-category="vault-profile" aria-controls="settings-panel-vault-profile" aria-selected="false">Vault Profile</button>',
-      '      <button type="button" class="settings-category-button" data-settings-category="templates" aria-controls="settings-panel-templates" aria-selected="false">Templates</button>',
-      '      <button type="button" class="settings-category-button" data-settings-category="appearance" aria-controls="settings-panel-appearance" aria-selected="false">Appearance</button>',
-      '      <button type="button" class="settings-category-button" data-settings-category="embeddings" aria-controls="settings-panel-embeddings" aria-selected="false">Embeddings</button>',
-      '      <button type="button" class="settings-category-button" data-settings-category="safety" aria-controls="settings-panel-safety" aria-selected="false">Safety</button>',
-      '      <button type="button" class="settings-category-button" data-settings-category="about" aria-controls="settings-panel-about" aria-selected="false">About</button>',
+      '      <button type="button" class="settings-category-button is-active" data-settings-category="providers" aria-controls="settings-panel-providers" aria-selected="true" data-settings-icon="plug">Providers</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="limits" aria-controls="settings-panel-limits" aria-selected="false" data-settings-icon="warning">Limits</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="vault-profile" aria-controls="settings-panel-vault-profile" aria-selected="false" data-settings-icon="folder">Vault Profile</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="templates" aria-controls="settings-panel-templates" aria-selected="false" data-settings-icon="markdownFile">Templates</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="appearance" aria-controls="settings-panel-appearance" aria-selected="false" data-settings-icon="edit">Appearance</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="embeddings" aria-controls="settings-panel-embeddings" aria-selected="false" data-settings-icon="search">Embeddings</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="safety" aria-controls="settings-panel-safety" aria-selected="false" data-settings-icon="lock">Safety</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="about" aria-controls="settings-panel-about" aria-selected="false" data-settings-icon="file">About</button>',
       '    </nav>',
       '    <div class="settings-category-content">',
       '      <section id="settings-panel-providers" class="settings-section settings-category-panel" data-settings-category-panel="providers">',
@@ -141,6 +141,7 @@
       '</div>'
     ].join('');
     renderSettingsCloseIcon(backdrop.querySelector('.settings-icon-button[data-settings-close]'));
+    renderSettingsCategoryIcons(backdrop);
     bindSettingsCategories(backdrop);
 
     return {
@@ -158,6 +159,20 @@
     };
   }
 
+  function renderSettingsCategoryIcons(backdrop) {
+    const renderer = getIconRenderer();
+    if (!renderer || typeof renderer.createIconElement !== 'function') return;
+    Array.from(backdrop.querySelectorAll('[data-settings-icon]')).forEach((button) => {
+      const iconName = button.getAttribute('data-settings-icon');
+      if (!iconName) return;
+      const label = button.textContent;
+      button.textContent = '';
+      button.appendChild(renderer.createIconElement(iconName, 'settings-category-icon'));
+      const text = document.createElement('span');
+      text.textContent = label;
+      button.appendChild(text);
+    });
+  }
   function bindSettingsCategories(backdrop) {
     const buttons = Array.from(backdrop.querySelectorAll('[data-settings-category]'));
     const panels = Array.from(backdrop.querySelectorAll('[data-settings-category-panel]'));

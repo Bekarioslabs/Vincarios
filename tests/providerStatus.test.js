@@ -94,7 +94,8 @@ test('provider status view updates the status chip without owning provider check
     statusPill: { dataset: {}, title: '' },
     statusDot: { classList: { toggle(name, enabled) { toggles.push({ name, enabled }); } } },
     statusLabel: { textContent: '' },
-    providerName: { textContent: '' }
+    providerName: { textContent: '' },
+    privacyBadge: { dataset: {}, textContent: '', title: '' }
   };
 
   setProviderStatus(nodes, {
@@ -107,6 +108,9 @@ test('provider status view updates the status chip without owning provider check
   assert.equal(nodes.statusPill.title, 'Provider online');
   assert.equal(nodes.statusLabel.textContent, 'Provider online');
   assert.equal(nodes.providerName.textContent, 'LM Studio');
+  assert.equal(nodes.privacyBadge.dataset.providerPrivacy, 'local');
+  assert.equal(nodes.privacyBadge.textContent, 'Local');
+  assert.equal(nodes.privacyBadge.title, 'Local provider');
   assert.deepEqual(toggles, [{ name: 'ok', enabled: true }]);
 });
 test('provider IPC exposes model list and provider/model selection channels', async () => {
@@ -224,4 +228,14 @@ test('provider status refresh button rechecks status without changing provider',
   assert.equal(statusCalls, 2);
   assert.equal(setActiveCalls, 0);
   assert.equal(refreshButton.disabled, false);
+});
+test('provider status view labels cloud privacy without changing provider checks', () => {
+  const nodes = { privacyBadge: { dataset: {}, textContent: '', title: '' } };
+  const { setProviderPrivacyBadge } = require('../src/renderer/providers/mountProviderStatus');
+
+  setProviderPrivacyBadge(nodes.privacyBadge, { privacy: 'cloud' });
+
+  assert.equal(nodes.privacyBadge.dataset.providerPrivacy, 'cloud');
+  assert.equal(nodes.privacyBadge.textContent, 'Cloud');
+  assert.equal(nodes.privacyBadge.title, 'Cloud provider');
 });

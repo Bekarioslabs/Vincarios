@@ -26,6 +26,8 @@ test('icon registry exposes semantic app icon names instead of raw UI usage name
   assert.equal(ICONS.save, 'save.svg');
   assert.equal(ICONS.copy, 'copy.svg');
   assert.equal(ICONS.warning, 'triangle-alert.svg');
+  assert.equal(ICONS.lock, 'lock.svg');
+  assert.equal(ICONS.plug, 'plug.svg');
   assert.equal(ICONS.send, 'arrow-up.svg');
 });
 test('bundled SVG icons do not contain visible escaped newline literals', () => {

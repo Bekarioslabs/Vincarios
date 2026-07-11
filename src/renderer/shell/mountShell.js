@@ -23,6 +23,7 @@
         '      <span id="provider-dot" class="status-dot" aria-hidden="true"></span>',
         '      <span id="provider-status-label">Provider offline</span>',
         '    </span>',
+        '    <span id="provider-privacy-badge" class="provider-privacy-badge" data-provider-privacy="local" title="Local provider">Local</span>',
         '    <button id="provider-refresh" type="button" class="provider-refresh-button" aria-label="Refresh provider status" title="Refresh provider status"></button>',
         '    <select id="provider-select" class="provider-select" aria-label="Provider">',
         '      <option value="lm-studio">LM Studio</option>',
@@ -57,7 +58,7 @@
         '        <button type="button" class="left-button left-button-placeholder" data-future-slot="review-basket-nav" disabled>Review Basket</button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-settings" aria-label="Settings">',
-        '        <button type="button" class="left-button" data-open-settings>Settings</button>',
+        '        <button type="button" class="left-button" data-open-settings data-left-icon="settings">Settings</button>',
         '      </section>',
         '    </div>',
         '  </aside>',
@@ -75,8 +76,8 @@
         '            <span id="review-basket-count" class="mini-panel-count" hidden>0</span>',
         '          </button>',
         '          <div class="review-basket-actions">',
-        '            <button id="review-clear" class="review-clear-button" type="button" disabled>Clear pending</button>',
-        '            <button id="review-clear-done" class="review-clear-button" type="button" disabled>Clear executed</button>',
+        '            <button id="review-clear" class="review-clear-button review-danger-button" type="button" title="Remove pending review items" aria-label="Clear pending review items" disabled>Clear pending</button>',
+        '            <button id="review-clear-done" class="review-clear-button review-danger-button" type="button" title="Remove executed review items" aria-label="Clear executed review items" disabled>Clear executed</button>',
         '            <button id="review-execute" class="review-execute-button" type="button" disabled>Execute selected</button>',
         '          </div>',
         '        </div>',
@@ -145,6 +146,7 @@
 
       app.appendChild(status);
       root.appendChild(app);
+      renderLeftNavigationIcons(app);
       wireShellInteractions(app);
       const workspaceState = createWorkspaceState();
       wireWorkspaceTabs(app, workspaceState);
@@ -264,6 +266,20 @@
           ? 'Permission set: ' + entry.path + ' (' + modes.join(', ') + ')'
           : 'Permission cleared: ' + entry.path);
       }
+    });
+  }
+  function renderLeftNavigationIcons(app) {
+    const renderer = getIconRenderer();
+    if (!app || !renderer || typeof renderer.createIconElement !== 'function') return;
+    app.querySelectorAll('[data-left-icon]').forEach((button) => {
+      const iconName = button.getAttribute('data-left-icon');
+      if (!iconName) return;
+      const label = button.textContent;
+      button.textContent = '';
+      button.appendChild(renderer.createIconElement(iconName, 'left-button-icon'));
+      const text = document.createElement('span');
+      text.textContent = label;
+      button.appendChild(text);
     });
   }
   function wireShellInteractions(app) {
@@ -391,7 +407,10 @@
         title: proposal.title,
         content: proposal.content
       });
-      if (result && result.ok) await refreshFilePanelAfterWrite(vaultUi);
+      if (result && result.ok) {
+        await refreshFilePanelAfterWrite(vaultUi);
+        flashFilePanelPath(vaultUi, result.path || proposal.targetPath);
+      }
       return result;
     }
     if (proposal.type === 'create_from_template') {
@@ -438,6 +457,7 @@
         created.push(result.path);
       }
       await refreshFilePanelAfterWrite(vaultUi);
+      flashFilePanelPath(vaultUi, created[0] || proposal.targetPath || proposal.templatePlanRootPath);
       return { ok: true, action: 'create_from_template', path: proposal.targetPath || proposal.templatePlanRootPath || '', createdFolders, created };
     }
     if (proposal.type === 'update_note') {
@@ -449,7 +469,10 @@
         currentContent: proposal.currentContent,
         proposedContent: proposal.proposedContent
       });
-      if (result && result.ok) await refreshCurrentPreviewAfterUpdate(vaultUi, proposal.targetPath);
+      if (result && result.ok) {
+        await refreshCurrentPreviewAfterUpdate(vaultUi, proposal.targetPath);
+        flashFilePanelPath(vaultUi, proposal.targetPath);
+      }
       return result;
     }
     return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
@@ -457,6 +480,12 @@
 
   function splitPath(value) {
     return String(value || '').replace(/\\/g, '/').split('/').map((part) => part.trim()).filter(Boolean);
+  }
+
+  function flashFilePanelPath(vaultUi, targetPath) {
+    const filePanel = vaultUi && vaultUi.filePanel;
+    if (!filePanel || typeof filePanel.flashPath !== 'function' || !targetPath) return;
+    filePanel.flashPath(targetPath);
   }
 
   async function refreshFilePanelAfterWrite(vaultUi) {

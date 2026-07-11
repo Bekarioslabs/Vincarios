@@ -237,6 +237,16 @@
   color: var(--text-normal);
 }
 
+.review-danger-button:not(:disabled) {
+  border-color: rgba(var(--status-danger-rgb), .28);
+  color: var(--text-muted);
+}
+
+.review-danger-button:hover:not(:disabled) {
+  border-color: rgba(var(--status-danger-rgb), .45);
+  color: var(--status-danger-soft);
+}
+
 .review-execute-button {
   border-color: rgba(var(--interactive-accent-rgb), .5);
   background: rgba(var(--interactive-accent-rgb), .1);

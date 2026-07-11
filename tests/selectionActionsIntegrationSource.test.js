@@ -190,6 +190,10 @@ test('propose update soft-disabled state is visual only', () => {
   assert.match(source, /action\.softDisabled/);
   assert.match(source, /is-soft-disabled/);
   assert.match(source, /aria-disabled/);
+  assert.match(source, /renderSoftDisabledLock/);
+  assert.match(source, /selection-action-lock-icon/);
+  assert.doesNotMatch(source, /selection-actions-target/);
+  assert.match(source, /createIconElement\('lock', 'selection-action-lock-icon'\)/);
   assert.match(css, /\.selection-action-button\.is-soft-disabled/);
 });
 test('soft-disabled actions route through missing permission guidance', () => {

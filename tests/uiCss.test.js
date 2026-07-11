@@ -82,6 +82,12 @@ test('review basket polish stays isolated in review stylesheet', () => {
   assert.match(reviewCss, /\.review-status-icon/);
   assert.match(reviewCss, /\.review-status-dot/);
 });
+test('review destructive clear controls use subtle danger styling only when active', () => {
+  const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
+
+  assert.match(reviewCss, /\.review-danger-button:not\(:disabled\)\s*\{[\s\S]*border-color:\s*rgba\(var\(--status-danger-rgb\), \.28\);/);
+  assert.match(reviewCss, /\.review-danger-button:hover:not\(:disabled\)\s*\{[\s\S]*color:\s*var\(--status-danger-soft\);/);
+});
 test('vault panel layout places files and actions above full-width preview', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
   const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
@@ -176,6 +182,8 @@ test('left navigation keeps settings in a separate bottom group', () => {
   assert.match(css, /\.left-nav-actions\s*\{[\s\S]*flex:\s*1 1 auto;/);
   assert.match(css, /\.left-nav-group-settings\s*\{[\s\S]*margin-top:\s*auto;/);
   assert.match(css, /\.left-nav-group-settings\s*\{[\s\S]*border-top:\s*1px solid var\(--background-modifier-border\);/);
+  assert.match(css, /\.left-button\[data-left-icon\]\s*\{[\s\S]*justify-content:\s*flex-start;/);
+  assert.match(css, /\.left-button-icon\s*\{[\s\S]*filter:\s*var\(--icon-muted-filter, none\);/);
 });
 test('chat drag-over styling stays scoped to the chat log', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
@@ -213,4 +221,58 @@ test('chat baskets scroll locally instead of expanding the workspace', () => {
   assert.match(layoutCss, /\.context-slot\s*\{[\s\S]*max-height:\s*min\(18vh, 160px\);[\s\S]*overflow:\s*hidden;/);
   assert.match(layoutCss, /\.context-basket-items\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*auto;/);
   assert.match(reviewCss, /\.review-basket-items\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*auto;/);
+});
+test('soft-disabled selection actions stay neutral until active', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.selection-action-button\.is-soft-disabled\s*\{[\s\S]*border-color:\s*var\(--background-modifier-border\);/);
+  assert.match(css, /\.selection-action-button\.is-soft-disabled\s*\{[\s\S]*border-left-color:\s*var\(--background-modifier-border\);/);
+  assert.match(css, /\.selection-action-button\.is-soft-disabled\s*\{[\s\S]*background:\s*var\(--background-secondary\);/);
+  assert.match(css, /\.selection-action-lock-icon\s*\{[\s\S]*margin-left:\s*auto;/);
+  assert.match(css, /\.selection-action-lock-icon\s*\{[\s\S]*filter:\s*var\(--icon-muted-filter, none\);/);
+  assert.match(css, /\.selection-action-button\.is-soft-disabled:hover\s*\{[\s\S]*background:\s*var\(--background-subtle-strong\);/);
+  assert.match(css, /\.selection-action-button:not\(\.is-soft-disabled\)\.is-read\s*\{\s*border-left-color:\s*var\(--action-read\);\s*\}/);
+  assert.match(css, /\.selection-action-button:not\(\.is-soft-disabled\)\.is-write\s*\{\s*border-left-color:\s*var\(--action-write\);\s*\}/);
+  assert.doesNotMatch(css, /\.selection-action-button\.is-soft-disabled\s*\{[\s\S]*border-style:\s*dashed;/);
+});
+
+test('file permission buttons distinguish direct inherited and off states without color alone', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+
+  assert.match(css, /\.file-permission-button\s*\{[\s\S]*background:\s*var\(--background-primary\);/);
+  assert.match(css, /\.file-permission-button\.is-active\s*\{[\s\S]*box-shadow:\s*inset 0 0 0 1px rgba\(var\(--interactive-accent-rgb\), \.28\);/);
+  assert.match(css, /\.file-permission-button\.is-inherited\s*\{[\s\S]*border-style:\s*dashed;/);
+  assert.match(css, /\.file-permission-button\.is-inherited\s*\{[\s\S]*box-shadow:\s*none;/);
+});
+
+test('compact empty states use shared icon styling', () => {
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const suggestionsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
+
+  assert.match(layoutCss, /\.mini-panel-empty-rich\s*\{[\s\S]*display:\s*inline-flex;/);
+  assert.match(layoutCss, /\.empty-state-icon\s*\{[\s\S]*filter:\s*var\(--icon-muted-filter, none\);/);
+  assert.match(suggestionsCss, /\.suggestions-empty-state\s*\{[\s\S]*display:\s*flex;/);
+  assert.match(suggestionsCss, /\.suggestions-empty-detail\s*\{[\s\S]*font-size:\s*11px;/);
+});
+
+test('provider privacy badge uses provider-mode styling instead of static local-only copy', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(shell, /id="provider-privacy-badge"/);
+  assert.match(css, /\.provider-privacy-badge\s*\{/);
+  assert.match(css, /data-provider-privacy="cloud"/);
+  assert.match(css, /data-provider-privacy="external"/);
+});
+
+test('visual polish uses tokenized transitions and file-row update flash', () => {
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const fileCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+  const settingsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
+
+  assert.match(layoutCss, /\.left-button\s*\{[\s\S]*transition: border-color var\(--transition-fast\)/);
+  assert.match(layoutCss, /\.left-button-current\s*\{[\s\S]*box-shadow: inset 0 0 0 1px rgba\(var\(--interactive-accent-rgb\), \.06\);/);
+  assert.match(fileCss, /\.file-row\.is-recently-updated\s*\{[\s\S]*box-shadow: inset 3px 0 0 rgba\(var\(--interactive-accent-rgb\), \.72\);/);
+  assert.match(fileCss, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(settingsCss, /\.settings-category-button\.is-active\s*\{[\s\S]*box-shadow: inset 0 0 0 1px rgba\(var\(--interactive-accent-rgb\), \.06\);/);
 });
