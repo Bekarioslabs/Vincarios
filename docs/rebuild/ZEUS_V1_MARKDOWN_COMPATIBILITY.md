@@ -57,7 +57,7 @@ Obsidian combines CommonMark, GitHub Flavored Markdown, LaTeX, and Obsidian-spec
 | Tags in body | `#tag` and nested tags | Missing as a special visual element | Plain text remains readable; dedicated tag styling is optional. |
 | Escaping | Backslash escapes for Markdown characters | Full | Provided by the CommonMark engine. |
 | Raw HTML | Obsidian renders supported HTML but not Markdown inside HTML | Intentional difference | ZEUS escapes raw HTML and must not execute scripts or unsafe attributes. |
-| Copied inline styling | `<font color="...">text</font>` and `<mark style="background:...">text</mark>` from copied notes | Missing | V1 insertion: support a narrow sanitized color/highlight subset without enabling arbitrary raw HTML, event handlers, scripts, or `unsafe-inline` CSP. |
+| Copied inline styling | `<font color="...">text</font>` and `<mark style="background:...">text</mark>` from copied notes | Partial | Narrow allowlisted color/highlight compatibility renders through `markdownFormattingCompat.js` as safe spans/classes. Unsupported copied tags are stripped to inner Markdown text. Raw HTML, event handlers, unknown styles, unsafe URLs, and `unsafe-inline` CSP remain blocked. |
 | Math | Inline and block LaTeX | Missing | Separate dependency and security decision. |
 | Mermaid | Mermaid code blocks render diagrams | Missing | Keep as safe code until a reviewed renderer dependency is approved. |
 | YAML Properties | Text, lists, numbers, booleans, dates, tags, links | Partial | Flat scalar and list properties render. Type-aware presentation needs separate work; nested YAML remains source-only. |
@@ -89,7 +89,7 @@ V1 supports the practical Obsidian-core subset needed for readable vault review:
 
 Intentional V1 differences:
 
-- Raw HTML stays escaped except for narrow sanitized copied-formatting compatibility such as safe color spans and highlights.
+- Raw HTML stays escaped except for narrow sanitized copied-formatting compatibility such as allowlisted safe color spans and highlights.
 - Remote images stay blocked by default.
 - Plugin code is never executed.
 - Mermaid, math, Dataview, Templater, Kanban board rendering, note/PDF/audio/video embeds, block IDs, and full callout behavior stay V1.1/V1.2 unless the V1 freeze review reclassifies one as must-have.
@@ -135,13 +135,14 @@ Initial research cohort:
 Phase 7.6 uses pinned `markdown-it` 14.3.0 under an isolated renderer boundary:
 
 - `markdownEngine.js` owns CommonMark/GFM engine configuration.
-- `obsidianMarkdownExtension.js` owns only Obsidian-specific inline syntax and safe link/task rendering.
+- `obsidianMarkdownExtension.js` owns only Obsidian-specific inline syntax and safe link/task rendering, and wires the formatting compatibility module into the Markdown engine.
+- `markdownFormattingCompat.js` owns the narrow copied inline styling compatibility model for allowlisted `<font color>` and `<mark background>` cases, plus safe fallbacks for unsupported copied tags.
 - `markdownProperties.js` owns frontmatter extraction and Properties presentation.
 - `markdownRenderer.js` is the small public facade used by Chat and Markdown Preview.
 - `vaultAssetResolver.js` owns safe vault asset target resolution for Markdown embeds and future previewable asset types; `vaultReadService.js` consumes it and serializes validated assets.
 - `third_party/markdown-it/` contains the browser build and MIT license; Node tests use the exact pinned npm dependency.
 
-Raw HTML remains disabled. The planned copied-formatting compatibility layer must live inside `src/renderer/markdown/` as an explicit sanitizer/transformer and shared formatting model, not as general raw HTML execution. The future editor toolbar should reuse that model instead of inventing separate color/highlight serialization. Missing engine modules fail during renderer startup instead of failing later during preview rendering.
+Raw HTML remains disabled. The copied-formatting compatibility layer lives inside `src/renderer/markdown/` as an explicit sanitizer/transformer and shared formatting model, not as general raw HTML execution. The future editor toolbar should reuse that model instead of inventing separate color/highlight serialization. Missing engine modules fail during renderer startup instead of failing later during preview rendering.
 ## Implementation Order
 
 1. Lock the audit with a representative Markdown fixture.

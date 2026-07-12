@@ -170,6 +170,56 @@
   color: var(--markdown-highlight-text);
   background: var(--markdown-highlight-background);
 }
+.markdown-format-background {
+  padding: .04em .14em;
+  border-radius: var(--radius-xs);
+}
+
+.markdown-color-office-blue {
+  color: #17365d;
+}
+
+.markdown-color-office-green {
+  color: #9bbb59;
+}
+
+.markdown-color-office-red {
+  color: #c0504d;
+}
+
+.markdown-color-alert-red {
+  color: #ff4d4f;
+}
+
+.markdown-bg-mint {
+  color: var(--color-neutral-950);
+  background: #affad1;
+}
+
+.markdown-bg-green {
+  color: var(--color-neutral-950);
+  background: #d3f8b6;
+}
+
+.markdown-bg-red {
+  color: var(--text-strong);
+  background: #ff4d4f;
+}
+
+.markdown-format-underline {
+  text-decoration: underline;
+  text-underline-offset: .16em;
+}
+
+.markdown-format-superscript {
+  vertical-align: super;
+  font-size: .75em;
+}
+
+.markdown-format-subscript {
+  vertical-align: sub;
+  font-size: .75em;
+}
 
 .markdown-preview code {
   padding: .12em .34em;

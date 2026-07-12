@@ -59,14 +59,24 @@ test('shell creates status bar before mounting Markdown preview controller', () 
 test('index loads the bundled Markdown engine and focused extensions before the renderer facade', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
   const vendorIndex = source.indexOf('./third_party/markdown-it/markdown-it.min.js');
+  const formattingIndex = source.indexOf('./src/renderer/markdown/markdownFormattingCompat.js');
   const extensionIndex = source.indexOf('./src/renderer/markdown/obsidianMarkdownExtension.js');
   const engineIndex = source.indexOf('./src/renderer/markdown/markdownEngine.js');
   const propertiesIndex = source.indexOf('./src/renderer/markdown/markdownProperties.js');
   const rendererIndex = source.indexOf('./src/renderer/markdown/markdownRenderer.js');
 
   assert.equal(vendorIndex > -1, true);
-  assert.equal(extensionIndex > vendorIndex, true);
+  assert.equal(formattingIndex > vendorIndex, true);
+  assert.equal(extensionIndex > formattingIndex, true);
   assert.equal(engineIndex > extensionIndex, true);
   assert.equal(propertiesIndex > engineIndex, true);
   assert.equal(rendererIndex > propertiesIndex, true);
+});
+
+test('Obsidian Markdown extension wires the formatting compatibility module', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'markdown', 'obsidianMarkdownExtension.js'), 'utf8');
+
+  assert.match(source, /loadFormattingCompat/);
+  assert.match(source, /useMarkdownFormattingCompat\(md\)/);
+  assert.doesNotMatch(source, /zeus_safe_mark_html/);
 });

@@ -324,16 +324,16 @@ Status: complete for V1 rendering scope. Further plugin rendering, callouts, mat
 
 ### Phase 7.6.5 - Safe Copied HTML Styling Compatibility
 
-Status: planned V1 insertion before continuing broader UI hardening.
+Status: complete.
 
-- [ ] Keep the renderer CSP strict. Do not add `unsafe-inline` for scripts or styles.
-- [ ] Add a focused Markdown formatting compatibility module under `src/renderer/markdown/`, for example `markdownFormattingCompat.js`, that owns safe inline color/highlight parsing and serialization.
-- [ ] Support common copied Obsidian/Word/browser inline styling: `<mark style="background:...">`, `<font color="...">`, and safe nested Markdown text inside those spans.
-- [ ] Convert allowed inline colors/highlights into safe renderer-owned spans/classes or sanitized style tokens before insertion into the preview DOM.
-- [ ] Strip all event attributes, scripts, unknown inline styles, and unsafe URLs before render so CSP warnings do not accumulate during normal Markdown preview.
-- [ ] Design the module so future Editor Light / formatting toolbar actions can reuse the same allowed formatting model for selected text effects such as text color, background color, highlight, bold, and italic.
-- [ ] Add regression fixtures for nested combinations such as colored text inside highlights and Markdown emphasis inside allowed inline styling.
-- [ ] Keep this owned by `src/renderer/markdown/`; do not scatter ad-hoc HTML handling through shell, preview controller, chat code, or future editor toolbar code.
+- [x] Keep the renderer CSP strict. Do not add `unsafe-inline` for scripts or styles.
+- [x] Add `src/renderer/markdown/markdownFormattingCompat.js` as the focused Markdown formatting compatibility module that owns safe inline color/highlight parsing and serialization.
+- [x] Support common copied Obsidian/Word/browser inline styling: `<mark style="background:...">`, `<font color="...">`, and safe nested Markdown text inside those spans.
+- [x] Convert allowed inline colors/highlights into safe renderer-owned spans/classes before insertion into the preview DOM.
+- [x] Strip unsupported copied `<font>`/`<mark>` tags to their inner Markdown text and never render event attributes, scripts, unknown inline styles, or unsafe URLs.
+- [x] Design the module so future Editor Light / formatting toolbar actions can reuse the same allowed formatting model for selected text effects such as text color, background color, highlight, bold, and italic.
+- [x] Add regression fixtures for nested combinations such as colored text inside highlights and Markdown emphasis inside allowed inline styling.
+- [x] Keep this owned by `src/renderer/markdown/`; do not scatter ad-hoc HTML handling through shell, preview controller, chat code, or future editor toolbar code.
 ### Phase 7.7 - V1 UI/UX Hardening And Polish Gate
 
 Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work in small testable slices. The external UI/UX proposal files were reviewed as design input and then archived outside the active docs. The accepted goal is to bring their useful fixes and polish into V1 iteratively instead of deferring them wholesale to V1.1.

@@ -2,10 +2,12 @@
   'use strict';
 
   function useObsidianMarkdown(md) {
+    const formattingCompat = loadFormattingCompat();
+    formattingCompat.useMarkdownFormattingCompat(md);
+
     md.inline.ruler.before('image', 'obsidian_image_embed', parseImageEmbed);
     md.inline.ruler.before('emphasis', 'obsidian_comment', parseComment);
     md.inline.ruler.before('emphasis', 'obsidian_highlight', parseHighlight);
-    md.inline.ruler.before('html_inline', 'zeus_safe_mark_html', parseSafeMarkHtml);
     md.inline.ruler.before('link', 'obsidian_wikilink', parseWikilink);
 
     md.renderer.rules.image = renderMarkdownImage;
@@ -51,22 +53,6 @@
       const token = state.push('obsidian_highlight', 'mark', 0);
       token.content = state.src.slice(state.pos + 2, end);
       state.pos = end + 2;
-    }
-    return true;
-  }
-
-  function parseSafeMarkHtml(state, silent) {
-    if (!state.src.startsWith('<mark', state.pos)) return false;
-    const openEnd = state.src.indexOf('>', state.pos + 5);
-    if (openEnd === -1) return false;
-    const openTag = state.src.slice(state.pos, openEnd + 1);
-    if (!/^<mark(?:\s[^>]*)?>$/i.test(openTag)) return false;
-    const closeStart = state.src.toLowerCase().indexOf('</mark>', openEnd + 1);
-    if (closeStart === -1 || closeStart === openEnd + 1) return false;
-    if (!silent) {
-      const token = state.push('obsidian_highlight', 'mark', 0);
-      token.content = state.src.slice(openEnd + 1, closeStart);
-      state.pos = closeStart + 7;
     }
     return true;
   }
@@ -173,6 +159,15 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
+
+  function loadFormattingCompat() {
+    if (typeof window !== 'undefined' && window.ZeusMarkdownFormattingCompat) {
+      return window.ZeusMarkdownFormattingCompat;
+    }
+    if (typeof require === 'function') return require('./markdownFormattingCompat');
+    throw new Error('Markdown formatting compatibility module unavailable.');
+  }
+
   const api = { useObsidianMarkdown };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

@@ -245,14 +245,14 @@ Markdown Preview supports a preview context-menu action `Copy as link` for the c
 
 External Markdown links do not open directly. Clicking an `http` or `https` link shows a confirmation dialog with `Open in browser`, `Copy link`, and `Cancel`. The OS-browser open action goes through a small app IPC channel and accepts only validated `http` and `https` URLs.
 
-HTML remains escaped by default. V1 should add a narrow safe copied-formatting compatibility layer for common Markdown notes that contain `<mark style="background:...">` and `<font color="...">`. The renderer must transform allowed color/highlight markup into sanitized renderer-owned output and strip event handlers, scripts, unsafe URLs, and unknown inline styles. CSP must stay strict; do not add `unsafe-inline`. The allowed formatting model should be reusable by future Editor Light toolbar actions, so text color, background/highlight color, bold, and italic do not become separate ad-hoc implementations.
+HTML remains escaped by default. V1 includes a narrow safe copied-formatting compatibility layer for common Markdown notes that contain `<mark style="background:...">` and `<font color="...">`. The renderer transforms allowlisted color/highlight markup into sanitized renderer-owned spans/classes and strips unsupported copied tags to their inner Markdown text. Event handlers, scripts, unsafe URLs, unknown inline styles, and `unsafe-inline` CSP remain blocked. The allowed formatting model is reusable by future Editor Light toolbar actions, so text color, background/highlight color, bold, and italic do not become separate ad-hoc implementations.
 
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
 
 YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview, including simple inline arrays and block-list values such as `tags:\n  - item`. It is not directly editable in this renderer block. The source editor can stage manual full-note updates through the `Update` button; blocked update attempts show visible preview feedback instead of silently failing. Future Properties actions belong to the Selection Actions and review workflows, so metadata suggestions can be proposed and reviewed instead of silently changing frontmatter.
 
-Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`.
+Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`. The copied-formatting compatibility layer is limited to allowlisted inline text styling and stays owned by `src/renderer/markdown/markdownFormattingCompat.js`.
 
 The preview toolbar includes an `Edit` button that switches to local Markdown source mode. Local source edits do not write directly to the vault. When the edited source differs from the loaded source, `Propose update` creates an `update_note` proposal in the Review Basket. Persisted writes still require the existing diff, backup, stale-content validation, and audit logging path.
 
@@ -726,7 +726,7 @@ The prototype's context-aware selection behavior should be recovered cleanly:
 
 ### Detachable Edit Preview - Future
 
-Later versions should allow the Markdown edit surface to detach into its own window or panel for longer writing sessions. The detached editor should keep the current file context, show live Markdown preview updates for common formatting such as bold and italic, and eventually expose a small formatting toolbar for common Markdown actions. Formatting toolbar actions such as text color, background color/highlight, bold, and italic should reuse the Markdown formatting compatibility model introduced for safe copied inline styling. This is not V1-critical; V1 keeps Edit Mode local, reviewed, and proposal-based.
+Later versions should allow the Markdown edit surface to detach into its own window or panel for longer writing sessions. The detached editor should keep the current file context, show live Markdown preview updates for common formatting such as bold and italic, and eventually expose a small formatting toolbar for common Markdown actions. Formatting toolbar actions such as text color, background color/highlight, bold, and italic should reuse `markdownFormattingCompat.js`, the Markdown formatting compatibility model introduced for safe copied inline styling. This is not V1-critical; V1 keeps Edit Mode local, reviewed, and proposal-based.
 
 ### Implementation Note
 

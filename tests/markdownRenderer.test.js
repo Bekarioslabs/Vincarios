@@ -134,10 +134,41 @@ test('renders Markdown and Obsidian image embeds as safe preview placeholders', 
   assert.doesNotMatch(html, /src="assets\/hero\.png"/);
 });
 
-test('renders safe mark HTML as highlight without allowing arbitrary HTML', () => {
-  const html = renderMarkdown('Here is <mark style="background:#d3f8b6">marked text</mark> and <span>raw</span>.');
+test('renders allowed copied font color HTML as sanitized Markdown formatting', () => {
+  const html = renderMarkdown('<font color="#c0504d">**Spider-Man**</font>');
 
-  assert.match(html, /<mark>marked text<\/mark>/);
-  assert.match(html, /&lt;span&gt;raw&lt;\/span&gt;/);
-  assert.doesNotMatch(html, /background:#d3f8b6/);
+  assert.match(html, /<span class="markdown-format-color markdown-color-office-red"><strong>Spider-Man<\/strong><\/span>/);
+  assert.doesNotMatch(html, /<font/i);
+  assert.doesNotMatch(html, /color="/i);
+  assert.doesNotMatch(html, /style=/i);
+});
+
+test('renders allowed copied mark background HTML as sanitized Markdown formatting', () => {
+  const html = renderMarkdown('<mark style="background:#affad1">**Iron Man**</mark>');
+
+  assert.match(html, /<span class="markdown-format-background markdown-bg-mint"><strong>Iron Man<\/strong><\/span>/);
+  assert.doesNotMatch(html, /<mark style=/i);
+  assert.doesNotMatch(html, /style=/i);
+});
+
+test('renders nested copied color and background formatting without inline styles', () => {
+  const html = renderMarkdown('<mark style="background:#ff4d4f"><font color="#9bbb59">Captain America</font></mark>');
+
+  assert.match(html, /markdown-format-background markdown-bg-red/);
+  assert.match(html, /markdown-format-color markdown-color-office-green/);
+  assert.match(html, /Captain America/);
+  assert.doesNotMatch(html, /style=/i);
+  assert.doesNotMatch(html, /<font/i);
+});
+
+test('escapes unsupported copied HTML formatting instead of rendering unsafe attributes', () => {
+  const html = renderMarkdown('<mark style="background:url(javascript:alert(1))" onclick="alert(1)">bad</mark> <font color="#123456">unknown</font>');
+
+  assert.doesNotMatch(html, /markdown-format-background/);
+  assert.doesNotMatch(html, /markdown-format-color/);
+  assert.doesNotMatch(html, /onclick=/i);
+  assert.doesNotMatch(html, /style=/i);
+  assert.match(html, /bad unknown/);
+  assert.doesNotMatch(html, /&lt;mark/);
+  assert.doesNotMatch(html, /&lt;font/);
 });
