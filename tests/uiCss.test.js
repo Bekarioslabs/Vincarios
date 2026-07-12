@@ -301,3 +301,22 @@ test('suggestions score rings use shared score tokens', () => {
   assert.match(css, /\.suggestions-score-ring-wrap\.is-score-yellow\s*{[\s\S]*color:\s*var\(--score-medium\);/);
   assert.match(css, /\.suggestions-score-ring-wrap\.is-score-orange\s*{[\s\S]*color:\s*var\(--score-weak\);/);
 });
+test('bottom bar separates global and preview-local status surfaces', () => {
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const markdownCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
+
+  assert.match(shell, /id="status-bar-global"/);
+  assert.match(shell, /id="markdown-preview-status"/);
+  assert.equal(shell.indexOf('id="markdown-preview-status"') > shell.indexOf('status.innerHTML = ['), true);
+  assert.doesNotMatch(shell, /mountChat\(\{ api, app, status, reviewBasket, contextState \}\)/);
+  assert.doesNotMatch(shell, /mountOptional\('[^']+', status,/);
+  assert.match(shell, /mountChat\(\{ api, app, status: globalStatus, reviewBasket, contextState \}\)/);
+  assert.match(layoutCss, /\.status-bar\s*\{[\s\S]*display:\s*grid;/);
+  assert.match(layoutCss, /grid-template-columns:\s*var\(--left-nav-width\) minmax\(var\(--min-main-width\), 1fr\) minmax\(var\(--min-vault-width\), var\(--vault-panel-width\)\);/);
+  assert.match(layoutCss, /\.status-bar-global\s*\{[\s\S]*grid-column:\s*1 \/ 3;/);
+  assert.match(markdownCss, /\.markdown-preview-status\s*\{[\s\S]*grid-column:\s*3;/);
+  assert.match(markdownCss, /\.markdown-preview-status\s*\{[\s\S]*border-left:\s*1px solid var\(--background-modifier-border\);/);
+  assert.match(markdownCss, /\.markdown-preview-status\.is-empty\s*\{[\s\S]*background:\s*var\(--background-secondary\);/);
+  assert.doesNotMatch(markdownCss, /\.markdown-preview-status\s*\{[\s\S]*border-top:/);
+});

@@ -236,7 +236,7 @@ User messages stay plain text to preserve exactly what the user typed.
 `Save as Note` keeps the raw assistant Markdown content, not rendered HTML.
 ## Preview Status Decisions
 
-Preview-local messages live below the Markdown/Image Preview, not in the global status bar and not inside the File Tree header. This includes missing internal links, blocked external links, unresolved image assets, and local source-edit notices.
+Preview-local messages render in the preview segment of the bottom status bar, not in the global status segment and not inside the File Tree header. This includes missing internal links, blocked external links, unresolved image assets, and local source-edit notices. The visual surface is shared with the bottom bar, but ownership stays with the Markdown/Image Preview through `#markdown-preview-status`.
 
 The global status bar remains reserved for app-wide events such as vault opening, file reads, folder listings, renames, provider state, and reviewed proposal execution.
 ## Markdown Preview Rendering Decisions
@@ -245,7 +245,7 @@ Markdown Preview supports a preview context-menu action `Copy as link` for the c
 
 External Markdown links do not open directly. Clicking an `http` or `https` link shows a confirmation dialog with `Open in browser`, `Copy link`, and `Cancel`. The OS-browser open action goes through a small app IPC channel and accepts only validated `http` and `https` URLs.
 
-HTML remains escaped by default. V1 allows only a narrow safe `<mark>...</mark>` compatibility case for copied/exported Markdown highlights; arbitrary inline styles are not preserved.
+HTML remains escaped by default. V1 should add a narrow safe copied-formatting compatibility layer for common Markdown notes that contain `<mark style="background:...">` and `<font color="...">`. The renderer must transform allowed color/highlight markup into sanitized renderer-owned output and strip event handlers, scripts, unsafe URLs, and unknown inline styles. CSP must stay strict; do not add `unsafe-inline`. The allowed formatting model should be reusable by future Editor Light toolbar actions, so text color, background/highlight color, bold, and italic do not become separate ad-hoc implementations.
 
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
@@ -384,7 +384,7 @@ Visual noise reduction:
 Bottom bar / activity direction:
 
 - The Session Log can remain a workspace internally, but the UI may expose it through a compact bottom-bar activity drawer instead of a large `WORKSPACE` button.
-- Preview-local messages may use a dedicated preview segment in the bottom status bar instead of a separate preview-local block. Ownership stays preview-local even if the visual surface is shared.
+- Preview-local messages use a dedicated preview segment in the bottom status bar instead of a separate preview-local block. Ownership stays preview-local even though the visual surface is shared.
 - Global status, preview status, and activity history must remain distinguishable in state/code even when presented in one bottom bar.
 
 Focus Mode:
@@ -726,7 +726,7 @@ The prototype's context-aware selection behavior should be recovered cleanly:
 
 ### Detachable Edit Preview - Future
 
-Later versions should allow the Markdown edit surface to detach into its own window or panel for longer writing sessions. The detached editor should keep the current file context, show live Markdown preview updates for common formatting such as bold and italic, and eventually expose a small formatting toolbar for common Markdown actions. This is not V1-critical; V1 keeps Edit Mode local, reviewed, and proposal-based.
+Later versions should allow the Markdown edit surface to detach into its own window or panel for longer writing sessions. The detached editor should keep the current file context, show live Markdown preview updates for common formatting such as bold and italic, and eventually expose a small formatting toolbar for common Markdown actions. Formatting toolbar actions such as text color, background color/highlight, bold, and italic should reuse the Markdown formatting compatibility model introduced for safe copied inline styling. This is not V1-critical; V1 keeps Edit Mode local, reviewed, and proposal-based.
 
 ### Implementation Note
 

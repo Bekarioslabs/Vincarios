@@ -1017,7 +1017,8 @@ body.is-resizing .pane-resizer::after {
   background: var(--background-primary);
 }
 .status-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--left-nav-width) minmax(var(--min-main-width), 1fr) minmax(var(--min-vault-width), var(--vault-panel-width));
   min-height: var(--statusbar-height);
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
@@ -1026,6 +1027,7 @@ body.is-resizing .pane-resizer::after {
 }
 
 .status-bar-global {
+  grid-column: 1 / 3;
   min-width: 0;
   overflow: hidden;
   padding: 5px 12px;

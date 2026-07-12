@@ -322,6 +322,18 @@ Status: complete for V1 rendering scope. Further plugin rendering, callouts, mat
 - [x] Compare against Obsidian's default Markdown behavior and document intentional V1 differences instead of chasing plugin behavior.
 - [x] Editor Light decision: keep formatting buttons, color styling, live preview editing, and detachable editor out of V1. Current V1 editor remains local source editing plus reviewed full-note update proposals.
 
+### Phase 7.6.5 - Safe Copied HTML Styling Compatibility
+
+Status: planned V1 insertion before continuing broader UI hardening.
+
+- [ ] Keep the renderer CSP strict. Do not add `unsafe-inline` for scripts or styles.
+- [ ] Add a focused Markdown formatting compatibility module under `src/renderer/markdown/`, for example `markdownFormattingCompat.js`, that owns safe inline color/highlight parsing and serialization.
+- [ ] Support common copied Obsidian/Word/browser inline styling: `<mark style="background:...">`, `<font color="...">`, and safe nested Markdown text inside those spans.
+- [ ] Convert allowed inline colors/highlights into safe renderer-owned spans/classes or sanitized style tokens before insertion into the preview DOM.
+- [ ] Strip all event attributes, scripts, unknown inline styles, and unsafe URLs before render so CSP warnings do not accumulate during normal Markdown preview.
+- [ ] Design the module so future Editor Light / formatting toolbar actions can reuse the same allowed formatting model for selected text effects such as text color, background color, highlight, bold, and italic.
+- [ ] Add regression fixtures for nested combinations such as colored text inside highlights and Markdown emphasis inside allowed inline styling.
+- [ ] Keep this owned by `src/renderer/markdown/`; do not scatter ad-hoc HTML handling through shell, preview controller, chat code, or future editor toolbar code.
 ### Phase 7.7 - V1 UI/UX Hardening And Polish Gate
 
 Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work in small testable slices. The external UI/UX proposal files were reviewed as design input and then archived outside the active docs. The accepted goal is to bring their useful fixes and polish into V1 iteratively instead of deferring them wholesale to V1.1.
@@ -365,7 +377,7 @@ Status: planned before Phase 8 if it stays a focused UI-density pass. Goal: redu
 - [ ] File Tree permission controls (`R`/`W`) should appear on row hover/focus instead of permanently on every row, while active/inherited/off state remains discoverable and keyboard reachable.
 - [ ] Remove or reduce vault-name/path redundancy between file toolbar and breadcrumb if they overlap.
 - [ ] Session Log should not require a large Workspace button if a cleaner bottom-bar drawer works better. The bottom status/activity area may open a compact activity drawer.
-- [ ] Preview-local messages may move into a preview segment of the bottom status bar instead of a dedicated preview message block, as long as ownership remains clear.
+- [x] Preview-local messages now render in a dedicated preview segment of the bottom status bar instead of a separate preview message block. Ownership remains preview-local through `#markdown-preview-status`; the global status and preview status are visually adjacent but logically separate.
 - [ ] Add a Focus Mode / distraction-free toggle: collapse icon rail, File Tree, and Context Basket together, leaving the writing/review surface and input dominant.
 - [ ] Persist collapse and Focus Mode preferences in app-local settings, not in the selected vault `.zeus/`. These are per-user UI layout preferences, unlike folder visual identity which is vault metadata.
 - [ ] Keep implementation modular: shell owns layout state, files owns tree collapse/hover controls, chat/context owns basket collapse, activity owns drawer behavior, settings owns persistence.

@@ -131,7 +131,6 @@
         '        <article id="markdown-preview" class="markdown-preview" aria-label="Markdown preview">No file selected.</article>',
         '        <textarea id="markdown-source-editor" class="markdown-source-editor" spellcheck="false" aria-label="Markdown source editor" hidden></textarea>',
         '      </div>',
-        '      <div id="markdown-preview-status" class="markdown-preview-status is-empty" aria-live="polite" aria-atomic="true"></div>',
         '    </section>',
         '  </aside>',
         '</section>'
@@ -140,7 +139,10 @@
       const status = document.createElement('footer');
       status.id = 'status-bar';
       status.className = 'status-bar';
-      status.innerHTML = '<div id="status-bar-global" class="status-bar-global" role="status" aria-live="polite"></div>';
+      status.innerHTML = [
+        '<div id="status-bar-global" class="status-bar-global" role="status" aria-live="polite"></div>',
+        '<div id="markdown-preview-status" class="markdown-preview-status is-empty" aria-live="polite" aria-atomic="true"></div>'
+      ].join('');
       const globalStatus = status.querySelector('#status-bar-global');
       globalStatus.textContent = info.name + ' ' + info.version + ' - local first';
 
@@ -157,22 +159,22 @@
       wireSuggestionIndicator(app, suggestionState);
       const updateFlashState = createUpdateFlashState();
       const vaultUi = { filePanel: null, updateFlashState };
-      const reviewBasket = mountOptional('review basket', status, () => window.ZeusReviewBasket
-        ? window.ZeusReviewBasket.mountReviewBasket({ app, status, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
+      const reviewBasket = mountOptional('review basket', globalStatus, () => window.ZeusReviewBasket
+        ? window.ZeusReviewBasket.mountReviewBasket({ app, status: globalStatus, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
         : null);
-      mountOptional('creation presets', status, () => window.ZeusCreationPresets && window.ZeusCreationPresets.mountCreationPresets({ app, api, reviewBasket, status }));
+      mountOptional('creation presets', globalStatus, () => window.ZeusCreationPresets && window.ZeusCreationPresets.mountCreationPresets({ app, api, reviewBasket, status: globalStatus }));
       wireVaultShell(api, app, contextState, vaultUi, reviewBasket);
 
-      mountOptional('provider status', status, () => window.ZeusProviderStatus && window.ZeusProviderStatus.mountProviderStatus({ api, app }));
-      mountOptional('settings panel', status, () => window.ZeusSettingsPanel && window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status }));
-      mountOptional('inbox cleanup', status, () => window.ZeusInboxCleanup && window.ZeusInboxCleanup.mountInboxCleanup({ api, app, status }));
-      mountOptional('chat', status, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status, reviewBasket, contextState }));
-      mountOptional('context basket', status, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
-      mountOptional('suggestions workspace', status, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status }));
-      mountOptional('session log', status, () => window.ZeusSessionLog && window.ZeusSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
-      mountOptional('selection actions', status, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status, suggestionState }));
-      mountOptional('pane resize', status, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
-      mountOptional('scoped selection', status, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));
+      mountOptional('provider status', globalStatus, () => window.ZeusProviderStatus && window.ZeusProviderStatus.mountProviderStatus({ api, app }));
+      mountOptional('settings panel', globalStatus, () => window.ZeusSettingsPanel && window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status: globalStatus }));
+      mountOptional('inbox cleanup', globalStatus, () => window.ZeusInboxCleanup && window.ZeusInboxCleanup.mountInboxCleanup({ api, app, status: globalStatus }));
+      mountOptional('chat', globalStatus, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status: globalStatus, reviewBasket, contextState }));
+      mountOptional('context basket', globalStatus, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
+      mountOptional('suggestions workspace', globalStatus, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: globalStatus }));
+      mountOptional('session log', globalStatus, () => window.ZeusSessionLog && window.ZeusSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
+      mountOptional('selection actions', globalStatus, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState }));
+      mountOptional('pane resize', globalStatus, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
+      mountOptional('scoped selection', globalStatus, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));
     });
   }
 

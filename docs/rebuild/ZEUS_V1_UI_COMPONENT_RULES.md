@@ -53,7 +53,7 @@ This file is the active reference for repeated UI elements in ZEUS V1. Use it be
 ## Status And Feedback
 
 - Global status belongs to the app status area.
-- Preview-local status belongs to the preview status area.
+- Preview-local status belongs to `#markdown-preview-status`. It may appear as a preview segment in the bottom bar, but it must not be mixed into the global status stream.
 - Per-session activity belongs to the Session Log.
 - File update flash belongs to `src/renderer/feedback/updateFlashState.js`.
 - Do not add scattered one-off flash state or direct row effects in unrelated modules.

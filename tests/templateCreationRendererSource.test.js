@@ -29,7 +29,7 @@ test('shell mounts creation presets through a dedicated renderer module', () => 
   const source = read('src/renderer/shell/mountShell.js');
 
   assert.match(source, /window\.ZeusCreationPresets/);
-  assert.match(source, /mountCreationPresets\(\{ app, api, reviewBasket, status \}\)/);
+  assert.match(source, /mountCreationPresets\(\{ app, api, reviewBasket, status: globalStatus \}\)/);
 });
 
 test('create preset buttons are wired as real preset targets', () => {

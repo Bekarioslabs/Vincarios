@@ -34,7 +34,7 @@ test('shell mounts review basket view and passes it into chat', () => {
 
   assert.match(source, /ZeusReviewBasket\.mountReviewBasket/);
   assert.match(source, /reviewBasket/);
-  assert.match(source, /mountChat\(\{ api, app, status, reviewBasket, contextState \}\)/);
+  assert.match(source, /mountChat\(\{ api, app, status: globalStatus, reviewBasket, contextState \}\)/);
 });
 
 test('shell passes review basket into Markdown preview update wiring', () => {
@@ -150,7 +150,7 @@ test('shell exposes context basket and passes context state into chat', () => {
   assert.match(source, /id="context-basket-items"/);
   assert.match(source, /id="context-clear-all"/);
   assert.match(source, /ZeusContextBasket\.mountContextBasket/);
-  assert.match(source, /mountChat\(\{ api, app, status, reviewBasket, contextState \}\)/);
+  assert.match(source, /mountChat\(\{ api, app, status: globalStatus, reviewBasket, contextState \}\)/);
   assert.doesNotMatch(source, /active-context-toggle/);
   assert.doesNotMatch(source, /setAutoContextEnabled/);
 });
