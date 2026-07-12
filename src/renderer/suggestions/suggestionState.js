@@ -41,6 +41,30 @@
       return snapshot();
     }
 
+    function setGroupChecked(groupId, checked) {
+      const nextChecked = checked === true;
+      groups = groups.map((group) => {
+        if (group.id !== String(groupId)) return group;
+        return Object.assign({}, group, {
+          items: group.items.map((item) => item.dismissed === true ? item : Object.assign({}, item, { checked: nextChecked }))
+        });
+      });
+      notify();
+      return snapshot();
+    }
+
+    function dismissChecked() {
+      groups = groups.map((group) => Object.assign({}, group, {
+        items: group.items.map((item) => item.checked === true && item.dismissed !== true ? Object.assign({}, item, { dismissed: true, checked: false }) : item)
+      }));
+      if (selected) {
+        const selectedItem = findItem(groups, selected.groupId, selected.itemId);
+        if (!selectedItem || selectedItem.dismissed === true) selected = firstVisibleItem(groups);
+      }
+      notify();
+      return snapshot();
+    }
+
     function dismissItem(groupId, itemId) {
       groups = groups.map((group) => {
         if (group.id !== String(groupId)) return group;
@@ -78,6 +102,8 @@
       addGroup,
       selectItem,
       toggleItem,
+      setGroupChecked,
+      dismissChecked,
       dismissItem,
       clearGroup,
       subscribe

@@ -54,16 +54,80 @@
       const section = document.createElement('section');
       section.className = 'suggestions-group';
 
+      const visibleItems = group.items.filter((item) => item.dismissed !== true);
+      const checkedCount = visibleItems.filter((item) => item.checked === true).length;
+
       const title = document.createElement('div');
       title.className = 'suggestions-group-title';
-      title.textContent = group.title;
+      title.title = group.title;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'suggestions-group-check';
+      checkbox.checked = visibleItems.length > 0 && checkedCount === visibleItems.length;
+      checkbox.indeterminate = checkedCount > 0 && checkedCount < visibleItems.length;
+      checkbox.setAttribute('aria-label', 'Select visible suggestions in ' + group.title);
+      checkbox.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (typeof suggestionState.setGroupChecked === 'function') {
+          suggestionState.setGroupChecked(group.id, checkbox.checked);
+        }
+      });
+
+      const icon = renderGroupIcon(group);
+      const label = document.createElement('span');
+      label.className = 'suggestions-group-label';
+      label.appendChild(renderGroupPrefix(group));
+      label.appendChild(document.createTextNode(' - ' + formatGroupTargetName(group)));
+
+      title.appendChild(checkbox);
+      if (icon) title.appendChild(icon);
+      title.appendChild(label);
       section.appendChild(title);
 
-      group.items.filter((item) => item.dismissed !== true).forEach((item) => {
+      visibleItems.forEach((item) => {
         section.appendChild(renderItem(group, item, selectedItem));
       });
 
       return section;
+    }
+
+    function renderGroupIcon(group) {
+      const renderer = getIconRenderer();
+      if (!renderer || typeof renderer.createIconElement !== 'function') return null;
+      return renderer.createIconElement(groupIconName(group), 'suggestions-group-icon');
+    }
+
+    function groupIconName(group) {
+      const type = groupType(group);
+      if (type === 'metadata') return 'metadata';
+      if (type === 'similar') return 'search';
+      return 'file';
+    }
+
+    function renderGroupPrefix(group) {
+      const prefix = document.createElement('span');
+      prefix.className = 'suggestions-group-prefix';
+      const type = groupType(group);
+      if (type === 'metadata') prefix.textContent = 'TAG CANDIDATES';
+      else if (type === 'similar') prefix.textContent = 'SIMILAR NOTES';
+      else prefix.textContent = 'SUGGESTIONS';
+      return prefix;
+    }
+
+    function groupType(group) {
+      const source = String(group && group.source || '').toLowerCase();
+      const title = String(group && group.title || '').toLowerCase();
+      if (source.includes('tag') || source.includes('metadata') || title.includes('tag candidate')) return 'metadata';
+      if (source.includes('similar') || title.includes('similar note')) return 'similar';
+      return 'generic';
+    }
+
+    function formatGroupTargetName(group) {
+      const title = String(group && group.title || 'Suggestions');
+      const markerIndex = title.indexOf(':');
+      const value = markerIndex > -1 ? title.slice(markerIndex + 1).trim() : title;
+      return basename(value) || title;
     }
 
     function renderItem(group, item, selectedItem) {
@@ -267,6 +331,7 @@
       const bar = document.createElement('div');
       bar.className = 'suggestions-action-bar';
       const conversion = converters.getConvertibleCheckedSuggestions(snapshot);
+      const checkedCount = countCheckedSuggestions(snapshot);
 
       const add = document.createElement('button');
       add.type = 'button';
@@ -277,7 +342,26 @@
       add.addEventListener('click', () => convertCheckedSuggestionsToReviewBasket(conversion));
       bar.appendChild(add);
 
+      const clear = document.createElement('button');
+      clear.type = 'button';
+      clear.className = 'chat-message-action-button suggestions-clear-selected';
+      clear.textContent = checkedCount > 0 ? 'Clear selected (' + checkedCount + ')' : 'Clear selected';
+      clear.disabled = checkedCount === 0 || !suggestionState || typeof suggestionState.dismissChecked !== 'function';
+      clear.title = 'Hide selected suggestions from this session.';
+      clear.addEventListener('click', () => {
+        if (typeof suggestionState.dismissChecked === 'function') suggestionState.dismissChecked();
+      });
+      bar.appendChild(clear);
+
       return bar;
+    }
+
+    function countCheckedSuggestions(snapshot) {
+      if (!snapshot || !Array.isArray(snapshot.groups)) return 0;
+      return snapshot.groups.reduce((total, group) => {
+        const items = Array.isArray(group.items) ? group.items : [];
+        return total + items.filter((item) => item && item.checked === true && item.dismissed !== true).length;
+      }, 0);
     }
 
     function convertCheckedSuggestionsToReviewBasket(conversion) {
@@ -373,6 +457,11 @@
 
   function formatSuggestionName(item) {
     const value = String(item && (item.path || item.title) || 'Suggestion').replace(/\\/g, '/');
+    return basename(value);
+  }
+
+  function basename(value) {
+    value = String(value || '').replace(/\\/g, '/');
     const parts = value.split('/').filter(Boolean);
     return parts.length ? parts[parts.length - 1] : value;
   }

@@ -582,9 +582,9 @@ analysis action -> grouped suggestions -> user selects suggestions -> preview/di
 
 Recommended layout for the Suggestions workspace:
 
-- left side: compact suggestion groups/items with checkboxes, score rings for similarity items, dismiss controls, and per-item preview controls. Similarity scores should not render as oval pills.
+- left side: compact suggestion groups/items with checkboxes, score rings for similarity items, dismiss controls, and per-item preview controls. Each visible group header has a three-state checkbox that selects only visible, non-dismissed items in that group. Group headers show a compact category prefix/icon plus the target basename; the full source path remains available as tooltip. Similarity scores should not render as oval pills.
 - right side: detail preview for the selected suggestion. Preview type depends on suggestion kind: text detail, Markdown-line diff, property/tag diff, move plan, duplicate comparison, or create-note preview.
-- top or footer action bar: `Add selected to Review Basket` only becomes active when selected suggestions can become concrete actions. It must not mean execute.
+- top or footer action bar: `Add selected to Review Basket` only becomes active when selected suggestions can become concrete actions. It must not mean execute. `Clear selected` hides selected suggestions from the current session and uses the same dismissal semantics as per-item dismiss, not vault deletion.
 
 Suggestions that are report-only must be visually separated from actionable suggestions. Before V1 freeze, the workspace should group or section suggestions by type, such as Similar Notes for report-only embedding findings and Metadata/Tags for suggestions that can become Review Basket actions. This avoids implying that every suggestion can be executed.
 

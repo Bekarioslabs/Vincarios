@@ -38,7 +38,7 @@ This file is the active reference for repeated UI elements in ZEUS V1. Use it be
 - Similar-note suggestions use compact score rings for numeric similarity.
 - Do not render similarity scores as oval pills.
 - Metadata and tag candidates use type badges such as `TAG`; they must not show fake `0%` score rings.
-- Report-only suggestions and actionable suggestions must remain visually distinguishable.
+- Report-only suggestions and actionable suggestions must remain visually distinguishable. Group headers may use standard three-state checkboxes to select visible items only; batch clearing means dismissing suggestions from the session, not deleting vault files. Header labels should stay compact: category prefix/icon plus target basename, with the full path in hover/title when needed.
 - Dismiss controls use the shared compact icon button pattern, not plain text links in dense rows.
 
 ## Modals And Forms

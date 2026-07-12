@@ -19,6 +19,7 @@
     warning: 'triangle-alert.svg',
     lock: 'lock.svg',
     search: 'search.svg',
+    metadata: 'file-text.svg',
     send: 'arrow-up.svg',
     edit: 'square-pen.svg'
   });

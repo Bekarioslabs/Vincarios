@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -51,6 +51,23 @@ test('suggestion state selects toggles and dismisses items without deleting file
   assert.equal(snapshot.groups[0].items.find((item) => item.id === 'a').dismissed, true);
 });
 
+test('suggestion state selects visible group items and dismisses checked suggestions', () => {
+  const state = createSuggestionState();
+  state.addGroup(sampleGroup());
+
+  state.dismissItem('similar-notes:test', 'a');
+  state.setGroupChecked('similar-notes:test', true);
+  let snapshot = state.snapshot();
+
+  assert.equal(snapshot.groups[0].items.find((item) => item.id === 'a').checked, false);
+  assert.equal(snapshot.groups[0].items.find((item) => item.id === 'b').checked, true);
+
+  state.dismissChecked();
+  snapshot = state.snapshot();
+
+  assert.equal(snapshot.groups[0].items.find((item) => item.id === 'b').dismissed, true);
+  assert.equal(snapshot.selectedItem, null);
+});
 test('suggestion state clears groups and notifies subscribers', () => {
   const state = createSuggestionState();
   const counts = [];

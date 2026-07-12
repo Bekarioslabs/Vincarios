@@ -28,6 +28,33 @@ test('suggestions workspace renderer owns list detail and disabled conversion UI
   assert.doesNotMatch(source, /api\.chat/);
 });
 
+test('suggestions group headers use compact category labels and basename targets', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
+  const icons = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'icons', 'iconRegistry.js'), 'utf8');
+
+  assert.match(source, /formatGroupTargetName/);
+  assert.match(source, /return basename\(value\) \|\| title/);
+  assert.match(source, /TAG CANDIDATES/);
+  assert.match(source, /SIMILAR NOTES/);
+  assert.match(source, /renderGroupIcon/);
+  assert.match(source, /title\.title = group\.title/);
+  assert.match(css, /\.suggestions-group-prefix/);
+  assert.match(css, /var\(--icon-accent-filter/);
+  assert.match(icons, /metadata: 'file-text\.svg'/);
+});
+test('suggestions workspace supports visible group selection and clearing selected items', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
+
+  assert.match(source, /suggestions-group-check/);
+  assert.match(source, /checkbox\.indeterminate/);
+  assert.match(source, /setGroupChecked\(group\.id, checkbox\.checked\)/);
+  assert.match(source, /Clear selected/);
+  assert.match(source, /dismissChecked\(\)/);
+  assert.match(source, /countCheckedSuggestions/);
+  assert.match(css, /\.suggestions-group-check/);
+});
 test('suggestions workspace styles use dedicated layout classes', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
