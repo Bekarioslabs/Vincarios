@@ -137,6 +137,18 @@ function createSettingsStore(options) {
     return { ok: true, settings, role: normalizedRole };
   }
 
+  function setLayoutPreferences(layout) {
+    const input = layout || {};
+    const nextLayout = normalizeLayoutSettings({
+      panels: Object.assign({}, settings.layout.panels, input.panels || {})
+    });
+    updateSettings((draft) => {
+      draft.layout = nextLayout;
+      return draft;
+    });
+    return { ok: true, settings, layout: settings.layout };
+  }
+
   return Object.freeze({
     getSettings,
     updateSettings,
@@ -147,7 +159,8 @@ function createSettingsStore(options) {
     setLimits,
     setEmbeddingSettings,
     setVaultProfileRole,
-    resetVaultProfileRole
+    resetVaultProfileRole,
+    setLayoutPreferences
   });
 }
 
@@ -170,6 +183,7 @@ function normalizeAppSettings(value) {
       mode: normalizeChoice(value.theme && value.theme.mode, ['dark', 'light', 'system'], 'dark'),
       accent: normalizeId(value.theme && value.theme.accent) || 'zeus-amber'
     }),
+    layout: Object.freeze(normalizeLayoutSettings(value.layout || {})),
     safety: Object.freeze({
       reviewRequired: value.safety && value.safety.reviewRequired === false ? false : true,
       trustedMode: value.safety && value.safety.trustedMode === true
@@ -177,6 +191,17 @@ function normalizeAppSettings(value) {
   });
 }
 
+function normalizeLayoutSettings(value) {
+  const panels = value && value.panels ? value.panels : {};
+  return {
+    panels: Object.freeze({
+      leftNavCollapsed: panels.leftNavCollapsed === true,
+      filesCollapsed: panels.filesCollapsed === true,
+      selectionActionsCollapsed: panels.selectionActionsCollapsed === true,
+      contextBasketCollapsed: panels.contextBasketCollapsed === true
+    })
+  };
+}
 function normalizeLimits(value) {
   const input = value || {};
   const selectedFileFallback = input.maxContextChars || DEFAULT_LIMITS.maxSelectedFileChars;

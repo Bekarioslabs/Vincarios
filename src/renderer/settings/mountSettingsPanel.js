@@ -23,12 +23,14 @@
 
     const panel = createPanel();
     app.appendChild(panel.backdrop);
+    panel.modalBehavior = getModalBehavior().mountModalBehavior({
+      overlay: panel.backdrop,
+      dialog: panel.dialog,
+      initialFocus: () => panel.closeButtons[0]
+    });
     const openButtons = app.querySelectorAll('[data-open-settings]');
     openButtons.forEach((button) => button.addEventListener('click', () => openPanel(panel, api, status)));
     panel.closeButtons.forEach((button) => button.addEventListener('click', () => closePanel(panel)));
-    panel.backdrop.addEventListener('click', (event) => {
-      if (event.target === panel.backdrop) closePanel(panel);
-    });
 
     return Object.freeze({
       open() { return openPanel(panel, api, status); },
@@ -146,6 +148,7 @@
 
     return {
       backdrop,
+      dialog: backdrop.querySelector('.settings-panel'),
       providerList: backdrop.querySelector('[data-settings-provider-list]'),
       limitsGrid: backdrop.querySelector('[data-settings-limit-grid]'),
       vaultRoleList: backdrop.querySelector('[data-settings-vault-role-list]'),
@@ -208,10 +211,15 @@
     setText(panel.status, 'Loading...');
     setText(statusBar, 'Settings opened.');
     await renderSettings(panel, api, statusBar);
+    panel.modalBehavior.focusInitial();
   }
 
   function closePanel(panel) {
     panel.backdrop.hidden = true;
+  }
+
+  function getModalBehavior() {
+    return window.ZeusModalBehavior;
   }
 
   async function renderSettings(panel, api, statusBar) {

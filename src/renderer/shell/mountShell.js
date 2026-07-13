@@ -4,7 +4,7 @@
   function mountShell(root, api) {
     if (!root) return Promise.resolve();
 
-    return getAppInfo(api).then((info) => {
+    return getAppInfo(api).then(async (info) => {
       root.innerHTML = '';
       const app = document.createElement('main');
       app.className = 'app-shell is-start';
@@ -35,30 +35,33 @@
         '</header>',
         '<section class="workspace">',
         '  <aside class="left-nav" aria-label="Application navigation">',
-        '    <div class="left-nav-actions">',
+        '    <div class="left-nav-header">',
+        '      <button type="button" class="left-nav-collapse-toggle ui-tool-button" data-left-nav-toggle aria-label="Collapse navigation" title="Collapse navigation" aria-expanded="true" aria-controls="left-nav-actions"><span class="left-nav-collapse-icon" aria-hidden="true"></span></button>',
+        '    </div>',
+        '    <div id="left-nav-actions" class="left-nav-actions">',
         '      <section class="left-nav-group left-nav-group-workspace" aria-label="Workspace">',
         '        <div class="left-section-title">Workspace</div>',
-        '        <button type="button" class="left-button left-button-current" data-workspace-tab="chat" aria-current="page">Chat</button>',
-        '        <button type="button" class="left-button" data-workspace-tab="suggestions"><span>Suggestions</span><span class="left-button-count" data-suggestions-count hidden>0</span></button>',
-        '        <button type="button" class="left-button" data-workspace-tab="sessionLog">Session Log</button>',
+        '        <button type="button" class="left-button ui-flat-row left-button-current" data-workspace-tab="chat" data-left-icon="navigationChat" aria-current="page" aria-label="Chat"><span class="left-button-label">Chat</span></button>',
+        '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="suggestions" data-left-icon="navigationSuggestions" aria-label="Suggestions"><span class="left-button-label">Suggestions</span><span class="left-button-count" data-suggestions-count hidden>0</span></button>',
+        '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="sessionLog" data-left-icon="navigationSessionLog" aria-label="Session Log"><span class="left-button-label">Session Log</span></button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-create" aria-label="Create">',
         '        <div class="left-section-title">Create</div>',
-        '        <button type="button" class="left-button" data-toggle="note-presets" aria-expanded="false" aria-controls="note-presets">New Note</button>',
+        '        <button type="button" class="left-button ui-flat-row" data-toggle="note-presets" data-left-icon="navigationNewNote" aria-expanded="false" aria-controls="note-presets" aria-label="New Note"><span class="left-button-label">New Note</span></button>',
         '        <div id="note-presets" class="left-subactions" data-preset-list="note" hidden>',
         '        </div>',
-        '        <button type="button" class="left-button" data-toggle="project-presets" aria-expanded="false" aria-controls="project-presets">New Project</button>',
+        '        <button type="button" class="left-button ui-flat-row" data-toggle="project-presets" data-left-icon="navigationNewProject" aria-expanded="false" aria-controls="project-presets" aria-label="New Project"><span class="left-button-label">New Project</span></button>',
         '        <div id="project-presets" class="left-subactions" data-preset-list="project" hidden>',
         '        </div>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-vault" aria-label="Vault">',
         '        <div class="left-section-title">Vault</div>',
-        '        <button type="button" class="left-button left-button-accent" data-open-vault>Open Vault</button>',
-        '        <button type="button" class="left-button" data-inbox-review>Inbox Review</button>',
-        '        <button type="button" class="left-button left-button-placeholder" data-future-slot="review-basket-nav" disabled>Review Basket</button>',
+        '        <button type="button" class="left-button ui-flat-row left-button-accent" data-open-vault data-left-icon="navigationOpenVault" aria-label="Open Vault"><span class="left-button-label">Open Vault</span></button>',
+        '        <button type="button" class="left-button ui-flat-row" data-inbox-review data-left-icon="navigationInboxReview" aria-label="Inbox Review"><span class="left-button-label">Inbox Review</span></button>',
+        '        <button type="button" class="left-button ui-flat-row left-button-placeholder" data-future-slot="review-basket-nav" data-left-icon="navigationReviewBasket" aria-label="Review Basket" disabled><span class="left-button-label">Review Basket</span></button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-settings" aria-label="Settings">',
-        '        <button type="button" class="left-button" data-open-settings data-left-icon="settings">Settings</button>',
+        '        <button type="button" class="left-button ui-flat-row" data-open-settings data-left-icon="settings" aria-label="Settings"><span class="left-button-label">Settings</span></button>',
         '      </section>',
         '    </div>',
         '  </aside>',
@@ -68,9 +71,9 @@
         '      <section id="chat-log" class="chat-log" aria-label="Chat messages" aria-live="polite" aria-relevant="additions">',
         '        <div class="chat-empty-state">Vault loaded. How can I help?</div>',
         '      </section>',
-        '      <section id="review-basket" class="review-slot" aria-label="Review Basket" data-future-slot="review-basket">',
+        '      <section id="review-basket" class="review-slot is-collapsed" aria-label="Review Basket" data-future-slot="review-basket">',
         '        <div class="review-basket-header">',
-        '          <button type="button" class="mini-panel-toggle" data-panel-toggle="review-basket" aria-expanded="true" aria-controls="review-basket-items">',
+        '          <button type="button" class="mini-panel-toggle" data-panel-toggle="review-basket" aria-expanded="false" aria-controls="review-basket-items">',
         '            <span class="mini-panel-toggle-icon" aria-hidden="true"></span>',
         '            <span>Review Basket</span>',
         '            <span id="review-basket-count" class="mini-panel-count" hidden>0</span>',
@@ -85,9 +88,9 @@
         '          <div class="mini-panel-empty">No suggestions yet.</div>',
         '        </div>',
         '      </section>',
-        '      <section id="context-basket" class="context-slot" aria-label="Context Basket">',
+        '      <section id="context-basket" class="context-slot is-collapsed" aria-label="Context Basket">',
         '        <div class="context-basket-header">',
-        '          <button type="button" class="mini-panel-toggle" data-panel-toggle="context-basket" aria-expanded="true" aria-controls="context-basket-items">',
+        '          <button type="button" class="mini-panel-toggle" data-panel-toggle="context-basket" aria-expanded="false" aria-controls="context-basket-items">',
         '            <span class="mini-panel-toggle-icon" aria-hidden="true"></span>',
         '            <span>Context Basket</span>',
         '            <span id="context-basket-count" class="mini-panel-count" hidden>0</span>',
@@ -113,20 +116,25 @@
         '      <div id="file-panel"></div>',
         '    </section>',
         '    <div class="pane-resizer" data-resize="files" title="Resize files and actions" role="separator" aria-label="Resize files and actions" aria-orientation="vertical"></div>',
-        '    <aside class="selection-actions-pane" data-future-slot="selection-actions" aria-label="Selection actions">',
-        '      <div class="selection-actions-header">Selection Actions</div>',
-        '      <div class="selection-actions-empty">Select a file or folder.</div>',
+        '    <aside id="selection-actions-panel" class="selection-actions-pane" data-future-slot="selection-actions" aria-label="Selection actions">',
+        '      <div class="selection-actions-header ui-panel-header">',
+        '        <span class="selection-actions-title ui-panel-header-label">Selection Actions</span>',
+        '        <button type="button" class="selection-actions-collapse-toggle ui-tool-button" data-selection-actions-toggle aria-label="Collapse Selection Actions" title="Collapse Selection Actions" aria-expanded="true" aria-controls="selection-actions-panel"><span class="selection-actions-toggle-icon" aria-hidden="true"></span></button>',
+        '      </div>',
+        '      <div class="selection-actions-content">',
+        '        <div class="selection-actions-empty">Select a file or folder.</div>',
+        '      </div>',
         '    </aside>',
-        '    <div class="pane-resizer pane-resizer-horizontal" data-resize="preview" title="Resize preview" role="separator" aria-label="Resize Markdown preview" aria-orientation="horizontal"></div>',
+        '    <div class="pane-resizer" data-resize="actions" title="Resize Selection Actions and Preview" role="separator" aria-label="Resize Selection Actions and Preview" aria-orientation="vertical"></div>',
         '    <section class="preview-pane">',
         '      <div class="markdown-preview-shell">',
         '        <div class="markdown-preview-toolbar">',
-        '          <div id="markdown-preview-title" class="markdown-preview-title">Markdown Preview</div>',
-        '          <button id="markdown-history-back" class="markdown-history-button" type="button" title="Back" aria-label="Back in preview history" disabled>&lt;</button>',
-        '          <button id="markdown-history-forward" class="markdown-history-button" type="button" title="Forward" aria-label="Forward in preview history" disabled>&gt;</button>',
-        '          <button id="markdown-reveal-current" class="markdown-reveal-current" type="button" aria-label="Reveal current note in Files" disabled>Reveal in Files</button>',
-        '          <button id="markdown-edit-toggle" class="markdown-edit-toggle" type="button" aria-label="Edit Markdown source" disabled>Edit</button>',
-        '          <button id="markdown-propose-update" class="markdown-propose-update" type="button" aria-label="Propose Markdown update" disabled>Update</button>',
+        '          <div id="markdown-preview-title" class="markdown-preview-title" aria-live="polite"></div>',
+        '          <button id="markdown-history-back" class="markdown-history-button ui-tool-button" type="button" title="Back" aria-label="Back in preview history" disabled>&lt;</button>',
+        '          <button id="markdown-history-forward" class="markdown-history-button ui-tool-button" type="button" title="Forward" aria-label="Forward in preview history" disabled>&gt;</button>',
+        '          <button id="markdown-reveal-current" class="markdown-reveal-current ui-tool-button" type="button" aria-label="Reveal current note in Files" title="Reveal current note in Files" disabled>Reveal in Files</button>',
+        '          <button id="markdown-edit-toggle" class="markdown-edit-toggle ui-tool-button" type="button" aria-label="Edit Markdown source" title="Edit Markdown source" disabled>Edit</button>',
+        '          <button id="markdown-propose-update" class="markdown-propose-update ui-tool-button" type="button" aria-label="Propose Markdown update" title="Propose Markdown update" disabled>Update</button>',
         '        </div>',
         '        <article id="markdown-preview" class="markdown-preview" aria-label="Markdown preview">No file selected.</article>',
         '        <textarea id="markdown-source-editor" class="markdown-source-editor" spellcheck="false" aria-label="Markdown source editor" hidden></textarea>',
@@ -156,14 +164,26 @@
       app.__zeusActivityState = activityState;
       const contextState = createContextState();
       const suggestionState = createSuggestionState();
+      const panelLayoutState = createPanelLayoutState();
+      await hydratePanelLayoutPreferences(api, panelLayoutState);
+      app.__zeusPanelLayoutState = panelLayoutState;
+      let selectionActionsController = null;
+      wireLeftNavigationPanelLayout(app, api, panelLayoutState, globalStatus);
+      const filesPanelLayout = wireFilesPanelLayout(app, api, panelLayoutState, globalStatus);
+      const requestSelectionActionsPanelExpand = wireSelectionActionsPanelLayout(app, api, panelLayoutState, globalStatus, () => {
+        if (selectionActionsController && typeof selectionActionsController.closeOpenForms === 'function') selectionActionsController.closeOpenForms();
+      });
       wireSuggestionIndicator(app, suggestionState);
       const updateFlashState = createUpdateFlashState();
-      const vaultUi = { filePanel: null, updateFlashState };
+      const folderVisualState = window.ZeusFolderVisualState
+        ? window.ZeusFolderVisualState.createFolderVisualState({ api })
+        : null;
+      const vaultUi = { filePanel: null, folderVisualState, updateFlashState };
       const reviewBasket = mountOptional('review basket', globalStatus, () => window.ZeusReviewBasket
         ? window.ZeusReviewBasket.mountReviewBasket({ app, status: globalStatus, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
         : null);
       mountOptional('creation presets', globalStatus, () => window.ZeusCreationPresets && window.ZeusCreationPresets.mountCreationPresets({ app, api, reviewBasket, status: globalStatus }));
-      wireVaultShell(api, app, contextState, vaultUi, reviewBasket);
+      wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout);
 
       mountOptional('provider status', globalStatus, () => window.ZeusProviderStatus && window.ZeusProviderStatus.mountProviderStatus({ api, app }));
       mountOptional('settings panel', globalStatus, () => window.ZeusSettingsPanel && window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status: globalStatus }));
@@ -172,13 +192,187 @@
       mountOptional('context basket', globalStatus, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
       mountOptional('suggestions workspace', globalStatus, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: globalStatus }));
       mountOptional('session log', globalStatus, () => window.ZeusSessionLog && window.ZeusSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
-      mountOptional('selection actions', globalStatus, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState }));
+      selectionActionsController = mountOptional('selection actions', globalStatus, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true }));
       mountOptional('pane resize', globalStatus, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
       mountOptional('scoped selection', globalStatus, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));
     });
   }
 
 
+  function createPanelLayoutState() {
+    if (!window.ZeusPanelLayoutState || typeof window.ZeusPanelLayoutState.createPanelLayoutState !== 'function') {
+      throw new Error('ZEUS panel layout state is not available.');
+    }
+    return window.ZeusPanelLayoutState.createPanelLayoutState();
+  }
+
+  async function hydratePanelLayoutPreferences(api, panelLayoutState) {
+    if (!api || !api.settings || typeof api.settings.get !== 'function') return;
+    try {
+      const settings = await api.settings.get();
+      panelLayoutState.replace(settings && settings.layout && settings.layout.panels);
+    } catch (error) {
+      // The default open layout remains usable when app-local settings are unavailable.
+    }
+  }
+
+  function wireLeftNavigationPanelLayout(app, api, panelLayoutState, status) {
+    const navigation = app.querySelector('.left-nav');
+    const toggle = app.querySelector('[data-left-nav-toggle]');
+    if (!navigation || !toggle || !panelLayoutState) return;
+
+    function apply(snapshot) {
+      const collapsed = snapshot.leftNavCollapsed === true;
+      app.classList.toggle('is-left-nav-collapsed', collapsed);
+      toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      toggle.setAttribute('aria-label', collapsed ? 'Expand navigation' : 'Collapse navigation');
+      toggle.title = collapsed ? 'Expand navigation' : 'Collapse navigation';
+      if (collapsed) closeLeftNavigationSubactions(app);
+      renderLeftNavigationToggleIcon(toggle, collapsed);
+    }
+
+    function setCollapsed(collapsed) {
+      const snapshot = panelLayoutState.setPanelCollapsed('leftNav', collapsed);
+      persistPanelLayoutPreference(api, panelLayoutState, status);
+      return snapshot;
+    }
+
+    panelLayoutState.subscribe(apply);
+    apply(panelLayoutState.snapshot());
+    toggle.addEventListener('click', () => setCollapsed(!panelLayoutState.snapshot().leftNavCollapsed));
+    navigation.querySelectorAll('[data-toggle]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (panelLayoutState.snapshot().leftNavCollapsed) setCollapsed(false);
+      });
+    });
+  }
+
+  function closeLeftNavigationSubactions(app) {
+    app.querySelectorAll('.left-subactions').forEach((target) => {
+      target.hidden = true;
+    });
+    app.querySelectorAll('[data-toggle][aria-controls]').forEach((button) => {
+      button.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function renderLeftNavigationToggleIcon(toggle, collapsed) {
+    const slot = toggle && toggle.querySelector('.left-nav-collapse-icon');
+    if (!slot) return;
+    slot.textContent = '';
+    const renderer = getIconRenderer();
+    const iconName = collapsed ? 'chevronRight' : 'chevronLeft';
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      slot.appendChild(renderer.createIconElement(iconName, 'left-nav-collapse-icon-svg'));
+      return;
+    }
+    slot.textContent = collapsed ? '>' : '<';
+  }
+
+  async function persistPanelLayoutPreference(api, panelLayoutState, status) {
+    if (!api || !api.settings || typeof api.settings.setLayout !== 'function') return;
+    try {
+      const result = await api.settings.setLayout({ panels: panelLayoutState.snapshot() });
+      if (result && result.ok === false && status) status.textContent = result.message || 'Could not save layout preference.';
+    } catch (error) {
+      if (status) status.textContent = 'Could not save layout preference.';
+    }
+  }
+  function wireFilesPanelLayout(app, api, panelLayoutState, status) {
+    const vaultPanel = app.querySelector('.vault-panel');
+    const filesResizer = app.querySelector('[data-resize="files"]');
+    let filePanel = null;
+    if (!vaultPanel || !panelLayoutState) return { attachFilePanel() {}, requestExpand() {} };
+
+    function apply(snapshot) {
+      const collapsed = snapshot.filesCollapsed === true;
+      vaultPanel.classList.toggle('is-files-collapsed', collapsed);
+      if (filePanel && typeof filePanel.setCollapsed === 'function') filePanel.setCollapsed(collapsed);
+      app.dispatchEvent(new CustomEvent('zeus:files-collapse-change', { detail: { collapsed } }));
+    }
+
+    function setCollapsed(collapsed) {
+      const snapshot = panelLayoutState.setPanelCollapsed('files', collapsed);
+      persistPanelLayoutPreference(api, panelLayoutState, status);
+      return snapshot;
+    }
+
+    if (filesResizer) {
+      filesResizer.addEventListener('zeus:panel-resize-start', () => {
+        if (panelLayoutState.snapshot().filesCollapsed) setCollapsed(false);
+      });
+    }
+    panelLayoutState.subscribe(apply);
+    apply(panelLayoutState.snapshot());
+
+    return {
+      attachFilePanel(nextFilePanel) {
+        filePanel = nextFilePanel || null;
+        apply(panelLayoutState.snapshot());
+      },
+      requestExpand() {
+        if (!panelLayoutState.snapshot().filesCollapsed) return;
+        setCollapsed(false);
+      },
+      isCollapsed() {
+        return panelLayoutState.snapshot().filesCollapsed === true;
+      },
+      toggle() {
+        setCollapsed(!panelLayoutState.snapshot().filesCollapsed);
+      }
+    };
+  }
+  function wireSelectionActionsPanelLayout(app, api, panelLayoutState, status, onBeforeCollapse) {
+    const vaultPanel = app.querySelector('.vault-panel');
+    const toggle = app.querySelector('[data-selection-actions-toggle]');
+    const actionsResizer = app.querySelector('[data-resize="actions"]');
+    if (!vaultPanel || !toggle || !panelLayoutState) return function noop() {};
+
+    function apply(snapshot) {
+      const collapsed = snapshot.selectionActionsCollapsed === true;
+      vaultPanel.classList.toggle('is-selection-actions-collapsed', collapsed);
+      toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      toggle.setAttribute('aria-label', collapsed ? 'Expand Selection Actions' : 'Collapse Selection Actions');
+      toggle.title = collapsed ? 'Expand Selection Actions' : 'Collapse Selection Actions';
+      renderSelectionActionsToggleIcon(toggle, collapsed);
+    }
+
+
+    function setCollapsed(collapsed) {
+      if (collapsed && typeof onBeforeCollapse === 'function') onBeforeCollapse();
+      const snapshot = panelLayoutState.setPanelCollapsed('selectionActions', collapsed);
+      persistPanelLayoutPreference(api, panelLayoutState, status);
+      return snapshot;
+    }
+
+    if (actionsResizer) {
+      actionsResizer.addEventListener('zeus:panel-resize-start', () => {
+        if (panelLayoutState.snapshot().selectionActionsCollapsed) setCollapsed(false);
+      });
+    }
+    panelLayoutState.subscribe(apply);
+    apply(panelLayoutState.snapshot());
+    toggle.addEventListener('click', () => setCollapsed(!panelLayoutState.snapshot().selectionActionsCollapsed));
+
+    return function requestSelectionActionsPanelExpand() {
+      if (!panelLayoutState.snapshot().selectionActionsCollapsed) return;
+      setCollapsed(false);
+    };
+  }
+
+
+  function renderSelectionActionsToggleIcon(toggle, collapsed) {
+    const slot = toggle && toggle.querySelector('.selection-actions-toggle-icon');
+    if (!slot) return;
+    slot.textContent = '';
+    const renderer = getIconRenderer();
+    const iconName = collapsed ? 'chevronRight' : 'chevronLeft';
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      slot.appendChild(renderer.createIconElement(iconName, 'selection-actions-toggle-icon-svg'));
+      return;
+    }
+    slot.textContent = collapsed ? '<' : '>';
+  }
   function createWorkspaceState() {
     if (!window.ZeusWorkspaceState) return null;
     return window.ZeusWorkspaceState.createWorkspaceState();
@@ -280,14 +474,11 @@
     const renderer = getIconRenderer();
     if (!app || !renderer || typeof renderer.createIconElement !== 'function') return;
     app.querySelectorAll('[data-left-icon]').forEach((button) => {
+      if (button.querySelector('.left-button-icon')) return;
       const iconName = button.getAttribute('data-left-icon');
       if (!iconName) return;
-      const label = button.textContent;
-      button.textContent = '';
-      button.appendChild(renderer.createIconElement(iconName, 'left-button-icon'));
-      const text = document.createElement('span');
-      text.textContent = label;
-      button.appendChild(text);
+      if (!button.title) button.title = button.getAttribute('aria-label') || '';
+      button.prepend(renderer.createIconElement(iconName, 'left-button-icon'));
     });
   }
   function wireShellInteractions(app) {
@@ -556,7 +747,7 @@
     return { name: 'ZEUS Agent', version: '0.1.0' };
   }
 
-  function wireVaultShell(api, app, contextState, vaultUi, reviewBasket) {
+  function wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
     const statusBar = app.querySelector('#status-bar-global');
@@ -593,8 +784,12 @@
         status: statusBar,
         contextState,
         permissionState,
-        updateFlashState: vaultUi && vaultUi.updateFlashState
+        updateFlashState: vaultUi && vaultUi.updateFlashState,
+        folderVisualState: vaultUi && vaultUi.folderVisualState,
+        onToggleCollapse: filesPanelLayout && filesPanelLayout.toggle,
+        onRequestExpand: filesPanelLayout && filesPanelLayout.requestExpand
       });
+      if (filesPanelLayout && typeof filesPanelLayout.attachFilePanel === 'function') filesPanelLayout.attachFilePanel(filePanel);
       if (vaultUi) vaultUi.filePanel = filePanel;
     }
 

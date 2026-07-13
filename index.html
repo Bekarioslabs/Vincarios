@@ -6,6 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: file:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>ZEUS Agent</title>
   <link rel="stylesheet" href="./src/renderer/styles/tokens.css">
+  <link rel="stylesheet" href="./src/renderer/styles/components.css">
   <link rel="stylesheet" href="./src/renderer/styles/layout.css">
   <link rel="stylesheet" href="./src/renderer/styles/files.css">
   <link rel="stylesheet" href="./src/renderer/styles/markdown.css">
@@ -17,6 +18,7 @@
 <body>
   <div id="app"></div>
   <script src="./src/shared/vaultProfile/defaults.js"></script>
+  <script src="./src/shared/vaultProfile/folderVisuals.js"></script>
   <script src="./src/shared/metadata/generatedNoteMetadata.js"></script>
   <script src="./src/shared/templates/presetRegistry.js"></script>
   <script src="./src/shared/templates/presetProposals.js"></script>
@@ -28,7 +30,10 @@
   <script src="./src/shared/actions/diffPreview.js"></script>
   <script src="./src/renderer/diff/diffLineRenderer.js"></script>
   <script src="./src/renderer/layout/paneResize.js"></script>
+  <script src="./src/renderer/layout/panelLayoutState.js"></script>
   <script src="./src/renderer/files/fileNavigator.js"></script>
+  <script src="./src/renderer/files/folderVisualState.js"></script>
+  <script src="./src/renderer/files/folderAppearanceModal.js"></script>
   <script src="./src/renderer/files/fileTreeKeyboard.js"></script>
   <script src="./src/renderer/context/contextIntent.js"></script>
   <script src="./src/renderer/context/contextLimits.js"></script>
@@ -68,6 +73,7 @@
   <script src="./src/renderer/markdown/markdownPreviewController.js"></script>
   <script src="./src/renderer/files/mountFilePanel.js"></script>
   <script src="./src/renderer/providers/mountProviderStatus.js"></script>
+  <script src="./src/renderer/ui/modalBehavior.js"></script>
   <script src="./src/renderer/settings/mountSettingsPanel.js"></script>
   <script src="./src/renderer/review/reviewBasketState.js"></script>
   <script src="./src/renderer/review/mountReviewBasket.js"></script>

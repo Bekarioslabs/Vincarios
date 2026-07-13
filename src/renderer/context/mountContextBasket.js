@@ -51,14 +51,26 @@
 
       const icon = document.createElement('span');
       icon.className = 'context-basket-icon';
-      icon.textContent = targetIconFor(item);
+      renderTargetIcon(icon, item);
+
+      const details = document.createElement('span');
+      details.className = 'context-basket-details';
 
       const label = document.createElement('span');
       label.className = 'context-basket-label';
       label.textContent = formatItemLabel(item);
+      details.appendChild(label);
+
+      const pathContext = formatItemPathContext(item);
+      if (pathContext) {
+        const path = document.createElement('span');
+        path.className = 'context-basket-path';
+        path.textContent = pathContext;
+        details.appendChild(path);
+      }
 
       button.appendChild(icon);
-      button.appendChild(label);
+      button.appendChild(details);
       button.addEventListener('click', () => {
         if (onActivate) onActivate(item);
       });
@@ -134,12 +146,36 @@
     return index >= 0 ? normalized.slice(index + 1) : normalized;
   }
 
+  function renderTargetIcon(element, item) {
+    const renderer = getIconRenderer();
+    if (renderer && typeof renderer.createIconElement === 'function') {
+      element.appendChild(renderer.createIconElement(targetIconFor(item), 'context-basket-icon-svg'));
+      return;
+    }
+    element.textContent = targetIconFallbackLabel(item);
+  }
+
   function targetIconFor(item) {
+    if (item && item.kind === 'folder') return 'folder';
+    const path = String((item && item.path) || '').toLowerCase();
+    if (/\.md$/.test(path)) return 'markdownFile';
+    if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(path)) return 'image';
+    return 'file';
+  }
+
+  function targetIconFallbackLabel(item) {
     if (item && item.kind === 'folder') return 'DIR';
     const path = String((item && item.path) || '').toLowerCase();
     if (/\.md$/.test(path)) return 'MD';
     if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(path)) return 'IMG';
     return 'FILE';
+  }
+
+  function formatItemPathContext(item) {
+    const path = formatItemTitle(item).replace(/\\/g, '/').replace(/\/+$/g, '');
+    const index = path.lastIndexOf('/');
+    if (index <= 0) return '';
+    return baseName(path.slice(0, index));
   }
 
   function fileTypeLabel(path) {
@@ -149,7 +185,7 @@
     return 'File';
   }
 
-  const api = { mountContextBasket, formatItemLabel, formatItemTitle, targetIconFor };
+  const api = { mountContextBasket, formatItemLabel, formatItemTitle, formatItemPathContext, targetIconFor };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (typeof window !== 'undefined') window.ZeusContextBasket = Object.freeze(api);

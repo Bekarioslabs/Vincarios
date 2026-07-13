@@ -19,6 +19,14 @@ Right: Files, Selection Actions, and Markdown Preview
 
 Chat input auto-grows within bounded limits for longer prompts. Once it reaches the limit, the input scrolls internally. The send/cancel button must remain reachable and the main app layout must not shift unpredictably.
 
+## Visual Direction
+
+ZEUS V1 uses a compact, tool-first visual system: softly raised neutral app surfaces, darker Chat and Preview focus surfaces, restrained structural dividers, and warm amber only for active or primary states. Navigation and Selection Actions favor flat icon/text rows over a grid of outlined buttons. Repeated utility controls share one compact icon-control treatment.
+
+Collapse is deterministic space management. A panel contracts toward the left, retains a visible boundary, clips its own contents, and must not silently resize its neighbors. Resize remains an explicit user operation. Layout preferences remain app-local and persist across restarts.
+
+Review Basket and Context Basket start collapsed by default once their collapse work is implemented. Context items are compact framed packets with a target-type icon, short label, and restrained path context.
+
 The exact layout can change, but these concepts must remain visible:
 
 - selected vault
@@ -117,7 +125,7 @@ Base layout keeps the current mental model:
 Left navigation | Main workspace | Vault panel
 ```
 
-Left navigation contains app-level commands such as New Project, Inbox Review, Review, and Settings.
+Left navigation contains app-level commands such as New Project, Inbox Review, Review, and Settings. It can collapse into a persisted 48px icon rail. In that state, semantic Lucide icons retain accessible names and tooltips; section labels become quiet divider lines, and preset sublists close before the rail contracts. Selecting New Note or New Project from the compact rail expands it before showing the preset list.
 
 Main workspace order:
 
@@ -128,7 +136,7 @@ Context Basket
 Input field
 ```
 
-Vault panel keeps file tree and preview visible at the same time.
+Vault panel keeps file tree and preview visible at the same time. Files can snap-collapse into a persisted icon rail; its local toolbar toggle stays visible, the resize handle is disabled while collapsed, and explicit Reveal in Files actions expand the tree before navigating.
 
 Resizable panes must have minimum sizes so core functions cannot be dragged into unusable states.
 
@@ -298,6 +306,8 @@ Current V1 foundation actions:
 - selected folder currently shows `Use as context`, `List folder`, `Analyze folder`, and `Summarize MD files`.
 - `Use as context` is active for readable folders and for readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content.
 - inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.
+- Selection Action presentation comes from the Action Registry: short labels keep rows scannable, semantic Lucide icons remain centrally replaceable, category dots show Context/Read/Write/Organize as a supporting cue, and tooltips/accessible labels keep the full action meaning available. Action rows do not use category-color borders.
+- Execution kinds are explicit: `app` means deterministic app work with no model call; `embedding` means local similarity inference; `provider` means a local provider request when the action is submitted. File/folder context and tag suggestions are currently `app`, Similar Notes is `embedding`, and summaries/content-update proposals are `provider`.
 - provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working. `Summarize MD files` reads only direct Markdown files from the selected folder, applies Settings/Limits caps, ignores images/PDFs/attachments, and returns a normal saveable ZEUS answer. Summary answers suggest editable Save-as-Note titles in the form `Summary - MD - <file name> - YYYY-MM-DD` for Markdown files and `Summary - DIR - <folder name> - YYYY-MM-DD` for folders. They default to `AI Responses/Summaries` under the configured Inbox role.
 - future custom actions belong behind Settings and must produce visible proposals or context items, not direct writes.
 
@@ -373,7 +383,7 @@ Collapse candidates:
 - File Tree: snap-collapse can temporarily hide the tree in addition to drag-resize, especially while working in Chat or Suggestions.
 - Context Basket: default-collapsed is acceptable when empty or inactive. When context exists, show a compact header/count so active context is not hidden.
 - Review Basket: remains primary attention when proposals exist; it may stay collapsible, but it should not be hidden automatically while actionable items exist.
-- Selection Actions: later categories may be collapsible when action count grows, but V1 should keep available actions easy to discover.
+- Selection Actions: the V1 panel can collapse to a persisted 48px icon strip. The strip retains semantic icons, category dots, and lock state; hover/focus keeps full action meaning available. Actions that open an inline configuration form expand the panel first. Existing direct actions remain direct and do not expand it unnecessarily.
 - Suggestions: groups should be collapsible by type, especially once Similar Notes, Metadata/Tags, and future cleanup/link candidates coexist.
 
 Visual noise reduction:
@@ -397,7 +407,7 @@ Persistence:
 
 - Collapse states and Focus Mode are app-local user preferences.
 - Store them in app settings, not selected-vault `.zeus/` metadata.
-- Folder Visual Identity remains different: it is vault metadata because it describes that vault's top-level folder appearance.
+- Folder Visual Identity remains different: it is vault metadata because it describes that vault's top-level folder appearance. The six English default roots (`00_Inbox`, `01_Daily`, `02_Projects`, `03_Knowledge`, `90_AI_Brain`, `99_Archive`) receive semantic icon/color identities. Unknown and nested folders remain neutral. A right-click on an existing top-level folder opens `Folder appearance...`; the modal offers the fixed V1 icon/color set, Apply, Cancel, and Reset. It persists only explicit overrides in selected-vault `.zeus/profile.json`; Reset returns to the default identity or neutral fallback.
 
 Implementation ownership:
 
@@ -506,23 +516,24 @@ The current "enter folder and replace list" behavior is acceptable only as tempo
 
 V1 should make selected-file/folder actions visible without forcing the chat to infer intent from broad wording.
 
-Target layout:
+Current V1 layout:
 
 ```text
 Vault Panel:
-Top row:    Files | Selection Actions
-Bottom row: Markdown Preview across both columns
+Files | Selection Actions | Markdown Preview
 ```
 
-Files stays compact and navigational. Selection Actions has the same top-row height as Files and owns its own scrolling. Markdown Preview spans the full vault-panel width below both top panes. Selection Actions is deterministic app UI for the currently selected file or folder, not another chat prompt surface.
+Files, Selection Actions, and Markdown Preview use the full available vault-panel height and own local scrolling. Files stays compact and navigational; Selection Actions stays deterministic app UI for the currently selected file or folder; Preview remains the reading surface. Review Basket, Context Basket, and input remain inside the Chat workspace stack and keep their bounded local scrolling.
 
 Responsive rules:
 
-- Files and Selection Actions keep useful minimum widths.
-- Markdown Preview remains readable and should not disappear when the window narrows.
-- The whole app shell should not scroll during normal use.
-- Scroll should be local to file tree, selection actions, Markdown preview, chat history, and review basket.
-- Future detachable preview is a valid follow-up if the combined vault panel becomes too crowded, but it is not part of the first 5.4 cut.
+- Files stays within `170�340px`; Selection Actions stays within `220�360px`. Shared resize logic protects the adjacent panel before applying those caps.
+- Markdown Preview is the flexible remainder. At narrow widths it may shrink to `0px`, but it must never push Files or Selection Actions outside the visible Vault panel.
+- The whole app shell does not gain a document-level vertical scrollbar during normal use.
+- Scroll remains local to file tree, Selection Actions, Markdown Preview, chat history, Review Basket, and Context Basket.
+- Collapsed Review Basket and Context Basket rows follow their compact content height and must not reserve empty spacer rows in Chat.
+- The current full-height layout supports persisted collapse for left navigation, Files, and Selection Actions. Focus Mode and compact/default-collapsed Baskets remain later Phase 7.9 slices.
+- Future detachable preview remains a valid follow-up but is not part of V1.
 
 ### Selection Actions Panel
 

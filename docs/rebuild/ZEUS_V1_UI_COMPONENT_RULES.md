@@ -5,9 +5,28 @@ This file is the active reference for repeated UI elements in ZEUS V1. Use it be
 ## Source Of Truth
 
 - Shared visual values live in `src/renderer/styles/tokens.css`.
-- Component styles live in the owning stylesheet, for example `layout.css`, `files.css`, `markdown.css`, `review.css`, `settings.css`, `suggestions.css`, or `activity.css`.
+- Shared component primitives live in `src/renderer/styles/components.css`. Owning stylesheets such as `layout.css`, `files.css`, `markdown.css`, `review.css`, `settings.css`, `suggestions.css`, or `activity.css` own only local layout and state geometry.
 - Do not add inline CSS to `index.html` or component markup.
 - Do not create one-off colors when an existing token or semantic component style already exists.
+
+## Visual System Direction
+
+ZEUS is a compact local work tool, not a card-heavy dashboard. Its visual character is quiet dark surfaces, precise spacing, restrained depth, and warm amber used only for meaningful active or primary states.
+
+- App chrome and navigation use softly raised neutral surfaces. Chat and Markdown Preview remain the darker reading/focus surfaces.
+- Prefer subtle surface contrast and restrained inset/shadow depth over decorative borders. Do not add gradients, glow decoration, or heavy neumorphism.
+- Dividers are structural only: keep them for real region boundaries, not between adjacent utility buttons or as decoration.
+- Dark and future light themes must change shared semantic tokens, never require a component-by-component recolor.
+- Reference images and `docs/Design_index.html` guide hierarchy, compactness, and surface depth. They are not markup or layout templates to copy.
+
+## Shared Scale And Variants
+
+- Reusable visual differences must be introduced through tokens or documented component variants, never scattered literal values.
+- Maintain small deliberate scales for spacing, radius, text, icon size, and control size. A new size/color/radius requires a clear reusable purpose and a token in `tokens.css`.
+- Use semantic text roles such as `ui`, `muted`, `emphasis`, and `section`; use semantic size steps instead of arbitrary per-component point values.
+- Use semantic surface roles such as app chrome, raised surface, focus surface, and field surface. Components consume these roles rather than inventing local grays.
+- Component-local structural geometry is allowed only when it cannot be a shared scale value, for example a tree indentation or a grid track.
+- One-off visual exceptions must be promoted to a reusable semantic variant before they are used in more than one place.
 
 ## Icon-First Familiarity
 
@@ -19,6 +38,10 @@ This file is the active reference for repeated UI elements in ZEUS V1. Use it be
 ## Buttons
 
 - Primary buttons are for explicit user commands.
+- Utility controls such as Collapse, Refresh, Back, Forward, Copy, and Reveal use one shared compact tool-control pattern: one control size, one icon size, one radius, one hover/focus treatment, and semantic tooltips.
+- `.ui-tool-button` owns the shared compact utility-control base; `.ui-panel-header` and `.ui-panel-header-label` own the shared Files/Selection Actions header base; `.ui-flat-row` owns the shared borderless icon/text row base. Do not recreate these base rules in an owning stylesheet.
+- Utility controls are light, mostly borderless icon buttons. A persistent border is reserved for real inputs, selected states, or explicit primary/destructive commands.
+- Navigation rows are not generic outlined buttons. They are flat icon/text rows; the active row uses a subtle raised background instead of a permanent outline.
 - Compact rows should prefer icon-only controls for utility actions such as copy, remove, dismiss, reveal, or retry.
 - Icon-only controls must use semantic icon mappings from `src/renderer/icons/iconRegistry.js` and rendering helpers from `src/renderer/icons/iconRenderer.js`.
 - Replacing an icon should usually mean changing the semantic mapping, not every call site.
@@ -32,6 +55,10 @@ This file is the active reference for repeated UI elements in ZEUS V1. Use it be
 - Missing-permission actions stay visible, muted, and clickable for guidance.
 - Inactive action rows must not use dashed decorative accents or glow effects.
 - Inline option forms open directly below the owning action row.
+- The Action Registry owns `shortLabel`, `description`, `icon`, `category`, and `executionKind` for every visible action. The renderer must not recreate per-action presentation metadata.
+- Action rows combine a semantic icon, compact short label, category dot, full tooltip/accessible label, and optional execution marker. The category dot supplements meaning; it never carries meaning alone.
+- `executionKind` is `app`, `embedding`, or `provider`. App actions do not call a model; embedding and provider markers make model-backed work visible without implying identical behavior.
+- A collapsed action panel uses the same registry metadata. It may hide labels for density, but must retain semantic icons, accessible labels, category dots, execution markers, and lock state. Inline configuration forms always request expansion first.
 
 ## Suggestions
 
@@ -71,6 +98,10 @@ This file is the active reference for repeated UI elements in ZEUS V1. Use it be
 ## Collapse Controls
 
 - Collapsible areas need a visible toggle, a keyboard path, and accessible expanded/collapsed state.
+- Collapse toggles use the shared compact tool-control pattern, not a full-width activation surface.
+- Collapse moves the owned panel toward the left without silently resizing sibling panels. Neighbor widths change only through explicit user resize or an intentional future Focus Mode rule.
+- Collapsed rails retain their own boundary and must clip internal content completely; no forms, action labels, or buttons may bleed into an adjacent region.
+- Files and Selection Actions use aligned header/control geometry in both expanded and collapsed states.
 - Collapsed panels must keep important active state discoverable, for example counts for Context Basket items or active Suggestions.
 - Collapse state is layout preference unless it describes vault content. Layout preferences belong to app settings, not vault metadata.
 - Focus Mode may coordinate multiple collapses, but each owned module still controls its own rendering details.

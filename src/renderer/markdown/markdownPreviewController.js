@@ -33,6 +33,9 @@
     preview.addEventListener('click', handlePreviewClick);
     setButtonIcon(backButton, 'chevronLeft');
     setButtonIcon(forwardButton, 'chevronRight');
+    setButtonIcon(revealButton, 'folder', 'markdown-command-icon');
+    setButtonIcon(editButton, 'edit', 'markdown-command-icon');
+    setButtonIcon(proposeButton, 'save', 'markdown-command-icon');
     if (revealButton) revealButton.addEventListener('click', handleRevealClick);
     if (backButton) backButton.addEventListener('click', () => moveHistory(-1));
     if (forwardButton) forwardButton.addEventListener('click', () => moveHistory(1));
@@ -61,7 +64,7 @@
       setCurrentPath('');
       history = [];
       historyIndex = -1;
-      if (title) title.textContent = 'Markdown Preview';
+      if (title) title.textContent = '';
       if (revealButton) revealButton.disabled = true;
       preview.textContent = String(message || 'No file selected.');
       clearPreviewStatus();
@@ -196,7 +199,7 @@
     function showEditor() {
       mode = 'source';
       editor.value = currentSource;
-      editButton.textContent = 'Preview';
+      setEditModeControl(true);
       setVisibleMode();
       editor.focus();
       clearPreviewStatus();
@@ -208,7 +211,7 @@
       currentSource = editor.value;
       updateCurrentHistorySource(currentSource);
       renderPreview(currentSource);
-      editButton.textContent = 'Edit';
+      setEditModeControl(false);
       setVisibleMode();
       updateProposeButton();
       if (changed) showPreviewStatus('Preview updated from local source editor. Not saved to vault.');
@@ -356,8 +359,15 @@
       const sourceMode = mode === 'source';
       preview.hidden = sourceMode;
       editor.hidden = !sourceMode;
-      editButton.textContent = sourceMode ? 'Preview' : 'Edit';
+      setEditModeControl(sourceMode);
       updateProposeButton();
+    }
+
+    function setEditModeControl(sourceMode) {
+      if (!editButton) return;
+      const label = sourceMode ? 'Show rendered Markdown preview' : 'Edit Markdown source';
+      editButton.setAttribute('aria-label', label);
+      editButton.setAttribute('title', label);
     }
 
     function showPreviewStatus(message) {
@@ -402,15 +412,15 @@
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
   }
-  function setButtonIcon(button, iconName) {
+  function setButtonIcon(button, iconName, className) {
     if (!button) return;
     const renderer = getIconRenderer();
     button.textContent = '';
     if (renderer && typeof renderer.createIconElement === 'function' && typeof button.appendChild === 'function') {
-      button.appendChild(renderer.createIconElement(iconName, 'markdown-history-icon'));
+      button.appendChild(renderer.createIconElement(iconName, className || 'markdown-history-icon'));
       return;
     }
-    button.textContent = iconName === 'chevronLeft' ? '<' : '>';
+    button.textContent = iconName === 'chevronLeft' ? '<' : iconName === 'chevronRight' ? '>' : '';
   }
 
   function getIconRenderer() {

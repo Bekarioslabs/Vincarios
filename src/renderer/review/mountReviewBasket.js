@@ -265,7 +265,7 @@
     dialog.appendChild(actions);
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
-    titleInput.focus();
+    getModalBehavior().mountModalBehavior({ overlay, dialog, initialFocus: titleInput }).focusInitial();
     titleInput.select();
   }
 
@@ -374,7 +374,7 @@
     dialog.appendChild(actions);
     overlay.appendChild(dialog);
     document.body.appendChild(overlay);
-    close.focus();
+    getModalBehavior().mountModalBehavior({ overlay, dialog, initialFocus: close }).focusInitial();
   }
 
   function renderDiffLines(root, diffPreview) {
@@ -531,7 +531,7 @@
       dialog.appendChild(actions);
       overlay.appendChild(dialog);
       document.body.appendChild(overlay);
-      confirm.focus();
+      getModalBehavior().mountModalBehavior({ overlay, dialog, initialFocus: confirm }).focusInitial();
     });
   }
   function setText(node, value) {
@@ -552,6 +552,10 @@
 
   function getIconRenderer() {
     return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+  }
+
+  function getModalBehavior() {
+    return window.ZeusModalBehavior;
   }
 
   if (typeof module !== 'undefined' && module.exports) {

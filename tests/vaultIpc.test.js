@@ -133,3 +133,20 @@ test('vault IPC also sets embedding root after folder selection and direct root 
     ['embedding', 'D:/Vault2']
   ]);
 });
+
+test('vault IPC exposes low-risk top-level folder appearance settings through a dedicated service', async () => {
+  const handlers = new Map();
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const readService = { setRoot() {}, getState() { return {}; }, listFolder() {}, readMarkdown() {} };
+  const visualService = {
+    getFolderVisuals() { return { ok: true, visuals: { '00_Inbox': { icon: 'inbox', color: 'amber' } } }; },
+    setFolderVisual(payload) { return { ok: true, payload }; },
+    clearFolderVisual(payload) { return { ok: true, payload }; }
+  };
+
+  registerVaultIpc(ipcMain, {}, null, readService, null, null, visualService);
+
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_GET_FOLDER_VISUALS)(), { ok: true, visuals: { '00_Inbox': { icon: 'inbox', color: 'amber' } } });
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_SET_FOLDER_VISUAL)(null, { path: '00_Inbox' }), { ok: true, payload: { path: '00_Inbox' } });
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_CLEAR_FOLDER_VISUAL)(null, { path: '00_Inbox' }), { ok: true, payload: { path: '00_Inbox' } });
+});

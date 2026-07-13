@@ -61,6 +61,30 @@ function createApp(nodes) {
   };
 }
 
+test('preview controller keeps the toolbar title neutral when no file is selected', () => {
+  global.window = {
+    ZeusMarkdownRenderer: {
+      renderMarkdown(source) { return '<p>' + source + '</p>'; }
+    }
+  };
+  delete require.cache[require.resolve('../src/renderer/markdown/markdownPreviewController')];
+  const { mountMarkdownPreview } = require('../src/renderer/markdown/markdownPreviewController');
+  const title = createNode();
+  const controller = mountMarkdownPreview({
+    app: createApp({
+      '#markdown-preview': createNode(),
+      '#markdown-source-editor': createNode(),
+      '#markdown-edit-toggle': createNode(),
+      '#markdown-preview-title': title
+    })
+  });
+
+  assert.equal(title.textContent, '');
+  controller.setMessage('No file selected.');
+  assert.equal(title.textContent, '');
+  delete global.window;
+});
+
 test('preview controller delegates rendered Markdown link clicks to onOpenLink', async () => {
   global.window = {
     ZeusMarkdownRenderer: {

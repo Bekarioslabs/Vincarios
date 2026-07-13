@@ -88,6 +88,8 @@ archive   -> 99_Archive
 ```
 
 Consumers should ask for roles such as `inbox`, `projects`, or `knowledge` through the vault profile helpers. They should not hard-code default folder names in workflow logic. Forks and future Options UI can add or override roles through the profile without rewriting consumers.
+
+Folder Visual Identity uses four explicit layers. `src/shared/vaultProfile/folderVisuals.js` owns the fixed icon/color choice keys and normalizes only top-level records. `src/main/vault/vaultFolderVisualService.js` owns selected-vault `.zeus/profile.json` reads/writes and accepts only existing, non-dot top-level folders. `src/renderer/files/folderVisualState.js` loads and combines saved overrides with English default identities. `src/renderer/files/folderAppearanceModal.js` owns the File Tree right-click menu and modal; it never accesses the filesystem directly. Folder visual settings are low-risk configuration, not Markdown/content changes, so this dedicated service intentionally bypasses Review Basket, note backups, and content audit entries.
 ## Settings Plan
 
 Settings are app configuration, not provider logic.

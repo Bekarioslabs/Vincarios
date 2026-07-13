@@ -56,12 +56,16 @@ test('assistant chat markdown has compact scoped styles', () => {
   assert.match(css, /\.chat-message-markdown h1/);
   assert.match(css, /\.chat-message-markdown pre code/);
 });
-test('Markdown history controls are styled in the Markdown stylesheet', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
+test('Markdown history controls use the shared tool-control styling', () => {
+  const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const componentsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'components.css'), 'utf8');
+  const markdownCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
 
-  assert.match(css, /\.markdown-history-button/);
-  assert.match(css, /\.markdown-history-button:hover:not\(:disabled\)/);
-  assert.match(css, /\.markdown-history-button:disabled/);
+  assert.match(index, /styles\/components\.css/);
+  assert.match(componentsCss, /\.ui-tool-button\s*\{/);
+  assert.match(componentsCss, /\.ui-tool-button:hover:not\(:disabled\)/);
+  assert.match(componentsCss, /\.ui-tool-button:disabled/);
+  assert.doesNotMatch(markdownCss, /\.markdown-history-button\s*\{/);
 });
 test('diff review modal styles stay in the review stylesheet', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
@@ -88,31 +92,59 @@ test('review destructive clear controls use subtle danger styling only when acti
   assert.match(reviewCss, /\.review-danger-button:not\(:disabled\)\s*\{[\s\S]*border-color:\s*rgba\(var\(--status-danger-rgb\), \.28\);/);
   assert.match(reviewCss, /\.review-danger-button:hover:not\(:disabled\)\s*\{[\s\S]*color:\s*var\(--status-danger-soft\);/);
 });
-test('vault panel layout places files and actions above full-width preview', () => {
+test('vault panel uses full-height Files Actions Preview columns', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
   const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
 
   assert.match(shell, /class="selection-actions-pane"/);
   assert.match(shell, /data-future-slot="selection-actions"/);
   assert.match(layoutCss, /\.vault-panel\s*\{[\s\S]*display:\s*grid;/);
-  assert.match(layoutCss, /grid-template-columns:\s*minmax\(var\(--min-file-tree-width\), var\(--file-tree-width\)\)\s+7px\s+minmax\(220px, 1fr\);/);
-  assert.match(layoutCss, /grid-template-rows:\s*minmax\(180px, var\(--vault-top-height, 38%\)\)\s+7px\s+minmax\(var\(--min-preview-width\), 1fr\);/);
+  assert.match(layoutCss, /grid-template-columns:\s*minmax\(var\(--files-panel-min-width\), var\(--files-panel-width\)\)\s+var\(--panel-divider-width\)\s+minmax\(var\(--selection-actions-panel-min-width\), var\(--selection-actions-panel-width\)\)\s+var\(--panel-divider-width\)\s+minmax\(0, 1fr\);/);
+  assert.doesNotMatch(layoutCss, /grid-template-rows:\s*minmax\(180px, var\(--vault-top-height/);
   assert.match(layoutCss, /\.files-pane > #file-panel\s*\{[\s\S]*height:\s*100%;[\s\S]*overflow:\s*hidden;/);
-  assert.match(layoutCss, /\.preview-pane\s*\{[\s\S]*grid-column:\s*1 \/ -1;/);
+  assert.doesNotMatch(layoutCss, /\.preview-pane\s*\{[^}]*grid-column:\s*1 \/ -1;/);
 });
-test('vault panel exposes horizontal and vertical resize handles', () => {
+
+test('vault panel exposes three vertical resize handles', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
   const resizeSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'layout', 'paneResize.js'), 'utf8');
   const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
 
   assert.match(shell, /data-resize="files"/);
-  assert.match(shell, /data-resize="preview"/);
-  assert.match(resizeSource, /const previewHandle = app\.querySelector\('\[data-resize="preview"\]'\)/);
-  assert.match(resizeSource, /function resizePreview\(app, clientY\)/);
-  assert.match(resizeSource, /--vault-top-height/);
-  assert.match(tokensCss, /--vault-top-height:\s*38%;/);
+  assert.match(shell, /data-resize="actions"/);
+  assert.doesNotMatch(shell, /data-resize="preview"/);
+  assert.match(resizeSource, /const actionsHandle = app\.querySelector\('\[data-resize="actions"\]'\)/);
+  assert.match(resizeSource, /function resizeActions\(app, clientX\)/);
+  assert.doesNotMatch(resizeSource, /function resizePreview\(app, clientY\)/);
+  assert.doesNotMatch(resizeSource, /--vault-top-height/);
+  assert.match(tokensCss, /--selection-actions-width:\s*280px;/);
+});
+test('Selection Actions collapses to an accessible icon strip without removing action state', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(css, /\.vault-panel\.is-selection-actions-collapsed\s*\{[\s\S]*var\(--selection-actions-collapsed-width\)/);
+  assert.doesNotMatch(css, /\.vault-panel\.is-selection-actions-collapsed \[data-resize="actions"\]\s*\{\s*display:\s*none;/);
+  assert.match(css, /\.vault-panel\.is-selection-actions-collapsed \.selection-action-label\s*\{\s*display:\s*none;/);
+  assert.match(css, /\.vault-panel\.is-selection-actions-collapsed \.selection-action-lock-icon\s*\{[\s\S]*position:\s*absolute;/);
+  assert.match(css, /\.vault-panel\.is-selection-actions-collapsed \.selection-action-execution-icon\s*\{[\s\S]*position:\s*absolute;/);
+  assert.match(css, /\.preview-pane\s*\{[\s\S]*grid-column:\s*5;/);
+  assert.doesNotMatch(css, /\.pane-resizer\.is-disabled\s*\{/);
+  assert.doesNotMatch(shell, /setPanelResizerEnabled/);
+  assert.match(shell, /filesResizer\.addEventListener\('zeus:panel-resize-start'/);
+  assert.match(shell, /actionsResizer\.addEventListener\('zeus:panel-resize-start'/);
 });
 
+test('Files collapses to a compact rail while preserving the Actions and Preview columns', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.vault-panel\.is-files-collapsed\s*\{[\s\S]*var\(--files-collapsed-width\)/);
+  assert.doesNotMatch(css, /\.vault-panel\.is-files-collapsed \[data-resize="files"\]\s*\{\s*display:\s*none;/);
+  assert.doesNotMatch(css, /\.vault-panel\.is-files-collapsed \.files-pane\s*\{[\s\S]*border-right:/);
+  assert.match(css, /\.vault-panel\.is-files-collapsed \.file-tree\s*\{\s*display:\s*none;/);
+  assert.match(css, /\.vault-panel\.is-files-collapsed\.is-selection-actions-collapsed\s*\{[\s\S]*--selection-actions-panel-width:\s*var\(--selection-actions-collapsed-width\);/);
+  assert.match(css, /\.vault-panel\.is-selection-actions-collapsed \.selection-actions-content\s*\{[\s\S]*min-width:\s*0;/);
+});
 test('chat pending messages expose a lightweight spinner animation', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
 
@@ -158,6 +190,34 @@ test('review basket failed item errors use review stylesheet', () => {
   assert.match(css, /review-basket-error-summary/);
   assert.match(css, /--status-danger/);
 });
+test('visual system tokens expose shared semantic scales for themed UI work', () => {
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+
+  assert.match(tokensCss, /--surface-app:/);
+  assert.match(tokensCss, /--surface-raised:/);
+  assert.match(tokensCss, /--surface-focus:/);
+  assert.match(tokensCss, /--text-ui:/);
+  assert.match(tokensCss, /--text-ui-emphasis:/);
+  assert.match(tokensCss, /--font-size-ui-xs:/);
+  assert.match(tokensCss, /--font-size-ui-md:/);
+  assert.match(tokensCss, /--icon-size-tool:/);
+  assert.match(tokensCss, /--control-size-tool:/);
+  assert.match(tokensCss, /--space-1:/);
+  assert.match(tokensCss, /--space-4:/);
+});
+test('text selection uses semantic neutral tokens instead of the amber interaction accent', () => {
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+
+  assert.match(tokensCss, /--selection-background:\s*rgba\(214,\s*214,\s*214,\s*(?:0?\.\d+|0|1)\);/);
+  assert.match(tokensCss, /--selection-text:\s*var\(--text-strong\);/);
+  const selectionRule = layoutCss.match(/::selection\s*\{[^}]*\}/)[0];
+
+  assert.match(selectionRule, /background:\s*var\(--selection-background\);/);
+  assert.match(selectionRule, /color:\s*var\(--selection-text\);/);
+  assert.doesNotMatch(selectionRule, /interactive-accent-rgb/);
+});
+
 test('readability tokens activate bundled Inter and avoid ultra-heavy UI weights', () => {
   const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
   const filesCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
@@ -184,6 +244,26 @@ test('left navigation keeps settings in a separate bottom group', () => {
   assert.match(css, /\.left-nav-group-settings\s*\{[\s\S]*border-top:\s*1px solid var\(--background-modifier-border\);/);
   assert.match(css, /\.left-button\[data-left-icon\]\s*\{[\s\S]*justify-content:\s*flex-start;/);
   assert.match(css, /\.left-button-icon\s*\{[\s\S]*filter:\s*var\(--icon-muted-filter, none\);/);
+});
+test('expanded left navigation uses flat rows with shared UI tokens', () => {
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const componentsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'components.css'), 'utf8');
+
+  assert.match(componentsCss, /\.ui-flat-row\s*\{[\s\S]*border:\s*0;/);
+  assert.match(componentsCss, /\.ui-flat-row\s*\{[\s\S]*background:\s*transparent;/);
+  assert.match(componentsCss, /\.ui-flat-row\s*\{[\s\S]*font-size:\s*var\(--font-size-ui-md\);/);
+  assert.match(layoutCss, /\.left-button\[data-left-icon\]\s*\{[\s\S]*justify-content:\s*flex-start;/);
+  assert.match(layoutCss, /\.left-button-current\s*\{[\s\S]*background:\s*var\(--surface-raised\);/);
+  assert.match(layoutCss, /\.left-button-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
+  assert.doesNotMatch(layoutCss, /\.left-button\s*\{[\s\S]*font-size:\s*var\(--font-size-ui-md\);/);
+});
+test('collapsed left navigation becomes an icon rail with quiet group separators', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(css, /\.app-shell\.is-left-nav-collapsed\s+\.left-nav\s*\{[\s\S]*width:\s*var\(--left-nav-collapsed-width\);/);
+  assert.match(css, /\.app-shell\.is-left-nav-collapsed\s+\.left-section-title\s*\{[\s\S]*font-size:\s*0;/);
+  assert.match(css, /\.app-shell\.is-left-nav-collapsed\s+\.left-button-label\s*\{[\s\S]*display:\s*none;/);
+  assert.match(css, /\.app-shell\.is-left-nav-collapsed\s+\.left-subactions\s*\{[\s\S]*display:\s*none;/);
 });
 test('chat drag-over styling stays scoped to the chat log', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
@@ -216,26 +296,26 @@ test('chat baskets scroll locally instead of expanding the workspace', () => {
   const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
   const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
 
-  assert.match(layoutCss, /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(42px, min-content\) minmax\(42px, min-content\) auto;/);
-  assert.match(layoutCss, /\.review-slot\s*\{[\s\S]*max-height:\s*min\(24vh, 220px\);[\s\S]*overflow:\s*hidden;/);
-  assert.match(layoutCss, /\.context-slot\s*\{[\s\S]*max-height:\s*min\(18vh, 160px\);[\s\S]*overflow:\s*hidden;/);
+  assert.match(layoutCss, /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(0, min-content\) minmax\(0, min-content\) auto;/);
+  assert.match(layoutCss, /\.review-slot\s*\{[\s\S]*max-height:\s*min\(20vh, 180px\);[\s\S]*overflow:\s*hidden;/);
+  assert.match(layoutCss, /\.context-slot\s*\{[\s\S]*max-height:\s*min\(16vh, 144px\);[\s\S]*overflow:\s*hidden;/);
   assert.match(layoutCss, /\.context-basket-items\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*auto;/);
   assert.match(reviewCss, /\.review-basket-items\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*auto;/);
 });
-test('soft-disabled selection actions stay neutral until active', () => {
+test('soft-disabled selection actions stay neutral while category dots preserve non-color semantics', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
 
-  assert.match(css, /\.selection-action-button\.is-soft-disabled\s*\{[\s\S]*border-color:\s*var\(--background-modifier-border\);/);
-  assert.match(css, /\.selection-action-button\.is-soft-disabled\s*\{[\s\S]*border-left-color:\s*var\(--background-modifier-border\);/);
-  assert.match(css, /\.selection-action-button\.is-soft-disabled\s*\{[\s\S]*background:\s*var\(--background-secondary\);/);
-  assert.match(css, /\.selection-action-lock-icon\s*\{[\s\S]*margin-left:\s*auto;/);
+  assert.match(css, /\.selection-action-button\.is-soft-disabled,\s*\.selection-action-button\.is-layout-locked\s*\{[\s\S]*border-color:\s*transparent;/);
+  assert.match(css, /\.selection-action-button\.is-soft-disabled,\s*\.selection-action-button\.is-layout-locked\s*\{[\s\S]*background:\s*transparent;/);
+  assert.match(css, /\.selection-action-button\.is-soft-disabled \.selection-action-category-dot,\s*\.selection-action-button\.is-layout-locked \.selection-action-category-dot\s*\{[\s\S]*background:\s*var\(--background-modifier-border\);/);
+  assert.match(css, /\.selection-action-button:not\(\.is-soft-disabled\):not\(\.is-layout-locked\)\[data-action-category="read"\] \.selection-action-category-dot\s*\{\s*background:\s*var\(--action-read\);\s*\}/);
+  assert.match(css, /\.selection-action-button:not\(\.is-soft-disabled\):not\(\.is-layout-locked\)\[data-action-category="write"\] \.selection-action-category-dot\s*\{\s*background:\s*var\(--action-write\);\s*\}/);
   assert.match(css, /\.selection-action-lock-icon\s*\{[\s\S]*filter:\s*var\(--icon-muted-filter, none\);/);
-  assert.match(css, /\.selection-action-button\.is-soft-disabled:hover\s*\{[\s\S]*background:\s*var\(--background-subtle-strong\);/);
-  assert.match(css, /\.selection-action-button:not\(\.is-soft-disabled\)\.is-read\s*\{\s*border-left-color:\s*var\(--action-read\);\s*\}/);
-  assert.match(css, /\.selection-action-button:not\(\.is-soft-disabled\)\.is-write\s*\{\s*border-left-color:\s*var\(--action-write\);\s*\}/);
+  assert.match(css, /\.selection-action-label \+ \.selection-action-lock-icon\s*\{\s*margin-left:\s*auto;\s*\}/);
+  assert.match(css, /\.selection-action-execution-icon\.is-provider/);
+  assert.match(css, /\.selection-action-execution-icon\.is-embedding/);
   assert.doesNotMatch(css, /\.selection-action-button\.is-soft-disabled\s*\{[\s\S]*border-style:\s*dashed;/);
 });
-
 test('file permission buttons distinguish direct inherited and off states without color alone', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
 
@@ -270,8 +350,8 @@ test('visual polish uses tokenized transitions and file-row update flash', () =>
   const fileCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
   const settingsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
 
-  assert.match(layoutCss, /\.left-button\s*\{[\s\S]*transition: border-color var\(--transition-fast\)/);
-  assert.match(layoutCss, /\.left-button-current\s*\{[\s\S]*box-shadow: inset 0 0 0 1px rgba\(var\(--interactive-accent-rgb\), \.06\);/);
+  assert.match(fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'components.css'), 'utf8'), /\.ui-flat-row\s*\{[\s\S]*transition: background-color var\(--transition-fast\)/);
+  assert.match(layoutCss, /\.left-button-current\s*\{[\s\S]*background: var\(--surface-raised\);/);
   assert.match(fileCss, /\.file-row\.is-recently-updated\s*\{[\s\S]*animation: file-row-update-flash \.85s ease-out;/);
   assert.match(fileCss, /\.file-row\.is-recently-updated\s*\{[\s\S]*outline: 1px solid rgba\(var\(--interactive-accent-rgb\), \.36\);/);
   assert.match(fileCss, /@keyframes file-row-update-flash/);
@@ -301,6 +381,38 @@ test('suggestions score rings use shared score tokens', () => {
   assert.match(css, /\.suggestions-score-ring-wrap\.is-score-yellow\s*{[\s\S]*color:\s*var\(--score-medium\);/);
   assert.match(css, /\.suggestions-score-ring-wrap\.is-score-orange\s*{[\s\S]*color:\s*var\(--score-weak\);/);
 });
+test('Files and Selection Actions use the shared toolbar structure across collapse states', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const componentsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'components.css'), 'utf8');
+  const filePanel = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+
+  assert.match(tokensCss, /--panel-toolbar-height:\s*36px;/);
+  assert.match(tokensCss, /--panel-rail-width:\s*48px;/);
+  assert.match(tokensCss, /--files-collapsed-width:\s*var\(--panel-rail-width\);/);
+  assert.match(tokensCss, /--selection-actions-collapsed-width:\s*var\(--panel-rail-width\);/);
+  assert.match(filePanel, /class="file-toolbar ui-panel-header"/);
+  assert.match(shell, /class="selection-actions-header ui-panel-header"/);
+  assert.match(componentsCss, /\.ui-panel-header\s*\{[\s\S]*min-height:\s*var\(--panel-toolbar-height\);[\s\S]*border-bottom:\s*1px solid var\(--border-structural\);/);
+  assert.match(css, /\.pane-resizer::after\s*\{[\s\S]*background:\s*var\(--border-structural\);/);
+  assert.doesNotMatch(css, /\.vault-panel\s*\{[^}]*border-left:/);
+  assert.doesNotMatch(css, /^\.selection-actions-pane\s*\{[^}]*border-right:/m);
+  assert.match(css, /\.vault-panel\s*\{[\s\S]*grid-template-columns:\s*minmax\(var\(--files-panel-min-width\), var\(--files-panel-width\)\)\s+var\(--panel-divider-width\)\s+minmax\(var\(--selection-actions-panel-min-width\), var\(--selection-actions-panel-width\)\)\s+var\(--panel-divider-width\)\s+minmax\(0, 1fr\);/);
+  assert.match(css, /body\.is-resizing \.vault-panel\s*\{\s*transition:\s*none;/);
+  assert.match(css, /\.vault-panel\.is-files-collapsed \.file-toolbar\s*\{[\s\S]*padding-right:\s*0;/);
+  assert.match(css, /\.vault-panel\.is-selection-actions-collapsed \.selection-actions-header\s*\{[\s\S]*border-bottom:\s*0;/);
+});
+test('icon-only tool controls share the compact visual scale', () => {
+  const componentsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'components.css'), 'utf8');
+  const markdownCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
+
+  assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*width:\s*var\(--control-size-tool\);/);
+  assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*border:\s*0;/);
+  assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*height:\s*var\(--control-size-tool\);/);
+  assert.match(componentsCss, /\.ui-tool-button \.zeus-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
+  assert.match(markdownCss, /\.markdown-history-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
+});
 test('bottom bar separates global and preview-local status surfaces', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
   const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
@@ -319,4 +431,43 @@ test('bottom bar separates global and preview-local status surfaces', () => {
   assert.match(markdownCss, /\.markdown-preview-status\s*\{[\s\S]*border-left:\s*1px solid var\(--background-modifier-border\);/);
   assert.match(markdownCss, /\.markdown-preview-status\.is-empty\s*\{[\s\S]*background:\s*var\(--background-secondary\);/);
   assert.doesNotMatch(markdownCss, /\.markdown-preview-status\s*\{[\s\S]*border-top:/);
+});
+test('panel dividers separate visual boundaries from the full resize hit area', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+
+  assert.match(tokensCss, /--panel-divider-width:\s*1px;/);
+  assert.match(tokensCss, /--panel-resize-hit-area:\s*7px;/);
+  assert.match(css, /\.pane-resizer\s*\{[\s\S]*?width:\s*var\(--panel-divider-width\);/);
+  assert.match(css, /\.pane-resizer::before\s*\{[\s\S]*?width:\s*var\(--panel-resize-hit-area\);/);
+  assert.match(css, /\.pane-resizer::after\s*\{[^}]*width:\s*var\(--panel-divider-width\);/);
+});
+test('chat baskets start collapsed and render compact context packets', () => {
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
+  const contextSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'context', 'mountContextBasket.js'), 'utf8');
+
+  assert.match(shell, /id="review-basket" class="review-slot is-collapsed"/);
+  assert.match(shell, /data-panel-toggle="review-basket" aria-expanded="false"/);
+  assert.match(shell, /id="context-basket" class="context-slot is-collapsed"/);
+  assert.match(shell, /data-panel-toggle="context-basket" aria-expanded="false"/);
+  assert.match(
+    layoutCss,
+    /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(0, min-content\) minmax\(0, min-content\) auto;/
+  );
+  assert.match(layoutCss, /\.context-slot\.is-collapsed\s*\{[\s\S]*min-height:\s*var\(--basket-collapsed-height\);/);
+  assert.match(reviewCss, /\.review-slot\.is-collapsed\s*\{[\s\S]*min-height:\s*var\(--basket-collapsed-height\);/);
+  assert.match(contextSource, /context-basket-icon-svg/);
+  assert.match(contextSource, /context-basket-path/);
+});
+
+test('folder appearance controls use file-scoped styles and shared visual tokens', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+
+  assert.match(css, /\.folder-appearance-dialog/);
+  assert.match(css, /var\(--surface-raised\)/);
+  assert.match(css, /\.folder-appearance-icons/);
+  assert.match(css, /\.folder-appearance-colors/);
+  assert.match(css, /\.folder-appearance-apply/);
 });

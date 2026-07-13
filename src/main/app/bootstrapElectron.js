@@ -16,6 +16,7 @@ const { createSettingsStore, toProviderRegistryOptions } = require('../settings/
 const { createSettingsService } = require('../settings/settingsService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
+const { createVaultFolderVisualService } = require('../vault/vaultFolderVisualService');
 const { createEmbeddingSimilaritySearch } = require('../embeddings/embeddingSimilaritySearch');
 const { createEmbeddingIndexer } = require('../embeddings/embeddingIndexer');
 const { getPortableSettingsPath, migrateLegacySettingsToPortable } = require('./portableDataPath');
@@ -34,6 +35,7 @@ function bootstrapElectron(electron, options) {
     initialSettings: options.initialSettings
   });
   const vaultWriteService = options.vaultWriteService || createVaultWriteService({ settingsStore });
+  const folderVisualService = options.folderVisualService || createVaultFolderVisualService();
   const providerSettingsOptions = Object.assign(
     {},
     options.providerOptions || {},
@@ -61,7 +63,7 @@ function bootstrapElectron(electron, options) {
     version: app.getVersion ? app.getVersion() : '0.1.0',
     shell: electron.shell
   });
-  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService);
+  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, folderVisualService);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);
   registerSettingsIpc(ipcMain, settingsService);
   registerEmbeddingIpc(ipcMain, embeddingSearchService);

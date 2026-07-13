@@ -4,7 +4,7 @@
 
 **Goal:** Replace the current Files/Actions-over-Preview vault grid with independent full-height Files, Selection Actions, and Preview columns while preserving every existing vault workflow.
 
-**Architecture:** `mountShell.js` defines the three vault regions and accessible resize handles. `layout.css` owns the horizontal grid and local scrolling. `paneResize.js` owns only width calculations for vault, file-tree, and selection-action handles; it no longer owns a vertical preview resize. The first implementation slice deliberately excludes collapse state, persisted preferences, Focus Mode, and action-panel auto-expansion.
+**Architecture:** `mountShell.js` defines the three vault regions and accessible resize handles. `layout.css` owns the horizontal grid and local scrolling. `paneResize.js` owns only width calculations for vault, file-tree, and selection-action handles; it no longer owns a vertical preview resize. Review Basket, Context Basket, and input remain inside the Chat workspace stack with their existing local scroll behavior. The first implementation slice deliberately excludes collapse state, persisted preferences, Focus Mode, and action-panel auto-expansion.
 
 **Tech Stack:** Electron renderer, browser-first IIFE modules, CSS Grid, Node built-in test runner.
 
@@ -14,7 +14,9 @@
 - Keep the renderer sandboxed and do not add renderer filesystem access.
 - Use existing CSS tokens; no inline styles or new ad-hoc colors.
 - Files, Selection Actions, and Preview scroll locally. The app shell does not scroll.
+- Review Basket and Context Basket remain inside Active Workspace and preserve their existing bounded local scrolling.
 - All resize controls remain semantic vertical separators with accessible labels.
+- Folder Visual Identity and later File Tree polish begin only after this layout foundation is visually accepted.
 - Run targeted tests before the full suite. Run `npm test` before each commit.
 
 ---
@@ -240,6 +242,7 @@ Expected: all JavaScript checks and Node tests pass.
 5. Drag the Files/Actions splitter and Actions/Preview splitter. Confirm neither Chat nor Preview can be squeezed below its protected minimum.
 6. Confirm the application shell never gains a document-level scrollbar.
 7. Confirm all three resize handles have usable hover, focus, and screen-reader labels.
+8. In Chat, add enough Review Basket and Context Basket entries to confirm their lists stay locally scrollable and do not expand the whole workspace.
 
 - [ ] **Step 4: Commit the implementation**
 

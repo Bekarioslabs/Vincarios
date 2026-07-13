@@ -12,6 +12,7 @@ const IPC_CHANNELS = Object.freeze({
   SETTINGS_GET: 'settings:get',
   SETTINGS_SET_PROVIDER_URL: 'settings:set-provider-url',
   SETTINGS_RESET_PROVIDER_URL: 'settings:reset-provider-url',
+  SETTINGS_SET_LAYOUT: 'settings:set-layout',
   SETTINGS_SET_LIMITS: 'settings:set-limits',
   SETTINGS_SET_VAULT_ROLE: 'settings:set-vault-role',
   SETTINGS_RESET_VAULT_ROLE: 'settings:reset-vault-role',
@@ -26,7 +27,10 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_CREATE_NOTE: 'vault:create-note',
   VAULT_CREATE_FOLDER: 'vault:create-folder',
   VAULT_UPDATE_NOTE: 'vault:update-note',
-  VAULT_RENAME_FILE: 'vault:rename-file'
+  VAULT_RENAME_FILE: 'vault:rename-file',
+  VAULT_GET_FOLDER_VISUALS: 'vault:get-folder-visuals',
+  VAULT_SET_FOLDER_VISUAL: 'vault:set-folder-visual',
+  VAULT_CLEAR_FOLDER_VISUAL: 'vault:clear-folder-visual'
 });
 
 module.exports = {

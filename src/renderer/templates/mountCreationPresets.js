@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   function mountCreationPresets(options) {
@@ -65,6 +65,7 @@
     const preview = modal.querySelector('.review-modal-preview');
     const cancel = modal.querySelector('.review-modal-cancel');
     const confirm = modal.querySelector('.review-modal-confirm');
+    const modalBehavior = getModalBehavior().mountModalBehavior({ overlay, dialog: modal, initialFocus: input });
     let activeProfile = getDefaultProfile();
 
     const updatePreview = () => renderPlanPreview(preview, context.presetApi, preset, input.value, activeProfile);
@@ -82,17 +83,13 @@
         event.preventDefault();
         confirm.click();
       }
-      if (event.key === 'Escape') closeDialog(overlay);
     });
     cancel.addEventListener('click', () => closeDialog(overlay));
     confirm.addEventListener('click', () => {
       addPresetToReviewBasket(context, preset, input.value, activeProfile);
       closeDialog(overlay);
     });
-    overlay.addEventListener('click', (event) => {
-      if (event.target === overlay) closeDialog(overlay);
-    });
-    input.focus();
+    modalBehavior.focusInitial();
     input.select();
   }
 
@@ -165,6 +162,10 @@
 
   function setText(node, value) {
     if (node) node.textContent = value;
+  }
+
+  function getModalBehavior() {
+    return window.ZeusModalBehavior;
   }
 
   function escapeHtml(value) {

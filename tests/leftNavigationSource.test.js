@@ -29,7 +29,7 @@ test('left navigation is grouped into workspace create vault and settings areas'
 test('open vault is the primary action inside the vault group', () => {
   const source = readShellSource();
   const vault = source.indexOf('left-nav-group-vault');
-  const openVault = source.indexOf('left-button left-button-accent', vault);
+  const openVault = source.indexOf('left-button ui-flat-row left-button-accent', vault);
   const settings = source.indexOf('left-nav-group-settings', vault);
 
   assert.equal(vault > -1, true);
@@ -69,4 +69,23 @@ test('settings navigation uses the semantic settings icon', () => {
   assert.match(source, /data-open-settings data-left-icon="settings"/);
   assert.match(source, /function renderLeftNavigationIcons/);
   assert.match(source, /renderer\.createIconElement\(iconName, 'left-button-icon'\)/);
+});
+test('left navigation has semantic icons and a persisted icon-rail toggle', () => {
+  const source = readShellSource();
+
+  assert.match(source, /data-left-nav-toggle/);
+  assert.match(source, /data-left-icon="navigationChat"/);
+  assert.match(source, /data-left-icon="navigationOpenVault"/);
+  assert.match(source, /function wireLeftNavigationPanelLayout/);
+  assert.match(source, /setPanelCollapsed\('leftNav', collapsed\)/);
+  assert.match(source, /app\.classList\.toggle\('is-left-nav-collapsed', collapsed\)/);
+  assert.match(source, /navigation\.querySelectorAll\('\[data-toggle\]'\)\.forEach/);
+  assert.match(source, /if \(panelLayoutState\.snapshot\(\)\.leftNavCollapsed\) setCollapsed\(false\);/);
+});
+
+test('expanded navigation actions use the shared flat row primitive', () => {
+  const source = readShellSource();
+
+  assert.match(source, /class=\"left-button ui-flat-row left-button-current\"/);
+  assert.match(source, /class=\"left-button ui-flat-row left-button-accent\"/);
 });

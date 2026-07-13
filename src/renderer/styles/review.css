@@ -329,7 +329,8 @@
 }
 
 .review-slot.is-collapsed {
-  min-height: 42px;
+  min-height: var(--basket-collapsed-height);
+  max-height: var(--basket-collapsed-height);
 }
 
 .review-slot.is-collapsed .review-basket-items {

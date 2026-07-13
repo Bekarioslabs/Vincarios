@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 function createSettingsService(options) {
   options = options || {};
@@ -31,6 +31,10 @@ function createSettingsService(options) {
     return mergeProviderResult(storeResult, providerResult);
   }
 
+  function setLayoutPreferences(payload) {
+    return settingsStore.setLayoutPreferences(payload || {});
+  }
+
   function setLimits(payload) {
     return settingsStore.setLimits(payload || {});
   }
@@ -51,6 +55,7 @@ function createSettingsService(options) {
     getSettings,
     setProviderUrlOverride,
     resetProviderUrlOverride,
+    setLayoutPreferences,
     setLimits,
     setEmbeddingSettings,
     setVaultProfileRole,

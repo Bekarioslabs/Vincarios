@@ -358,29 +358,83 @@ Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work i
 
 Status: planned for V1 consideration before Phase 8. This replaces the earlier "Folder-Role color dots" idea with a fuller but still small navigation aid.
 
-- [ ] Support visual identity only for top-level folders in V1: icon plus color.
-- [ ] Store ZEUS-owned folder visual settings under selected-vault `.zeus/`, not `.obsidian`.
-- [ ] Treat folder visuals as manual low-risk UI configuration writes, not Markdown/content writes. They intentionally bypass Review Basket, content diff, and note-backup pipeline.
-- [ ] Keep `.obsidian` read-only for future compatibility/import layers such as Iconize; do not write ZEUS UI state there.
-- [ ] Use a fixed V1 icon/color set from the existing Lucide/icon and token systems.
-- [ ] Design the data shape so future Templates and Vault Profiles can provide folder roles, icons, and colors when creating/importing project structures.
+- [x] Support visual identity only for top-level folders in V1: icon plus color. English default roots render with semantic local Lucide icons and token-driven colors; unknown or nested folders retain the neutral folder icon until an explicit vault profile override exists.
+- [x] Store ZEUS-owned folder visual settings under selected-vault `.zeus/profile.json`, not `.obsidian`.
+- [x] Treat folder visuals as manual low-risk UI configuration writes, not Markdown/content writes. They intentionally bypass Review Basket, content diff, note-backup, and content-audit pipelines through a dedicated main-process service.
+- [x] Keep `.obsidian` read-only for future compatibility/import layers such as Iconize; do not write ZEUS UI state there.
+- [x] Use a fixed V1 icon/color set from the existing Lucide/icon and token systems. The File Tree exposes it through a top-level-folder context menu and focused modal with Apply, Cancel, and Reset.
+- [x] Design the data shape so future Templates and Vault Profiles can provide folder roles, icons, and colors when creating/importing project structures. `profile.json` preserves unrelated future fields and stores only explicit `folderVisuals` overrides.
 - [ ] Keep full Iconize compatibility, per-file visuals, custom SVGs, and deep-folder styling in V1.1/V1.2 unless reclassified by freeze review.
 
-### Phase 7.9 - UI Density And Collapse
+### Phase 7.9 - UI Density, Visual System, And Collapse
 
-Status: planned before Phase 8 if it stays a focused UI-density pass. Goal: reduce visible clutter without hiding core safety state or changing action semantics.
+Status: in progress before Phase 8. Goal: reduce visible clutter without hiding core safety state or changing action semantics. The visual target is a compact local work tool: quiet raised neutral surfaces, darker Chat/Preview focus surfaces, restrained structural dividers, flat navigation/action rows, and warm amber only for active or primary states.
 
-- [ ] Left navigation rail can collapse from full labels to icon-only width. Toggle lives at the top of the rail. Workspace/Create/Vault groups remain available and keyboard accessible.
-- [ ] Move dense repeated actions toward icon-first controls with hover/focus text, following Obsidian familiarity, while keeping safety-critical state discoverable.
-- [ ] File Tree supports snap-collapse in addition to existing drag resize, so Chat/Suggestions work can temporarily reclaim the vault-panel width.
-- [ ] Context Basket starts collapsed by default when empty or not actively used; it remains visible when context exists through a compact count/summary header.
-- [ ] File Tree permission controls (`R`/`W`) should appear on row hover/focus instead of permanently on every row, while active/inherited/off state remains discoverable and keyboard reachable.
-- [ ] Remove or reduce vault-name/path redundancy between file toolbar and breadcrumb if they overlap.
-- [ ] Session Log should not require a large Workspace button if a cleaner bottom-bar drawer works better. The bottom status/activity area may open a compact activity drawer.
-- [x] Preview-local messages now render in a dedicated preview segment of the bottom status bar instead of a separate preview message block. Ownership remains preview-local through `#markdown-preview-status`; the global status and preview status are visually adjacent but logically separate.
-- [ ] Add a Focus Mode / distraction-free toggle: collapse icon rail, File Tree, and Context Basket together, leaving the writing/review surface and input dominant.
-- [ ] Persist collapse and Focus Mode preferences in app-local settings, not in the selected vault `.zeus/`. These are per-user UI layout preferences, unlike folder visual identity which is vault metadata.
-- [ ] Keep implementation modular: shell owns layout state, files owns tree collapse/hover controls, chat/context owns basket collapse, activity owns drawer behavior, settings owns persistence.
+Implementation rule: work from large visible impact to fine polish. Each block gets a manual visual checkpoint before the next block. Components consume shared tokens and variants; no new local color, radius, icon-size, text-size, or control-size exceptions without a reusable documented purpose.
+
+#### Existing Completed Foundation
+
+- [x] Full-height vault layout foundation: Files, Selection Actions, and Preview are independent local-scroll columns with accessible vertical resizers. The old `--vault-top-height` token and horizontal Preview resizer are removed. Review Basket, Context Basket, and input remain in the Chat workspace stack with their existing bounded local scrolling.
+- [x] Selection Action presentation foundation: the registry owns compact labels, semantic local Lucide icon keys, category, full description, and `app`/`embedding`/`provider` execution kind. Rows use semantic icons plus neutral-safe category dots; provider and embedding work use distinct small markers. The underlying action runners and permission behavior are unchanged.
+- [x] Selection Actions collapse: the panel can shrink to a persisted 48px icon strip. It keeps semantic icons, category dots, visible lock state, and execution markers; inline-form actions expand the panel before opening their form. Layout preferences remain app-local settings, not vault metadata.
+- [x] Left navigation and File Tree collapse: both panels use persisted 48px rails, accessible toggles, and explicit reveal/expand behavior. Preview-local messages render in their dedicated bottom-bar segment.
+
+#### Shared Modal Interaction Foundation
+
+- [x] Settings, preset-create, and Review dialogs use one shared modal behavior: backdrop clicks and Escape do not dismiss; Tab focus stays inside the active dialog; visible Cancel, Close, Save, or confirmed execution actions remain the only close paths. Targeted source tests and manual UI verification are green.
+
+#### 7.9.1 Shared Visual System Foundation
+
+- [x] Inventory current surface, border, text, icon, radius, spacing, and tool-control values before visual changes.
+- [x] Define a small semantic token scale for surface roles, text roles, type sizes, icon sizes, control sizes, radius, and spacing. Theme changes must be token-driven.
+- [x] Define shared component patterns for compact tool controls, Files/Selection Actions panel headers, and the baseline flat Selection Action row in `components.css`; owner styles retain only local layout and state geometry.
+  - [ ] Extend shared patterns to flat navigation rows, framed context packets, and active states.
+- [ ] Keep structural dividers only; remove decorative per-button and redundant toolbar dividers as components migrate.
+
+#### 7.9.2 Left Navigation Refresh
+
+- [ ] Move the expanded left navigation from outlined buttons to flat semantic icon/text rows with a subtle active surface.
+- [ ] Keep section hierarchy through compact muted labels, spacing, and minimal structural separators.
+- [ ] Preserve the current icon rail behavior, hover titles, keyboard accessibility, preset expansion, and app-local persistence.
+- [ ] Manual checkpoint: compare expanded and collapsed navigation with the agreed visual references before continuing.
+
+#### 7.9.3 Shared Toolbars And Collapse Geometry
+
+- [ ] Apply the shared compact tool-control pattern to navigation collapse, Files refresh/collapse, Selection Actions collapse, and Markdown Back/Forward controls.
+- [ ] Make Files and Selection Actions header/control geometry aligned in expanded and collapsed states.
+- [ ] Enforce collapse direction and fixed-neighbor behavior: a collapse must not make sibling panels grow or leak content into Preview.
+- [ ] Keep the outer Chat/Vault resize usable when Rails are collapsed; inner resize controls only disable where their owned panel is collapsed.
+- [ ] Manual checkpoint: test every Files/Actions open-collapse combination and outer resize at narrow and wide window sizes.
+
+#### 7.9.4 Files And Selection Actions Visual Refresh
+
+- [ ] Simplify the Files toolbar to compact Refresh and Collapse icon controls without decorative vertical dividers.
+- [x] Reduce Selection Action row visual weight: flat icon/text actions, semantic category dot and execution marker, clear active/blocked state, no persistent card grid. Targeted checks are green; manual visual checkpoint pending.
+- [ ] Keep permission, provider, embedding, lock, and selection state visible without relying on color alone.
+
+#### 7.9.5 Compact Review And Context Baskets
+
+- [ ] Make Review Basket and Context Basket default-collapsed with compact headers, counts, and preserved keyboard/accessible state.
+- [ ] Reduce basket vertical footprint and local list density without hiding review safety state.
+- [ ] Render Context items as compact framed packets with target icon, short label, and restrained path context.
+
+#### 7.9.6 Preview And Status Polish
+
+- [x] Align Preview toolbar controls with the shared tool-control pattern. History, Reveal, Edit, and Update use compact icon controls with accessible labels and hover descriptions.
+- [x] Keep Preview a darker reading/focus surface and preserve its separate local-status ownership in the bottom bar.
+- [x] Recheck redundant path/vault labels across Files and Preview. The empty static title is removed; the loaded preview path remains because it identifies the actual reading target when selection and Preview differ.
+
+#### 7.9.7 Responsive, Theme, And Accessibility Final Pass
+
+- [ ] Test all collapse combinations, keyboard/focus behavior, tooltips, and local scrolling at narrow and wide desktop widths.
+- [ ] Verify Dark mode and future Light mode use the same semantic tokens and no component-local recolor exceptions.
+- [ ] Run UI source/accessibility checks plus the full suite; document any intentionally deferred polish before Phase 8.
+
+#### Deferred Interaction Density Follow-Ups
+
+- [ ] Move File Tree permission controls (`R`/`W`) to row hover/focus while preserving direct/inherited/off state and keyboard reachability.
+- [ ] Decide whether Session Log becomes a compact bottom-bar activity drawer instead of a prominent Workspace entry.
+- [ ] Add Focus Mode only after individual collapses are visually stable; it coordinates icon rail, Files, and Context Basket and persists app-locally.
 
 ## Phase 8 - V1 Freeze And Release Baseline
 

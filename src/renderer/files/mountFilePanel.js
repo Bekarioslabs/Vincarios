@@ -11,6 +11,9 @@
     const contextState = options.contextState || null;
     const permissionState = options.permissionState || null;
     const updateFlashState = options.updateFlashState || null;
+    const folderVisualState = options.folderVisualState || null;
+    const onToggleCollapse = typeof options.onToggleCollapse === 'function' ? options.onToggleCollapse : null;
+    const onRequestExpand = typeof options.onRequestExpand === 'function' ? options.onRequestExpand : null;
     const navigator = options.navigator || window.ZeusFileNavigator.createFileNavigator();
     const keyboard = options.keyboard || window.ZeusFileTreeKeyboard || null;
     const entriesByFolder = new Map();
@@ -21,25 +24,34 @@
     if (!root) return null;
 
     root.innerHTML = [
-      '<div class="file-toolbar">',
+      '<div class="file-toolbar ui-panel-header">',
       '  <div class="file-title-wrap">',
-      '    <div class="file-label">Files</div>',
+      '    <div class="file-label ui-panel-header-label">Files</div>',
       '    <div id="file-vault-name" class="file-vault-name">No vault</div>',
       '  </div>',
-      '  <button id="file-refresh" class="file-refresh-button" type="button" disabled title="Refresh file tree" aria-label="Refresh file tree"></button>',
+      '  <button id="file-refresh" class="file-refresh-button ui-tool-button" type="button" disabled title="Refresh file tree" aria-label="Refresh file tree"></button>',
+      '  <button id="file-collapse" class="file-collapse-button ui-tool-button" type="button" data-files-collapse-toggle aria-label="Collapse Files" title="Collapse Files" aria-expanded="true" aria-controls="file-tree"></button>',
       '</div>',
       '<div id="file-breadcrumb" class="file-breadcrumb">Vault root</div>',
       '<div id="file-tree" class="file-tree muted">Open a vault to list files.</div>'
     ].join('');
 
     const refreshButton = root.querySelector('#file-refresh');
+    const collapseButton = root.querySelector('#file-collapse');
     const breadcrumb = root.querySelector('#file-breadcrumb');
     const tree = root.querySelector('#file-tree');
     const vaultName = root.querySelector('#file-vault-name');
 
     attachRefreshIcon();
+    setCollapsed(false);
     refreshButton.addEventListener('click', refreshTree);
+    if (collapseButton) {
+      collapseButton.addEventListener('click', () => {
+        if (onToggleCollapse) onToggleCollapse();
+      });
+    }
     subscribeToUpdateFlashState();
+    subscribeToFolderVisualState();
 
     function setVaultName(name) {
       setText(vaultName, name || 'Vault');
@@ -49,6 +61,7 @@
       refreshButton.disabled = false;
       navigator.openFolder('');
       await ensureFolderLoaded('');
+      if (folderVisualState && typeof folderVisualState.load === 'function') await folderVisualState.load();
       renderTree();
     }
 
@@ -120,6 +133,21 @@
       refreshButton.appendChild(renderer.createIconElement('refresh', 'file-refresh-icon'));
     }
 
+    function setCollapsed(collapsed) {
+      if (!collapseButton) return;
+      const next = collapsed === true;
+      collapseButton.setAttribute('aria-expanded', next ? 'false' : 'true');
+      collapseButton.setAttribute('aria-label', next ? 'Expand Files' : 'Collapse Files');
+      collapseButton.title = next ? 'Expand Files' : 'Collapse Files';
+      const renderer = getIconRenderer();
+      collapseButton.textContent = '';
+      if (renderer && typeof renderer.createIconElement === 'function') {
+        collapseButton.appendChild(renderer.createIconElement(next ? 'chevronRight' : 'chevronLeft', 'file-collapse-icon'));
+        return;
+      }
+      collapseButton.textContent = next ? '>' : '<';
+    }
+
     function createFileRowIcon(entry) {
       const wrapper = document.createElement('span');
       wrapper.className = 'file-row-icon';
@@ -131,8 +159,10 @@
       if (!renderer || typeof renderer.createIconElement !== 'function') return wrapper;
 
       if (entry.kind === 'folder') {
+        const visual = getFolderVisual(entry.path);
+        if (visual) wrapper.classList.add('has-folder-visual', 'folder-visual-' + visual.color);
         wrapper.appendChild(renderer.createIconElement(navigator.isExpanded(entry.path) ? 'chevronDown' : 'chevronRight', 'file-row-chevron-icon'));
-        wrapper.appendChild(renderer.createIconElement('folder', 'file-row-type-icon'));
+        wrapper.appendChild(renderer.createIconElement(resolveFolderVisualIconName(visual), 'file-row-type-icon'));
         return wrapper;
       }
 
@@ -172,7 +202,12 @@
           focusTreeRow(row);
           activateEntry(entry);
         });
-        row.addEventListener('keydown', (event) => {
+        row.addEventListener('contextmenu', (event) => {
+          if (!isTopLevelFolder(entry)) return;
+          event.preventDefault();
+          event.stopPropagation();
+          openFolderAppearance(entry, event);
+        });        row.addEventListener('keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             focusTreeRow(row);
@@ -340,6 +375,11 @@
       setStatus('Read: ' + read.path);
     }
 
+    function subscribeToFolderVisualState() {
+      if (!folderVisualState || typeof folderVisualState.subscribe !== 'function') return;
+      folderVisualState.subscribe(() => renderTree());
+    }
+
     function subscribeToUpdateFlashState() {
       if (!updateFlashState || typeof updateFlashState.subscribe !== 'function') return;
       updateFlashState.subscribe(applyFlashSnapshot);
@@ -452,6 +492,7 @@
     }
 
     async function revealPath(path) {
+      if (onRequestExpand) onRequestExpand();
       const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
       if (!normalizedPath) return { ok: false, message: 'No preview file to reveal.' };
 
@@ -466,6 +507,7 @@
       return { ok: true, path: normalizedPath };
     }
     async function revealFolder(path) {
+      if (onRequestExpand) onRequestExpand();
       const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
       const folders = ancestorFolders(normalizedPath + '/placeholder.md');
       for (const folder of folders) {
@@ -488,6 +530,34 @@
         folders.push(parts.slice(0, index + 1).join('/'));
       }
       return folders;
+    }
+
+    function isTopLevelFolder(entry) {
+      return !!(entry && entry.kind === 'folder' && entry.path && !String(entry.path).includes('/'));
+    }
+
+    function openFolderAppearance(entry, event) {
+      const appearance = typeof window !== 'undefined' ? window.ZeusFolderAppearance : null;
+      if (!appearance || typeof appearance.openFolderAppearanceMenu !== 'function' || !folderVisualState) return;
+      appearance.openFolderAppearanceMenu({
+        path: entry.path,
+        x: event.clientX,
+        y: event.clientY,
+        folderVisualState,
+        onSaved: setStatus
+      });
+    }
+    function getFolderVisual(path) {
+      if (folderVisualState && typeof folderVisualState.get === 'function') return folderVisualState.get(path);
+      const visuals = typeof window !== 'undefined' ? window.ZeusFolderVisuals : null;
+      if (!visuals || typeof visuals.getDefaultTopLevelFolderVisual !== 'function') return null;
+      return visuals.getDefaultTopLevelFolderVisual(path);
+    }
+
+    function resolveFolderVisualIconName(visual) {
+      const registry = typeof window !== 'undefined' ? window.ZeusIconRegistry : null;
+      if (!visual || !registry || typeof registry.resolveFolderVisualIconName !== 'function') return 'folder';
+      return registry.resolveFolderVisualIconName(visual.icon);
     }
 
     function getIconRenderer() {
@@ -724,6 +794,7 @@
       openRoot,
       refreshTree,
       refreshLoadedMarkdown,
+      setCollapsed,
       flashPath,
       renderTree,
       ensureFolderLoaded,

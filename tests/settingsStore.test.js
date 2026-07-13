@@ -24,6 +24,7 @@ test('settings normalize into future-proof categories', () => {
   assert.equal(typeof settings.limits.maxSelectedFileChars, 'number');
   assert.deepEqual(settings.vaultProfile.roles, {});
   assert.equal(settings.theme.mode, 'dark');
+  assert.equal(settings.layout.panels.selectionActionsCollapsed, false);
   assert.equal(settings.safety.reviewRequired, true);
 });
 
@@ -157,4 +158,18 @@ test('settings store persists similar-note defaults with safe normalization', ()
   assert.equal(normalized.embeddings.similarNotes.mode, 'mixed');
   assert.equal(normalized.embeddings.similarNotes.contentWeight, 0);
   assert.equal(normalized.embeddings.similarNotes.metadataWeight, 100);
+});
+
+test('settings store persists app-local panel layout preferences', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const filePath = path.join(dir, 'settings.json');
+  const store = createSettingsStore({ filePath });
+
+  const result = store.setLayoutPreferences({ panels: { selectionActionsCollapsed: true } });
+  assert.equal(result.ok, true);
+  assert.equal(store.getSettings().layout.panels.selectionActionsCollapsed, true);
+  assert.equal(store.getSettings().layout.panels.filesCollapsed, false);
+
+  const reloaded = createSettingsStore({ filePath });
+  assert.equal(reloaded.getSettings().layout.panels.selectionActionsCollapsed, true);
 });

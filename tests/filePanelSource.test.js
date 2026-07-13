@@ -86,6 +86,16 @@ test('file panel focuses rows before activation so keyboard navigation can conti
   assert.match(source, /focusTreeRow\(row\);\s*activateEntry\(entry\)/);
   assert.match(source, /focusRenderedPath\(entry\.path\)/);
 });
+test('file panel exposes a shell-owned collapse control and expands for explicit reveal actions', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /const onToggleCollapse = typeof options\.onToggleCollapse === 'function' \? options\.onToggleCollapse : null/);
+  assert.match(source, /data-files-collapse-toggle/);
+  assert.match(source, /collapseButton\.addEventListener\('click', \(\) => \{/);
+  assert.match(source, /function setCollapsed\(collapsed\)/);
+  assert.match(source, /onRequestExpand\(\);/);
+  assert.match(source, /setCollapsed,/);
+});
 test('file panel uses semantic icon renderer for tree and refresh icons', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
@@ -93,7 +103,9 @@ test('file panel uses semantic icon renderer for tree and refresh icons', () => 
   assert.match(source, /createFileRowIcon/);
   assert.match(source, /function getIconRenderer/);
   assert.match(source, /function isMarkdownPath/);
-  assert.match(source, /createIconElement\('folder'/);
+  assert.match(source, /function getFolderVisual\(path\)/);
+  assert.match(source, /function resolveFolderVisualIconName\(visual\)/);
+  assert.match(source, /createIconElement\(resolveFolderVisualIconName\(visual\), 'file-row-type-icon'\)/);
   assert.match(source, /'markdownFile'/);
   assert.match(source, /'chevronRight'/);
   assert.match(source, /'chevronDown'/);
@@ -146,4 +158,13 @@ test('file panel applies update flash through visible row state without rebuildi
   assert.match(source, /row\.classList\.toggle\('is-recently-updated', updateFlashState\.isFlashing\(path\)\)/);
   assert.match(source, /function flashPath\(path\)/);
   assert.match(source, /updateFlashState\.flashTargets\(\{ path, kind: 'file', reason: 'updated' \}\)/);
+});
+
+test('file panel opens folder appearance only for top-level folders through the dedicated files module', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /function isTopLevelFolder\(entry\)/);
+  assert.match(source, /row\.addEventListener\('contextmenu'/);
+  assert.match(source, /window\.ZeusFolderAppearance/);
+  assert.match(source, /appearance\.openFolderAppearanceMenu/);
 });

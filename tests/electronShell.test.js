@@ -36,16 +36,20 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'SETTINGS_RESET_PROVIDER_URL',
     'SETTINGS_RESET_VAULT_ROLE',
     'SETTINGS_SET_EMBEDDINGS',
+    'SETTINGS_SET_LAYOUT',
     'SETTINGS_SET_LIMITS',
     'SETTINGS_SET_PROVIDER_URL',
     'SETTINGS_SET_VAULT_ROLE',
+    'VAULT_CLEAR_FOLDER_VISUAL',
     'VAULT_CREATE_FOLDER',
     'VAULT_CREATE_NOTE',
+    'VAULT_GET_FOLDER_VISUALS',
     'VAULT_LIST_FOLDER',
     'VAULT_READ_IMAGE_ASSET',
     'VAULT_READ_MARKDOWN',
     'VAULT_RENAME_FILE',
     'VAULT_SELECT_FOLDER',
+    'VAULT_SET_FOLDER_VISUAL',
     'VAULT_SET_ROOT',
     'VAULT_STATE',
     'VAULT_UPDATE_NOTE'
@@ -62,6 +66,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.SETTINGS_GET, 'settings:get');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_PROVIDER_URL, 'settings:set-provider-url');
   assert.equal(IPC_CHANNELS.SETTINGS_RESET_PROVIDER_URL, 'settings:reset-provider-url');
+  assert.equal(IPC_CHANNELS.SETTINGS_SET_LAYOUT, 'settings:set-layout');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_LIMITS, 'settings:set-limits');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS, 'settings:set-embeddings');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE, 'settings:set-vault-role');
@@ -72,6 +77,9 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.VAULT_CREATE_FOLDER, 'vault:create-folder');
   assert.equal(IPC_CHANNELS.VAULT_UPDATE_NOTE, 'vault:update-note');
   assert.equal(IPC_CHANNELS.VAULT_RENAME_FILE, 'vault:rename-file');
+  assert.equal(IPC_CHANNELS.VAULT_GET_FOLDER_VISUALS, 'vault:get-folder-visuals');
+  assert.equal(IPC_CHANNELS.VAULT_SET_FOLDER_VISUAL, 'vault:set-folder-visual');
+  assert.equal(IPC_CHANNELS.VAULT_CLEAR_FOLDER_VISUAL, 'vault:clear-folder-visual');
 });
 
 test('preload exposes image asset reads without filesystem access', () => {
@@ -112,9 +120,11 @@ test('preload exposes chat cancel and settings without filesystem access', () =>
   assert.match(preloadSource, /settings: Object\.freeze/);
   assert.match(preloadSource, /setProviderUrl\(payload\)/);
   assert.match(preloadSource, /resetProviderUrl\(payload\)/);
+  assert.match(preloadSource, /setLayout\(payload\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_GET\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_SET_PROVIDER_URL, payload\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_RESET_PROVIDER_URL, payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SETTINGS_SET_LAYOUT, payload\)/);
 });
 
 test('preload exposes manual rename without filesystem access', () => {
@@ -145,4 +155,14 @@ test('preload exposes external link opening without filesystem access', () => {
 
   assert.match(preloadSource, /openExternal\(url\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.APP_OPEN_EXTERNAL, url\)/);
+});
+test('preload exposes dedicated folder appearance configuration without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /getFolderVisuals\(\)/);
+  assert.match(preloadSource, /setFolderVisual\(payload\)/);
+  assert.match(preloadSource, /clearFolderVisual\(payload\)/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_GET_FOLDER_VISUALS/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_SET_FOLDER_VISUAL/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_CLEAR_FOLDER_VISUAL/);
 });

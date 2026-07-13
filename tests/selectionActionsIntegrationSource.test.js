@@ -41,6 +41,22 @@ test('shell mounts selection action panel with context state', () => {
   assert.match(source, /contextState/);
   assert.match(source, /reviewBasket/);
   assert.match(source, /suggestionState/);
+  assert.match(source, /onRequestPanelExpand/);
+  assert.match(source, /closeOpenForms/);
+  assert.match(source, /Could not save layout preference\./);
+  assert.match(source, /function wireFilesPanelLayout/);
+  assert.match(source, /const filesPanelLayout = wireFilesPanelLayout/);
+  assert.match(source, /onToggleCollapse: filesPanelLayout && filesPanelLayout\.toggle/);
+  assert.match(source, /onRequestExpand: filesPanelLayout && filesPanelLayout\.requestExpand/);
+  assert.match(source, /async function persistPanelLayoutPreference\(api, panelLayoutState, status\) \{[\s\S]*try \{[\s\S]*catch \(error\)/);
+  assert.match(source, /class="selection-actions-content"/);
+});
+
+test('selection action renderer keeps the shell-owned panel header outside its dynamic content root', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /querySelector\('\.selection-actions-content'\)/);
+  assert.doesNotMatch(source, /querySelector\('\.selection-actions-pane'\)/);
 });
 
 test('context basket renders target-type icons separate from action colors', () => {
@@ -244,4 +260,28 @@ test('similar note suggestions carry numeric scores for workspace presentation',
 
   assert.match(source, /scorePercent: candidate.scorePercent/);
   assert.match(source, /scoreTone:\s*scoreToneForPercent\(candidate\.scorePercent\)/);
+});
+
+
+test('files collapse locks selection actions without clearing the selected target', () => {
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(shell, /zeus:files-collapse-change/);
+  assert.match(shell, /isTargetAvailable:\s*\(\) => filesPanelLayout\.isCollapsed\(\) !== true/);
+  assert.match(source, /files-collapse-change/);
+  assert.match(source, /createLayoutLockedAction/);
+  assert.match(source, /Expand Files to use Selection Actions\./);
+  assert.match(css, /\.selection-action-button\.is-layout-locked/);
+});
+test('selection action renderer uses registry-owned compact labels icons category dots and execution markers', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /button\.dataset\.actionExecution/);
+  assert.match(source, /selection-action-category-dot/);
+  assert.match(source, /action\.shortLabel/);
+  assert.match(source, /renderExecutionMarker/);
+  assert.match(source, /actionProvider/);
+  assert.match(source, /actionEmbedding/);
 });

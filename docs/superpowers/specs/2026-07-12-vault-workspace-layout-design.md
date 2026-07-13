@@ -17,7 +17,7 @@ Icon Rail | Active Workspace | Files | Selection Actions | Preview
 ## Region Responsibilities
 
 - The Icon Rail contains app-level navigation and may collapse to icon-only width.
-- The Active Workspace contains Chat, Suggestions, or Session Log.
+- The Active Workspace contains Chat, Suggestions, or Session Log. In the Chat workspace, Review Basket, Context Basket, and input remain in the existing workspace stack; their current local scrolling remains intact.
 - Files owns vault navigation and stays available by default.
 - Selection Actions owns selected-target actions and their inline option forms.
 - Preview owns Markdown, image, and source-edit preview rendering.
@@ -40,6 +40,7 @@ The Preview remains a reading surface. It is not an action drawer and does not h
 - Clicking an action that requires configuration expands a collapsed Selection Actions panel to its saved width, then renders its inline form below the owning action row.
 - The panel stays open after submit or cancel until the user explicitly collapses it.
 - If there is insufficient width to preserve the Preview minimum, the configuration uses an explicit action dialog rather than compressing the entire workspace.
+- If Selection Actions is already open, selecting another configurable action only changes the inline form. It does not change the saved panel width.
 
 ## Collapse State
 
@@ -63,6 +64,7 @@ The Preview remains a reading surface. It is not an action drawer and does not h
 - No movable/detachable Preview in V1.
 - No automatic hiding of panels merely because a file or folder selection changes.
 - No fake action controls or new action semantics.
+- Folder Visual Identity and later File Tree polish start only after this layout foundation is visually accepted; no parallel changes alter the same layout/files boundary.
 
 ## Verification
 

@@ -7,6 +7,7 @@ const path = require('node:path');
 
 const BROWSER_SHARED_SCRIPTS = [
   'src/shared/vaultProfile/defaults.js',
+  'src/shared/vaultProfile/folderVisuals.js',
   'src/shared/security/payloadLimits.js',
   'src/shared/actions/actionSchema.js',
   'src/shared/actions/modelActionParser.js',
@@ -17,7 +18,9 @@ const BROWSER_RENDERER_SCRIPTS = [
   'src/renderer/files/mountFilePanel.js',
   'src/renderer/shell/mountShell.js',
   'src/renderer/icons/iconRegistry.js',
-  'src/renderer/icons/iconRenderer.js'
+  'src/renderer/icons/iconRenderer.js',
+  'src/renderer/files/folderVisualState.js',
+  'src/renderer/files/folderAppearanceModal.js'
 ];
 
 

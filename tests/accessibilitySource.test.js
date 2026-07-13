@@ -21,16 +21,17 @@ test('shell exposes live regions and accessible control relationships', () => {
   assert.match(source, /id="chat-send"[^>]*aria-label="Send message"/);
   assert.match(source, /id="status-bar-global"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(source, /id="provider-refresh"[^>]*aria-label="Refresh provider status"/);
+  assert.match(source, /data-selection-actions-toggle[^>]*aria-label="Collapse Selection Actions"[^>]*aria-expanded="true"/);
 });
 
-test('custom resizers expose separator semantics', () => {
+test('custom resizers expose vertical separator semantics', () => {
   const source = read('src/renderer/shell/mountShell.js');
 
   assert.match(source, /data-resize="vault"[^>]*role="separator"[^>]*aria-orientation="vertical"/);
   assert.match(source, /data-resize="files"[^>]*role="separator"[^>]*aria-orientation="vertical"/);
-  assert.match(source, /data-resize="preview"[^>]*role="separator"[^>]*aria-orientation="horizontal"/);
+  assert.match(source, /data-resize="actions"[^>]*role="separator"[^>]*aria-orientation="vertical"/);
+  assert.doesNotMatch(source, /data-resize="preview"/);
 });
-
 test('Markdown preview controls expose accessible labels and status regions', () => {
   const source = read('src/renderer/shell/mountShell.js');
 
@@ -41,6 +42,12 @@ test('Markdown preview controls expose accessible labels and status regions', ()
   assert.match(source, /markdown-preview-status[^>]*aria-live="polite"/);
 });
 
+test('Files collapse control exposes an accessible state', () => {
+  const source = read('src/renderer/files/mountFilePanel.js');
+
+  assert.match(source, /data-files-collapse-toggle[^>]*aria-label="Collapse Files"[^>]*aria-expanded="true"/);
+  assert.match(source, /collapseButton\.setAttribute\('aria-expanded', next \? 'false' : 'true'\)/);
+});
 test('file tree rows and permission buttons expose accessible names', () => {
   const source = read('src/renderer/files/mountFilePanel.js');
 

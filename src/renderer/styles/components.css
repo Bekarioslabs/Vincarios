@@ -1,0 +1,84 @@
+/* Cross-area UI primitives. Area styles own layout; these own shared presentation. */
+
+.ui-tool-button {
+  width: var(--control-size-tool);
+  height: var(--control-size-tool);
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 var(--control-size-tool);
+  border: 0;
+  border-radius: var(--radius-ui-md);
+  background: transparent;
+  color: var(--text-ui-muted);
+  padding: 0;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.ui-tool-button:hover:not(:disabled),
+.ui-tool-button:focus-visible {
+  background: var(--surface-hover);
+  color: var(--text-accent);
+}
+
+.ui-tool-button:hover:not(:disabled) .zeus-icon,
+.ui-tool-button:focus-visible .zeus-icon {
+  filter: var(--icon-accent-filter, var(--icon-muted-filter, none));
+}
+
+.ui-tool-button:focus-visible {
+  outline: 1px solid rgba(var(--interactive-accent-rgb), .55);
+  outline-offset: 1px;
+}
+
+.ui-tool-button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+.ui-tool-button .zeus-icon {
+  width: var(--icon-size-tool);
+  height: var(--icon-size-tool);
+}
+.ui-panel-header {
+  min-height: var(--panel-toolbar-height);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  border-bottom: 1px solid var(--border-structural);
+}
+
+.ui-panel-header-label {
+  color: var(--text-ui-section);
+  font-size: var(--font-size-ui-xs);
+  font-weight: var(--font-weight-ui-strong);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.ui-flat-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--control-size-regular);
+  border: 0;
+  border-radius: var(--radius-ui-md);
+  background: transparent;
+  color: var(--text-ui);
+  padding: 0 var(--space-2);
+  font: inherit;
+  font-size: var(--font-size-ui-md);
+  text-align: left;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.ui-flat-row:hover:not(:disabled),
+.ui-flat-row:focus-visible {
+  background: var(--surface-hover);
+  color: var(--text-ui-emphasis);
+}
+
+.ui-flat-row:focus-visible {
+  outline: 1px solid rgba(var(--interactive-accent-rgb), .55);
+  outline-offset: 1px;
+}

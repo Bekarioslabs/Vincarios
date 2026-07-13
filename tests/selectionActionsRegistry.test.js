@@ -104,3 +104,24 @@ test('permission text helper keeps read and write guidance centralized', () => {
     'Please enable R and W for this file before suggesting tag updates: A.md'
   );
 });
+
+test('registry exposes compact semantic presentation for file and folder actions', () => {
+  const fileActions = getSelectionActions({ kind: 'file', path: 'A.md', content: '# A', readAllowed: true, writeAllowed: true });
+  const folderActions = getSelectionActions({ kind: 'folder', path: '03_Knowledge', readAllowed: true });
+
+  assert.deepEqual(fileActions.map((action) => [action.id, action.shortLabel, action.icon, action.executionKind]), [
+    ['file.summarize', 'Summary', 'actionSummary', 'provider'],
+    ['file.useAsContext', 'Context', 'actionContextFile', 'app'],
+    ['file.findSimilar', 'Similar', 'actionSimilar', 'embedding'],
+    ['file.suggestTags', 'Tags', 'actionTags', 'app'],
+    ['file.proposeUpdate', 'Update', 'actionUpdate', 'provider']
+  ]);
+  assert.deepEqual(folderActions.map((action) => [action.id, action.shortLabel, action.icon, action.executionKind]), [
+    ['folder.useAsContext', 'Context', 'actionContextFile', 'app'],
+    ['folder.listCurrent', 'List', 'actionListFolder', 'app'],
+    ['folder.analyze', 'Analyze', 'actionAnalyzeFolder', 'app'],
+    ['folder.summarizeMarkdown', 'Summary', 'actionSummaryFolder', 'provider']
+  ]);
+  assert.match(fileActions.find((action) => action.id === 'file.summarize').description, /local provider/i);
+  assert.match(folderActions.find((action) => action.id === 'folder.analyze').description, /without model/i);
+});

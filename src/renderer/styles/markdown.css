@@ -8,7 +8,7 @@
 }
 
 .markdown-preview-toolbar {
-  min-height: 36px;
+  min-height: var(--panel-toolbar-height);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -43,41 +43,6 @@
 .markdown-preview-status.is-empty {
   background: var(--background-secondary);
   color: var(--text-faint);
-}
-.markdown-edit-toggle,
-.markdown-propose-update,
-.markdown-reveal-current,
-.markdown-history-button {
-  flex: 0 0 auto;
-  padding: 4px 10px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: var(--radius-compact);
-  color: var(--text-normal);
-  background: var(--background-modifier-form-field);
-  font: 11px/1 var(--font-interface);
-  cursor: pointer;
-}
-
-.markdown-edit-toggle:hover:not(:disabled),
-.markdown-propose-update:hover:not(:disabled),
-.markdown-reveal-current:hover:not(:disabled),
-.markdown-history-button:hover:not(:disabled) {
-  border-color: var(--interactive-accent);
-  color: var(--text-accent);
-}
-
-.markdown-edit-toggle:disabled,
-.markdown-propose-update:disabled,
-.markdown-reveal-current:disabled,
-.markdown-history-button:disabled {
-  opacity: .45;
-  cursor: default;
-}
-
-.markdown-history-button {
-  width: 28px;
-  padding-right: 0;
-  padding-left: 0;
 }
 .markdown-source-editor {
   width: 100%;
@@ -326,8 +291,8 @@
 }
 
 .markdown-history-icon {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-size-tool);
+  height: var(--icon-size-tool);
   filter: var(--icon-inverse-filter);
   opacity: .8;
 }

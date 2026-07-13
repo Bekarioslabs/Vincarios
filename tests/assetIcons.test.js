@@ -29,6 +29,13 @@ test('icon registry exposes semantic app icon names instead of raw UI usage name
   assert.equal(ICONS.lock, 'lock.svg');
   assert.equal(ICONS.plug, 'plug.svg');
   assert.equal(ICONS.send, 'arrow-up.svg');
+  assert.equal(ICONS.actionContextFile, 'link.svg');
+  assert.equal(ICONS.actionTags, 'tag.svg');
+  assert.equal(ICONS.actionListFolder, 'list-tree.svg');
+  assert.equal(ICONS.actionProvider, 'sparkles.svg');
+  assert.equal(ICONS.actionEmbedding, 'cpu.svg');
+  assert.equal(ICONS.folderVisualInbox, 'inbox.svg');
+  assert.equal(ICONS.folderVisualArchive, 'archive.svg');
 });
 test('bundled SVG icons do not contain visible escaped newline literals', () => {
   const root = path.join(__dirname, '..');

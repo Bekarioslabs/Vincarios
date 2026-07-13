@@ -4,6 +4,8 @@
   function mountSelectionActions(options) {
     options = options || {};
     const api = options.api || {};
+    const onRequestPanelExpand = typeof options.onRequestPanelExpand === 'function' ? options.onRequestPanelExpand : function noop() {};
+    const isTargetAvailable = typeof options.isTargetAvailable === 'function' ? options.isTargetAvailable : () => true;
     const app = options.app;
     const contextState = options.contextState;
     const reviewBasket = options.reviewBasket || null;
@@ -12,21 +14,19 @@
     let similarNotesSessionOptions = null;
     if (!app || !contextState || typeof contextState.snapshot !== 'function') return null;
 
-    const root = app.querySelector('.selection-actions-pane');
+    const root = app.querySelector('.selection-actions-content');
     if (!root) return null;
 
     const unsubscribe = typeof contextState.subscribe === 'function'
       ? contextState.subscribe(render)
       : null;
+    const onFilesCollapseChanged = () => render(contextState.snapshot());
+    app.addEventListener('zeus:files-collapse-change', onFilesCollapseChanged);
 
     render(contextState.snapshot());
 
     function render(snapshot) {
       root.innerHTML = '';
-      const header = document.createElement('div');
-      header.className = 'selection-actions-header';
-      header.textContent = 'Selection Actions';
-      root.appendChild(header);
 
       if (!snapshot || snapshot.kind === 'none') {
         const empty = document.createElement('div');
@@ -46,7 +46,20 @@
         return;
       }
 
-      actions.forEach((action) => root.appendChild(createActionRow(action, snapshot)));
+      const available = isTargetAvailable() !== false;
+      actions.forEach((action) => {
+        const renderedAction = available ? action : createLayoutLockedAction(action);
+        root.appendChild(createActionRow(renderedAction, snapshot));
+      });
+    }
+
+    function createLayoutLockedAction(action) {
+      return Object.assign({}, action, {
+        enabled: false,
+        softDisabled: false,
+        layoutLocked: true,
+        reason: 'Expand Files to use Selection Actions.'
+      });
     }
 
     function createActionRow(action, snapshot) {
@@ -60,33 +73,63 @@
     function createActionButton(action, snapshot, host) {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'selection-action-button is-' + action.category;
+      button.className = 'selection-action-button ui-flat-row is-' + action.category;
       button.dataset.actionId = action.id;
       button.dataset.actionCategory = action.category;
+      button.dataset.actionExecution = action.executionKind || 'app';
       if (action.future) button.dataset.futureSlot = action.id;
       button.disabled = action.enabled !== true;
       if (action.softDisabled) {
         button.classList.add('is-soft-disabled');
         button.setAttribute('aria-disabled', 'true');
       }
-      button.title = action.reason || (action.future ? 'Planned V1 action.' : action.label);
+      if (action.layoutLocked) {
+        button.classList.add('is-layout-locked');
+        button.setAttribute('aria-disabled', 'true');
+      }
 
       const category = getCategories().getActionCategory(action.category);
-      const tag = document.createElement('span');
-      tag.className = 'selection-action-category';
-      tag.textContent = category.label;
+      const hoverText = action.reason || (action.future ? 'Planned V1 action.' : action.description || action.label);
+      button.title = hoverText;
+      button.setAttribute('aria-label', action.reason || getActionAriaLabel(action, category));
+
+      const renderer = getIconRenderer();
+      if (renderer && action.icon) button.appendChild(renderer.createIconElement(action.icon, 'selection-action-icon'));
+
+      const categoryDot = document.createElement('span');
+      categoryDot.className = 'selection-action-category-dot';
+      categoryDot.setAttribute('aria-hidden', 'true');
 
       const label = document.createElement('span');
       label.className = 'selection-action-label';
-      label.textContent = action.label;
+      label.textContent = action.shortLabel || action.label;
 
-      button.appendChild(tag);
+      button.appendChild(categoryDot);
       button.appendChild(label);
-      if (action.softDisabled) renderSoftDisabledLock(button);
+      renderExecutionMarker(button, action.executionKind);
+      if (action.softDisabled || action.layoutLocked) renderSoftDisabledLock(button);
       button.addEventListener('click', () => runAction(action, snapshot, host));
       return button;
     }
 
+    function getActionAriaLabel(action, category) {
+      const execution = executionDescription(action.executionKind);
+      return [action.description || action.label, category.label + ' action', execution].filter(Boolean).join('. ');
+    }
+
+    function executionDescription(kind) {
+      if (kind === 'provider') return 'Uses the local provider.';
+      if (kind === 'embedding') return 'Uses local embeddings.';
+      return 'Runs locally without a model.';
+    }
+
+    function renderExecutionMarker(button, executionKind) {
+      const renderer = getIconRenderer();
+      if (!renderer || executionKind === 'app') return;
+      const iconName = executionKind === 'provider' ? 'actionProvider' : 'actionEmbedding';
+      const marker = renderer.createIconElement(iconName, 'selection-action-execution-icon is-' + executionKind);
+      button.appendChild(marker);
+    }
     function renderSoftDisabledLock(button) {
       const renderer = getIconRenderer();
       if (!renderer || typeof renderer.createIconElement !== 'function') return;
@@ -248,6 +291,7 @@
     }
 
     async function renderSimilarNotesForm(snapshot, host) {
+      onRequestPanelExpand();
       removeOpenActionForms();
       const defaults = await loadSimilarNotesDefaults();
       const form = document.createElement('form');
@@ -367,6 +411,7 @@
       }
     }
     function renderUpdateInstructionForm(snapshot, host) {
+      onRequestPanelExpand();
       removeOpenActionForms();
 
       const form = document.createElement('form');
@@ -756,8 +801,12 @@
     }
 
     return Object.freeze({
+      closeOpenForms() {
+        removeOpenActionForms();
+      },
       destroy() {
         if (typeof unsubscribe === 'function') unsubscribe();
+        app.removeEventListener('zeus:files-collapse-change', onFilesCollapseChanged);
       }
     });
   }

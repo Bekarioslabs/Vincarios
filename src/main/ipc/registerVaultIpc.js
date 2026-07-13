@@ -2,7 +2,7 @@
 
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 
-function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaultWriteService, embeddingService) {
+function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaultWriteService, embeddingService, folderVisualService) {
   ipcMain.handle(IPC_CHANNELS.VAULT_STATE, () => vaultReadService.getState());
 
   ipcMain.handle(IPC_CHANNELS.VAULT_SELECT_FOLDER, async () => {
@@ -20,7 +20,7 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
 
     const readResult = vaultReadService.setRoot(result.filePaths[0]);
     if (readResult.ok) {
-      syncDependentRoot(result.filePaths[0], vaultWriteService, embeddingService);
+      syncDependentRoot(result.filePaths[0], vaultWriteService, embeddingService, folderVisualService);
     }
     return readResult;
   });
@@ -28,7 +28,7 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
   ipcMain.handle(IPC_CHANNELS.VAULT_SET_ROOT, (_event, vaultRoot) => {
     const readResult = vaultReadService.setRoot(vaultRoot);
     if (readResult.ok) {
-      syncDependentRoot(vaultRoot, vaultWriteService, embeddingService);
+      syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, folderVisualService);
     }
     return readResult;
   });
@@ -59,14 +59,27 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
     }
     return vaultWriteService.renameFile(payload);
   });
+  ipcMain.handle(IPC_CHANNELS.VAULT_GET_FOLDER_VISUALS, () => callFolderVisualService(folderVisualService, 'getFolderVisuals'));
+  ipcMain.handle(IPC_CHANNELS.VAULT_SET_FOLDER_VISUAL, (_event, payload) => callFolderVisualService(folderVisualService, 'setFolderVisual', payload));
+  ipcMain.handle(IPC_CHANNELS.VAULT_CLEAR_FOLDER_VISUAL, (_event, payload) => callFolderVisualService(folderVisualService, 'clearFolderVisual', payload));
 }
 
-function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService) {
+function callFolderVisualService(service, method, payload) {
+  if (!service || typeof service[method] !== 'function') {
+    return { ok: false, code: 'folder_visuals_unavailable', message: 'Folder appearance service unavailable.' };
+  }
+  return service[method](payload);
+}
+
+function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, folderVisualService) {
   if (vaultWriteService && typeof vaultWriteService.setRoot === 'function') {
     vaultWriteService.setRoot(vaultRoot);
   }
   if (embeddingService && typeof embeddingService.setRoot === 'function') {
     embeddingService.setRoot(vaultRoot);
+  }
+  if (folderVisualService && typeof folderVisualService.setRoot === 'function') {
+    folderVisualService.setRoot(vaultRoot);
   }
 }
 

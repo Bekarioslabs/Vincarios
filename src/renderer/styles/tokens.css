@@ -33,6 +33,15 @@
   --background-subtle: rgba(255,255,255,.018);
   --background-subtle-strong: rgba(255,255,255,.035);
 
+  /* Shared UI surface roles */
+  --surface-app: var(--background-secondary);
+  --surface-raised: var(--background-tertiary);
+  --surface-focus: var(--background-primary);
+  --surface-field: var(--background-modifier-form-field);
+  --surface-hover: var(--background-subtle-strong);
+  --border-structural: var(--background-modifier-border);
+  --border-subtle: rgba(255,255,255,.055);
+
   /* Semantic text */
   --text-normal: #e8e8e8;
   --text-muted: #8a8a8a;
@@ -45,6 +54,16 @@
 
   --interactive-accent: var(--color-amber-600);
   --interactive-accent-rgb: 217,119,6;
+
+  /* Shared UI text roles */
+  --text-ui: var(--text-normal);
+  --text-ui-muted: var(--text-muted);
+  --text-ui-emphasis: var(--text-strong);
+  --text-ui-section: var(--text-accent);
+
+  /* Text selection remains neutral so it does not read as an action state. */
+  --selection-background: rgba(214, 214, 214, 0.1);
+  --selection-text: var(--text-strong);
 
   /* Markdown and metadata */
   --metadata-accent: #d08a22;
@@ -89,12 +108,42 @@
   --score-noisy: var(--color-red-600);
   --score-noisy-rgb: 220,38,38;
 
+  /* Shared visual scale: components consume these semantic steps. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+
+  --font-size-ui-xs: 10px;
+  --font-size-ui-sm: 11px;
+  --font-size-ui-md: 12px;
+  --font-size-ui-lg: 13px;
+  --font-size-ui-title: 16px;
+
+  --icon-size-xs: 12px;
+  --icon-size-tool: 14px;
+  --icon-size-md: 16px;
+
+  --control-size-tool: 28px;
+  --control-size-regular: 32px;
+  --control-size-primary: 40px;
+  --panel-toolbar-height: 36px;
+  --basket-collapsed-height: 36px;
+  --panel-rail-width: 48px;
+  --panel-divider-width: 1px;
+  --panel-resize-hit-area: 7px;
+
+  --radius-ui-sm: 4px;
+  --radius-ui-md: 6px;
+  --radius-ui-lg: 8px;
+
+  /* Compatibility aliases migrate gradually as owning components are refreshed. */
   --radius-xs: 2px;
-  --radius-sm: 4px;
+  --radius-sm: var(--radius-ui-sm);
   --radius-compact: 5px;
-  --radius-md: 6px;
+  --radius-md: var(--radius-ui-md);
   --radius-control: 7px;
-  --radius-lg: 8px;
+  --radius-lg: var(--radius-ui-lg);
   --radius-xl: 10px;
   --radius-pill: 999px;
   --transition-fast: .15s ease-in-out;
@@ -102,6 +151,12 @@
   --icon-muted-filter: brightness(0) saturate(100%) invert(82%) sepia(0%) saturate(0%) hue-rotate(180deg) brightness(88%) contrast(86%);
   --icon-accent-filter: brightness(0) saturate(100%) invert(69%) sepia(92%) saturate(1400%) hue-rotate(355deg) brightness(98%) contrast(97%);
   --icon-inverse-filter: brightness(0) invert(1);
+  --folder-visual-amber-filter: var(--icon-accent-filter);
+  --folder-visual-green-filter: brightness(0) saturate(100%) invert(69%) sepia(42%) saturate(550%) hue-rotate(91deg) brightness(94%) contrast(89%);
+  --folder-visual-sky-filter: brightness(0) saturate(100%) invert(68%) sepia(62%) saturate(694%) hue-rotate(165deg) brightness(100%) contrast(95%);
+  --folder-visual-violet-filter: brightness(0) saturate(100%) invert(68%) sepia(29%) saturate(936%) hue-rotate(211deg) brightness(98%) contrast(95%);
+  --folder-visual-orange-filter: brightness(0) saturate(100%) invert(65%) sepia(67%) saturate(955%) hue-rotate(337deg) brightness(100%) contrast(96%);
+  --folder-visual-red-filter: brightness(0) saturate(100%) invert(53%) sepia(63%) saturate(1225%) hue-rotate(322deg) brightness(98%) contrast(96%);
 
   --overlay-backdrop-background: rgba(0, 0, 0, .64);
   --shadow-popover: 0 16px 48px rgba(0, 0, 0, .45);
@@ -116,12 +171,18 @@
 
   --titlebar-height: 39px;
   --statusbar-height: 24px;
-  --left-nav-width: 200px;
+  --left-nav-width: 168px;
+  --left-nav-collapsed-width: 48px;
   --vault-panel-width: 44vw;
   --file-tree-width: 260px;
-  --vault-top-height: 38%;
-  --min-main-width: 420px;
-  --min-vault-width: 520px;
+  --files-collapsed-width: var(--panel-rail-width);
+  --selection-actions-width: 280px;
+  --selection-actions-collapsed-width: var(--panel-rail-width);
+  --min-main-width: 400px;
+  --min-vault-width: 392px;
   --min-file-tree-width: 170px;
-  --min-preview-width: 260px;
+  --min-selection-actions-width: 220px;
+  --max-file-tree-width: 340px;
+  --max-selection-actions-width: 360px;
+  --min-preview-width: 320px;
 }

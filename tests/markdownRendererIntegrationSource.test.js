@@ -29,7 +29,8 @@ test('preview controller owns rendered/source mode switching', () => {
 
   assert.match(source, /ZeusMarkdownRenderer\.renderMarkdown/);
   assert.match(source, /preview\.textContent = String\(source \|\| ''\)/);
-  assert.match(source, /editButton\.textContent = sourceMode \? 'Preview' : 'Edit'/);
+  assert.match(source, /function setEditModeControl\(sourceMode\)/);
+  assert.match(source, /sourceMode \? 'Show rendered Markdown preview' : 'Edit Markdown source'/);
   assert.match(source, /Local changes are not saved\. Use Update to send them to Review Basket\./);
   assert.match(source, /type: 'update_note'/);
   assert.match(source, /currentContent: loadedSource/);

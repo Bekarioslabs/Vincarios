@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -19,7 +19,8 @@ test('settings IPC exposes get and provider URL override actions', async () => {
     setLimits(payload) { return { ok: true, limits: payload }; },
     setEmbeddingSettings(payload) { return { ok: true, embeddings: payload }; },
     setVaultProfileRole(role, folderPath) { return { ok: true, role, folderPath }; },
-    resetVaultProfileRole(role) { return { ok: true, role }; }
+    resetVaultProfileRole(role) { return { ok: true, role }; },
+    setLayoutPreferences(payload) { return { ok: true, layout: payload }; }
   };
 
   registerSettingsIpc(ipcMain, service);
@@ -31,6 +32,7 @@ test('settings IPC exposes get and provider URL override actions', async () => {
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE), true);
+  assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_LAYOUT), true);
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_GET)(), { version: 1 });
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_PROVIDER_URL)(null, { providerId: 'ollama', baseUrl: 'http://localhost:11435' }), {
     ok: true,
@@ -57,5 +59,9 @@ test('settings IPC exposes get and provider URL override actions', async () => {
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE)(null, { role: 'projects' }), {
     ok: true,
     role: 'projects'
+  });
+  assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_LAYOUT)(null, { panels: { selectionActionsCollapsed: true } }), {
+    ok: true,
+    layout: { panels: { selectionActionsCollapsed: true } }
   });
 });

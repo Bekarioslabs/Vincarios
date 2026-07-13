@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 
@@ -18,6 +18,10 @@ function registerSettingsIpc(ipcMain, settingsService) {
 
   if (typeof settingsService.resetProviderUrlOverride === 'function') {
     ipcMain.handle(IPC_CHANNELS.SETTINGS_RESET_PROVIDER_URL, (event, payload) => settingsService.resetProviderUrlOverride(payload && payload.providerId));
+  }
+
+  if (typeof settingsService.setLayoutPreferences === 'function') {
+    ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_LAYOUT, (event, payload) => settingsService.setLayoutPreferences(payload || {}));
   }
 
   if (typeof settingsService.setLimits === 'function') {

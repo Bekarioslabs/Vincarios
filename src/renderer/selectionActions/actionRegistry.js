@@ -29,21 +29,21 @@
     const canProposeUpdate = canUseAsContext && selection.writeAllowed === true;
 
     return [
-      action({ id: 'file.summarize', label: 'Summarize file', category: 'read', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canSummarize, requiredPermission: 'read', reason: canSummarize ? '' : permissionText.fileReadReason() }),
-      action({ id: 'file.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.fileReadReason() }),
-      action({ id: 'file.findSimilar', label: 'Find similar notes', category: 'read', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.fileReadReason() }),
-      action({ id: 'file.suggestTags', label: 'Suggest tags', category: 'write', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canProposeUpdate, requiredPermission: 'write', reason: canProposeUpdate ? permissionText.fileUpdateReadyReason() : permissionText.fileWriteReason() }),
-      action({ id: 'file.proposeUpdate', label: 'Propose content update', category: 'write', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canProposeUpdate, requiredPermission: 'write', reason: canProposeUpdate ? permissionText.fileUpdateReadyReason() : permissionText.fileWriteReason() })
+      action({ id: 'file.summarize', label: 'Summarize file', shortLabel: 'Summary', description: 'Summarize file with local provider.', icon: 'actionSummary', executionKind: 'provider', category: 'read', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canSummarize, requiredPermission: 'read', reason: canSummarize ? '' : permissionText.fileReadReason() }),
+      action({ id: 'file.useAsContext', label: 'Use as context', shortLabel: 'Context', description: 'Use file as chat context.', icon: 'actionContextFile', executionKind: 'app', category: 'context', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.fileReadReason() }),
+      action({ id: 'file.findSimilar', label: 'Find similar notes', shortLabel: 'Similar', description: 'Find similar notes with local embeddings.', icon: 'actionSimilar', executionKind: 'embedding', category: 'read', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.fileReadReason() }),
+      action({ id: 'file.suggestTags', label: 'Suggest tags', shortLabel: 'Tags', description: 'Suggest tags from local note metadata.', icon: 'actionTags', executionKind: 'app', category: 'write', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canProposeUpdate, requiredPermission: 'write', reason: canProposeUpdate ? permissionText.fileUpdateReadyReason() : permissionText.fileWriteReason() }),
+      action({ id: 'file.proposeUpdate', label: 'Propose content update', shortLabel: 'Update', description: 'Propose content update with local provider.', icon: 'actionUpdate', executionKind: 'provider', category: 'write', targetKinds: ['markdown'], enabled: isMarkdownFile, softDisabled: isMarkdownFile && !canProposeUpdate, requiredPermission: 'write', reason: canProposeUpdate ? permissionText.fileUpdateReadyReason() : permissionText.fileWriteReason() })
     ];
   }
 
   function folderActions(selection) {
     const canUseAsContext = selection && selection.readAllowed === true;
     return [
-      action({ id: 'folder.useAsContext', label: 'Use as context', category: 'context', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
-      action({ id: 'folder.listCurrent', label: 'List folder', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
-      action({ id: 'folder.analyze', label: 'Analyze folder', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
-      action({ id: 'folder.summarizeMarkdown', label: 'Summarize MD files', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() })
+      action({ id: 'folder.useAsContext', label: 'Use as context', shortLabel: 'Context', description: 'Use folder path as chat context.', icon: 'actionContextFile', executionKind: 'app', category: 'context', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
+      action({ id: 'folder.listCurrent', label: 'List folder', shortLabel: 'List', description: 'List folder entries without reading note contents.', icon: 'actionListFolder', executionKind: 'app', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
+      action({ id: 'folder.analyze', label: 'Analyze folder', shortLabel: 'Analyze', description: 'Analyze folder structure without model or note reads.', icon: 'actionAnalyzeFolder', executionKind: 'app', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() }),
+      action({ id: 'folder.summarizeMarkdown', label: 'Summarize MD files', shortLabel: 'Summary', description: 'Summarize direct Markdown files with local provider.', icon: 'actionSummaryFolder', executionKind: 'provider', category: 'read', targetKinds: ['folder'], enabled: true, softDisabled: !canUseAsContext, requiredPermission: 'read', reason: canUseAsContext ? '' : permissionText.folderReadReason() })
     ];
   }
 
@@ -51,6 +51,10 @@
     return Object.freeze({
       id: config.id,
       label: config.label,
+      shortLabel: config.shortLabel || config.label,
+      description: config.description || config.label,
+      icon: config.icon || '',
+      executionKind: config.executionKind || 'app',
       category: config.category,
       targetKinds: Object.freeze((config.targetKinds || []).slice()),
       enabled: config.enabled === true,
@@ -60,7 +64,6 @@
       softDisabled: config.softDisabled === true
     });
   }
-
 
   function getPermissionText() {
     if (typeof window !== 'undefined' && window.ZeusSelectionActionPermissionText) return window.ZeusSelectionActionPermissionText;
@@ -72,6 +75,7 @@
       fileUpdateReadyReason: () => ''
     };
   }
+
   const api = { getSelectionActions, getTargetKind };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
