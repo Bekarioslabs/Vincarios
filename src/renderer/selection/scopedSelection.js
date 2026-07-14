@@ -391,5 +391,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusScopedSelection = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosScopedSelection = Object.freeze(api);
 })();

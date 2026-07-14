@@ -1,10 +1,10 @@
-# ZEUS V1 Markdown Compatibility
+# Vitruvios V1 Markdown Compatibility
 
 Status: Active Phase 7.6 reference
 
 ## Purpose
 
-This matrix compares the current ZEUS Markdown Preview with Obsidian core Markdown behavior.
+This matrix compares the current Vitruvios Markdown Preview with Obsidian core Markdown behavior.
 It is a decision aid, not a promise to reproduce every Obsidian feature.
 
 Primary references:
@@ -16,20 +16,20 @@ Primary references:
 - https://obsidian.md/help/embeds
 - https://obsidian.md/help/Files%2Band%2Bfolders/Accepted%2Bfile%2Bformats
 
-Obsidian combines CommonMark, GitHub Flavored Markdown, LaTeX, and Obsidian-specific extensions. ZEUS keeps a smaller, safe preview surface and documents intentional differences.
+Obsidian combines CommonMark, GitHub Flavored Markdown, LaTeX, and Obsidian-specific extensions. Vitruvios keeps a smaller, safe preview surface and documents intentional differences.
 
 ## Status Meaning
 
 | Status | Meaning |
 |---|---|
-| Full | Current ZEUS behavior covers the practical Obsidian-core case. |
-| Partial | ZEUS renders a useful subset but misses valid variants or behavior. |
-| Missing | ZEUS currently displays source text or does not render the feature. |
-| Intentional difference | ZEUS deliberately avoids Obsidian behavior for safety or V1 scope. |
+| Full | Current Vitruvios behavior covers the practical Obsidian-core case. |
+| Partial | Vitruvios renders a useful subset but misses valid variants or behavior. |
+| Missing | Vitruvios currently displays source text or does not render the feature. |
+| Intentional difference | Vitruvios deliberately avoids Obsidian behavior for safety or V1 scope. |
 
 ## Core Compatibility Matrix
 
-| Area | Obsidian behavior | Current ZEUS status | V1 direction |
+| Area | Obsidian behavior | Current Vitruvios status | V1 direction |
 |---|---|---|---|
 | ATX headings | `#` through `######` | Full | Keep and add regression fixture coverage. |
 | Setext headings | Underlined headings | Full | Provided by the pinned CommonMark engine. |
@@ -44,7 +44,7 @@ Obsidian combines CommonMark, GitHub Flavored Markdown, LaTeX, and Obsidian-spec
 | Callouts | `> [!type]` with fold states and titles | Missing | Strong V1 candidate because it is Obsidian core and common in vaults. |
 | Horizontal rules | Hyphen, asterisk, and underscore forms | Full | Provided by the CommonMark engine. |
 | Inline code | Variable backtick delimiters | Full | Provided by the CommonMark engine. |
-| Fenced code | Backtick or tilde fences, language label | Full for safe source rendering | ZEUS preserves code and language classes but does not promise syntax highlighting. |
+| Fenced code | Backtick or tilde fences, language label | Full for safe source rendering | Vitruvios preserves code and language classes but does not promise syntax highlighting. |
 | Indented code | Four-space or tab-indented code | Missing | Lower-priority standards gap. |
 | Tables | GFM-style tables and formatting inside cells | Partial | Basic tables render. Escaped pipes, alignment, and Obsidian's permissive separator rules need work. |
 | Markdown links | Internal and external Markdown links | Partial | Internal navigation exists. External URL behavior remains deliberately restricted until a safe explicit open flow exists. |
@@ -56,7 +56,7 @@ Obsidian combines CommonMark, GitHub Flavored Markdown, LaTeX, and Obsidian-spec
 | Block identifiers | `^block-id` and block links | Missing | Keep link text safe; full block navigation can follow later. |
 | Tags in body | `#tag` and nested tags | Missing as a special visual element | Plain text remains readable; dedicated tag styling is optional. |
 | Escaping | Backslash escapes for Markdown characters | Full | Provided by the CommonMark engine. |
-| Raw HTML | Obsidian renders supported HTML but not Markdown inside HTML | Intentional difference | ZEUS escapes raw HTML and must not execute scripts or unsafe attributes. |
+| Raw HTML | Obsidian renders supported HTML but not Markdown inside HTML | Intentional difference | Vitruvios escapes raw HTML and must not execute scripts or unsafe attributes. |
 | Copied inline styling | `<font color="...">text</font>` and `<mark style="background:...">text</mark>` from copied notes | Partial | Narrow allowlisted color/highlight compatibility renders through `markdownFormattingCompat.js` as safe spans/classes. Unsupported copied tags are stripped to inner Markdown text. Raw HTML, event handlers, unknown styles, unsafe URLs, and `unsafe-inline` CSP remain blocked. |
 | Math | Inline and block LaTeX | Missing | Separate dependency and security decision. |
 | Mermaid | Mermaid code blocks render diagrams | Missing | Keep as safe code until a reviewed renderer dependency is approved. |
@@ -64,13 +64,13 @@ Obsidian combines CommonMark, GitHub Flavored Markdown, LaTeX, and Obsidian-spec
 
 ## Image Link Resolution
 
-ZEUS resolves local image embeds through the main-process vault read service. The renderer never receives filesystem access.
+Vitruvios resolves local image embeds through the main-process vault read service. The renderer never receives filesystem access.
 
 Resolution order for `![alt](path)` and `![[image.png]]`:
 
 1. Explicit or relative vault path from the current Markdown file.
 2. For basename-only Obsidian embeds, one unique matching image filename anywhere in the vault.
-3. If multiple images share the same basename, ZEUS marks the embed unresolved instead of guessing.
+3. If multiple images share the same basename, Vitruvios marks the embed unresolved instead of guessing.
 
 Remote images remain blocked by default in V1.
 
@@ -96,21 +96,21 @@ Intentional V1 differences:
 - The source editor remains plain Markdown source with reviewed full-note `update_note` proposals. Formatting toolbar, live split preview editing, color tools, and detachable editor are later work.
 ## Plugin Compatibility Boundary
 
-Obsidian community plugins do not share one renderer standard. Plugins may register Markdown post-processors, custom code blocks, metadata conventions, JavaScript, filesystem access, or network behavior. ZEUS does not load or execute Obsidian plugins.
+Obsidian community plugins do not share one renderer standard. Plugins may register Markdown post-processors, custom code blocks, metadata conventions, JavaScript, filesystem access, or network behavior. Vitruvios does not load or execute Obsidian plugins.
 
 V1 compatibility has three levels:
 
 1. **Native Markdown compatibility**
-   Plugin output remains normal Markdown and ZEUS renders it normally. Advanced Tables primarily belongs here.
+   Plugin output remains normal Markdown and Vitruvios renders it normally. Advanced Tables primarily belongs here.
 2. **Recognized safe fallback**
-   ZEUS recognizes an explicit plugin syntax such as a fenced `dataview`, `dataviewjs`, or `tasks` block and shows a standard unsupported-plugin notice plus the untouched source.
+   Vitruvios recognizes an explicit plugin syntax such as a fenced `dataview`, `dataviewjs`, or `tasks` block and shows a standard unsupported-plugin notice plus the untouched source.
 3. **Unsupported opaque content**
-   Unknown plugin formats stay visible as ordinary source/code. ZEUS does not guess a plugin from filenames or prose.
+   Unknown plugin formats stay visible as ordinary source/code. Vitruvios does not guess a plugin from filenames or prose.
 
 Required fallback copy:
 
 ```text
-This content belongs to the <Plugin Name> plugin and is not currently rendered by ZEUS.
+This content belongs to the <Plugin Name> plugin and is not currently rendered by Vitruvios.
 ```
 
 The fallback registry must be data-driven and owned by `src/renderer/markdown/`. It may map explicit syntax identifiers to plugin names and documentation links. It must never execute plugin code.

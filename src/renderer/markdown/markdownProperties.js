@@ -77,5 +77,5 @@
   const api = { splitFrontmatter, renderProperties };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusMarkdownProperties = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosMarkdownProperties = Object.freeze(api);
 })();

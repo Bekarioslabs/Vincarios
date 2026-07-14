@@ -2,7 +2,9 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+
 const { createVaultContext } = require('./vaultContext');
+const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 
 function createVaultBackupService(options) {
   options = options || {};
@@ -90,7 +92,7 @@ function createBackupPath(relativePath, stamp) {
   const parsed = path.posix.parse(relativePath.replace(/\\/g, '/'));
   const datedFolder = stamp.slice(0, 10);
   const backupName = parsed.name + '.' + stamp + parsed.ext;
-  return ['.zeus', 'backups', datedFolder, parsed.dir, backupName]
+  return [CURRENT_INTERNAL_NAMESPACE, 'backups', datedFolder, parsed.dir, backupName]
     .filter(Boolean)
     .join('/');
 }
@@ -112,7 +114,7 @@ function createBackupTimestamp(date) {
 const createLocalTimestamp = createBackupTimestamp;
 
 function appendAudit(vaultRoot, entry) {
-  const auditDir = path.join(vaultRoot, '.zeus');
+  const auditDir = path.join(vaultRoot, CURRENT_INTERNAL_NAMESPACE);
   fs.mkdirSync(auditDir, { recursive: true });
   const auditEntry = Object.assign({
     timestamp: new Date().toISOString()

@@ -83,7 +83,7 @@
     }
 
     if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
-      window.addEventListener('zeus:settings-updated', () => {
+      window.addEventListener('vitruvios:settings-updated', () => {
         refresh(nodes.providerSelect ? nodes.providerSelect.value : undefined);
       });
     }
@@ -102,7 +102,7 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
   function setProviderStatus(nodes, activeProvider, providers) {
     const isAvailable = !!(activeProvider && activeProvider.available);
@@ -198,6 +198,6 @@
   }
 
   if (typeof window !== 'undefined') {
-    window.ZeusProviderStatus = Object.freeze({ mountProviderStatus });
+    window.VitruviosProviderStatus = Object.freeze({ mountProviderStatus });
   }
 })();

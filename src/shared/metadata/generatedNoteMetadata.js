@@ -24,19 +24,19 @@
       tags: Object.freeze(['ai-response']),
       type: 'ai-response',
       status: 'draft',
-      source: 'zeus'
+      source: 'vitruvios'
     }),
     [ORIGIN_ACTIONS.summarizeFile]: Object.freeze({
       tags: Object.freeze(['ai-summary']),
       type: 'summary',
       status: 'draft',
-      source: 'zeus'
+      source: 'vitruvios'
     }),
     [ORIGIN_ACTIONS.summarizeFolder]: Object.freeze({
       tags: Object.freeze(['ai-summary']),
       type: 'summary',
       status: 'draft',
-      source: 'zeus'
+      source: 'vitruvios'
     }),
     [ORIGIN_ACTIONS.importMarkdown]: Object.freeze({
       tags: Object.freeze(['imported-note']),
@@ -52,7 +52,7 @@
       tags: Object.freeze(['ai-draft']),
       type: 'ai-draft',
       status: 'draft',
-      source: 'zeus'
+      source: 'vitruvios'
     })
   });
 
@@ -241,5 +241,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusGeneratedNoteMetadata = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosGeneratedNoteMetadata = Object.freeze(api);
 })();

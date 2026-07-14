@@ -82,5 +82,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusMarkdownLinkResolver = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosMarkdownLinkResolver = Object.freeze(api);
 })();

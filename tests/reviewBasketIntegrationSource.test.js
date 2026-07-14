@@ -32,7 +32,7 @@ test('index loads review basket modules before chat and shell modules', () => {
 test('shell mounts review basket view and passes it into chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /ZeusReviewBasket\.mountReviewBasket/);
+  assert.match(source, /VitruviosReviewBasket\.mountReviewBasket/);
   assert.match(source, /reviewBasket/);
   assert.match(source, /mountChat\(\{ api, app, status: globalStatus, reviewBasket, contextState \}\)/);
 });
@@ -56,7 +56,7 @@ test('assistant messages render markdown through the shared renderer while user 
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
 
   assert.match(source, /renderMessageBody\(body, role, content\)/);
-  assert.match(source, /window\.ZeusMarkdownRenderer/);
+  assert.match(source, /window\.VitruviosMarkdownRenderer/);
   assert.match(source, /renderer\.renderMarkdown/);
   assert.match(source, /body\.innerHTML = renderer\.renderMarkdown/);
   assert.match(source, /body\.textContent = content/);
@@ -138,7 +138,7 @@ test('shell refreshes the file panel after a successful create note proposal', (
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
   assert.match(source, /const updateFlashState = createUpdateFlashState\(\)/);
-  assert.match(source, /const vaultUi = \{ filePanel: null, folderVisualState, updateFlashState \}/);
+  assert.match(source, /const vaultUi = \{ filePanel: null, vaultProfileState, updateFlashState \}/);
   assert.match(source, /executeReviewProposal\(api, proposal, vaultUi\)/);
   assert.match(source, /vaultUi\.filePanel = filePanel/);
   assert.match(source, /refreshFilePanelAfterWrite\(vaultUi\)/);
@@ -149,7 +149,7 @@ test('shell exposes context basket and passes context state into chat', () => {
   assert.match(source, /id="context-basket"/);
   assert.match(source, /id="context-basket-items"/);
   assert.match(source, /id="context-clear-all"/);
-  assert.match(source, /ZeusContextBasket\.mountContextBasket/);
+  assert.match(source, /VitruviosContextBasket\.mountContextBasket/);
   assert.match(source, /mountChat\(\{ api, app, status: globalStatus, reviewBasket, contextState \}\)/);
   assert.doesNotMatch(source, /active-context-toggle/);
   assert.doesNotMatch(source, /setAutoContextEnabled/);
@@ -235,7 +235,7 @@ test('chat does not auto-route selected Markdown update text into write proposal
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
 
   assert.doesNotMatch(source, /runSelectedUpdateProposalRequest/);
-  assert.doesNotMatch(source, /ZeusSelectedUpdateProposalAction/);
+  assert.doesNotMatch(source, /VitruviosSelectedUpdateProposalAction/);
 });
 test('index loads model action parser before model read action runner and chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');

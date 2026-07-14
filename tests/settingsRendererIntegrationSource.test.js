@@ -21,7 +21,7 @@ test('index loads settings styles and renderer module before shell bootstrap', (
 test('renderer bootstrap requires the settings panel module', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'bootstrap.js'), 'utf8');
 
-  assert.match(source, /ZeusSettingsPanel/);
+  assert.match(source, /VitruviosSettingsPanel/);
   assert.match(source, /mountSettingsPanel/);
 });
 
@@ -29,28 +29,29 @@ test('shell opens settings through a dedicated renderer module', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
   assert.match(source, /data-open-settings/);
-  assert.match(source, /ZeusSettingsPanel\.mountSettingsPanel/);
+  assert.match(source, /VitruviosSettingsPanel\.mountSettingsPanel/);
   assert.doesNotMatch(source, /function renderSettingsPanel/);
 });
 
-test('settings panel owns provider URL override UI without vault access', () => {
+test('settings panel owns provider URL overrides and reads Vault Profile only through preload APIs', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
 
   assert.match(source, /function mountSettingsPanel/);
   assert.match(source, /api\.settings\.setProviderUrl/);
   assert.match(source, /api\.settings\.resetProviderUrl/);
-  assert.doesNotMatch(source, /api\.vault/);
+  assert.match(source, /api\.vault\.getProfile/);
+  assert.match(source, /api\.vault\.setProfileRole/);
   assert.doesNotMatch(source, /require\('node:fs'\)/);
 });
 
-test('settings panel exposes limits and vault profile sections through settings API', () => {
+test('settings panel exposes limits through settings API and Vault Profile through vault API', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
 
   assert.match(source, /Limits/);
   assert.match(source, /Vault Profile/);
   assert.match(source, /api\.settings\.setLimits/);
-  assert.match(source, /api\.settings\.setVaultRole/);
-  assert.match(source, /api\.settings\.resetVaultRole/);
+  assert.match(source, /api\.vault\.setProfileRole/);
+  assert.match(source, /api\.vault\.resetProfileRole/);
 });
 
 test('settings panel displays provider capabilities without owning provider logic', () => {
@@ -106,7 +107,9 @@ test('settings modal keeps a stable size and scrolls only active content', () =>
 
   assert.match(css, /\.settings-panel\s*\{[\s\S]*width:\s*min\(920px, calc\(100vw - 56px\)\);/);
   assert.match(css, /\.settings-panel\s*\{[\s\S]*\n\s*height:\s*min\(680px, calc\(100vh - 56px\)\);/);
-  assert.doesNotMatch(css, /\.settings-panel\s*\{[\s\S]*max-height:/);
+  const panelRule = css.match(/\.settings-panel\s*\{([\s\S]*?)\n\}/);
+  assert.ok(panelRule);
+  assert.doesNotMatch(panelRule[1], /max-height:/);
   assert.match(css, /\.settings-body\s*\{[\s\S]*overflow:\s*hidden;/);
   assert.match(css, /\.settings-category-content\s*\{[\s\S]*overflow:\s*auto;/);
 });
@@ -132,4 +135,15 @@ test('settings category buttons use existing semantic icons', () => {
   assert.match(source, /renderer\.createIconElement\(iconName, 'settings-category-icon'\)/);
   assert.match(css, /\.settings-category-button\s*\{[\s\S]*display:\s*flex;/);
   assert.match(css, /\.settings-category-icon\s*\{[\s\S]*filter:\s*var\(--icon-muted-filter, none\);/);
+});
+
+test('Vault Profile settings use a renderer-owned draft state for dirty rows and available folders', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+
+  assert.match(source, /window\.VitruviosVaultProfileDraftState/);
+  assert.match(source, /draft\.isDirty/);
+  assert.match(source, /draft\.getAssignedRole/);
+  assert.match(source, /draft\.commitRole/);
+  assert.match(source, /panel\.vaultProfileDraft\.invalidate\(\)/);
+  assert.doesNotMatch(source, /panel\.vaultProfileDraft\.reset\(\)/);
 });

@@ -1,20 +1,23 @@
-# ZEUS V1 Product Brief
+# Vitruvios V1 Product Brief
 
 ## One-Sentence Product
 
-ZEUS is a local Obsidian-vault assistant that helps users safely analyze, organize, connect, and update Markdown notes through visible, reviewable, reversible actions.
+Vitruvios is a local Obsidian-vault assistant that helps users safely analyze, organize, connect, and update Markdown notes through visible, reviewable, reversible actions.
 
+## Phase 8 Positioning Gate
+
+The current internal product wording remains provisional until Phase 8. Before splash/README/build branding changes, decide the final name and whether external communication leads with an independent local-first Markdown/project workspace, with Obsidian-vault compatibility stated as a supported workflow rather than Vitruvios's only identity.
 ## Product Truth
 
-- ZEUS is note-first, not agent-first.
-- ZEUS complements Obsidian instead of replacing it.
-- ZEUS works primarily with Markdown files.
-- ZEUS should make vault organization easier, not become a general automation harness.
+- Vitruvios is note-first, not agent-first.
+- Vitruvios complements Obsidian instead of replacing it.
+- Vitruvios works primarily with Markdown files.
+- Vitruvios should make vault organization easier, not become a general automation harness.
 - AI suggests; the app validates, previews, backs up, logs, and executes.
 
 ## V1 User Promise
 
-ZEUS helps users clean up and maintain their vault without hidden file access, cloud dependency, or blind autonomous edits.
+Vitruvios helps users clean up and maintain their vault without hidden file access, cloud dependency, or blind autonomous edits.
 
 ## V1 Core Features
 
@@ -57,6 +60,6 @@ Manual UI actions are separate from AI actions.
 
 ## Success Criteria
 
-- A non-technical Obsidian user can open a vault, let ZEUS inspect allowed notes, review suggestions, and apply selected changes with confidence.
+- A non-technical Obsidian user can open a vault, let Vitruvios inspect allowed notes, review suggestions, and apply selected changes with confidence.
 - No risky write happens without preview, backup, and audit log.
 - The codebase is small enough that a new developer can understand the main flow in one session.

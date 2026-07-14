@@ -2,8 +2,9 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 
-const PORTABLE_DATA_FOLDER = '.zeus';
+const PORTABLE_DATA_FOLDER = CURRENT_INTERNAL_NAMESPACE;
 const SETTINGS_FILE_NAME = 'settings.json';
 
 function getPortableDataRoot(projectRoot) {

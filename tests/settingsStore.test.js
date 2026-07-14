@@ -22,7 +22,6 @@ test('settings normalize into future-proof categories', () => {
   assert.equal(settings.providers.urlOverrides.ollama, 'http://localhost:11435');
   assert.equal(settings.limits.providerTimeoutMs, 120000);
   assert.equal(typeof settings.limits.maxSelectedFileChars, 'number');
-  assert.deepEqual(settings.vaultProfile.roles, {});
   assert.equal(settings.theme.mode, 'dark');
   assert.equal(settings.layout.panels.selectionActionsCollapsed, false);
   assert.equal(settings.safety.reviewRequired, true);
@@ -50,7 +49,7 @@ test('settings reject invalid provider base URLs', () => {
 });
 
 test('settings store persists provider URL overrides', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -63,7 +62,7 @@ test('settings store persists provider URL overrides', () => {
 });
 
 test('settings store persists active provider and selected model', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -76,7 +75,7 @@ test('settings store persists active provider and selected model', () => {
 });
 
 test('settings store persists limits with normalized positive values', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -107,20 +106,9 @@ test('settings store persists limits with normalized positive values', () => {
   assert.equal(reloaded.getSettings().limits.maxSuggestionsPerReview, 12);
 });
 
-test('settings store persists vault profile role overrides and can reset them', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
-  const filePath = path.join(dir, 'settings.json');
-  const store = createSettingsStore({ filePath });
-
-  assert.equal(store.setVaultProfileRole('projects', 'Custom Projects/Active').ok, true);
-  assert.equal(store.getSettings().vaultProfile.roles.projects, 'Custom Projects/Active');
-  assert.equal(store.resetVaultProfileRole('projects').ok, true);
-  assert.equal(store.getSettings().vaultProfile.roles.projects, undefined);
-});
-
 
 test('settings store persists similar-note defaults with safe normalization', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -161,7 +149,7 @@ test('settings store persists similar-note defaults with safe normalization', ()
 });
 
 test('settings store persists app-local panel layout preferences', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 

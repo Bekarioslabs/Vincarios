@@ -17,14 +17,14 @@
   const INLINE_TAG_RULES = Object.freeze({
     font: {
       tag: 'font',
-      token: 'zeus_format_font_color',
+      token: 'vitruvios_format_font_color',
       classPrefix: 'markdown-format-color',
       attrPattern: /\scolor\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/i,
       classByValue: COLOR_CLASS_BY_HEX
     },
     mark: {
       tag: 'mark',
-      token: 'zeus_format_background',
+      token: 'vitruvios_format_background',
       classPrefix: 'markdown-format-background',
       attrPattern: /\sstyle\s*=\s*(?:"([^"]+)"|'([^']+)')/i,
       styleProperty: 'background',
@@ -32,17 +32,17 @@
     },
     underline: {
       tag: 'u',
-      token: 'zeus_format_underline',
+      token: 'vitruvios_format_underline',
       className: 'markdown-format-underline'
     },
     superscript: {
       tag: 'sup',
-      token: 'zeus_format_superscript',
+      token: 'vitruvios_format_superscript',
       className: 'markdown-format-superscript'
     },
     subscript: {
       tag: 'sub',
-      token: 'zeus_format_subscript',
+      token: 'vitruvios_format_subscript',
       className: 'markdown-format-subscript'
     }
   });
@@ -203,5 +203,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusMarkdownFormattingCompat = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosMarkdownFormattingCompat = Object.freeze(api);
 })();

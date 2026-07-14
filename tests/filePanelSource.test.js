@@ -160,11 +160,12 @@ test('file panel applies update flash through visible row state without rebuildi
   assert.match(source, /updateFlashState\.flashTargets\(\{ path, kind: 'file', reason: 'updated' \}\)/);
 });
 
-test('file panel opens folder appearance only for top-level folders through the dedicated files module', () => {
+test('file panel renders folder appearance from shared Vault Profile state without configuration controls', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
-  assert.match(source, /function isTopLevelFolder\(entry\)/);
-  assert.match(source, /row\.addEventListener\('contextmenu'/);
-  assert.match(source, /window\.ZeusFolderAppearance/);
-  assert.match(source, /appearance\.openFolderAppearanceMenu/);
+  assert.match(source, /const vaultProfileState = options\.vaultProfileState \|\| null/);
+  assert.match(source, /function subscribeToVaultProfileState\(\)/);
+  assert.match(source, /vaultProfileState\.getFolderVisual\(path\)/);
+  assert.doesNotMatch(source, /contextmenu/);
+  assert.doesNotMatch(source, /FolderAppearance/);
 });

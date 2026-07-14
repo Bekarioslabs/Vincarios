@@ -38,7 +38,7 @@
     function start(event) {
       event.preventDefault();
       document.body.classList.add('is-resizing');
-      handle.dispatchEvent(new CustomEvent('zeus:panel-resize-start'));
+      handle.dispatchEvent(new CustomEvent('vitruvios:panel-resize-start'));
       window.addEventListener('mousemove', move);
       window.addEventListener('mouseup', stop);
     }
@@ -174,5 +174,5 @@
   const api = { mountPaneResize, clamp, calculatePanelMetrics, calculatePanelResizeMaximum };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusPaneResize = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosPaneResize = Object.freeze(api);
 })();

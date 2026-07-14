@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { getIconPath, createIconElement } = require('../src/renderer/icons/iconRenderer');
+const { getIconPath, createIconElement, createIconElementFromSource } = require('../src/renderer/icons/iconRenderer');
 const { resolveFolderVisualIconName } = require('../src/renderer/icons/iconRegistry');
 
 test('icon renderer resolves semantic icon names to local Lucide assets', () => {
@@ -26,7 +26,7 @@ test('icon renderer creates accessible decorative icon elements', () => {
   try {
     const icon = createIconElement('refresh', 'file-refresh-icon');
     assert.equal(icon.tagName, 'img');
-    assert.equal(icon.className, 'zeus-icon file-refresh-icon');
+    assert.equal(icon.className, 'vitruvios-icon file-refresh-icon');
     assert.equal(icon.attributes.src, './src/renderer/assets/icons/lucide/refresh-cw.svg');
     assert.equal(icon.attributes['aria-hidden'], 'true');
   } finally {
@@ -36,4 +36,25 @@ test('icon renderer creates accessible decorative icon elements', () => {
 test('icon registry resolves folder visual keys through semantic local assets', () => {
   assert.equal(resolveFolderVisualIconName('briefcase'), 'folderVisualBriefcase');
   assert.equal(resolveFolderVisualIconName('unknown'), 'folder');
+});
+test('icon renderer creates decorative icons from validated local sources', () => {
+  const previousDocument = global.document;
+  global.document = {
+    createElement(tagName) {
+      return {
+        tagName,
+        className: '',
+        attributes: {},
+        setAttribute(name, value) { this.attributes[name] = String(value); }
+      };
+    }
+  };
+  try {
+    const icon = createIconElementFromSource('data:image/svg+xml;base64,PHN2Zy8+', 'file-row-type-icon');
+    assert.equal(icon.tagName, 'img');
+    assert.equal(icon.className, 'vitruvios-icon file-row-type-icon');
+    assert.equal(icon.attributes.src, 'data:image/svg+xml;base64,PHN2Zy8+');
+  } finally {
+    global.document = previousDocument;
+  }
 });

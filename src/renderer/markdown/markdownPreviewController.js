@@ -326,11 +326,11 @@
       clearPreviewStatus();
     }
     function renderPreview(source) {
-      if (!window.ZeusMarkdownRenderer || !window.ZeusMarkdownRenderer.renderMarkdown) {
+      if (!window.VitruviosMarkdownRenderer || !window.VitruviosMarkdownRenderer.renderMarkdown) {
         preview.textContent = String(source || '');
         return;
       }
-      preview.innerHTML = window.ZeusMarkdownRenderer.renderMarkdown(source);
+      preview.innerHTML = window.VitruviosMarkdownRenderer.renderMarkdown(source);
       resolveMarkdownImages();
     }
 
@@ -424,10 +424,10 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
   const api = { mountMarkdownPreview };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusMarkdownPreview = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosMarkdownPreview = Object.freeze(api);
 })();

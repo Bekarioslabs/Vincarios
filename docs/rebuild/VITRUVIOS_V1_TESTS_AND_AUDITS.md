@@ -1,4 +1,4 @@
-# ZEUS V1 Tests And Audits
+# Vitruvios V1 Tests And Audits
 
 ## Test Principle
 
@@ -7,7 +7,7 @@ Tests start on day one. Safety-critical behavior must be tested before feature p
 ## Required V1 Test Areas
 
 - path safety: no access outside the selected vault
-- dot-folder blocking: `.obsidian`, `.zeus`, `.zeus_backups`
+- dot-folder blocking: `.obsidian`, `.vitruvios`, `.vitruvios_backups`
 - action schema validation
 - review basket state: open, selected, running, done, failed, rejected, stale
 - permission inheritance: direct, inherited, blocked/off
@@ -17,8 +17,8 @@ Tests start on day one. Safety-critical behavior must be tested before feature p
 - archive/trash instead of normal delete
 - audit log without note contents
 - provider boundary: providers never read/write files
-- renderer runtime parity: renderer modules prefer `window.Zeus...` browser APIs before Node/CommonJS test fallbacks
-- embedding index/model/runtime basics: Markdown-only index schema, vault `.zeus/index` storage, project `.zeus/models` artifact metadata, hash/mtime updates, local runtime with remote model loading disabled
+- renderer runtime parity: renderer modules prefer `window.Vitruvios...` browser APIs before Node/CommonJS test fallbacks
+- embedding index/model/runtime basics: Markdown-only index schema, vault `.vitruvios/index` storage, project `.vitruvios/models` artifact metadata, hash/mtime updates, local runtime with remote model loading disabled
 
 ## Focused Audit Rhythm
 
@@ -53,7 +53,7 @@ Before public release, add or verify:
 - release artifact SHA256 checksums
 - embedding model artifact source/license/SHA256 verification before release packaging
 - embedding runtime smoke: local bundled model path loads offline and returns 384-dimensional vectors
-- embedding indexer smoke: selected-vault Markdown files build document vectors under `.zeus/index`; a second unchanged run skips all documents.
+- embedding indexer smoke: selected-vault Markdown files build document vectors under `.vitruvios/index`; a second unchanged run skips all documents.
 - explicit unsigned-build warning until code signing is implemented
 - build-it-yourself instructions for cautious beta testers
 
@@ -122,7 +122,7 @@ Deferred decisions:
 
 ### Release trust baseline
 
-Before external beta or public V1 release, ZEUS must treat supply-chain trust as a release gate, not a feature nice-to-have.
+Before external beta or public V1 release, Vitruvios must treat supply-chain trust as a release gate, not a feature nice-to-have.
 
 Required release checks:
 

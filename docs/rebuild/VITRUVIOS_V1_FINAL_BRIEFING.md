@@ -1,14 +1,16 @@
-# ZEUS V1 Final Briefing
+# Vitruvios V1 Final Briefing
 
-Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
+Audit triage reference: [VITRUVIOS_V1_AUDIT_TRIAGE.md](./VITRUVIOS_V1_AUDIT_TRIAGE.md).
 
 ## Product Sentence
 
-ZEUS is a local Obsidian-vault assistant that helps users safely analyze, organize, connect, and update Markdown notes through visible, reviewable, reversible actions.
+Vitruvios is a local Obsidian-vault assistant that helps users safely analyze, organize, connect, and update Markdown notes through visible, reviewable, reversible actions.
+
+This is the current internal wording. Phase 8 decides the final public name and whether external communication leads with an independent local-first Markdown/project workspace while presenting Obsidian-vault compatibility as a supported workflow.
 
 ## Product Boundary
 
-ZEUS V1 is:
+Vitruvios V1 is:
 
 - local-first
 - Markdown-first
@@ -16,7 +18,7 @@ ZEUS V1 is:
 - review-first
 - safety-first
 
-ZEUS V1 is not:
+Vitruvios V1 is not:
 
 - a second Obsidian
 - a general-purpose agent harness
@@ -85,7 +87,7 @@ Resizable panes need minimum sizes.
 
 The Review Basket is a standalone module, not part of chat rendering.
 
-Current foundation: shared action schema and proposal-plan parsing normalize V1 action suggestions into Review Basket items. Assistant responses can add a `create_note` proposal for `Save as Note` into the Review Basket. Identical open proposals are de-duplicated. Proposals can be selected, dismissed from the visible basket, and pending proposals can be cleared as a group. Selected `create_note` proposals execute after an in-app Create Preview with an editable title field; main validates paths, refuses overwrites, writes the Markdown file, and appends an audit entry. Selected `update_note` proposals are unselected by default, require current/proposed content, show an Apply Update diff preview, create a `.zeus/backups` copy, reject stale file content, write the proposed Markdown, and append audit entries. Phase 3 stops at this foundation: `insert_into_note`, `move_note`, `rename_note`, and `archive_note` are known schema types but remain non-executable until their dedicated reviewed services exist.
+Current foundation: shared action schema and proposal-plan parsing normalize V1 action suggestions into Review Basket items. Assistant responses can add a `create_note` proposal for `Save as Note` into the Review Basket. Identical open proposals are de-duplicated. Proposals can be selected, dismissed from the visible basket, and pending proposals can be cleared as a group. Selected `create_note` proposals execute after an in-app Create Preview with an editable title field; main validates paths, refuses overwrites, writes the Markdown file, and appends an audit entry. Selected `update_note` proposals are unselected by default, require current/proposed content, show an Apply Update diff preview, create a `.vitruvios/backups` copy, reject stale file content, write the proposed Markdown, and append audit entries. Phase 3 stops at this foundation: `insert_into_note`, `move_note`, `rename_note`, and `archive_note` are known schema types but remain non-executable until their dedicated reviewed services exist.
 
 Proposal statuses:
 
@@ -103,12 +105,12 @@ V1 uses automatic safe execution ordering. Manual drag-and-drop ordering is futu
 
 ## Reviewed Update Flow
 
-Reliable file updating is V1-critical. ZEUS must be able to turn chat or local Edit Mode changes into reviewed `update_note` proposals for the selected Markdown file when `R` and `W` allow it. The V1 scope is reliable whole-note replacement through reviewed diff, not a complex partial-edit engine. The app should produce clear permission guidance when access is missing, instead of letting the model fall back to generic filesystem disclaimers. All applied updates still go through diff preview, backup, stale-content validation, and audit logging. Focused insert/replace by section is V1.1 work.
+Reliable file updating is V1-critical. Vitruvios must be able to turn chat or local Edit Mode changes into reviewed `update_note` proposals for the selected Markdown file when `R` and `W` allow it. The V1 scope is reliable whole-note replacement through reviewed diff, not a complex partial-edit engine. The app should produce clear permission guidance when access is missing, instead of letting the model fall back to generic filesystem disclaimers. All applied updates still go through diff preview, backup, stale-content validation, and audit logging. Focused insert/replace by section is V1.1 work.
 
 ## Permissions
 
-- Read means ZEUS may use the path as context.
-- Write means ZEUS may propose write actions.
+- Read means Vitruvios may use the path as context.
+- Write means Vitruvios may propose write actions.
 - Write never means silent execution.
 - Three states: direct, inherited, blocked/off. Explicit child off overrides inherited parent access.
 - Dot/runtime folders are blocked regardless of UI state.
@@ -124,13 +126,13 @@ The Context Basket is the explicit selected-file/folder context source. Items ar
 
 File context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time. Folder context items attach path context only. Natural-language folder questions may show inline help, but they must not list folder contents. Folder contents are listed through deterministic app actions such as `List folder`, with `R` checked first. Attached context is request-scoped and is not stored in chat history.
 
-If Read is not active for the selected file/folder or one of its parent folders, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
+If Read is not active for the selected file/folder or one of its parent folders, Vitruvios must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 
-Missing Read/Write blocks show a clear permission message in chat or the relevant panel. V1 does not show permission retry buttons, because they look too similar to real follow-up actions. After enabling the missing permission, the user repeats the original Selection Action or request explicitly. If the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
+Missing Read/Write blocks show a clear permission message in chat or the relevant panel. V1 does not show permission retry buttons, because they look too similar to real follow-up actions. After enabling the missing permission, the user repeats the original Selection Action or request explicitly. If the selected file has permission but no loaded content, Vitruvios should instruct the user to reselect/click the file or refresh the preview inside Vitruvios, not switch to external upload instructions.
 
-Selected folders expose the folder path only. They are not blindly fully loaded. Folder intent handles pending-action replies, existing blocked-action retries, help-only Selection Action guidance, and model-action fallback checks. Typo/fuzzy matching, deictic "here/it" guesses, and broad prompt workarounds are not part of the intent layer. Natural-language folder-content prompts show the inline help `Use "List folder" in Selection Actions to inspect the selected folder.` They do not list, read, or create blocked actions by themselves. Current-level folder listing is owned by the `List folder` Selection Action. Folder scope is controlled by `PendingActionState` plus `FolderContextController` only for open app flows; short replies such as `all` or `alle` only resolve an existing pending folder action. Supported folder-list model-action envelopes remain a fallback, are checked against the active selection, and are returned as a ZEUS message instead of raw tool-call text. `list_directory` is normalized to `list_folder` as a structured action alias. Visible app-generated folder listings are not stored in provider history with file names; only a short app-result marker is stored to prevent stale folder-list reuse.
+Selected folders expose the folder path only. They are not blindly fully loaded. Folder intent handles pending-action replies, existing blocked-action retries, help-only Selection Action guidance, and model-action fallback checks. Typo/fuzzy matching, deictic "here/it" guesses, and broad prompt workarounds are not part of the intent layer. Natural-language folder-content prompts show the inline help `Use "List folder" in Selection Actions to inspect the selected folder.` They do not list, read, or create blocked actions by themselves. Current-level folder listing is owned by the `List folder` Selection Action. Folder scope is controlled by `PendingActionState` plus `FolderContextController` only for open app flows; short replies such as `all` or `alle` only resolve an existing pending folder action. Supported folder-list model-action envelopes remain a fallback, are checked against the active selection, and are returned as a Vitruvios message instead of raw tool-call text. `list_directory` is normalized to `list_folder` as a structured action alias. Visible app-generated folder listings are not stored in provider history with file names; only a short app-result marker is stored to prevent stale folder-list reuse.
 
-Future Folder Context Index: selected folders can be counted first, then listed and remembered only after user approval. Persistent folder indexes belong in `.zeus/` or a configured cache location, not blindly in normal vault notes. They should later combine with embeddings for folder candidates, similar-note lookup, and stale-index detection.
+Future Folder Context Index: selected folders can be counted first, then listed and remembered only after user approval. Persistent folder indexes belong in `.vitruvios/` or a configured cache location, not blindly in normal vault notes. They should later combine with embeddings for folder candidates, similar-note lookup, and stale-index detection.
 
 Context package sources are visibly separated with source labels such as `context_basket`; future dropped Markdown and embedding candidate sources must use their own labels instead of blending into the active selection. Dropped `.md` files become temporary context immediately. They are not automatically imported into the vault. External dropped Markdown files get an `Import to Inbox` action.
 
@@ -228,7 +230,7 @@ Not V1 Options:
 
 ## V1 Freeze Gate
 
-V1 is done when all current V1 phases are complete and a sober freeze review finds no remaining must-have gaps. A new finding becomes V1-must only if it blocks safety, core usefulness, or external testing. Useful but non-blocking ideas move to V1.1 or the Parking Lot.
+Phase 8 is the final product-readiness and scope-freeze gate: decide public identity, complete only the explicitly accepted small V1 workflows, then freeze scope. Phase 9 is release hardening and baseline verification. V1 is done when both phases are complete and a sober release review finds no remaining must-have gaps. After scope freeze, a new finding becomes V1-must only if it blocks safety, core usefulness, or external testing. Useful but non-blocking ideas move to V1.1 or the Parking Lot.
 
 ## Brain OS Direction
 

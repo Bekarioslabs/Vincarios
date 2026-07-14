@@ -68,5 +68,5 @@
   const api = { buildMarkdownDiffPreview };
   
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusDiffPreview = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosDiffPreview = Object.freeze(api);
 })();

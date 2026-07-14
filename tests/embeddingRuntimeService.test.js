@@ -24,7 +24,7 @@ test('embedding runtime refuses to load when bundled artifacts are unavailable',
 
 test('embedding runtime loads local model with remote models disabled', async () => {
   const calls = [];
-  const modelPath = path.join('D:', 'ZEUS_AGENT', '.zeus', 'models', 'embeddings', 'model');
+  const modelPath = path.join('D:', 'Vitruvios_AGENT', '.vitruvios', 'models', 'embeddings', 'model');
   const service = createEmbeddingRuntimeService({
     modelStore: createAvailableModelStore(modelPath),
     loadTransformers: async () => {

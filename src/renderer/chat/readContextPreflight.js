@@ -252,25 +252,25 @@
   }
 
   function getIntentApi() {
-    if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
+    if (typeof window !== 'undefined' && window.VitruviosContextIntent) return window.VitruviosContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('../context/contextIntent');
     return null;
   }
 
   function getFolderContextControllerApi() {
-    if (typeof window !== 'undefined' && window.ZeusFolderContextController) return window.ZeusFolderContextController;
+    if (typeof window !== 'undefined' && window.VitruviosFolderContextController) return window.VitruviosFolderContextController;
     if (typeof module !== 'undefined' && module.exports) return require('../context/folderContextController');
     return null;
   }
 
   function getPendingActionStateApi() {
-    if (typeof window !== 'undefined' && window.ZeusPendingActionState) return window.ZeusPendingActionState;
+    if (typeof window !== 'undefined' && window.VitruviosPendingActionState) return window.VitruviosPendingActionState;
     if (typeof module !== 'undefined' && module.exports) return require('../context/pendingActionState');
     return null;
   }
 
   function getBlockedActionStateApi() {
-    if (typeof window !== 'undefined' && window.ZeusBlockedActionState) return window.ZeusBlockedActionState;
+    if (typeof window !== 'undefined' && window.VitruviosBlockedActionState) return window.VitruviosBlockedActionState;
     if (typeof module !== 'undefined' && module.exports) return require('../context/blockedActionState');
     return null;
   }
@@ -285,5 +285,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusReadContextPreflight = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosReadContextPreflight = Object.freeze(api);
 })();

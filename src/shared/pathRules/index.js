@@ -1,12 +1,12 @@
 'use strict';
 
 const path = require('node:path');
+const { CURRENT_INTERNAL_NAMESPACE } = require('../internalNamespace');
 
 const DEFAULT_BLOCKED_DOT_SEGMENTS = new Set([
   '.git',
   '.obsidian',
-  '.zeus',
-  '.zeus_backups'
+  CURRENT_INTERNAL_NAMESPACE
 ]);
 
 function normalizeVaultRelativePath(input, options) {

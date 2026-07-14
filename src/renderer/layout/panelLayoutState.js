@@ -65,5 +65,5 @@
 
   const api = { PANEL_IDS, createPanelLayoutState, normalizePanelLayout };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusPanelLayoutState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosPanelLayoutState = Object.freeze(api);
 })();

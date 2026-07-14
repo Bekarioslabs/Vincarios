@@ -22,29 +22,29 @@ test('renderer bootstrap validates all required renderer modules', () => {
 });
 
 test('renderer bootstrap fails fast when model action parser is missing', () => {
-  const runtime = createRuntime({ ZeusModelActionParser: undefined });
+  const runtime = createRuntime({ VitruviosModelActionParser: undefined });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /ZeusModelActionParser/);
+  assert.match(result.message, /VitruviosModelActionParser/);
 });
 
 test('renderer bootstrap validates required parser methods', () => {
-  const runtime = createRuntime({ ZeusModelActionParser: {} });
+  const runtime = createRuntime({ VitruviosModelActionParser: {} });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /ZeusModelActionParser\.parseModelActionCalls/);
+  assert.match(result.message, /VitruviosModelActionParser\.parseModelActionCalls/);
 });
 test('renderer bootstrap requires the selected update proposal module', () => {
-  const runtime = createRuntime({ ZeusSelectedUpdateProposalAction: undefined });
+  const runtime = createRuntime({ VitruviosSelectedUpdateProposalAction: undefined });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /ZeusSelectedUpdateProposalAction/);
+  assert.match(result.message, /VitruviosSelectedUpdateProposalAction/);
 });
 test('renderer bootstrap requires the Markdown engine submodules', () => {
-  ['ZeusObsidianMarkdownExtension', 'ZeusMarkdownEngine', 'ZeusMarkdownProperties'].forEach((globalName) => {
+  ['VitruviosObsidianMarkdownExtension', 'VitruviosMarkdownEngine', 'VitruviosMarkdownProperties'].forEach((globalName) => {
     const runtime = createRuntime({ [globalName]: undefined });
     const result = validateRendererModules(runtime);
 
@@ -58,4 +58,19 @@ test('preview update validation uses permission state instead of requiring selec
   assert.match(source, /addPreviewUpdateProposal\(reviewBasket, statusBar, proposal, contextState, permissionState\)/);
   assert.match(source, /validatePreviewUpdatePermission\(proposal, contextState, permissionState\)/);
   assert.match(source, /permissionState\.resolve\(targetPath\)\.write === true/);
+});
+
+test('renderer bootstrap requires the CSP-safe Vault Profile SVG renderer method', () => {
+  const runtime = createRuntime({ VitruviosVaultProfileVisualIconRenderer: {} });
+  const result = validateRendererModules(runtime);
+
+  assert.equal(result.ok, false);
+  assert.match(result.message, /VitruviosVaultProfileVisualIconRenderer\.createFolderVisualIcon/);
+});
+test('renderer bootstrap requires the Vault Profile draft-state module', () => {
+  const runtime = createRuntime({ VitruviosVaultProfileDraftState: undefined });
+  const result = validateRendererModules(runtime);
+
+  assert.equal(result.ok, false);
+  assert.match(result.message, /VitruviosVaultProfileDraftState/);
 });

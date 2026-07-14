@@ -131,8 +131,8 @@ test('Selection Actions collapses to an accessible icon strip without removing a
   assert.match(css, /\.preview-pane\s*\{[\s\S]*grid-column:\s*5;/);
   assert.doesNotMatch(css, /\.pane-resizer\.is-disabled\s*\{/);
   assert.doesNotMatch(shell, /setPanelResizerEnabled/);
-  assert.match(shell, /filesResizer\.addEventListener\('zeus:panel-resize-start'/);
-  assert.match(shell, /actionsResizer\.addEventListener\('zeus:panel-resize-start'/);
+  assert.match(shell, /filesResizer\.addEventListener\('vitruvios:panel-resize-start'/);
+  assert.match(shell, /actionsResizer\.addEventListener\('vitruvios:panel-resize-start'/);
 });
 
 test('Files collapses to a compact rail while preserving the Actions and Preview columns', () => {
@@ -149,7 +149,7 @@ test('chat pending messages expose a lightweight spinner animation', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
 
   assert.match(css, /\.chat-message-pending \.chat-message-body::before/);
-  assert.match(css, /@keyframes zeus-pending-spin/);
+  assert.match(css, /@keyframes vitruvios-pending-spin/);
 });
 test('chat message metadata appears on hover with copy affordance', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
@@ -161,7 +161,7 @@ test('chat message metadata appears on hover with copy affordance', () => {
 test('file tree uses local SVG icon sizing instead of unicode pseudo icons', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
 
-  assert.match(css, /\.zeus-icon/);
+  assert.match(css, /\.vitruvios-icon/);
   assert.match(css, /\.file-row-chevron-icon/);
   assert.match(css, /grid-template-columns:\s*auto 30px minmax\(0, 1fr\)/);
   assert.doesNotMatch(css, /file-row-icon::before/);
@@ -410,7 +410,7 @@ test('icon-only tool controls share the compact visual scale', () => {
   assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*width:\s*var\(--control-size-tool\);/);
   assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*border:\s*0;/);
   assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*height:\s*var\(--control-size-tool\);/);
-  assert.match(componentsCss, /\.ui-tool-button \.zeus-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
+  assert.match(componentsCss, /\.ui-tool-button \.vitruvios-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
   assert.match(markdownCss, /\.markdown-history-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
 });
 test('bottom bar separates global and preview-local status surfaces', () => {
@@ -462,12 +462,36 @@ test('chat baskets start collapsed and render compact context packets', () => {
   assert.match(contextSource, /context-basket-path/);
 });
 
-test('folder appearance controls use file-scoped styles and shared visual tokens', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+test('Vault Profile appearance controls use settings-scoped styles and shared visual tokens', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
 
-  assert.match(css, /\.folder-appearance-dialog/);
-  assert.match(css, /var\(--surface-raised\)/);
-  assert.match(css, /\.folder-appearance-icons/);
-  assert.match(css, /\.folder-appearance-colors/);
-  assert.match(css, /\.folder-appearance-apply/);
+  assert.match(css, /\.settings-vault-role-appearance/);
+  assert.match(css, /var\(--background-modifier-border\)/);
+  assert.match(css, /\.settings-vault-role-preview/);
+});
+
+test('Vault Profile color palette is compact and ordered in five square swatches per row', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
+
+  assert.match(css, /\.settings-vault-picker\[data-vault-color-options\]\s*\{[\s\S]*grid-template-columns:\s*repeat\(5, 24px\);/);
+  assert.match(css, /\.settings-vault-picker-swatch\s*\{[\s\S]*width:\s*24px;[\s\S]*border-radius:\s*var\(--radius-ui-sm\);/);
+});
+test('Vault Profile appearance pickers honor hidden state before interaction', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
+
+  assert.match(css, /\.settings-vault-picker\[hidden\]\s*\{\s*display:\s*none;/);
+});
+test('Vault Profile folder visuals use CSP-safe SVG images and fixed token palette styles', () => {
+  const fileCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+  const profileCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'vaultProfile.css'), 'utf8');
+
+  assert.doesNotMatch(fileCss, /-webkit-mask|folder-visual-mask/);
+  assert.match(profileCss, /\.file-row-icon\.has-folder-visual \.vitruvios-icon/);
+  assert.match(profileCss, /\[data-folder-color="violet-400"\]/);
+  assert.match(profileCss, /\[data-folder-color\^="amber-"\]/);
+});test('Vault Profile Save buttons stay neutral until a row has local changes', () => {
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
+
+  assert.match(css, /\.settings-vault-role-row \.settings-primary-button\[disabled\]\s*\{[\s\S]*background:\s*var\(--background-modifier-form-field\);/);
+  assert.match(css, /\.settings-vault-role-path option:disabled/);
 });

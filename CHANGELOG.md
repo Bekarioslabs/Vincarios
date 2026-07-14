@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to ZEUS Agent will be documented here.
+All notable changes to Vitruvios will be documented here.
 
 This project follows a practical pre-1.0 changelog style while the V1 rebuild is in progress.
 

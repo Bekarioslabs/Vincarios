@@ -14,8 +14,8 @@
       return null;
     }
 
-    renderPresetList({ app, type: presetApi.PRESET_TYPES.note, presetApi, proposalApi, reviewBasket, status, hostApi: options.api });
-    renderPresetList({ app, type: presetApi.PRESET_TYPES.project, presetApi, proposalApi, reviewBasket, status, hostApi: options.api });
+    renderPresetList({ app, type: presetApi.PRESET_TYPES.note, presetApi, proposalApi, reviewBasket, status, hostApi: options.api, vaultProfileState: options.vaultProfileState });
+    renderPresetList({ app, type: presetApi.PRESET_TYPES.project, presetApi, proposalApi, reviewBasket, status, hostApi: options.api, vaultProfileState: options.vaultProfileState });
     return { refresh: () => mountCreationPresets(options) };
   }
 
@@ -54,7 +54,7 @@
       '<pre class="review-modal-preview" aria-label="Preset create preview"></pre>',
       '<div class="review-modal-actions">',
       '  <button type="button" class="review-modal-cancel">Cancel</button>',
-      '  <button type="button" class="review-modal-confirm">Add to Review Basket</button>',
+      '  <button type="button" class="review-modal-confirm" disabled>Add to Review Basket</button>',
       '</div>'
     ].join('');
 
@@ -66,13 +66,20 @@
     const cancel = modal.querySelector('.review-modal-cancel');
     const confirm = modal.querySelector('.review-modal-confirm');
     const modalBehavior = getModalBehavior().mountModalBehavior({ overlay, dialog: modal, initialFocus: input });
-    let activeProfile = getDefaultProfile();
+    let activeProfile = null;
 
-    const updatePreview = () => renderPlanPreview(preview, context.presetApi, preset, input.value, activeProfile);
+    const updatePreview = () => {
+      if (!activeProfile) {
+        preview.textContent = 'Loading Vault Profile...';
+        return;
+      }
+      renderPlanPreview(preview, context.presetApi, preset, input.value, activeProfile);
+    };
     updatePreview();
-    loadProfile(context.hostApi).then((profile) => {
+    loadProfile(context.hostApi, context.vaultProfileState).then((profile) => {
       activeProfile = profile;
       updatePreview();
+      confirm.disabled = false;
     }).catch((error) => {
       preview.textContent = 'Preset preview failed: ' + error.message;
     });
@@ -86,6 +93,10 @@
     });
     cancel.addEventListener('click', () => closeDialog(overlay));
     confirm.addEventListener('click', () => {
+      if (!hasTargetRole(activeProfile, preset.targetRole)) {
+        preview.textContent = 'Assign the ' + preset.targetRole + ' role in Settings before creating from this preset.';
+        return;
+      }
       addPresetToReviewBasket(context, preset, input.value, activeProfile);
       closeDialog(overlay);
     });
@@ -125,15 +136,27 @@
     setText(context.status, 'Template proposals added to Review Basket: ' + proposals.length);
   }
 
-  function loadProfile(hostApi) {
+  function loadProfile(hostApi, vaultProfileState) {
     const vaultProfile = getVaultProfileApi();
-    if (!hostApi || !hostApi.settings || typeof hostApi.settings.get !== 'function') {
+    if (vaultProfileState && typeof vaultProfileState.getProfile === 'function') {
+      const active = vaultProfileState.getProfile();
+      if (active && active.roles) return Promise.resolve(createActiveProfile(active.roles));
+    }
+    if (!hostApi || !hostApi.vault || typeof hostApi.vault.getProfile !== 'function') {
       return Promise.resolve(getDefaultProfile());
     }
-    return hostApi.settings.get().then((settings) => {
-      const roles = settings && settings.vaultProfile && settings.vaultProfile.roles;
-      return vaultProfile.createVaultProfile({ folders: roles || {} });
+    return hostApi.vault.getProfile().then((result) => {
+      const roles = result && result.ok && result.profile ? result.profile.roles : {};
+      return createActiveProfile(roles || {});
     });
+  }
+
+  function createActiveProfile(roles) {
+    return { folders: Object.assign({}, roles || {}) };
+  }
+
+  function hasTargetRole(profile, role) {
+    return !!(profile && profile.folders && profile.folders[role]);
   }
 
   function getDefaultProfile() {
@@ -147,17 +170,17 @@
 
   function getPresetApi() {
     if (typeof require === 'function') return require('../../shared/templates/presetRegistry');
-    return window.ZeusTemplatePresets;
+    return window.VitruviosTemplatePresets;
   }
 
   function getProposalApi() {
     if (typeof require === 'function') return require('../../shared/templates/presetProposals');
-    return window.ZeusTemplatePresetProposals;
+    return window.VitruviosTemplatePresetProposals;
   }
 
   function getVaultProfileApi() {
     if (typeof require === 'function') return require('../../shared/vaultProfile/defaults');
-    return window.ZeusVaultProfile;
+    return window.VitruviosVaultProfile;
   }
 
   function setText(node, value) {
@@ -165,7 +188,7 @@
   }
 
   function getModalBehavior() {
-    return window.ZeusModalBehavior;
+    return window.VitruviosModalBehavior;
   }
 
   function escapeHtml(value) {
@@ -180,5 +203,5 @@
   const api = { mountCreationPresets };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusCreationPresets = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosCreationPresets = Object.freeze(api);
 })();

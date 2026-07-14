@@ -1,0 +1,60 @@
+.folder-visual-color {
+  --folder-visual-color: var(--color-amber-400);
+  --folder-visual-filter: var(--folder-visual-amber-base-filter);
+  --folder-visual-opacity: .9;
+}
+
+.folder-visual-color .vitruvios-icon,
+.file-row-icon.has-folder-visual .vitruvios-icon {
+  filter: var(--folder-visual-filter);
+  opacity: var(--folder-visual-opacity);
+}
+
+.folder-visual-color .settings-vault-color-swatch,
+.folder-visual-color.settings-vault-picker-swatch {
+  background: var(--folder-visual-color);
+}
+
+[data-folder-color^="blue-"] { --folder-visual-filter: var(--folder-visual-blue-filter); }
+[data-folder-color^="green-"] { --folder-visual-filter: var(--folder-visual-green-base-filter); }
+[data-folder-color^="red-"] { --folder-visual-filter: var(--folder-visual-red-base-filter); }
+[data-folder-color^="amber-"] { --folder-visual-filter: var(--folder-visual-amber-base-filter); }
+[data-folder-color^="violet-"] { --folder-visual-filter: var(--folder-visual-violet-base-filter); }
+[data-folder-color^="orange-"] { --folder-visual-filter: var(--folder-visual-orange-base-filter); }
+
+[data-folder-color$="-200"] { --folder-visual-opacity: .62; }
+[data-folder-color$="-300"] { --folder-visual-opacity: .76; }
+[data-folder-color$="-400"] { --folder-visual-opacity: .9; }
+[data-folder-color$="-500"] { --folder-visual-opacity: 1; }
+[data-folder-color$="-600"] { --folder-visual-opacity: .82; }
+
+[data-folder-color="blue-200"] { --folder-visual-color: var(--color-blue-200); }
+[data-folder-color="blue-300"] { --folder-visual-color: var(--color-blue-300); }
+[data-folder-color="blue-400"] { --folder-visual-color: var(--color-blue-400); }
+[data-folder-color="blue-500"] { --folder-visual-color: var(--color-blue-500); }
+[data-folder-color="blue-600"] { --folder-visual-color: var(--color-blue-600); }
+[data-folder-color="green-200"] { --folder-visual-color: var(--color-green-200); }
+[data-folder-color="green-300"] { --folder-visual-color: var(--color-green-300); }
+[data-folder-color="green-400"] { --folder-visual-color: var(--color-green-400); }
+[data-folder-color="green-500"] { --folder-visual-color: var(--color-green-500); }
+[data-folder-color="green-600"] { --folder-visual-color: var(--color-green-600); }
+[data-folder-color="red-200"] { --folder-visual-color: var(--color-red-200); }
+[data-folder-color="red-300"] { --folder-visual-color: var(--color-red-300); }
+[data-folder-color="red-400"] { --folder-visual-color: var(--color-red-400); }
+[data-folder-color="red-500"] { --folder-visual-color: var(--color-red-500); }
+[data-folder-color="red-600"] { --folder-visual-color: var(--color-red-600); }
+[data-folder-color="amber-200"] { --folder-visual-color: var(--color-amber-200); }
+[data-folder-color="amber-300"] { --folder-visual-color: var(--color-amber-300); }
+[data-folder-color="amber-400"] { --folder-visual-color: var(--color-amber-400); }
+[data-folder-color="amber-500"] { --folder-visual-color: var(--color-amber-500); }
+[data-folder-color="amber-600"] { --folder-visual-color: var(--color-amber-600); }
+[data-folder-color="violet-200"] { --folder-visual-color: var(--color-violet-200); }
+[data-folder-color="violet-300"] { --folder-visual-color: var(--color-violet-300); }
+[data-folder-color="violet-400"] { --folder-visual-color: var(--color-violet-400); }
+[data-folder-color="violet-500"] { --folder-visual-color: var(--color-violet-500); }
+[data-folder-color="violet-600"] { --folder-visual-color: var(--color-violet-600); }
+[data-folder-color="orange-200"] { --folder-visual-color: var(--color-orange-200); }
+[data-folder-color="orange-300"] { --folder-visual-color: var(--color-orange-300); }
+[data-folder-color="orange-400"] { --folder-visual-color: var(--color-orange-400); }
+[data-folder-color="orange-500"] { --folder-visual-color: var(--color-orange-500); }
+[data-folder-color="orange-600"] { --folder-visual-color: var(--color-orange-600); }

@@ -17,7 +17,7 @@
       '## Context Basket',
       '',
       'Context source: context_basket',
-      'These context items were explicitly added by the user through ZEUS UI. Plain file-tree selection is not context.',
+      'These context items were explicitly added by the user through Vitruvios UI. Plain file-tree selection is not context.',
       '',
       normalizedItems.map((item, index) => renderContextItem(item, index + 1, maxChars)).join('\n')
     ]);
@@ -91,13 +91,13 @@
   }
 
   function getLimitsApi() {
-    if (typeof window !== 'undefined' && window.ZeusContextLimits) return window.ZeusContextLimits;
+    if (typeof window !== 'undefined' && window.VitruviosContextLimits) return window.VitruviosContextLimits;
     if (typeof module !== 'undefined' && module.exports) return require('./contextLimits');
-    throw new Error('ZEUS context limits API is not available.');
+    throw new Error('Vitruvios context limits API is not available.');
   }
 
   function getStateApi() {
-    if (typeof window !== 'undefined' && window.ZeusContextState) return window.ZeusContextState;
+    if (typeof window !== 'undefined' && window.VitruviosContextState) return window.VitruviosContextState;
     if (typeof module !== 'undefined' && module.exports) return require('./contextState');
     return null;
   }
@@ -108,5 +108,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusContextPackageBuilder = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosContextPackageBuilder = Object.freeze(api);
 })();

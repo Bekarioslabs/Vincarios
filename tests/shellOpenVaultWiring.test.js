@@ -30,3 +30,10 @@ test('open vault click handler reports missing dependencies instead of being ski
   assert.equal(clickHandler > -1, true);
   assert.equal(unavailableStatus > -1, true);
 });
+test('shell wires one shared Vault Profile state into file, settings, and preset modules', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /createVaultProfileState\(\{ api \}\)/);
+  assert.match(source, /vaultProfileState/);
+  assert.match(source, /mountSettingsPanel\(\{ api, app, status: globalStatus, vaultProfileState \}\)/);
+});

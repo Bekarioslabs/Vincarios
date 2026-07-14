@@ -11,12 +11,12 @@
       app.innerHTML = [
         '<section class="start-screen">',
         '  <div class="start-kicker">Local-first Markdown assistant</div>',
-        '  <h1>ZEUS Agent</h1>',
+        '  <h1>Vitruvios</h1>',
         '  <p>Open an Obsidian vault to analyze, organize, and review Markdown changes safely.</p>',
         '  <button type="button" class="start-open" data-open-vault>Open Vault</button>',
         '</section>',
         '<header class="titlebar">',
-        '  <div class="titlebar-brand">ZEUS Agent</div>',
+        '  <div class="titlebar-brand">Vitruvios</div>',
         '  <div class="titlebar-spacer"></div>',
         '  <div class="topbar-actions" aria-label="Provider status" data-provider-status-widget>',
         '    <span id="provider-status" class="status-pill" data-provider-status="offline">',
@@ -161,12 +161,12 @@
       const workspaceState = createWorkspaceState();
       wireWorkspaceTabs(app, workspaceState);
       const activityState = createActivityState();
-      app.__zeusActivityState = activityState;
+      app.__vitruviosActivityState = activityState;
       const contextState = createContextState();
       const suggestionState = createSuggestionState();
       const panelLayoutState = createPanelLayoutState();
       await hydratePanelLayoutPreferences(api, panelLayoutState);
-      app.__zeusPanelLayoutState = panelLayoutState;
+      app.__vitruviosPanelLayoutState = panelLayoutState;
       let selectionActionsController = null;
       wireLeftNavigationPanelLayout(app, api, panelLayoutState, globalStatus);
       const filesPanelLayout = wireFilesPanelLayout(app, api, panelLayoutState, globalStatus);
@@ -175,35 +175,35 @@
       });
       wireSuggestionIndicator(app, suggestionState);
       const updateFlashState = createUpdateFlashState();
-      const folderVisualState = window.ZeusFolderVisualState
-        ? window.ZeusFolderVisualState.createFolderVisualState({ api })
+      const vaultProfileState = window.VitruviosVaultProfileState
+        ? window.VitruviosVaultProfileState.createVaultProfileState({ api })
         : null;
-      const vaultUi = { filePanel: null, folderVisualState, updateFlashState };
-      const reviewBasket = mountOptional('review basket', globalStatus, () => window.ZeusReviewBasket
-        ? window.ZeusReviewBasket.mountReviewBasket({ app, status: globalStatus, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
+      const vaultUi = { filePanel: null, vaultProfileState, updateFlashState };
+      const reviewBasket = mountOptional('review basket', globalStatus, () => window.VitruviosReviewBasket
+        ? window.VitruviosReviewBasket.mountReviewBasket({ app, status: globalStatus, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
         : null);
-      mountOptional('creation presets', globalStatus, () => window.ZeusCreationPresets && window.ZeusCreationPresets.mountCreationPresets({ app, api, reviewBasket, status: globalStatus }));
+      mountOptional('creation presets', globalStatus, () => window.VitruviosCreationPresets && window.VitruviosCreationPresets.mountCreationPresets({ app, api, reviewBasket, status: globalStatus, vaultProfileState }));
       wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout);
 
-      mountOptional('provider status', globalStatus, () => window.ZeusProviderStatus && window.ZeusProviderStatus.mountProviderStatus({ api, app }));
-      mountOptional('settings panel', globalStatus, () => window.ZeusSettingsPanel && window.ZeusSettingsPanel.mountSettingsPanel({ api, app, status: globalStatus }));
-      mountOptional('inbox cleanup', globalStatus, () => window.ZeusInboxCleanup && window.ZeusInboxCleanup.mountInboxCleanup({ api, app, status: globalStatus }));
-      mountOptional('chat', globalStatus, () => window.ZeusChat && window.ZeusChat.mountChat({ api, app, status: globalStatus, reviewBasket, contextState }));
-      mountOptional('context basket', globalStatus, () => window.ZeusContextBasket && window.ZeusContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
-      mountOptional('suggestions workspace', globalStatus, () => window.ZeusSuggestionsWorkspace && window.ZeusSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: globalStatus }));
-      mountOptional('session log', globalStatus, () => window.ZeusSessionLog && window.ZeusSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
-      selectionActionsController = mountOptional('selection actions', globalStatus, () => window.ZeusSelectionActions && window.ZeusSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true }));
-      mountOptional('pane resize', globalStatus, () => window.ZeusPaneResize && window.ZeusPaneResize.mountPaneResize(app));
-      mountOptional('scoped selection', globalStatus, () => window.ZeusScopedSelection && window.ZeusScopedSelection.mountScopedSelection({ app }));
+      mountOptional('provider status', globalStatus, () => window.VitruviosProviderStatus && window.VitruviosProviderStatus.mountProviderStatus({ api, app }));
+      mountOptional('settings panel', globalStatus, () => window.VitruviosSettingsPanel && window.VitruviosSettingsPanel.mountSettingsPanel({ api, app, status: globalStatus, vaultProfileState }));
+      mountOptional('inbox cleanup', globalStatus, () => window.VitruviosInboxCleanup && window.VitruviosInboxCleanup.mountInboxCleanup({ api, app, status: globalStatus }));
+      mountOptional('chat', globalStatus, () => window.VitruviosChat && window.VitruviosChat.mountChat({ api, app, status: globalStatus, reviewBasket, contextState }));
+      mountOptional('context basket', globalStatus, () => window.VitruviosContextBasket && window.VitruviosContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
+      mountOptional('suggestions workspace', globalStatus, () => window.VitruviosSuggestionsWorkspace && window.VitruviosSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: globalStatus }));
+      mountOptional('session log', globalStatus, () => window.VitruviosSessionLog && window.VitruviosSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
+      selectionActionsController = mountOptional('selection actions', globalStatus, () => window.VitruviosSelectionActions && window.VitruviosSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true }));
+      mountOptional('pane resize', globalStatus, () => window.VitruviosPaneResize && window.VitruviosPaneResize.mountPaneResize(app));
+      mountOptional('scoped selection', globalStatus, () => window.VitruviosScopedSelection && window.VitruviosScopedSelection.mountScopedSelection({ app }));
     });
   }
 
 
   function createPanelLayoutState() {
-    if (!window.ZeusPanelLayoutState || typeof window.ZeusPanelLayoutState.createPanelLayoutState !== 'function') {
-      throw new Error('ZEUS panel layout state is not available.');
+    if (!window.VitruviosPanelLayoutState || typeof window.VitruviosPanelLayoutState.createPanelLayoutState !== 'function') {
+      throw new Error('Vitruvios panel layout state is not available.');
     }
-    return window.ZeusPanelLayoutState.createPanelLayoutState();
+    return window.VitruviosPanelLayoutState.createPanelLayoutState();
   }
 
   async function hydratePanelLayoutPreferences(api, panelLayoutState) {
@@ -288,7 +288,7 @@
       const collapsed = snapshot.filesCollapsed === true;
       vaultPanel.classList.toggle('is-files-collapsed', collapsed);
       if (filePanel && typeof filePanel.setCollapsed === 'function') filePanel.setCollapsed(collapsed);
-      app.dispatchEvent(new CustomEvent('zeus:files-collapse-change', { detail: { collapsed } }));
+      app.dispatchEvent(new CustomEvent('vitruvios:files-collapse-change', { detail: { collapsed } }));
     }
 
     function setCollapsed(collapsed) {
@@ -298,7 +298,7 @@
     }
 
     if (filesResizer) {
-      filesResizer.addEventListener('zeus:panel-resize-start', () => {
+      filesResizer.addEventListener('vitruvios:panel-resize-start', () => {
         if (panelLayoutState.snapshot().filesCollapsed) setCollapsed(false);
       });
     }
@@ -346,7 +346,7 @@
     }
 
     if (actionsResizer) {
-      actionsResizer.addEventListener('zeus:panel-resize-start', () => {
+      actionsResizer.addEventListener('vitruvios:panel-resize-start', () => {
         if (panelLayoutState.snapshot().selectionActionsCollapsed) setCollapsed(false);
       });
     }
@@ -374,23 +374,23 @@
     slot.textContent = collapsed ? '<' : '>';
   }
   function createWorkspaceState() {
-    if (!window.ZeusWorkspaceState) return null;
-    return window.ZeusWorkspaceState.createWorkspaceState();
+    if (!window.VitruviosWorkspaceState) return null;
+    return window.VitruviosWorkspaceState.createWorkspaceState();
   }
 
   function createSuggestionState() {
-    if (!window.ZeusSuggestionState) return null;
-    return window.ZeusSuggestionState.createSuggestionState();
+    if (!window.VitruviosSuggestionState) return null;
+    return window.VitruviosSuggestionState.createSuggestionState();
   }
 
   function createActivityState() {
-    if (!window.ZeusActivityState) return null;
-    return window.ZeusActivityState.createActivityState();
+    if (!window.VitruviosActivityState) return null;
+    return window.VitruviosActivityState.createActivityState();
   }
 
   function createUpdateFlashState() {
-    if (!window.ZeusUpdateFlashState || typeof window.ZeusUpdateFlashState.createUpdateFlashState !== 'function') return null;
-    return window.ZeusUpdateFlashState.createUpdateFlashState({ normalizePath });
+    if (!window.VitruviosUpdateFlashState || typeof window.VitruviosUpdateFlashState.createUpdateFlashState !== 'function') return null;
+    return window.VitruviosUpdateFlashState.createUpdateFlashState({ normalizePath });
   }
 
   function wireWorkspaceTabs(app, workspaceState) {
@@ -445,8 +445,8 @@
   }
 
   function createContextState() {
-    if (!window.ZeusContextState) return null;
-    return window.ZeusContextState.createContextState();
+    if (!window.VitruviosContextState) return null;
+    return window.VitruviosContextState.createContextState();
   }
 
   function mountOptional(name, status, mount) {
@@ -458,8 +458,8 @@
     }
   }
   function createPermissionState(statusBar) {
-    if (!window.ZeusPermissionState) return null;
-    return window.ZeusPermissionState.createPermissionState({
+    if (!window.VitruviosPermissionState) return null;
+    return window.VitruviosPermissionState.createPermissionState({
       onChange(entry) {
         const modes = [];
         if (entry.read) modes.push('read');
@@ -525,7 +525,7 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
   function addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState, permissionState) {
     const permission = validatePreviewUpdatePermission(proposal, contextState, permissionState);
@@ -741,10 +741,10 @@
       try {
         return await api.appInfo();
       } catch (error) {
-        return { name: 'ZEUS Agent', version: 'unavailable' };
+        return { name: 'Vitruvios', version: 'unavailable' };
       }
     }
-    return { name: 'ZEUS Agent', version: '0.1.0' };
+    return { name: 'Vitruvios', version: '0.1.0' };
   }
 
   function wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout) {
@@ -752,8 +752,8 @@
     const filePanelRoot = app.querySelector('#file-panel');
     const statusBar = app.querySelector('#status-bar-global');
     let filePanel = null;
-    const previewController = window.ZeusMarkdownPreview
-      ? window.ZeusMarkdownPreview.mountMarkdownPreview({
+    const previewController = window.VitruviosMarkdownPreview
+      ? window.VitruviosMarkdownPreview.mountMarkdownPreview({
         app,
         api,
         status: statusBar,
@@ -774,10 +774,10 @@
 
     if (!api || !api.vault) {
       setText(statusBar, 'Vault API unavailable.');
-    } else if (!window.ZeusFilePanel) {
+    } else if (!window.VitruviosFilePanel) {
       setText(statusBar, 'File panel unavailable.');
     } else {
-      filePanel = window.ZeusFilePanel.mountFilePanel({
+      filePanel = window.VitruviosFilePanel.mountFilePanel({
         api,
         root: filePanelRoot,
         previewController,
@@ -785,7 +785,7 @@
         contextState,
         permissionState,
         updateFlashState: vaultUi && vaultUi.updateFlashState,
-        folderVisualState: vaultUi && vaultUi.folderVisualState,
+        vaultProfileState: vaultUi && vaultUi.vaultProfileState,
         onToggleCollapse: filesPanelLayout && filesPanelLayout.toggle,
         onRequestExpand: filesPanelLayout && filesPanelLayout.requestExpand
       });
@@ -825,7 +825,7 @@
   }
 
   function recordActivityFromStatus(app, type, action, targetPath, detail) {
-    const state = app && app.__zeusActivityState;
+    const state = app && app.__vitruviosActivityState;
     if (!state || typeof state.record !== 'function') return;
     state.record({ type, action, targetPath, detail });
   }
@@ -839,6 +839,6 @@
   }
 
   if (typeof window !== 'undefined') {
-    window.ZeusShell = Object.freeze({ mountShell });
+    window.VitruviosShell = Object.freeze({ mountShell });
   }
 })();

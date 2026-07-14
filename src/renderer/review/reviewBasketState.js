@@ -158,7 +158,7 @@
   }
 
   function getGeneratedMetadataApi() {
-    if (typeof window !== 'undefined' && window.ZeusGeneratedNoteMetadata) return window.ZeusGeneratedNoteMetadata;
+    if (typeof window !== 'undefined' && window.VitruviosGeneratedNoteMetadata) return window.VitruviosGeneratedNoteMetadata;
     if (typeof require === 'function') {
       try {
         return require('../../shared/metadata/generatedNoteMetadata');
@@ -178,7 +178,7 @@
   }
 
   function getVaultProfileApi() {
-    if (typeof window !== 'undefined' && window.ZeusVaultProfile) return window.ZeusVaultProfile;
+    if (typeof window !== 'undefined' && window.VitruviosVaultProfile) return window.VitruviosVaultProfile;
     if (typeof require === 'function') {
       try {
         return require('../../shared/vaultProfile/defaults');
@@ -190,7 +190,7 @@
   }
 
   function getActionSchemaApi() {
-    if (typeof window !== 'undefined' && window.ZeusActionSchema) return window.ZeusActionSchema;
+    if (typeof window !== 'undefined' && window.VitruviosActionSchema) return window.VitruviosActionSchema;
     if (typeof require === 'function') {
       try {
         return require('../../shared/actions/actionSchema');
@@ -202,7 +202,7 @@
   }
 
   function getProposalPlanApi() {
-    if (typeof window !== 'undefined' && window.ZeusProposalPlan) return window.ZeusProposalPlan;
+    if (typeof window !== 'undefined' && window.VitruviosProposalPlan) return window.VitruviosProposalPlan;
     if (typeof require === 'function') {
       try {
         return require('../../shared/actions/proposalPlan');
@@ -214,7 +214,7 @@
   }
 
   function getDiffPreviewApi() {
-    if (typeof window !== 'undefined' && window.ZeusDiffPreview) return window.ZeusDiffPreview;
+    if (typeof window !== 'undefined' && window.VitruviosDiffPreview) return window.VitruviosDiffPreview;
     if (typeof require === 'function') {
       try {
         return require('../../shared/actions/diffPreview');
@@ -270,7 +270,7 @@ function deriveTitle(content) {
   }
 
   if (typeof window !== 'undefined') {
-    window.ZeusReviewBasketState = Object.freeze({
+    window.VitruviosReviewBasketState = Object.freeze({
       createReviewBasketState,
       createSaveAssistantResponseProposal
     });

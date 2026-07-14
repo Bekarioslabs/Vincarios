@@ -15,5 +15,5 @@
   const api = { ACTION_CATEGORIES, getActionCategory };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusSelectionActionCategories = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosSelectionActionCategories = Object.freeze(api);
 })();

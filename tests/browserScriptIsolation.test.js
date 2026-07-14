@@ -19,8 +19,9 @@ const BROWSER_RENDERER_SCRIPTS = [
   'src/renderer/shell/mountShell.js',
   'src/renderer/icons/iconRegistry.js',
   'src/renderer/icons/iconRenderer.js',
-  'src/renderer/files/folderVisualState.js',
-  'src/renderer/files/folderAppearanceModal.js'
+  'src/renderer/vaultProfile/vaultProfileState.js',
+  'src/renderer/vaultProfile/vaultProfileDraftState.js',
+  'src/renderer/vaultProfile/visualIconRenderer.js'
 ];
 
 
@@ -42,6 +43,16 @@ test('index loads all isolated shared scripts before renderer script modules', (
     assert.equal(scriptIndex > -1, true, htmlPath);
     assert.equal(scriptIndex < firstRendererScript, true, htmlPath);
   });
+});
+test('Vault Profile visual icon renderer loads before its consumer modules', () => {
+  const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const rendererIndex = index.indexOf('./src/renderer/vaultProfile/visualIconRenderer.js');
+  const filePanelIndex = index.indexOf('./src/renderer/files/mountFilePanel.js');
+  const settingsPanelIndex = index.indexOf('./src/renderer/settings/mountSettingsPanel.js');
+
+  assert.equal(rendererIndex > -1, true);
+  assert.equal(rendererIndex < filePanelIndex, true);
+  assert.equal(rendererIndex < settingsPanelIndex, true);
 });
 test('index does not contain visible escaped newline literals', () => {
   const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');

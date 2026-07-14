@@ -21,8 +21,8 @@
   color: var(--text-accent);
 }
 
-.ui-tool-button:hover:not(:disabled) .zeus-icon,
-.ui-tool-button:focus-visible .zeus-icon {
+.ui-tool-button:hover:not(:disabled) .vitruvios-icon,
+.ui-tool-button:focus-visible .vitruvios-icon {
   filter: var(--icon-accent-filter, var(--icon-muted-filter, none));
 }
 
@@ -36,7 +36,7 @@
   cursor: default;
 }
 
-.ui-tool-button .zeus-icon {
+.ui-tool-button .vitruvios-icon {
   width: var(--icon-size-tool);
   height: var(--icon-size-tool);
 }

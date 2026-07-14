@@ -1,6 +1,6 @@
-# ZEUS Agent
+# Vitruvios
 
-ZEUS Agent is a local, review-first assistant for Obsidian-style Markdown vaults.
+Vitruvios is a local, review-first assistant for Obsidian-style Markdown vaults.
 
 It helps users analyze, organize, connect, and update notes through visible, reviewable, reversible actions.
 
@@ -30,13 +30,13 @@ Permission shortcuts:
 
 ## Starting On Windows
 
-Use `start.bat` for the local Electron app when `npm` is not available in the shell. The launcher keeps Electron user data, disk cache, and app settings portable under `D:\ZEUS_AGENT\.zeus\`. Vault-specific ZEUS data such as backups, audit logs, and future embedding indexes live under the opened vault's `.zeus/` folder.
+Use `start.bat` for the local Electron app when `npm` is not available in the shell. The launcher keeps Electron user data, disk cache, and app settings portable under `D:\Vitruvios_AGENT\.vitruvios\`. Vault-specific Vitruvios data such as backups, audit logs, and future embedding indexes live under the opened vault's `.vitruvios/` folder.
 ## Planning Docs
 
 Start here:
 
 ```text
-docs/rebuild/ZEUS_V1_FINAL_BRIEFING.md
+docs/rebuild/VITRUVIOS_V1_FINAL_BRIEFING.md
 ```
 
 Detailed planning lives in:

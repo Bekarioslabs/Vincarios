@@ -1,8 +1,8 @@
 {
-  "name": "zeus-agent",
+  "name": "vitruvios",
   "version": "0.1.0",
   "private": true,
-  "description": "Local review-first assistant for Obsidian-style Markdown vaults.",
+  "description": "Local-first Markdown and project workspace with visible, reviewable AI workflows.",
   "main": "src/main/index.js",
   "engines": {
     "node": ">=22.12.0"

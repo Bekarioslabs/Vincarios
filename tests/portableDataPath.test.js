@@ -11,19 +11,19 @@ const {
   migrateLegacySettingsToPortable
 } = require('../src/main/app/portableDataPath');
 
-test('portable settings live under the project .zeus folder, not Electron userData', () => {
-  const projectRoot = path.join(os.tmpdir(), 'zeus-portable-root');
+test('portable settings live under the project .vitruvios folder, not Electron userData', () => {
+  const projectRoot = path.join(os.tmpdir(), 'vitruvios-portable-root');
 
-  assert.equal(getPortableDataRoot(projectRoot), path.join(projectRoot, '.zeus'));
-  assert.equal(getPortableSettingsPath(projectRoot), path.join(projectRoot, '.zeus', 'settings.json'));
+  assert.equal(getPortableDataRoot(projectRoot), path.join(projectRoot, '.vitruvios'));
+  assert.equal(getPortableSettingsPath(projectRoot), path.join(projectRoot, '.vitruvios', 'settings.json'));
 });
 
 test('legacy userData settings migrate to portable storage and remove the old file', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-portable-migration-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-portable-migration-'));
   const projectRoot = path.join(root, 'app');
   const userData = path.join(root, 'AppData');
   const legacyPath = path.join(userData, 'settings.json');
-  const portablePath = path.join(projectRoot, '.zeus', 'settings.json');
+  const portablePath = path.join(projectRoot, '.vitruvios', 'settings.json');
   fs.mkdirSync(userData, { recursive: true });
   fs.writeFileSync(legacyPath, '{\"version\":1}\n', 'utf8');
 
@@ -37,9 +37,9 @@ test('legacy userData settings migrate to portable storage and remove the old fi
 });
 
 test('legacy settings are removed but do not overwrite existing portable settings', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-portable-existing-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-portable-existing-'));
   const legacyPath = path.join(root, 'AppData', 'settings.json');
-  const portablePath = path.join(root, 'App', '.zeus', 'settings.json');
+  const portablePath = path.join(root, 'App', '.vitruvios', 'settings.json');
   fs.mkdirSync(path.dirname(legacyPath), { recursive: true });
   fs.mkdirSync(path.dirname(portablePath), { recursive: true });
   fs.writeFileSync(legacyPath, '{\"legacy\":true}\n', 'utf8');

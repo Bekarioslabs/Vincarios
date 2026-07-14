@@ -66,8 +66,8 @@ test('proposal plan parser rejects empty plans', () => {
 test('proposal plan parser exposes browser globals through shared action schema', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'shared', 'actions', 'proposalPlan.js'), 'utf8');
 
-  assert.match(source, /window\.ZeusActionSchema/);
-  assert.match(source, /window\.ZeusProposalPlan/);
+  assert.match(source, /window\.VitruviosActionSchema/);
+  assert.match(source, /window\.VitruviosProposalPlan/);
   assert.doesNotMatch(source, /const \{ normalizeActionProposal \} = require/);
 });
 

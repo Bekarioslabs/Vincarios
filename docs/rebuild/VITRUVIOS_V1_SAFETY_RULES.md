@@ -1,4 +1,4 @@
-# ZEUS V1 Safety Rules
+# Vitruvios V1 Safety Rules
 
 ## Non-Negotiable Laws
 
@@ -33,9 +33,9 @@ Backup before:
 No backup needed for:
 
 - creating a new file that does not yet exist
-- manual ZEUS configuration writes under `.zeus/`, such as Folder Visual Identity settings, because they do not change Markdown content or Obsidian configuration
+- manual Vitruvios configuration writes under `.vitruvios/`, such as Folder Visual Identity settings, because they do not change Markdown content or Obsidian configuration
 
-Manual ZEUS configuration writes are intentional low-risk app settings writes. They do not use the Review Basket, content diff, or note-backup pipeline. Future config history may record them separately from vault-content audit entries.
+Manual Vitruvios configuration writes are intentional low-risk app settings writes. They do not use the Review Basket, content diff, or note-backup pipeline. Future config history may record them separately from vault-content audit entries.
 
 ## Audit Log
 

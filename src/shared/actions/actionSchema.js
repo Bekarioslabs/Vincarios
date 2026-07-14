@@ -184,5 +184,5 @@
   };
   
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusActionSchema = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosActionSchema = Object.freeze(api);
 })();

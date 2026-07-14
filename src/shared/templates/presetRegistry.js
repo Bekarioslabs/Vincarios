@@ -242,7 +242,7 @@
 
   function loadVaultProfile() {
     if (typeof require === 'function') return require('../vaultProfile/defaults');
-    return window.ZeusVaultProfile;
+    return window.VitruviosVaultProfile;
   }
 
   const api = {
@@ -254,5 +254,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusTemplatePresets = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosTemplatePresets = Object.freeze(api);
 })();

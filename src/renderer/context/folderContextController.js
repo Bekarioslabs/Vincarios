@@ -130,7 +130,7 @@
 
   function createMissingScopeMessage(selection, scopeChoice) {
     const path = selection && selection.path ? normalizePath(selection.path) : '';
-    const message = 'No open folder scope choice. Ask ZEUS to check or list a folder first, then choose current level or all subfolders.' + (path ? ' Current selection: ' + path : '');
+    const message = 'No open folder scope choice. Ask Vitruvios to check or list a folder first, then choose current level or all subfolders.' + (path ? ' Current selection: ' + path : '');
     return {
       handled: true,
       kind: 'message',
@@ -143,7 +143,7 @@
     const message = [
       'Choose folder scope for current selection ' + pendingAction.selectionId + ': ' + pendingAction.targetPath,
       '',
-      'ZEUS can list the current level or include all subfolders. Markdown file contents will not be read.'
+      'Vitruvios can list the current level or include all subfolders. Markdown file contents will not be read.'
     ].join('\n');
 
     return {
@@ -360,25 +360,25 @@
 
 
   function getIntentApi() {
-    if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
+    if (typeof window !== 'undefined' && window.VitruviosContextIntent) return window.VitruviosContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');
     return null;
   }
 
   function getLimitsApi() {
-    if (typeof window !== 'undefined' && window.ZeusContextLimits) return window.ZeusContextLimits;
+    if (typeof window !== 'undefined' && window.VitruviosContextLimits) return window.VitruviosContextLimits;
     if (typeof module !== 'undefined' && module.exports) return require('./contextLimits');
-    throw new Error('ZEUS context limits API is not available.');
+    throw new Error('Vitruvios context limits API is not available.');
   }
 
 
   function getBlockedActionStateApi() {
-    if (typeof window !== 'undefined' && window.ZeusBlockedActionState) return window.ZeusBlockedActionState;
+    if (typeof window !== 'undefined' && window.VitruviosBlockedActionState) return window.VitruviosBlockedActionState;
     if (typeof module !== 'undefined' && module.exports) return require('./blockedActionState');
     return null;
   }
   function getPendingActionStateApi() {
-    if (typeof window !== 'undefined' && window.ZeusPendingActionState) return window.ZeusPendingActionState;
+    if (typeof window !== 'undefined' && window.VitruviosPendingActionState) return window.VitruviosPendingActionState;
     if (typeof module !== 'undefined' && module.exports) return require('./pendingActionState');
     return null;
   }
@@ -394,5 +394,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusFolderContextController = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosFolderContextController = Object.freeze(api);
 })();

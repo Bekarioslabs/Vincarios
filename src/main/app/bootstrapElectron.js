@@ -16,7 +16,7 @@ const { createSettingsStore, toProviderRegistryOptions } = require('../settings/
 const { createSettingsService } = require('../settings/settingsService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
-const { createVaultFolderVisualService } = require('../vault/vaultFolderVisualService');
+const { createVaultProfileService } = require('../vault/vaultProfileService');
 const { createEmbeddingSimilaritySearch } = require('../embeddings/embeddingSimilaritySearch');
 const { createEmbeddingIndexer } = require('../embeddings/embeddingIndexer');
 const { getPortableSettingsPath, migrateLegacySettingsToPortable } = require('./portableDataPath');
@@ -25,6 +25,7 @@ function bootstrapElectron(electron, options) {
   options = options || {};
   const { app, ipcMain, dialog, BrowserWindow } = electron;
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
+
   const vaultReadService = options.vaultReadService || createVaultReadService();
   const settingsFilePath = options.settingsFilePath || getDefaultSettingsPath(app, projectRoot);
   if (!options.settingsFilePath) {
@@ -35,7 +36,7 @@ function bootstrapElectron(electron, options) {
     initialSettings: options.initialSettings
   });
   const vaultWriteService = options.vaultWriteService || createVaultWriteService({ settingsStore });
-  const folderVisualService = options.folderVisualService || createVaultFolderVisualService();
+  const vaultProfileService = options.vaultProfileService || createVaultProfileService();
   const providerSettingsOptions = Object.assign(
     {},
     options.providerOptions || {},
@@ -59,11 +60,11 @@ function bootstrapElectron(electron, options) {
 
   registerChatIpc(ipcMain, chatService);
   registerAppIpc(ipcMain, {
-    appName: 'ZEUS Agent',
+    appName: 'Vitruvios',
     version: app.getVersion ? app.getVersion() : '0.1.0',
     shell: electron.shell
   });
-  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, folderVisualService);
+  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);
   registerSettingsIpc(ipcMain, settingsService);
   registerEmbeddingIpc(ipcMain, embeddingSearchService);

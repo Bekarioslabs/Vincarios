@@ -47,7 +47,7 @@ The Preview remains a reading surface. It is not an action drawer and does not h
 - Collapse is a per-user layout preference and belongs in app-local settings.
 - A collapsed area keeps a visible, accessible toggle with `aria-expanded` state and a tooltip.
 - Important active state remains discoverable through compact counts or indicators.
-- Folder visual identity remains separate vault metadata under `.zeus/`; it is not layout state.
+- Folder visual identity remains separate vault metadata under `.vitruvios/`; it is not layout state.
 
 ## Module Boundaries
 

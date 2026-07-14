@@ -1,10 +1,10 @@
-# Contributing To ZEUS Agent
+# Contributing To Vitruvios
 
-Thanks for considering a contribution. ZEUS is still a V1 rebuild, so the most valuable contributions are small, tested, and aligned with the safety model.
+Thanks for considering a contribution. Vitruvios is still a V1 rebuild, so the most valuable contributions are small, tested, and aligned with the safety model.
 
 ## Product Boundary
 
-ZEUS is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian; it is not a second Obsidian, a general agent platform, or a cloud AI client.
+Vitruvios is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian; it is not a second Obsidian, a general agent platform, or a cloud AI client.
 
 Before proposing a large feature, check:
 
@@ -43,7 +43,7 @@ The GitHub CI workflow runs the same core checks.
 - Keep behavior in the owning module. Do not add one-off prompt or typo patches.
 - Prefer deterministic app state and Selection Actions over broad language-trigger guessing.
 
-See `AGENTS.md` and `docs/rebuild/ZEUS_V1_ARCHITECTURE.md` before changing architecture.
+See `AGENTS.md` and `docs/rebuild/VITRUVIOS_V1_ARCHITECTURE.md` before changing architecture.
 
 ## Pull Request Guidelines
 

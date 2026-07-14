@@ -12,7 +12,7 @@ test('embedding markdown source scans markdown files recursively and skips prote
   writeFile(root, 'Notes/One.md', '# One');
   writeFile(root, 'Notes/Two.txt', 'No');
   writeFile(root, 'Nested/Three.markdown', '# Three');
-  writeFile(root, '.zeus/index/documents.json', '{}');
+  writeFile(root, '.vitruvios/index/documents.json', '{}');
   writeFile(root, '.obsidian/app.json', '{}');
 
   const source = createEmbeddingMarkdownSource();
@@ -41,5 +41,5 @@ function writeFile(root, relativePath, content) {
 }
 
 function createTempVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-embedding-source-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-embedding-source-'));
 }

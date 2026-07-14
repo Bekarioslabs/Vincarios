@@ -355,7 +355,7 @@
 
 .settings-vault-role-row {
   display: grid;
-  grid-template-columns: minmax(120px, 170px) minmax(180px, 1fr) auto;
+  grid-template-columns: minmax(110px, 150px) minmax(150px, 1fr) minmax(200px, auto) auto;
   align-items: end;
   gap: 10px;
   padding: 12px;
@@ -396,4 +396,125 @@
 .settings-close-icon {
   width: 14px;
   height: 14px;
+}
+
+.settings-vault-role-appearance {
+  position: relative;
+  display: grid;
+  grid-template-columns: 32px 32px 32px;
+  gap: 6px;
+  align-items: center;
+}
+
+.settings-vault-appearance-button,
+.settings-vault-role-preview {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-control);
+  background: var(--background-secondary);
+  cursor: pointer;
+}
+
+.settings-vault-appearance-button:hover,
+.settings-vault-appearance-button:focus-visible {
+  border-color: rgba(var(--interactive-accent-rgb), .72);
+  outline: none;
+}
+
+.settings-vault-appearance-button .file-row-type-icon,
+.settings-vault-role-preview .file-row-type-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.settings-vault-color-swatch {
+  display: block;
+  width: 15px;
+  height: 15px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 50%;
+  background: var(--folder-visual-color, var(--color-amber-400));
+}
+
+.settings-vault-picker {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 204px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-control);
+  background: var(--background-secondary);
+  box-shadow: var(--shadow-popover);
+}
+
+.settings-vault-picker[hidden] {
+  display: none;
+}
+.settings-vault-picker[data-vault-color-options] {
+  left: 38px;
+  width: 152px;
+  grid-template-columns: repeat(5, 24px);
+  gap: 4px;
+  max-height: none;
+  overflow: visible;
+}
+
+.settings-vault-picker-icon,
+.settings-vault-picker-swatch {
+  min-height: 30px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-sm);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  cursor: pointer;
+}
+
+.settings-vault-picker-icon {
+  display: grid;
+  place-items: center;
+}
+
+.settings-vault-picker-swatch {
+  width: 24px;
+  min-height: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: var(--radius-ui-sm);
+}
+
+.settings-vault-picker-icon:hover,
+.settings-vault-picker-icon:focus-visible,
+.settings-vault-picker-swatch:hover,
+.settings-vault-picker-swatch:focus-visible {
+  border-color: rgba(var(--interactive-accent-rgb), .72);
+  outline: none;
+}
+
+.settings-vault-picker-icon .file-row-type-icon {
+  width: 15px;
+  height: 15px;
+}
+.settings-vault-role-row .settings-primary-button[disabled] {
+  border-color: var(--background-modifier-border);
+  background: var(--background-modifier-form-field);
+  color: var(--text-muted);
+  cursor: default;
+  opacity: 1;
+}
+
+.settings-vault-role-row .settings-primary-button[disabled]:hover {
+  border-color: var(--background-modifier-border);
+  color: var(--text-muted);
+}
+
+.settings-vault-role-path option:disabled {
+  color: var(--text-faint);
 }

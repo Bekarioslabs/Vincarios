@@ -2,7 +2,9 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+
 const { getPortableDataRoot } = require('../app/portableDataPath');
+const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 
 const DEFAULT_EMBEDDING_MODEL = Object.freeze({
   id: 'Xenova/paraphrase-multilingual-MiniLM-L12-v2',
@@ -38,7 +40,7 @@ function createEmbeddingModelStore(options) {
       modelId: DEFAULT_EMBEDDING_MODEL.id,
       baseModelId: DEFAULT_EMBEDDING_MODEL.baseModelId,
       artifactRepoId: DEFAULT_EMBEDDING_MODEL.artifactRepoId,
-      relativeFolder: '.zeus/models/embeddings/' + DEFAULT_EMBEDDING_MODEL.folderName,
+      relativeFolder: CURRENT_INTERNAL_NAMESPACE + '/models/embeddings/' + DEFAULT_EMBEDDING_MODEL.folderName,
       folderPath,
       manifestPath: path.join(folderPath, 'model-manifest.json')
     };

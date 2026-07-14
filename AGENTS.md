@@ -1,15 +1,15 @@
-# AGENTS.md — ZEUS Agent V1
+# AGENTS.md — Vitruvios V1
 
 > **Quick Reference**
-> ZEUS is a local-first Markdown vault assistant. Safety first. All vault writes are explicit, reviewable, and backed up. Providers generate text only — they never touch files.
+> Vitruvios is a local-first Markdown vault assistant. Safety first. All vault writes are explicit, reviewable, and backed up. Providers generate text only — they never touch files.
 
 ---
 
 ## 1. Identity & Scope
 
-ZEUS is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian, it does not replace it.
+Vitruvios is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian, it does not replace it.
 
-**Not ZEUS:** general-purpose agent, cloud AI client, standalone media manager, plugin ecosystem.
+**Not Vitruvios:** general-purpose agent, cloud AI client, standalone media manager, plugin ecosystem.
 
 Do not add features outside V1 without updating the product brief and asking Beka.
 
@@ -29,18 +29,18 @@ These are enforced in code, not prompts. Non-negotiable.
 - Writes require visible review.
 - Existing-file writes require backup.
 - Executed actions require audit log entries.
-- Dot folders (`.obsidian`, `.zeus`, `.zeus_backups`) are always blocked.
+- Dot folders (`.obsidian`, `.vitruvios`, `.vitruvios_backups`) are always blocked.
 - Remote providers receive no private vault context by default.
 
 **Permission model:**
-- Read = ZEUS may use the path as context.
-- Write = ZEUS may propose write actions. Write never means silent execution.
+- Read = Vitruvios may use the path as context.
+- Write = Vitruvios may propose write actions. Write never means silent execution.
 - V1 has no Trusted/Yolo mode.
 
 **Code beats Brain:** Brain/Core Markdown may explain and configure behavior. It must not override code-side safety laws, permissions, vault profile validation, provider boundaries, or reviewed write flows.
 
 **Data boundaries — keep out of Git:**
-Private profiles (e.g. `Oracle.md`), vault data, `.obsidian/`, `.zeus/`, `.zeus_backups/`, `node_modules/`, model caches, backups. The repo must work without Beka's private vault.
+Private profiles (e.g. `Oracle.md`), vault data, `.obsidian/`, `.vitruvios/`, `.vitruvios_backups/`, `node_modules/`, model caches, backups. The repo must work without Beka's private vault.
 
 ---
 
@@ -58,7 +58,7 @@ Future provider UI slots are allowed only as named integration slots, not fake f
 
 ### Module Ownership
 
-When adding behavior, identify the owner first. If unclear, update `docs/rebuild/ZEUS_V1_ARCHITECTURE.md` before coding.
+When adding behavior, identify the owner first. If unclear, update `docs/rebuild/VITRUVIOS_V1_ARCHITECTURE.md` before coding.
 
 **Renderer modules:**
 
@@ -115,7 +115,7 @@ If `defaults.js` still contains German names, that is the current canonical stat
 
 - Keep provider logic separate from vault safety.
 - Keep prompt rules separate from UI rendering.
-- Renderer modules are browser-first: use `window.Zeus...` APIs before any `require(...)` fallback. `require(...)` exists only for Node tests.
+- Renderer modules are browser-first: use `window.Vitruvios...` APIs before any `require(...)` fallback. `require(...)` exists only for Node tests.
 - Keep action schema shared and testable.
 - Add tests for safety-sensitive behavior.
 - Prefer small modules over large orchestration files.
@@ -168,7 +168,7 @@ State the owning module and the general rule before changing code.
 
 ### External Suggestions
 
-Treat suggestions from Claude, ChatGPT, audits, or other tools as design input only. Map each suggestion to ZEUS ownership boundaries, safety rules, and current V1 docs before implementing. If a suggestion does not fit the architecture, adapt the idea or decline it.
+Treat suggestions from Claude, ChatGPT, audits, or other tools as design input only. Map each suggestion to Vitruvios ownership boundaries, safety rules, and current V1 docs before implementing. If a suggestion does not fit the architecture, adapt the idea or decline it.
 
 ---
 
@@ -183,15 +183,15 @@ Load `FINAL_BRIEFING.md` only for cross-cutting changes spanning two or more doc
 
 | Area | Canonical doc |
 |---|---|
-| Product scope or priorities | `docs/rebuild/ZEUS_V1_PRODUCT_BRIEF.md` |
-| Module boundaries, source structure, provider plan, folder roles | `docs/rebuild/ZEUS_V1_ARCHITECTURE.md` |
-| Review basket, writes, diffs, action execution | `docs/rebuild/ZEUS_V1_ACTION_MODEL.md` |
-| Security, permissions, path handling, provider boundaries | `docs/rebuild/ZEUS_V1_SAFETY_RULES.md` |
-| UI, workflows, shortcuts, Markdown preview, layout, context/permission UI | `docs/rebuild/ZEUS_V1_UI_AND_WORKFLOWS.md` |
-| Tests, audits, release confidence | `docs/rebuild/ZEUS_V1_TESTS_AND_AUDITS.md` |
-| Rebuild process, repository hygiene | `docs/rebuild/ZEUS_V1_REBUILD_PROCESS.md` |
-| Phase checklist and open tasks | `docs/rebuild/ZEUS_V1_IMPLEMENTATION_PLAN.md` |
-| Cross-cutting or freeze-gate decisions only | `docs/rebuild/ZEUS_V1_FINAL_BRIEFING.md` |
+| Product scope or priorities | `docs/rebuild/VITRUVIOS_V1_PRODUCT_BRIEF.md` |
+| Module boundaries, source structure, provider plan, folder roles | `docs/rebuild/VITRUVIOS_V1_ARCHITECTURE.md` |
+| Review basket, writes, diffs, action execution | `docs/rebuild/VITRUVIOS_V1_ACTION_MODEL.md` |
+| Security, permissions, path handling, provider boundaries | `docs/rebuild/VITRUVIOS_V1_SAFETY_RULES.md` |
+| UI, workflows, shortcuts, Markdown preview, layout, context/permission UI | `docs/rebuild/VITRUVIOS_V1_UI_AND_WORKFLOWS.md` |
+| Tests, audits, release confidence | `docs/rebuild/VITRUVIOS_V1_TESTS_AND_AUDITS.md` |
+| Rebuild process, repository hygiene | `docs/rebuild/VITRUVIOS_V1_REBUILD_PROCESS.md` |
+| Phase checklist and open tasks | `docs/rebuild/VITRUVIOS_V1_IMPLEMENTATION_PLAN.md` |
+| Cross-cutting or freeze-gate decisions only | `docs/rebuild/VITRUVIOS_V1_FINAL_BRIEFING.md` |
 
 Do not load historical audit files unless the task explicitly asks for audit review.
 
@@ -225,7 +225,7 @@ Important features must be visible in the app flow. Prefer action cards, review 
 
 ### Component Rules
 
-Before adding or changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls, follow `docs/rebuild/ZEUS_V1_UI_COMPONENT_RULES.md`.
+Before adding or changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls, follow `docs/rebuild/VITRUVIOS_V1_UI_COMPONENT_RULES.md`.
 
 ### Accessibility Rules
 
@@ -279,7 +279,7 @@ When implementing or changing a visible feature, workflow, permission behavior, 
 **What to check:**
 - The specific V1 doc that owns the behavior (see canonical table in Section 5)
 - `README.md` only for user-facing feature, setup, release, or start command changes
-- `docs/rebuild/ZEUS_V1_FINAL_BRIEFING.md` only for cross-cutting or freeze-gate changes
+- `docs/rebuild/VITRUVIOS_V1_FINAL_BRIEFING.md` only for cross-cutting or freeze-gate changes
 
 Docs should be short, active, and decision-oriented. Archive historical material instead of letting active docs grow into a diary.
 

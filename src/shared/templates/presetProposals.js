@@ -68,7 +68,7 @@
 
   function loadGeneratedMetadataApi() {
     if (typeof require === 'function') return require('../metadata/generatedNoteMetadata');
-    if (typeof window !== 'undefined' && window.ZeusGeneratedNoteMetadata) return window.ZeusGeneratedNoteMetadata;
+    if (typeof window !== 'undefined' && window.VitruviosGeneratedNoteMetadata) return window.VitruviosGeneratedNoteMetadata;
     throw new Error('Generated note metadata API unavailable.');
   }
   function splitPath(value) {
@@ -93,5 +93,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusTemplatePresetProposals = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosTemplatePresetProposals = Object.freeze(api);
 })();

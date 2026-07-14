@@ -7,7 +7,7 @@ It is not product documentation. Do not read this file for architecture or featu
 
 ## Environment Assumptions
 
-- Platform: Windows (`D:\ZEUS_AGENT`)
+- Platform: Windows (`D:\Vitruvios_AGENT`)
 - Node runtime: available via `npm` or bundled Node path
 - Shell: PowerShell by default, cmd fallback when needed
 - Electron: dev dependency, started via `npm start` or `npx electron .`
@@ -59,7 +59,7 @@ If `npm` is unavailable in the shell:
 npm test          # full test suite - run before every commit
 npm run check     # JS syntax/lint check
 npm start         # start Electron app
-start.bat         # Windows launcher; uses %LOCALAPPDATA%\ZEUS_AGENT for Electron user-data/cache
+start.bat         # Windows launcher; uses %LOCALAPPDATA%\Vitruvios_AGENT for Electron user-data/cache
 ```
 
 Run targeted tests first for small changes. Reserve `npm test` for commits, safety-sensitive changes, and broad shell/IPC/provider/context changes.

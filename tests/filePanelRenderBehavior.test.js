@@ -60,9 +60,9 @@ test('file panel renders root folders after opening a vault', async () => {
 
   global.document = { createElement: createNode };
   global.window = {
-    ZeusFileNavigator: navigator,
-    ZeusFileTreeKeyboard: keyboard,
-    ZeusIconRenderer: {
+    VitruviosFileNavigator: navigator,
+    VitruviosFileTreeKeyboard: keyboard,
+    VitruviosIconRenderer: {
       createIconElement(name, className) {
         const icon = createNode('img');
         icon.iconName = name;
@@ -111,9 +111,9 @@ test('file panel opens Markdown after selecting an image file', async () => {
 
   global.document = { createElement: createNode };
   global.window = {
-    ZeusFileNavigator: navigator,
-    ZeusFileTreeKeyboard: keyboard,
-    ZeusIconRenderer: {
+    VitruviosFileNavigator: navigator,
+    VitruviosFileTreeKeyboard: keyboard,
+    VitruviosIconRenderer: {
       createIconElement(name, className) {
         const icon = createNode('img');
         icon.iconName = name;
@@ -182,9 +182,9 @@ test('file panel opens selected images in the preview controller', async () => {
 
   global.document = { createElement: createNode };
   global.window = {
-    ZeusFileNavigator: navigator,
-    ZeusFileTreeKeyboard: keyboard,
-    ZeusIconRenderer: {
+    VitruviosFileNavigator: navigator,
+    VitruviosFileTreeKeyboard: keyboard,
+    VitruviosIconRenderer: {
       createIconElement(name, className) {
         const icon = createNode('img');
         icon.iconName = name;

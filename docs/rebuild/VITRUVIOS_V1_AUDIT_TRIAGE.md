@@ -1,6 +1,6 @@
-# ZEUS V1 Audit Triage
+# Vitruvios V1 Audit Triage
 
-Source: external audit file `Audit 01.md` from June 25, 2026, compared against the current ZEUS V1 rebuild state.
+Source: external audit file `Audit 01.md` from June 25, 2026, compared against the current Vitruvios V1 rebuild state.
 
 This document keeps only actionable decisions. It is not a full copy of the audit.
 
@@ -51,7 +51,7 @@ Useful, but not required for the first stable V1 unless they become blockers.
 
 ## Parking Lot
 
-Interesting, but outside V1 and likely outside the core ZEUS identity for now.
+Interesting, but outside V1 and likely outside the core Vitruvios identity for now.
 
 - Voice input.
 - Peer-to-peer sync.

@@ -20,7 +20,7 @@ test('vault read service opens a vault and lists visible folders and Markdown fi
   fs.mkdirSync(path.join(root, '.obsidian'));
   fs.writeFileSync(path.join(root, 'A.md'), '# A');
   fs.writeFileSync(path.join(root, 'Hero.png'), Buffer.from([137, 80, 78, 71]));
-  fs.writeFileSync(path.join(root, 'B.txt'), 'hidden from ZEUS');
+  fs.writeFileSync(path.join(root, 'B.txt'), 'hidden from Vitruvios');
 
   const service = createVaultReadService();
   const opened = service.setRoot(root);
@@ -114,5 +114,5 @@ test('vault read service requires an opened vault', () => {
 });
 
 function createTempVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-vault-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-vault-'));
 }

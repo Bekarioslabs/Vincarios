@@ -10,7 +10,7 @@ const {
   createEmbeddingModelStore
 } = require('../src/main/embeddings/embeddingModelStore');
 
-test('embedding model store resolves bundled model artifacts under portable project .zeus', () => {
+test('embedding model store resolves bundled model artifacts under portable project .vitruvios', () => {
   const projectRoot = createTempProject();
   const vaultRoot = createTempProject();
   const store = createEmbeddingModelStore({ projectRoot });
@@ -20,8 +20,8 @@ test('embedding model store resolves bundled model artifacts under portable proj
   assert.equal(location.modelId, DEFAULT_EMBEDDING_MODEL.id);
   assert.equal(location.artifactRepoId, 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
   assert.equal(location.baseModelId, 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2');
-  assert.equal(location.relativeFolder, '.zeus/models/embeddings/paraphrase-multilingual-MiniLM-L12-v2');
-  assert.equal(location.folderPath, path.join(projectRoot, '.zeus', 'models', 'embeddings', 'paraphrase-multilingual-MiniLM-L12-v2'));
+  assert.equal(location.relativeFolder, '.vitruvios/models/embeddings/paraphrase-multilingual-MiniLM-L12-v2');
+  assert.equal(location.folderPath, path.join(projectRoot, '.vitruvios', 'models', 'embeddings', 'paraphrase-multilingual-MiniLM-L12-v2'));
   assert.equal(location.folderPath.startsWith(vaultRoot), false);
 });
 
@@ -64,5 +64,5 @@ test('embedding model availability stays false until expected local artifacts ex
 });
 
 function createTempProject() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'zeus-embedding-model-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-embedding-model-'));
 }

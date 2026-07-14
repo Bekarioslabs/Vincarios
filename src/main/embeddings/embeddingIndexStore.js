@@ -2,10 +2,12 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+
 const { createVaultContext } = require('../vault/vaultContext');
+const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 const { createEmptyEmbeddingIndex, createIndexedDocumentRecord } = require('../../shared/embeddings/embeddingIndexSchema');
 
-const INDEX_RELATIVE_FOLDER = '.zeus/index';
+const INDEX_RELATIVE_FOLDER = CURRENT_INTERNAL_NAMESPACE + '/index';
 const MANIFEST_FILE = 'manifest.json';
 const DOCUMENTS_FILE = 'documents.json';
 
@@ -32,7 +34,7 @@ function createEmbeddingIndexStore(options) {
   function getIndexLocation() {
     const current = requireVault();
     if (!current.ok) return current;
-    const indexFolder = path.join(current.vault.root, '.zeus', 'index');
+    const indexFolder = path.join(current.vault.root, CURRENT_INTERNAL_NAMESPACE, 'index');
     return {
       ok: true,
       relativeFolder: INDEX_RELATIVE_FOLDER,

@@ -18,7 +18,7 @@ const DEFAULT_EMBEDDINGS = Object.freeze({
   license: 'apache-2.0',
   dimensions: 384,
   runtime: 'transformers-js-onnx',
-  indexLocation: 'vault-zeus',
+  indexLocation: 'vault-vitruvios',
   similarNotes: DEFAULT_SIMILAR_NOTES
 });
 const DEFAULT_LIMITS = Object.freeze({
@@ -115,28 +115,6 @@ function createSettingsStore(options) {
     return { ok: true, settings, embeddings: settings.embeddings };
   }
 
-  function setVaultProfileRole(role, folderPath) {
-    const normalizedRole = normalizeId(role);
-    const normalizedPath = normalizeFolderPath(folderPath);
-    if (!normalizedRole) return { ok: false, code: 'missing_role', message: 'Vault role is required.' };
-    if (!normalizedPath) return { ok: false, code: 'missing_folder_path', message: 'Folder path is required.' };
-    updateSettings((draft) => {
-      draft.vaultProfile.roles[normalizedRole] = normalizedPath;
-      return draft;
-    });
-    return { ok: true, settings, role: normalizedRole, folderPath: normalizedPath };
-  }
-
-  function resetVaultProfileRole(role) {
-    const normalizedRole = normalizeId(role);
-    if (!normalizedRole) return { ok: false, code: 'missing_role', message: 'Vault role is required.' };
-    updateSettings((draft) => {
-      delete draft.vaultProfile.roles[normalizedRole];
-      return draft;
-    });
-    return { ok: true, settings, role: normalizedRole };
-  }
-
   function setLayoutPreferences(layout) {
     const input = layout || {};
     const nextLayout = normalizeLayoutSettings({
@@ -158,8 +136,6 @@ function createSettingsStore(options) {
     resetProviderUrlOverride,
     setLimits,
     setEmbeddingSettings,
-    setVaultProfileRole,
-    resetVaultProfileRole,
     setLayoutPreferences
   });
 }
@@ -175,13 +151,10 @@ function normalizeAppSettings(value) {
       urlOverrides: Object.freeze(normalizeUrlOverrideMap(providers.urlOverrides))
     }),
     limits: Object.freeze(normalizeLimits(value.limits || {})),
-    vaultProfile: Object.freeze({
-      roles: Object.freeze(normalizeFolderMap(value.vaultProfile && value.vaultProfile.roles))
-    }),
     embeddings: Object.freeze(normalizeEmbeddings(value.embeddings || {})),
     theme: Object.freeze({
       mode: normalizeChoice(value.theme && value.theme.mode, ['dark', 'light', 'system'], 'dark'),
-      accent: normalizeId(value.theme && value.theme.accent) || 'zeus-amber'
+      accent: normalizeId(value.theme && value.theme.accent) || 'vitruvios-amber'
     }),
     layout: Object.freeze(normalizeLayoutSettings(value.layout || {})),
     safety: Object.freeze({

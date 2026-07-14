@@ -21,7 +21,7 @@
       ? contextState.subscribe(render)
       : null;
     const onFilesCollapseChanged = () => render(contextState.snapshot());
-    app.addEventListener('zeus:files-collapse-change', onFilesCollapseChanged);
+    app.addEventListener('vitruvios:files-collapse-change', onFilesCollapseChanged);
 
     render(contextState.snapshot());
 
@@ -649,8 +649,8 @@
       options = options || {};
       const chatLog = app.querySelector('#chat-log');
       if (!chatLog) return;
-      if (typeof window !== 'undefined' && window.ZeusChat && typeof window.ZeusChat.appendMessage === 'function') {
-        const message = window.ZeusChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction });
+      if (typeof window !== 'undefined' && window.VitruviosChat && typeof window.VitruviosChat.appendMessage === 'function') {
+        const message = window.VitruviosChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction });
         if (options.pending && message) {
           message.classList.add('chat-message-pending');
           message.setAttribute('aria-busy', 'true');
@@ -665,7 +665,7 @@
       }
       const label = document.createElement('div');
       label.className = 'chat-message-label';
-      label.textContent = 'ZEUS';
+      label.textContent = 'Vitruvios';
       const body = document.createElement('div');
       body.className = 'chat-message-body';
       body.textContent = content;
@@ -721,7 +721,7 @@
     }
 
     function getPermissionText() {
-      if (typeof window !== 'undefined' && window.ZeusSelectionActionPermissionText) return window.ZeusSelectionActionPermissionText;
+      if (typeof window !== 'undefined' && window.VitruviosSelectionActionPermissionText) return window.VitruviosSelectionActionPermissionText;
       if (typeof require === 'function') return require('./permissionText');
       return {
         missingPermissionMessage(options) {
@@ -806,7 +806,7 @@
       },
       destroy() {
         if (typeof unsubscribe === 'function') unsubscribe();
-        app.removeEventListener('zeus:files-collapse-change', onFilesCollapseChanged);
+        app.removeEventListener('vitruvios:files-collapse-change', onFilesCollapseChanged);
       }
     });
   }
@@ -868,47 +868,47 @@
 
 
   function getTagCandidateAction() {
-    if (typeof window !== 'undefined' && window.ZeusTagCandidateAction) return window.ZeusTagCandidateAction;
+    if (typeof window !== 'undefined' && window.VitruviosTagCandidateAction) return window.VitruviosTagCandidateAction;
     if (typeof module !== 'undefined' && module.exports) return require('./tagCandidateAction');
     return null;
   }
 
   function getSimilarNotesPresentation() {
-    if (typeof window !== 'undefined' && window.ZeusSimilarNotesPresentation) return window.ZeusSimilarNotesPresentation;
+    if (typeof window !== 'undefined' && window.VitruviosSimilarNotesPresentation) return window.VitruviosSimilarNotesPresentation;
     if (typeof module !== 'undefined' && module.exports) return require('./similarNotesPresentation');
     return null;
   }
 
   function getRegistry() {
-    if (typeof window !== 'undefined' && window.ZeusSelectionActionRegistry) return window.ZeusSelectionActionRegistry;
+    if (typeof window !== 'undefined' && window.VitruviosSelectionActionRegistry) return window.VitruviosSelectionActionRegistry;
     if (typeof module !== 'undefined' && module.exports) return require('./actionRegistry');
-    throw new Error('ZEUS selection action registry is not available.');
+    throw new Error('Vitruvios selection action registry is not available.');
   }
 
   function getCategories() {
-    if (typeof window !== 'undefined' && window.ZeusSelectionActionCategories) return window.ZeusSelectionActionCategories;
+    if (typeof window !== 'undefined' && window.VitruviosSelectionActionCategories) return window.VitruviosSelectionActionCategories;
     if (typeof module !== 'undefined' && module.exports) return require('./actionCategories');
-    throw new Error('ZEUS selection action categories are not available.');
+    throw new Error('Vitruvios selection action categories are not available.');
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
 
   function getFileSummaryAction() {
-    if (typeof window !== 'undefined' && window.ZeusFileSummaryAction) return window.ZeusFileSummaryAction;
+    if (typeof window !== 'undefined' && window.VitruviosFileSummaryAction) return window.VitruviosFileSummaryAction;
     if (typeof module !== 'undefined' && module.exports) return require('./fileSummaryAction');
     return null;
   }
 
   function getSelectedUpdateProposalAction() {
-    if (typeof window !== 'undefined' && window.ZeusSelectedUpdateProposalAction) return window.ZeusSelectedUpdateProposalAction;
+    if (typeof window !== 'undefined' && window.VitruviosSelectedUpdateProposalAction) return window.VitruviosSelectedUpdateProposalAction;
     if (typeof module !== 'undefined' && module.exports) return require('../chat/selectedUpdateProposalAction');
     return null;
   }
 
   function getFolderSummaryAction() {
-    if (typeof window !== 'undefined' && window.ZeusFolderSummaryAction) return window.ZeusFolderSummaryAction;
+    if (typeof window !== 'undefined' && window.VitruviosFolderSummaryAction) return window.VitruviosFolderSummaryAction;
     if (typeof module !== 'undefined' && module.exports) return require('./folderSummaryAction');
     return null;
   }
@@ -920,7 +920,7 @@
   }
 
   function getFolderController() {
-    if (typeof window !== 'undefined' && window.ZeusFolderContextController) return window.ZeusFolderContextController;
+    if (typeof window !== 'undefined' && window.VitruviosFolderContextController) return window.VitruviosFolderContextController;
     if (typeof module !== 'undefined' && module.exports) return require('../context/folderContextController');
     return null;
   }
@@ -932,5 +932,5 @@
   const api = { mountSelectionActions, formatFolderAnalysis };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusSelectionActions = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosSelectionActions = Object.freeze(api);
 })();

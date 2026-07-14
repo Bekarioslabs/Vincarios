@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   function createFileNavigator(initialState) {
@@ -130,5 +130,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusFileNavigator = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosFileNavigator = Object.freeze(api);
 })();

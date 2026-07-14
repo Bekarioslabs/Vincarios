@@ -129,12 +129,12 @@
 
 
   function mountOptionalMarkdownDropController(options) {
-    const controller = typeof window !== 'undefined' ? window.ZeusMarkdownDropController : null;
+    const controller = typeof window !== 'undefined' ? window.VitruviosMarkdownDropController : null;
     if (!controller || typeof controller.mountMarkdownDropController !== 'function') return null;
     return controller.mountMarkdownDropController(options);
   }
   async function runReadContextPreflight(options) {
-    const preflight = typeof window !== 'undefined' ? window.ZeusReadContextPreflight : null;
+    const preflight = typeof window !== 'undefined' ? window.VitruviosReadContextPreflight : null;
     if (!preflight || typeof preflight.runReadContextPreflight !== 'function') return { handled: false };
     return preflight.runReadContextPreflight({
       api: options.api,
@@ -224,9 +224,9 @@
   }
   function buildOutboundMessages(messages, userText, contextState) {
     const outboundMessages = messages.slice();
-    if (!contextState || !window.ZeusContextState || !window.ZeusContextState.buildChatContextPackage) return outboundMessages;
+    if (!contextState || !window.VitruviosContextState || !window.VitruviosContextState.buildChatContextPackage) return outboundMessages;
 
-    const contextPackage = window.ZeusContextState.buildChatContextPackage({
+    const contextPackage = window.VitruviosContextState.buildChatContextPackage({
       userText,
       selection: contextState.snapshot()
     });
@@ -243,7 +243,7 @@
   }
 
   async function handleAssistantContent(options) {
-    const runner = typeof window !== 'undefined' ? window.ZeusModelReadActionRunner : null;
+    const runner = typeof window !== 'undefined' ? window.VitruviosModelReadActionRunner : null;
     if (!runner || typeof runner.runModelReadActions !== 'function') return false;
 
     const result = await runner.runModelReadActions({
@@ -285,7 +285,7 @@
 
     const label = document.createElement('div');
     label.className = 'chat-message-label';
-    label.textContent = role === 'user' ? 'You' : 'ZEUS';
+    label.textContent = role === 'user' ? 'You' : 'Vitruvios';
 
     const body = document.createElement('div');
     body.className = 'chat-message-body';
@@ -304,7 +304,7 @@
   }
 
   function getMarkdownRenderer() {
-    return typeof window !== 'undefined' ? window.ZeusMarkdownRenderer : null;
+    return typeof window !== 'undefined' ? window.VitruviosMarkdownRenderer : null;
   }
 
   function renderMessageBody(body, role, content) {
@@ -400,7 +400,7 @@
     button.className = 'chat-save-note-button chat-message-save';
     button.textContent = 'Save as Note';
     button.addEventListener('click', () => {
-      const factory = window.ZeusReviewBasketState && window.ZeusReviewBasketState.createSaveAssistantResponseProposal;
+      const factory = window.VitruviosReviewBasketState && window.VitruviosReviewBasketState.createSaveAssistantResponseProposal;
       if (!options.reviewBasket || typeof options.reviewBasket.addProposal !== 'function' || !factory) {
         setText(options.status, 'Review Basket unavailable.');
         return;
@@ -453,7 +453,7 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
   function autoSizeChatInput(input) {
     if (!input || !input.style) return;
@@ -514,6 +514,6 @@
   }
 
   if (typeof window !== 'undefined') {
-    window.ZeusChat = Object.freeze({ mountChat, appendMessage });
+    window.VitruviosChat = Object.freeze({ mountChat, appendMessage });
   }
 })();

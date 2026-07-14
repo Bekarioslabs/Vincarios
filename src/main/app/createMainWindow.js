@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const path = require('node:path');
 const { DEFAULT_THEME_COLORS } = require('../../shared/ui/themeDefaults');
@@ -30,19 +30,19 @@ function createMainWindow(electron, options) {
   const win = new BrowserWindow(createWindowOptions(projectRoot));
 
   win.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
-    console.error('ZEUS window failed to load:', errorCode, errorDescription);
+    console.error('Vitruvios window failed to load:', errorCode, errorDescription);
   });
 
   win.webContents.on('preload-error', (_event, preloadPath, error) => {
-    console.error('ZEUS preload failed:', preloadPath, error);
+    console.error('Vitruvios preload failed:', preloadPath, error);
   });
 
   win.webContents.on('render-process-gone', (_event, details) => {
-    console.error('ZEUS renderer process gone:', details);
+    console.error('Vitruvios renderer process gone:', details);
   });
 
   win.loadFile(path.join(projectRoot, 'index.html')).catch((error) => {
-    console.error('ZEUS loadFile failed:', error);
+    console.error('Vitruvios loadFile failed:', error);
   });
 
   return win;

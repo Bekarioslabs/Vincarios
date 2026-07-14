@@ -1,7 +1,7 @@
 'use strict';
 
 const INDEX_VERSION = 1;
-const INDEX_STORAGE = 'vault-zeus-index';
+const INDEX_STORAGE = 'vault-vitruvios-index';
 
 function createEmptyEmbeddingIndex(options) {
   options = options || {};

@@ -129,7 +129,7 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
   function formatItemLabel(item) {
     return baseName((item && item.path) || '') || formatItemTitle(item);
@@ -188,5 +188,5 @@
   const api = { mountContextBasket, formatItemLabel, formatItemTitle, formatItemPathContext, targetIconFor };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusContextBasket = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosContextBasket = Object.freeze(api);
 })();

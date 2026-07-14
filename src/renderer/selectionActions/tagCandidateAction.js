@@ -361,7 +361,7 @@
   }
 
     function getVaultProfileApi() {
-    if (typeof window !== 'undefined' && window.ZeusVaultProfile) return window.ZeusVaultProfile;
+    if (typeof window !== 'undefined' && window.VitruviosVaultProfile) return window.VitruviosVaultProfile;
     if (typeof module !== 'undefined' && module.exports) {
       try {
         return require('../../shared/vaultProfile/defaults');
@@ -375,5 +375,5 @@
   const api = { buildTagCandidates, suggestTags, extractTags, applyTagsToMarkdown };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusTagCandidateAction = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosTagCandidateAction = Object.freeze(api);
 })();

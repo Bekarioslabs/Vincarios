@@ -72,5 +72,5 @@ actionEmbedding: 'cpu.svg',
   const api = { ICONS, FOLDER_VISUAL_ICON_NAMES, resolveFolderVisualIconName };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusIconRegistry = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosIconRegistry = Object.freeze(api);
 })();

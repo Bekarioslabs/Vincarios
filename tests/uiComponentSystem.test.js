@@ -18,7 +18,7 @@ test('shared tool controls use one component layer across shell and Files', () =
   assert.match(index, /styles\/tokens\.css[\s\S]*styles\/components\.css[\s\S]*styles\/layout\.css/);
   assert.match(components, /\.ui-tool-button\s*\{/);
   assert.match(components, /\.ui-tool-button:hover:not\(:disabled\)/);
-  assert.match(components, /\.ui-tool-button:hover:not\(:disabled\) \.zeus-icon,[\s\S]*\.ui-tool-button:focus-visible \.zeus-icon/);
+  assert.match(components, /\.ui-tool-button:hover:not\(:disabled\) \.vitruvios-icon,[\s\S]*\.ui-tool-button:focus-visible \.vitruvios-icon/);
   assert.match(components, /\.ui-tool-button:focus-visible/);
   assert.match(components, /\.ui-tool-button:disabled/);
   assert.match(shell, /left-nav-collapse-toggle ui-tool-button/);

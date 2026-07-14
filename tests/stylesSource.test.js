@@ -23,16 +23,16 @@ test('index loads selection action modules before shell', () => {
 test('bootstrap requires selection action renderer modules', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'bootstrap.js'), 'utf8');
 
-  assert.match(source, /ZeusSelectionActionCategories/);
-  assert.match(source, /ZeusSelectionActionRegistry/);
-  assert.match(source, /ZeusSelectionActions/);
-  assert.match(source, /ZeusFileSummaryAction/);
+  assert.match(source, /VitruviosSelectionActionCategories/);
+  assert.match(source, /VitruviosSelectionActionRegistry/);
+  assert.match(source, /VitruviosSelectionActions/);
+  assert.match(source, /VitruviosFileSummaryAction/);
 });
 
 test('shell mounts selection action panel with context state', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /ZeusSelectionActions\.mountSelectionActions/);
+  assert.match(source, /VitruviosSelectionActions\.mountSelectionActions/);
   assert.match(source, /contextState/);
   assert.match(source, /reviewBasket/);
 });
@@ -77,7 +77,7 @@ test('summarize file uses the dedicated summary action module and provider API',
   assert.match(source, /summarizeFile/);
   assert.match(source, /buildFileSummaryMessages/);
   assert.match(source, /api\.chat\.send/);
-  assert.match(source, /ZeusChat\.appendMessage/);
+  assert.match(source, /VitruviosChat\.appendMessage/);
 });
 
 test('provider-backed selection actions use removable pending action messages', () => {

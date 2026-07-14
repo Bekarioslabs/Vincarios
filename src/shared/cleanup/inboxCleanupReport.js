@@ -141,5 +141,5 @@
   });
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusInboxCleanupReport = api;
+  if (typeof window !== 'undefined') window.VitruviosInboxCleanupReport = api;
 })();

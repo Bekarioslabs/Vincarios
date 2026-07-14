@@ -14,7 +14,7 @@
         {
           role: 'system',
           content: [
-            'You are ZEUS Agent summarizing one selected Markdown file.',
+            'You are Vitruvios summarizing one selected Markdown file.',
             'Be concise and concrete.',
             'Do not propose edits, moves, tags, links, or write actions unless the user asks for them.',
             'If the file is mostly structure, summarize its purpose and main sections.'
@@ -70,5 +70,5 @@
   const api = { buildFileSummaryMessages, normalizeSummarySelection, DEFAULT_MAX_CHARS };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusFileSummaryAction = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosFileSummaryAction = Object.freeze(api);
 })();

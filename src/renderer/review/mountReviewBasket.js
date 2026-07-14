@@ -13,9 +13,9 @@
     const countBadge = app ? app.querySelector('#review-basket-count') : null;
     let isExecuting = false;
 
-    if (!window.ZeusReviewBasketState || !root) return null;
+    if (!window.VitruviosReviewBasketState || !root) return null;
 
-    const state = window.ZeusReviewBasketState.createReviewBasketState({
+    const state = window.VitruviosReviewBasketState.createReviewBasketState({
       onChange(snapshot) {
         renderReviewBasket(root, snapshot, state);
         updateCountBadge(countBadge, snapshot && snapshot.items);
@@ -539,7 +539,7 @@
   }
 
   function getDiffLineRenderer() {
-    if (typeof window !== 'undefined' && window.ZeusDiffLineRenderer) return window.ZeusDiffLineRenderer;
+    if (typeof window !== 'undefined' && window.VitruviosDiffLineRenderer) return window.VitruviosDiffLineRenderer;
     if (typeof require === 'function') {
       try {
         return require('../diff/diffLineRenderer');
@@ -551,11 +551,11 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
 
   function getModalBehavior() {
-    return window.ZeusModalBehavior;
+    return window.VitruviosModalBehavior;
   }
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -563,6 +563,6 @@
   }
 
   if (typeof window !== 'undefined') {
-    window.ZeusReviewBasket = Object.freeze({ mountReviewBasket });
+    window.VitruviosReviewBasket = Object.freeze({ mountReviewBasket });
   }
 })();

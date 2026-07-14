@@ -133,7 +133,7 @@
   }
 
   function getGeneratedMetadataApi() {
-    if (typeof window !== 'undefined' && window.ZeusGeneratedNoteMetadata) return window.ZeusGeneratedNoteMetadata;
+    if (typeof window !== 'undefined' && window.VitruviosGeneratedNoteMetadata) return window.VitruviosGeneratedNoteMetadata;
     if (typeof require === 'function') return require('../../shared/metadata/generatedNoteMetadata');
     throw new Error('Generated note metadata API unavailable.');
   }
@@ -145,7 +145,7 @@
   }
 
   function getVaultProfileApi() {
-    if (typeof window !== 'undefined' && window.ZeusVaultProfile) return window.ZeusVaultProfile;
+    if (typeof window !== 'undefined' && window.VitruviosVaultProfile) return window.VitruviosVaultProfile;
     if (typeof require === 'function') {
       try {
         return require('../../shared/vaultProfile/defaults');
@@ -204,5 +204,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusMarkdownDropController = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosMarkdownDropController = Object.freeze(api);
 })();

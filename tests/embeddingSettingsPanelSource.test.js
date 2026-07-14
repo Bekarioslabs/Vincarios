@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -10,5 +10,5 @@ test('settings embeddings panel shows the selected V1 default model decision', (
   assert.match(source, /Xenova\/paraphrase-multilingual-MiniLM-L12-v2/);
   assert.match(source, /Apache-2\.0/);
   assert.match(source, /Transformers\.js \/ ONNX/);
-  assert.match(source, /Vault \.zeus\/index/);
+  assert.match(source, /Vault \.vitruvios\/index/);
 });

@@ -11,11 +11,11 @@
     const contextState = options.contextState || null;
     const permissionState = options.permissionState || null;
     const updateFlashState = options.updateFlashState || null;
-    const folderVisualState = options.folderVisualState || null;
+    const vaultProfileState = options.vaultProfileState || null;
     const onToggleCollapse = typeof options.onToggleCollapse === 'function' ? options.onToggleCollapse : null;
     const onRequestExpand = typeof options.onRequestExpand === 'function' ? options.onRequestExpand : null;
-    const navigator = options.navigator || window.ZeusFileNavigator.createFileNavigator();
-    const keyboard = options.keyboard || window.ZeusFileTreeKeyboard || null;
+    const navigator = options.navigator || window.VitruviosFileNavigator.createFileNavigator();
+    const keyboard = options.keyboard || window.VitruviosFileTreeKeyboard || null;
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
     const visibleRows = new Map();
@@ -51,7 +51,7 @@
       });
     }
     subscribeToUpdateFlashState();
-    subscribeToFolderVisualState();
+    subscribeToVaultProfileState();
 
     function setVaultName(name) {
       setText(vaultName, name || 'Vault');
@@ -61,7 +61,7 @@
       refreshButton.disabled = false;
       navigator.openFolder('');
       await ensureFolderLoaded('');
-      if (folderVisualState && typeof folderVisualState.load === 'function') await folderVisualState.load();
+      if (vaultProfileState && typeof vaultProfileState.load === 'function') await vaultProfileState.load();
       renderTree();
     }
 
@@ -78,7 +78,7 @@
     }
 
     async function ensureFolderLoaded(folderPath) {
-      const normalized = window.ZeusFileNavigator.normalizePath(folderPath || '');
+      const normalized = window.VitruviosFileNavigator.normalizePath(folderPath || '');
       if (entriesByFolder.has(normalized) || loadingFolders.has(normalized)) return;
       if (!api || !api.vault) {
         setStatus('Vault API unavailable.');
@@ -160,9 +160,11 @@
 
       if (entry.kind === 'folder') {
         const visual = getFolderVisual(entry.path);
-        if (visual) wrapper.classList.add('has-folder-visual', 'folder-visual-' + visual.color);
+        const colorToken = getVisualColorToken(visual);
+        if (visual) wrapper.classList.add('has-folder-visual', 'folder-visual-color');
+        if (colorToken) wrapper.setAttribute('data-folder-color', colorToken);
         wrapper.appendChild(renderer.createIconElement(navigator.isExpanded(entry.path) ? 'chevronDown' : 'chevronRight', 'file-row-chevron-icon'));
-        wrapper.appendChild(renderer.createIconElement(resolveFolderVisualIconName(visual), 'file-row-type-icon'));
+        wrapper.appendChild(createFolderVisualIcon(renderer, visual));
         return wrapper;
       }
 
@@ -202,12 +204,7 @@
           focusTreeRow(row);
           activateEntry(entry);
         });
-        row.addEventListener('contextmenu', (event) => {
-          if (!isTopLevelFolder(entry)) return;
-          event.preventDefault();
-          event.stopPropagation();
-          openFolderAppearance(entry, event);
-        });        row.addEventListener('keydown', (event) => {
+        row.addEventListener('keydown', (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             focusTreeRow(row);
@@ -330,7 +327,7 @@
 
     async function refreshRenamedPreview(oldPath, newPath) {
       if (!previewController || typeof previewController.getCurrentPath !== 'function') return;
-      if (window.ZeusFileNavigator.normalizePath(previewController.getCurrentPath()) !== window.ZeusFileNavigator.normalizePath(oldPath)) return;
+      if (window.VitruviosFileNavigator.normalizePath(previewController.getCurrentPath()) !== window.VitruviosFileNavigator.normalizePath(oldPath)) return;
       const read = await api.vault.readMarkdown(newPath);
       if (!read.ok) return;
       setPreviewSource(read.content, read.path, { recordHistory: false });
@@ -375,9 +372,9 @@
       setStatus('Read: ' + read.path);
     }
 
-    function subscribeToFolderVisualState() {
-      if (!folderVisualState || typeof folderVisualState.subscribe !== 'function') return;
-      folderVisualState.subscribe(() => renderTree());
+    function subscribeToVaultProfileState() {
+      if (!vaultProfileState || typeof vaultProfileState.subscribe !== 'function') return;
+      vaultProfileState.subscribe(() => renderTree());
     }
 
     function subscribeToUpdateFlashState() {
@@ -402,9 +399,9 @@
     }
 
     async function refreshLoadedMarkdown(path) {
-      const targetPath = window.ZeusFileNavigator.normalizePath(path || '');
+      const targetPath = window.VitruviosFileNavigator.normalizePath(path || '');
       if (!targetPath || !previewController || typeof previewController.getCurrentPath !== 'function') return { ok: false, message: 'No preview file to refresh.' };
-      if (window.ZeusFileNavigator.normalizePath(previewController.getCurrentPath()) !== targetPath) return { ok: true, skipped: true };
+      if (window.VitruviosFileNavigator.normalizePath(previewController.getCurrentPath()) !== targetPath) return { ok: true, skipped: true };
       const read = await api.vault.readMarkdown(targetPath);
       if (!read.ok) return read;
       setPreviewSource(read.content, read.path, { recordHistory: false });
@@ -468,7 +465,7 @@
       focusTreeRow(rows.find((item) => item.dataset.path === path));
     }
     async function openLinkedMarkdown(target, currentPath) {
-      const resolver = window.ZeusMarkdownLinkResolver;
+      const resolver = window.VitruviosMarkdownLinkResolver;
       if (!resolver || !resolver.createMarkdownLinkCandidates) {
         return { ok: false, message: 'Markdown link resolver unavailable.' };
       }
@@ -493,7 +490,7 @@
 
     async function revealPath(path) {
       if (onRequestExpand) onRequestExpand();
-      const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
+      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
       if (!normalizedPath) return { ok: false, message: 'No preview file to reveal.' };
 
       const folders = ancestorFolders(normalizedPath);
@@ -508,7 +505,7 @@
     }
     async function revealFolder(path) {
       if (onRequestExpand) onRequestExpand();
-      const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
+      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
       const folders = ancestorFolders(normalizedPath + '/placeholder.md');
       for (const folder of folders) {
         navigator.expandFolder(folder);
@@ -522,7 +519,7 @@
     }
 
     function ancestorFolders(path) {
-      const parent = window.ZeusFileNavigator.parentFolder(path);
+      const parent = window.VitruviosFileNavigator.parentFolder(path);
       if (!parent) return [''];
       const parts = parent.split('/').filter(Boolean);
       const folders = [''];
@@ -532,36 +529,49 @@
       return folders;
     }
 
-    function isTopLevelFolder(entry) {
-      return !!(entry && entry.kind === 'folder' && entry.path && !String(entry.path).includes('/'));
+    function getFolderVisual(path) {
+      if (vaultProfileState && typeof vaultProfileState.getFolderVisual === 'function') return vaultProfileState.getFolderVisual(path);
+      return null;
     }
 
-    function openFolderAppearance(entry, event) {
-      const appearance = typeof window !== 'undefined' ? window.ZeusFolderAppearance : null;
-      if (!appearance || typeof appearance.openFolderAppearanceMenu !== 'function' || !folderVisualState) return;
-      appearance.openFolderAppearanceMenu({
-        path: entry.path,
-        x: event.clientX,
-        y: event.clientY,
-        folderVisualState,
-        onSaved: setStatus
-      });
+    function createFolderVisualIcon(renderer, visual) {
+      const visualRenderer = getVaultProfileVisualIconRenderer();
+      if (visualRenderer && typeof visualRenderer.createFolderVisualIcon === 'function') {
+        const icon = visualRenderer.createFolderVisualIcon({
+          renderer,
+          visual,
+          className: 'file-row-type-icon',
+          resolveBuiltinIconName: (iconId) => resolveFolderVisualIconName({ icon: { kind: 'builtin', id: iconId } })
+        });
+        if (icon) return icon;
+      }
+      return renderer.createIconElement(resolveFolderVisualIconName(visual), 'file-row-type-icon');
     }
-    function getFolderVisual(path) {
-      if (folderVisualState && typeof folderVisualState.get === 'function') return folderVisualState.get(path);
-      const visuals = typeof window !== 'undefined' ? window.ZeusFolderVisuals : null;
-      if (!visuals || typeof visuals.getDefaultTopLevelFolderVisual !== 'function') return null;
-      return visuals.getDefaultTopLevelFolderVisual(path);
+
+    function getVaultProfileVisualIconRenderer() {
+      return typeof window !== 'undefined' ? window.VitruviosVaultProfileVisualIconRenderer : null;
     }
 
     function resolveFolderVisualIconName(visual) {
-      const registry = typeof window !== 'undefined' ? window.ZeusIconRegistry : null;
+      const registry = typeof window !== 'undefined' ? window.VitruviosIconRegistry : null;
+      const helpers = getFolderVisualHelpers();
       if (!visual || !registry || typeof registry.resolveFolderVisualIconName !== 'function') return 'folder';
-      return registry.resolveFolderVisualIconName(visual.icon);
+      const iconId = helpers && typeof helpers.getVisualIconId === 'function' ? helpers.getVisualIconId(visual) : 'folder';
+      return registry.resolveFolderVisualIconName(iconId);
+    }
+
+    function getVisualColorToken(visual) {
+      const helpers = getFolderVisualHelpers();
+      return helpers && typeof helpers.getVisualColorToken === 'function' ? helpers.getVisualColorToken(visual) : '';
+    }
+
+
+    function getFolderVisualHelpers() {
+      return typeof window !== 'undefined' ? window.VitruviosFolderVisuals : null;
     }
 
     function getIconRenderer() {
-      return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+      return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
     }
 
     function isMarkdownPath(path) {
@@ -572,11 +582,11 @@
         content: '',
         readAllowed: canUsePathAsContext(path),
         writeAllowed: canUsePathAsUpdateTarget(path),
-        parentReadAllowed: canUsePathAsContext(window.ZeusFileNavigator.parentFolder(path) || '')
+        parentReadAllowed: canUsePathAsContext(window.VitruviosFileNavigator.parentFolder(path) || '')
       };
     }
     function createContextDetails(path, content) {
-      const parentFolder = window.ZeusFileNavigator.parentFolder(path);
+      const parentFolder = window.VitruviosFileNavigator.parentFolder(path);
       return {
         content,
         readAllowed: canUsePathAsContext(path),
@@ -607,7 +617,7 @@
     }
 
     function permissionCandidates(path) {
-      const normalized = window.ZeusFileNavigator.normalizePath(path || '');
+      const normalized = window.VitruviosFileNavigator.normalizePath(path || '');
       if (!normalized) return [''];
       const parts = normalized.split('/').filter(Boolean);
       const candidates = [normalized];
@@ -693,20 +703,20 @@
     }
 
     async function recursiveDescendantPaths(path) {
-      const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
-      const collector = window.ZeusPermissionPathCollector;
+      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
+      const collector = window.VitruviosPermissionPathCollector;
       if (!collector || !collector.collectRecursivePermissionPaths) return knownVisibleDescendantPaths(normalizedPath);
 
       return collector.collectRecursivePermissionPaths(normalizedPath, async (folderPath) => {
         await ensureFolderLoaded(folderPath);
-        const folderData = entriesByFolder.get(window.ZeusFileNavigator.normalizePath(folderPath || ''));
+        const folderData = entriesByFolder.get(window.VitruviosFileNavigator.normalizePath(folderPath || ''));
         if (!folderData || !folderData.ok) return { ok: false, entries: [] };
         return { ok: true, entries: folderData.entries || [] };
       });
     }
 
     function knownVisibleDescendantPaths(path) {
-      const normalizedPath = window.ZeusFileNavigator.normalizePath(path || '');
+      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
       const paths = new Set([normalizedPath]);
       collectVisibleDescendants(normalizedPath, paths);
       return Array.from(paths);
@@ -767,7 +777,7 @@
     }
 
     function normalizePath(value) {
-      return window.ZeusFileNavigator.normalizePath(value || '');
+      return window.VitruviosFileNavigator.normalizePath(value || '');
     }
 
     function setPreviewSource(content, path, behavior) {
@@ -813,5 +823,5 @@
   const api = { mountFilePanel };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusFilePanel = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosFilePanel = Object.freeze(api);
 })();

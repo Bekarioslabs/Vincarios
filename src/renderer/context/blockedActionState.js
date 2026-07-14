@@ -74,5 +74,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusBlockedActionState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosBlockedActionState = Object.freeze(api);
 })();

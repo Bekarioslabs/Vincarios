@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
   'use strict';
 
   function createPendingActionState() {
@@ -52,5 +52,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusPendingActionState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosPendingActionState = Object.freeze(api);
 })();

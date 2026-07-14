@@ -32,8 +32,8 @@
   }
 
   function loadObsidianExtension() {
-    if (typeof window !== 'undefined' && window.ZeusObsidianMarkdownExtension) {
-      return window.ZeusObsidianMarkdownExtension;
+    if (typeof window !== 'undefined' && window.VitruviosObsidianMarkdownExtension) {
+      return window.VitruviosObsidianMarkdownExtension;
     }
     if (typeof require === 'function') return require('./obsidianMarkdownExtension');
     throw new Error('Obsidian Markdown extension unavailable.');
@@ -42,5 +42,5 @@
   const api = { renderBody, renderInline };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusMarkdownEngine = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosMarkdownEngine = Object.freeze(api);
 })();

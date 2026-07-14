@@ -114,5 +114,5 @@
   const api = { createUpdateFlashState, normalizeTargets };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusUpdateFlashState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosUpdateFlashState = Object.freeze(api);
 })();

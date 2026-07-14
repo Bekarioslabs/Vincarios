@@ -1,4 +1,4 @@
-# ZEUS V1 Architecture
+# Vitruvios V1 Architecture
 
 ## Core Shape
 
@@ -16,6 +16,27 @@ UI
 ## Main Principle
 
 The LLM never reads or writes files directly. It returns structured suggestions. The app decides what is valid, visible, reviewable, and executable.
+## V1 Request And Write Flow
+
+```mermaid
+flowchart LR
+  UI[Renderer UI] --> Request[Chat or Selection Action]
+  Request --> Context[Explicit Context Package]
+  Context --> Provider[Provider Service]
+  Provider --> Response[Text or Structured Proposal]
+  Response --> Chat[Chat Output]
+  Response --> Review[Review Basket]
+  Request --> Review
+  Review --> Shared[Shared Action Schema and Diff]
+  Shared --> IPC[Preload IPC]
+  IPC --> Safety[Main Safety and Path Validation]
+  Safety --> Backup[Backup Before Existing-File Write]
+  Backup --> Vault[Vault Services]
+  Vault --> Audit[Audit Entry]
+  Vault --> UI
+```
+
+Provider services have no vault-service edge. They receive only request-scoped text prepared by Vitruvios and never own path validation, backups, audit entries, or execution.
 
 ## Suggested Source Structure
 
@@ -63,7 +84,7 @@ docs/
 - Vault services read/write/list files only after safety validation.
 - Safety rules are code-side laws, not prompt wishes.
 - Prompt rules live in a dedicated module, not scattered through UI code.
-- Renderer modules are browser-first. They must use loaded `window.Zeus...` APIs before CommonJS `require(...)` fallbacks; `require(...)` exists only so the same modules can run in Node tests.
+- Renderer modules are browser-first. They must use loaded `window.Vitruvios...` APIs before CommonJS `require(...)` fallbacks; `require(...)` exists only so the same modules can run in Node tests.
 - Review state is its own concept, not just chat messages.
 - Suggestions are their own concept between analysis and Review Basket execution. They must not be hidden in chat text.
 - Context control and permission state are their own modules, not hidden inside chat or file-tree rendering.
@@ -89,7 +110,7 @@ archive   -> 99_Archive
 
 Consumers should ask for roles such as `inbox`, `projects`, or `knowledge` through the vault profile helpers. They should not hard-code default folder names in workflow logic. Forks and future Options UI can add or override roles through the profile without rewriting consumers.
 
-Folder Visual Identity uses four explicit layers. `src/shared/vaultProfile/folderVisuals.js` owns the fixed icon/color choice keys and normalizes only top-level records. `src/main/vault/vaultFolderVisualService.js` owns selected-vault `.zeus/profile.json` reads/writes and accepts only existing, non-dot top-level folders. `src/renderer/files/folderVisualState.js` loads and combines saved overrides with English default identities. `src/renderer/files/folderAppearanceModal.js` owns the File Tree right-click menu and modal; it never accesses the filesystem directly. Folder visual settings are low-risk configuration, not Markdown/content changes, so this dedicated service intentionally bypasses Review Basket, note backups, and content audit entries.
+The active Vault Profile is portable vault metadata at selected-vault `.vitruvios/profile.json`. `src/main/vault/vaultProfileService.js` validates and persists one active mapping of standard roles to existing, non-dot top-level folders, plus one icon/color visual per assigned role. `src/shared/vaultProfile/folderVisuals.js` owns fixed built-in icon ids, fixed palette ids, legacy migration, and the portable visual record. `src/renderer/vaultProfile/vaultProfileState.js` is the shared renderer read model; the File Tree displays it but never changes it. `src/renderer/settings/mountSettingsPanel.js` is the sole configuration surface. Settings selects a built-in Lucide icon or a safe static SVG already placed in selected-vault `.vitruvios/icons/`, plus one fixed palette color. `profile.json` stores only the SVG relative path; Main creates a safe Data URL only for renderer display. V1 has no SVG file-import dialog and no arbitrary custom hex colors. Folder-profile changes are low-risk configuration writes, deliberately outside Review Basket, Markdown backups, and content audit entries.
 ## Settings Plan
 
 Settings are app configuration, not provider logic.
@@ -102,7 +123,7 @@ V1 Settings categories:
 - `theme`: basic mode/accent readiness through CSS variables.
 - `safety`: review-required and future trusted-mode flags. Trusted mode is not V1 behavior.
 
-The settings store persists normalized JSON under the portable app data folder `ZEUS_AGENT/.zeus/settings.json`, not under Windows `AppData`. If a legacy `userData/settings.json` exists, startup migrates it to the portable path and removes the old file. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules. The Vault Profile settings bridge exposes role overrides for future consumers; it does not replace the Phase 2 folder-role helpers.
+The settings store persists normalized JSON under the portable app data folder `Vitruvios_AGENT/.vitruvios/settings.json`, not under Windows `AppData`. If a legacy `userData/settings.json` exists, startup migrates it to the portable path and removes the old file. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules. Vault Profile is intentionally not app-local settings: it is selected-vault metadata consumed by folder-role helpers and Templates.
 
 ## Provider Plan
 
@@ -138,13 +159,12 @@ Use for:
 
 Index behavior:
 
-- enabled automatically by default only after the user has opened a vault and accepted local indexing behavior.
-- can be disabled in Settings.
-- has a manual rebuild/update button in Settings.
-- runs as a background job, not as a blocking UI operation.
+- Similar Notes searches the selected vault's local index only.
+- `Refresh index first` is an explicit per-search option for newly added or externally changed Markdown files; V1 has no global Settings rebuild control.
+- runs as a local background job, not as a blocking UI operation.
 - uses limits and batching for large vaults.
 - uses hashes/modified timestamps so unchanged files are not re-indexed unnecessarily.
-- stores index data outside normal vault notes in the selected vault's `.zeus/index` folder by default. `.zeus` remains blocked from normal AI/file-tree context and is used only by internal main-process services.
+- stores index data outside normal vault notes in the selected vault's `.vitruvios/index` folder by default. `.vitruvios` remains blocked from normal AI/file-tree context and is used only by internal main-process services.
 
 Model behavior:
 
@@ -153,11 +173,11 @@ Model behavior:
 - Default license follows the Apache-2.0 base model card.
 - Default dimensions: 384.
 - Runtime target: Transformers.js / ONNX.
-- Model artifact storage is prepared under project `.zeus/models/embeddings/...` through `src/main/embeddings/embeddingModelStore.js`. Local development artifacts are verified against source, license, revision, expected file list, and the recorded ONNX SHA256 before use.
+- Model artifact storage is prepared under project `.vitruvios/models/embeddings/...` through `src/main/embeddings/embeddingModelStore.js`. Local development artifacts are verified against source, license, revision, expected file list, and the recorded ONNX SHA256 before use.
 - Current expected artifact set is `config.json`, tokenizer files, `unigram.json`, and `onnx/model_quantized.onnx`; the quantized ONNX SHA256 is recorded in the model store before download wiring.
 - `src/main/embeddings/embeddingRuntimeService.js` owns local inference. It loads the local model path through Transformers.js/ONNX, sets `allowRemoteModels=false`, caches the extractor, and returns vectors only. It must not read vault files, write vault files, or call chat providers.
-- `src/main/embeddings/embeddingMarkdownSource.js` owns Markdown discovery for indexing. It scans recursively, reads Markdown files only, and skips protected dot folders such as `.zeus` and `.obsidian`.
-- `src/main/embeddings/embeddingIndexer.js` coordinates Markdown source, runtime, and index store. It splits YAML frontmatter from body text, chunks Markdown, embeds changed documents, reindexes legacy records that lack split vectors, skips unchanged hash/mtime records, and stores vectors under the selected vault `.zeus/index`.
+- `src/main/embeddings/embeddingMarkdownSource.js` owns Markdown discovery for indexing. It scans recursively, reads Markdown files only, and skips protected dot folders such as `.vitruvios` and `.obsidian`.
+- `src/main/embeddings/embeddingIndexer.js` coordinates Markdown source, runtime, and index store. It splits YAML frontmatter from body text, chunks Markdown, embeds changed documents, reindexes legacy records that lack split vectors, skips unchanged hash/mtime records, and stores vectors under the selected vault `.vitruvios/index`.
 - `src/main/embeddings/embeddingSimilaritySearch.js` owns local similar-note lookup. It reads stored vectors, supports `content`, `metadata`, and `mixed` scoring modes, applies Settings/default thresholds and result limits, can explicitly rebuild the selected vault index before a search when requested, computes ranked `similar_note` candidates, and never creates review actions by itself.
 - Packaging direction: keep model artifacts out of Git. Prefer bundling the embedding model with official release builds/installer if size remains acceptable. Developer/source users can use a controlled download script or app download flow.
 - Settings may allow a custom local embedding model path.
@@ -185,7 +205,7 @@ Purpose:
 Storage target:
 
 ```text
-<selected-vault>/.zeus/index/metadata/
+<selected-vault>/.vitruvios/index/metadata/
   manifest.json
   notes.jsonl
   links.jsonl
@@ -193,7 +213,7 @@ Storage target:
   roles.jsonl
 ```
 
-`.zeus` remains blocked from normal AI context, File Tree context, and user note workflows. Only internal main-process services may read or write this folder.
+`.vitruvios` remains blocked from normal AI context, File Tree context, and user note workflows. Only internal main-process services may read or write this folder.
 
 Planned record fields:
 

@@ -19,9 +19,12 @@
     const api = options.api;
     const app = options.app;
     const status = options.status;
+    const vaultProfileState = options.vaultProfileState || null;
     if (!app) return null;
 
     const panel = createPanel();
+    panel.vaultProfileState = vaultProfileState;
+    panel.vaultProfileDraft = createVaultProfileDraftState();
     app.appendChild(panel.backdrop);
     panel.modalBehavior = getModalBehavior().mountModalBehavior({
       overlay: panel.backdrop,
@@ -29,11 +32,11 @@
       initialFocus: () => panel.closeButtons[0]
     });
     const openButtons = app.querySelectorAll('[data-open-settings]');
-    openButtons.forEach((button) => button.addEventListener('click', () => openPanel(panel, api, status)));
+    openButtons.forEach((button) => button.addEventListener('click', () => openPanel(panel, api, status, vaultProfileState)));
     panel.closeButtons.forEach((button) => button.addEventListener('click', () => closePanel(panel)));
 
     return Object.freeze({
-      open() { return openPanel(panel, api, status); },
+      open() { return openPanel(panel, api, status, vaultProfileState); },
       close() { closePanel(panel); }
     });
   }
@@ -47,7 +50,7 @@
       '  <header class="settings-header">',
       '    <div>',
       '      <div class="settings-kicker">Settings</div>',
-      '      <h2>ZEUS Settings</h2>',
+      '      <h2>Vitruvios Settings</h2>',
       '    </div>',
       '    <button type="button" class="settings-icon-button" data-settings-close aria-label="Close settings"></button>',
       '  </header>',
@@ -85,7 +88,7 @@
       '      <section id="settings-panel-vault-profile" class="settings-section settings-category-panel" data-settings-category-panel="vault-profile" hidden>',
       '        <div class="settings-section-head">',
       '          <h3>Vault Profile</h3>',
-      '          <p>Map app roles to vault folders. Defaults remain active unless overridden.</p>',
+      '          <p>Map roles to top-level vault folders. This portable profile stays in the opened vault.</p>',
       '        </div>',
       '        <div class="settings-vault-role-list" data-settings-vault-role-list></div>',
       '      </section>',
@@ -113,7 +116,7 @@
       '          <div><dt>Artifact repo</dt><dd>Xenova/paraphrase-multilingual-MiniLM-L12-v2</dd></div>',
       '          <div><dt>License</dt><dd>Apache-2.0</dd></div>',
       '          <div><dt>Runtime target</dt><dd>Transformers.js / ONNX</dd></div>',
-      '          <div><dt>Index storage</dt><dd>Vault .zeus/index by default</dd></div>',
+      '          <div><dt>Index storage</dt><dd>Vault .vitruvios/index by default</dd></div>',
       '        </dl>',
       '        <div class="settings-limit-grid" data-settings-embeddings-grid></div>',
       '        <div class="settings-section-actions">',
@@ -130,7 +133,7 @@
       '      <section id="settings-panel-about" class="settings-section settings-category-panel" data-settings-category-panel="about" hidden>',
       '        <div class="settings-section-head">',
       '          <h3>About</h3>',
-      '          <p>ZEUS Agent V1 local-first Markdown vault assistant.</p>',
+      '          <p>Vitruvios V1 local-first Markdown vault assistant.</p>',
       '        </div>',
       '        <div class="settings-future-note">Version and license details can be expanded here later.</div>',
       '      </section>',
@@ -204,13 +207,14 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.ZeusIconRenderer) ? window.ZeusIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
-  async function openPanel(panel, api, statusBar) {
+  async function openPanel(panel, api, statusBar, vaultProfileState) {
     panel.backdrop.hidden = false;
+    if (panel.vaultProfileDraft) panel.vaultProfileDraft.invalidate();
     setText(panel.status, 'Loading...');
     setText(statusBar, 'Settings opened.');
-    await renderSettings(panel, api, statusBar);
+    await renderSettings(panel, api, statusBar, vaultProfileState);
     panel.modalBehavior.focusInitial();
   }
 
@@ -219,10 +223,11 @@
   }
 
   function getModalBehavior() {
-    return window.ZeusModalBehavior;
+    return window.VitruviosModalBehavior;
   }
 
-  async function renderSettings(panel, api, statusBar) {
+  async function renderSettings(panel, api, statusBar, vaultProfileState) {
+    vaultProfileState = vaultProfileState || panel.vaultProfileState || null;
     if (!api || !api.settings || typeof api.settings.get !== 'function') {
       panel.providerList.innerHTML = '<div class="settings-empty">Settings API unavailable.</div>';
       setText(panel.status, 'Unavailable');
@@ -236,7 +241,7 @@
 
     renderProviderSettings(panel, api, statusBar, settings, providerStatus);
     renderLimitSettings(panel, api, statusBar, settings);
-    renderVaultProfileSettings(panel, api, statusBar, settings);
+    await renderVaultProfileSettings(panel, api, statusBar, vaultProfileState);
     renderEmbeddingSettings(panel, api, statusBar, settings);
     setText(panel.status, 'Ready');
   }
@@ -434,66 +439,285 @@
     return label;
   }
 
-  function renderVaultProfileSettings(panel, api, statusBar, settings) {
-    const roles = getDefaultVaultRoles();
-    const overrides = settings && settings.vaultProfile && settings.vaultProfile.roles ? settings.vaultProfile.roles : {};
+  async function renderVaultProfileSettings(panel, api, statusBar, vaultProfileState) {
+    if (!api || !api.vault || typeof api.vault.getProfile !== 'function') {
+      panel.vaultRoleList.innerHTML = '<div class="settings-empty">Open a vault to configure its profile.</div>';
+      return;
+    }
+    const [profileResult, folderResult, localIconsResult] = await Promise.all([
+      safeCall(() => api.vault.getProfile()),
+      safeCall(() => api.vault.listFolder('')),
+      safeCall(() => api.vault.listProfileIcons())
+    ]);
+    if (!profileResult || profileResult.ok === false || !folderResult || folderResult.ok === false) {
+      panel.vaultRoleList.innerHTML = '<div class="settings-empty">Open a vault to configure its profile.</div>';
+      return;
+    }
+    const profile = profileResult.profile || { roles: {}, roleVisuals: {} };
+    const folders = (folderResult.entries || []).filter((entry) => entry && entry.kind === 'folder' && !String(entry.path || '').includes('/'));
+    const draft = panel.vaultProfileDraft;
+    if (!draft) return;
+    if (!draft.hasBase()) draft.reset(profile);
+    const localIcons = localIconsResult && localIconsResult.ok !== false ? (localIconsResult.icons || []) : [];
+
     panel.vaultRoleList.innerHTML = '';
-    roles.forEach((role) => {
-      const row = document.createElement('div');
-      row.className = 'settings-vault-role-row';
-      const value = overrides[role.id] || role.path;
-      row.innerHTML = [
-        '<div class="settings-vault-role-meta">',
-        '  <strong></strong>',
-        '  <span></span>',
-        '</div>',
-        '<input class="settings-vault-role-path" data-settings-vault-role-path spellcheck="false">',
-        '<div class="settings-provider-actions">',
-        '  <button type="button" class="settings-secondary-button" data-settings-reset-vault-role>Reset</button>',
-        '  <button type="button" class="settings-primary-button" data-settings-save-vault-role>Save</button>',
-        '</div>'
-      ].join('');
-      row.querySelector('strong').textContent = role.label;
-      row.querySelector('span').textContent = overrides[role.id] ? 'Custom role path' : 'Default role path';
-      row.querySelector('[data-settings-vault-role-path]').value = value;
-      row.querySelector('[data-settings-save-vault-role]').setAttribute('data-role-id', role.id);
-      row.querySelector('[data-settings-reset-vault-role]').setAttribute('data-role-id', role.id);
-      panel.vaultRoleList.appendChild(row);
+    getDefaultVaultRoles().forEach((role) => {
+      panel.vaultRoleList.appendChild(createVaultRoleRow(role, draft, panel, folders, localIcons));
     });
+    syncVaultRoleRows(panel, draft);
 
     panel.vaultRoleList.querySelectorAll('[data-settings-save-vault-role]').forEach((button) => {
       button.addEventListener('click', async () => {
-        const row = button.closest('.settings-vault-role-row');
-        const input = row && row.querySelector('[data-settings-vault-role-path]');
         const role = button.getAttribute('data-role-id');
-        setText(panel.status, 'Saving vault role...');
-        const result = await api.settings.setVaultRole({ role, folderPath: input ? input.value : '' });
+        if (!role || !draft.isDirty(role)) return;
+        const entry = draft.getRole(role);
+        setText(panel.status, 'Saving vault profile...');
+        const result = await api.vault.setProfileRole({ role, folderPath: entry.folderPath, visual: serializeVaultRoleVisual(entry.visual) });
         if (!result || result.ok === false) {
-          setText(panel.status, result && result.message ? result.message : 'Could not save vault role.');
+          setText(panel.status, result && result.message ? result.message : 'Could not save Vault Profile.');
           return;
         }
-        setText(panel.status, 'Vault role saved.');
-        setText(statusBar, 'Vault role saved.');
-        await renderSettings(panel, api, statusBar);
+        draft.commitRole(role, result.profile);
+        if (vaultProfileState && typeof vaultProfileState.replace === 'function') vaultProfileState.replace(result.profile);
+        setText(panel.status, 'Vault Profile saved.');
+        setText(statusBar, 'Vault Profile saved.');
+        await renderVaultProfileSettings(panel, api, statusBar, vaultProfileState);
       });
     });
-
     panel.vaultRoleList.querySelectorAll('[data-settings-reset-vault-role]').forEach((button) => {
       button.addEventListener('click', async () => {
         const role = button.getAttribute('data-role-id');
-        setText(panel.status, 'Resetting vault role...');
-        const result = await api.settings.resetVaultRole({ role });
+        setText(panel.status, 'Resetting Vault Profile role...');
+        const result = await api.vault.resetProfileRole({ role });
         if (!result || result.ok === false) {
-          setText(panel.status, result && result.message ? result.message : 'Could not reset vault role.');
+          setText(panel.status, result && result.message ? result.message : 'Could not reset Vault Profile role.');
           return;
         }
-        setText(panel.status, 'Vault role reset.');
-        setText(statusBar, 'Vault role reset.');
-        await renderSettings(panel, api, statusBar);
+        draft.commitRole(role, result.profile);
+        if (vaultProfileState && typeof vaultProfileState.replace === 'function') vaultProfileState.replace(result.profile);
+        setText(panel.status, 'Vault Profile role reset.');
+        setText(statusBar, 'Vault Profile role reset.');
+        await renderVaultProfileSettings(panel, api, statusBar, vaultProfileState);
       });
     });
   }
 
+  function createVaultRoleRow(role, draft, panel, folders, localIcons) {
+    const entry = draft.getRole(role.id);
+    const row = document.createElement('div');
+    row.className = 'settings-vault-role-row';
+    row.setAttribute('data-vault-role-id', role.id);
+    row.__vaultRoleVisual = cloneVaultRoleVisual(entry.visual);
+    row.innerHTML = [
+      '<div class="settings-vault-role-meta"><strong></strong><span></span></div>',
+      '<select class="settings-vault-role-path" data-settings-vault-role-path></select>',
+      '<div class="settings-vault-role-appearance">',
+      '  <button type="button" class="settings-vault-appearance-button" data-vault-icon-picker aria-label="Choose folder icon"></button>',
+      '  <button type="button" class="settings-vault-appearance-button settings-vault-color-button" data-vault-color-picker aria-label="Choose folder color"></button>',
+      '  <span class="settings-vault-role-preview" aria-hidden="true"></span>',
+      '  <section class="settings-vault-picker" data-vault-icon-options hidden></section>',
+      '  <section class="settings-vault-picker" data-vault-color-options hidden></section>',
+      '</div>',
+      '<div class="settings-provider-actions">',
+      '  <button type="button" class="settings-secondary-button" data-settings-reset-vault-role>Reset</button>',
+      '  <button type="button" class="settings-primary-button" data-settings-save-vault-role>Save</button>',
+      '</div>'
+    ].join('');
+    row.querySelector('strong').textContent = role.label;
+    const pathSelect = row.querySelector('[data-settings-vault-role-path]');
+    appendOption(pathSelect, '', 'Unassigned', !entry.folderPath);
+    folders.forEach((folder) => appendOption(pathSelect, folder.path, folder.name || folder.path, folder.path === entry.folderPath));
+    wireVaultRoleAppearance(row, getFolderVisualHelpers(), localIcons, () => updateVaultRoleDraft(row, role.id, draft, panel));
+    pathSelect.addEventListener('change', () => updateVaultRoleDraft(row, role.id, draft, panel));
+    row.querySelector('[data-settings-save-vault-role]').setAttribute('data-role-id', role.id);
+    row.querySelector('[data-settings-reset-vault-role]').setAttribute('data-role-id', role.id);
+    renderVaultRolePreview(row);
+    return row;
+  }
+
+  function updateVaultRoleDraft(row, roleId, draft, panel) {
+    const pathSelect = row.querySelector('[data-settings-vault-role-path]');
+    draft.updateRole(roleId, {
+      folderPath: pathSelect ? pathSelect.value : '',
+      visual: cloneVaultRoleVisual(row.__vaultRoleVisual)
+    });
+    syncVaultRoleRows(panel, draft);
+  }
+
+  function syncVaultRoleRows(panel, draft) {
+    panel.vaultRoleList.querySelectorAll('.settings-vault-role-row').forEach((row) => {
+      const roleId = row.getAttribute('data-vault-role-id');
+      const entry = draft.getRole(roleId);
+      const pathSelect = row.querySelector('[data-settings-vault-role-path]');
+      const saveButton = row.querySelector('[data-settings-save-vault-role]');
+      const description = row.querySelector('.settings-vault-role-meta span');
+      if (pathSelect) {
+        pathSelect.value = entry.folderPath;
+        Array.from(pathSelect.options).forEach((option) => {
+          if (!option.value) return;
+          const assignedRole = draft.getAssignedRole(option.value);
+          const usedByOtherRole = assignedRole && assignedRole !== roleId;
+          option.disabled = Boolean(usedByOtherRole);
+          option.textContent = option.getAttribute('data-folder-label') || option.textContent;
+          if (usedByOtherRole) option.textContent += ' (used by ' + assignedRole + ')';
+        });
+      }
+      if (description) description.textContent = entry.folderPath ? 'Assigned top-level folder' : 'Unassigned';
+      const dirty = draft.isDirty(roleId);
+      row.classList.toggle('is-dirty', dirty);
+      if (saveButton) {
+        saveButton.disabled = !dirty;
+        saveButton.title = dirty ? 'Save role changes' : 'No changes to save';
+        saveButton.setAttribute('aria-label', dirty ? 'Save changes for ' + roleId : 'No changes to save for ' + roleId);
+      }
+    });
+  }
+  function wireVaultRoleAppearance(row, helpers, localIcons, onChange) {
+    const iconButton = row.querySelector('[data-vault-icon-picker]');
+    const colorButton = row.querySelector('[data-vault-color-picker]');
+    const iconPicker = row.querySelector('[data-vault-icon-options]');
+    const colorPicker = row.querySelector('[data-vault-color-options]');
+    const iconKeys = helpers && helpers.FOLDER_VISUAL_ICON_KEYS ? helpers.FOLDER_VISUAL_ICON_KEYS : ['folder'];
+    const colorKeys = helpers && helpers.FOLDER_VISUAL_COLOR_KEYS ? helpers.FOLDER_VISUAL_COLOR_KEYS : ['amber-400'];
+
+    function applyVisualChange() {
+      renderVaultRolePreview(row);
+      if (typeof onChange === 'function') onChange();
+    }
+
+    iconKeys.forEach((iconId) => {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'settings-vault-picker-icon';
+      option.title = iconId;
+      option.setAttribute('aria-label', 'Use ' + iconId + ' icon');
+      appendVisualIcon(option, { kind: 'builtin', id: iconId });
+      option.addEventListener('click', () => {
+        row.__vaultRoleVisual.icon = { kind: 'builtin', id: iconId };
+        iconPicker.hidden = true;
+        applyVisualChange();
+      });
+      iconPicker.appendChild(option);
+    });
+
+    (localIcons || []).forEach((localIcon) => {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'settings-vault-picker-icon';
+      option.title = localIcon.path;
+      option.setAttribute('aria-label', 'Use local Vault SVG ' + localIcon.path);
+      appendVisualIcon(option, localIcon);
+      option.addEventListener('click', () => {
+        row.__vaultRoleVisual.icon = { kind: 'custom', path: localIcon.path, src: localIcon.src };
+        iconPicker.hidden = true;
+        applyVisualChange();
+      });
+      iconPicker.appendChild(option);
+    });
+
+    colorKeys.forEach((colorId) => {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'settings-vault-picker-swatch folder-visual-color';
+      option.setAttribute('data-folder-color', colorId);
+      option.title = colorId;
+      option.setAttribute('aria-label', 'Use ' + colorId + ' color');
+      option.addEventListener('click', () => {
+        row.__vaultRoleVisual.color = { kind: 'token', id: colorId };
+        colorPicker.hidden = true;
+        applyVisualChange();
+      });
+      colorPicker.appendChild(option);
+    });
+
+    iconButton.addEventListener('click', () => toggleVaultRolePicker(row, iconPicker));
+    colorButton.addEventListener('click', () => toggleVaultRolePicker(row, colorPicker));
+  }
+
+  function toggleVaultRolePicker(row, target) {
+    const root = row.closest('[data-settings-vault-role-list]');
+    if (root) root.querySelectorAll('.settings-vault-picker').forEach((picker) => { if (picker !== target) picker.hidden = true; });
+    target.hidden = !target.hidden;
+  }
+
+  function renderVaultRolePreview(row) {
+    const visual = row.__vaultRoleVisual || createFallbackVisual();
+    const preview = row.querySelector('.settings-vault-role-preview');
+    const iconButton = row.querySelector('[data-vault-icon-picker]');
+    const colorButton = row.querySelector('[data-vault-color-picker]');
+    preview.textContent = '';
+    iconButton.textContent = '';
+    appendVisualIcon(preview, visual.icon);
+    appendVisualIcon(iconButton, visual.icon);
+    colorButton.innerHTML = '<span class="settings-vault-color-swatch"></span>';
+    applyVisualColor(preview, visual);
+    applyVisualColor(colorButton.querySelector('.settings-vault-color-swatch'), visual);
+  }
+
+  function appendVisualIcon(target, icon) {
+    const renderer = getIconRenderer();
+    const registry = typeof window !== 'undefined' ? window.VitruviosIconRegistry : null;
+    const visualRenderer = getVaultProfileVisualIconRenderer();
+    if (!renderer || !registry || !registry.resolveFolderVisualIconName) return;
+    const visual = { icon: icon || { kind: 'builtin', id: 'folder' } };
+    const rendered = visualRenderer && typeof visualRenderer.createFolderVisualIcon === 'function'
+      ? visualRenderer.createFolderVisualIcon({
+        renderer,
+        visual,
+        className: 'file-row-type-icon',
+        resolveBuiltinIconName: (iconId) => registry.resolveFolderVisualIconName(iconId)
+      })
+      : null;
+    target.appendChild(rendered || renderer.createIconElement(registry.resolveFolderVisualIconName(visual.icon.id), 'file-row-type-icon'));
+  }
+
+  function getVaultProfileVisualIconRenderer() {
+    return typeof window !== 'undefined' ? window.VitruviosVaultProfileVisualIconRenderer : null;
+  }
+
+  function applyVisualColor(target, visual) {
+    if (!target) return;
+    const helpers = getFolderVisualHelpers();
+    const token = helpers && helpers.getVisualColorToken ? helpers.getVisualColorToken(visual) : '';
+    if (token) target.setAttribute('data-folder-color', token);
+    else target.removeAttribute('data-folder-color');
+    target.classList.add('folder-visual-color');
+  }
+  function serializeVaultRoleVisual(visual) {
+    return {
+      icon: visual && visual.icon && visual.icon.kind === 'custom'
+        ? { kind: 'custom', path: visual.icon.path }
+        : { kind: 'builtin', id: visual && visual.icon ? visual.icon.id : 'folder' },
+      color: { kind: 'token', id: visual && visual.color ? visual.color.id : 'amber-400' }
+    };
+  }
+  function cloneVaultRoleVisual(visual) {
+    return { icon: Object.assign({}, visual.icon), color: Object.assign({}, visual.color) };
+  }
+
+  function createFallbackVisual() {
+    return { icon: { kind: 'builtin', id: 'folder' }, color: { kind: 'token', id: 'amber-400' } };
+  }
+
+  function appendOption(select, value, label, selected) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = label;
+    option.selected = selected;
+    option.setAttribute('data-folder-label', label);
+    select.appendChild(option);
+    return option;
+  }
+
+  function createVaultProfileDraftState() {
+    const module = typeof window !== 'undefined' ? window.VitruviosVaultProfileDraftState : null;
+    return module && typeof module.createVaultProfileDraftState === 'function'
+      ? module.createVaultProfileDraftState({ helpers: getFolderVisualHelpers() })
+      : null;
+  }
+  function getFolderVisualHelpers() {
+    return typeof window !== 'undefined' ? window.VitruviosFolderVisuals : null;
+  }
   function createProviderRow(provider, settings) {
     const row = document.createElement('div');
     row.className = 'settings-provider-row';
@@ -540,12 +764,12 @@
     if (input.chat !== false) labels.push('Chat');
     if (input.vision === true) labels.push('Vision');
     if (input.embeddings === true) labels.push('Embeddings');
-    return labels.length > 0 ? labels.join(' · ') : 'No declared capabilities';
+    return labels.length > 0 ? labels.join(' ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ') : 'No declared capabilities';
   }
 
   function getDefaultVaultRoles() {
-    const defaults = window.ZeusVaultProfile && window.ZeusVaultProfile.DEFAULT_FOLDERS
-      ? window.ZeusVaultProfile.DEFAULT_FOLDERS
+    const defaults = window.VitruviosVaultProfile && window.VitruviosVaultProfile.DEFAULT_FOLDERS
+      ? window.VitruviosVaultProfile.DEFAULT_FOLDERS
       : { inbox: '00_Inbox', daily: '01_Daily', projects: '02_Projects', knowledge: '03_Knowledge', brain: '90_AI_Brain', archive: '99_Archive' };
     return Object.keys(defaults).map((id) => ({
       id,
@@ -556,7 +780,7 @@
 
   function notifySettingsUpdated() {
     if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-      window.dispatchEvent(new CustomEvent('zeus:settings-updated'));
+      window.dispatchEvent(new CustomEvent('vitruvios:settings-updated'));
     }
   }
 
@@ -577,6 +801,6 @@
   }
 
   if (typeof window !== 'undefined') {
-    window.ZeusSettingsPanel = Object.freeze({ mountSettingsPanel });
+    window.VitruviosSettingsPanel = Object.freeze({ mountSettingsPanel });
   }
 })();

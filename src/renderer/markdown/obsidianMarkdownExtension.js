@@ -14,10 +14,10 @@
     md.renderer.rules.obsidian_image_embed = renderImageEmbed;
     md.renderer.rules.obsidian_highlight = renderHighlight;
     md.renderer.rules.obsidian_wikilink = renderWikilink;
-    md.renderer.rules.zeus_task_checkbox = renderTaskCheckbox;
+    md.renderer.rules.vitruvios_task_checkbox = renderTaskCheckbox;
 
     useSafeLinkTargets(md);
-    md.core.ruler.after('inline', 'zeus_task_lists', transformTaskLists);
+    md.core.ruler.after('inline', 'vitruvios_task_lists', transformTaskLists);
   }
 
   function parseImageEmbed(state, silent) {
@@ -127,7 +127,7 @@
       if (!firstText || !firstText.content.startsWith(task[0])) return;
       firstText.content = firstText.content.slice(task[0].length);
 
-      const checkbox = new state.Token('zeus_task_checkbox', 'input', 0);
+      const checkbox = new state.Token('vitruvios_task_checkbox', 'input', 0);
       checkbox.meta = { checked: task[1].toLowerCase() === 'x' };
       token.children.unshift(checkbox);
 
@@ -161,8 +161,8 @@
   }
 
   function loadFormattingCompat() {
-    if (typeof window !== 'undefined' && window.ZeusMarkdownFormattingCompat) {
-      return window.ZeusMarkdownFormattingCompat;
+    if (typeof window !== 'undefined' && window.VitruviosMarkdownFormattingCompat) {
+      return window.VitruviosMarkdownFormattingCompat;
     }
     if (typeof require === 'function') return require('./markdownFormattingCompat');
     throw new Error('Markdown formatting compatibility module unavailable.');
@@ -171,5 +171,5 @@
   const api = { useObsidianMarkdown };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusObsidianMarkdownExtension = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosObsidianMarkdownExtension = Object.freeze(api);
 })();

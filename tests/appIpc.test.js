@@ -21,7 +21,7 @@ test('app IPC validates external URLs before opening them', async () => {
 test('app IPC registers app info and external open handlers', () => {
   const handlers = new Map();
   const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
-  registerAppIpc(ipcMain, { appName: 'ZEUS Agent', version: '0.1.0', shell: { openExternal() {} } });
+  registerAppIpc(ipcMain, { appName: 'Vitruvios', version: '0.1.0', shell: { openExternal() {} } });
 
   assert.equal(handlers.has(IPC_CHANNELS.APP_INFO), true);
   assert.equal(handlers.has(IPC_CHANNELS.APP_OPEN_EXTERNAL), true);

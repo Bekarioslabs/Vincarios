@@ -90,7 +90,7 @@
   }
 
   function getDiffPreviewApi() {
-    if (typeof window !== 'undefined' && window.ZeusDiffPreview) return window.ZeusDiffPreview;
+    if (typeof window !== 'undefined' && window.VitruviosDiffPreview) return window.VitruviosDiffPreview;
     if (typeof require === 'function') {
       try {
         return require('../../shared/actions/diffPreview');
@@ -109,5 +109,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusSuggestionConverters = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosSuggestionConverters = Object.freeze(api);
 })();

@@ -14,8 +14,6 @@ const IPC_CHANNELS = Object.freeze({
   SETTINGS_RESET_PROVIDER_URL: 'settings:reset-provider-url',
   SETTINGS_SET_LAYOUT: 'settings:set-layout',
   SETTINGS_SET_LIMITS: 'settings:set-limits',
-  SETTINGS_SET_VAULT_ROLE: 'settings:set-vault-role',
-  SETTINGS_RESET_VAULT_ROLE: 'settings:reset-vault-role',
   SETTINGS_SET_EMBEDDINGS: 'settings:set-embeddings',
   EMBEDDINGS_FIND_SIMILAR_NOTES: 'embeddings:find-similar-notes',
   VAULT_STATE: 'vault:state',
@@ -28,9 +26,10 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_CREATE_FOLDER: 'vault:create-folder',
   VAULT_UPDATE_NOTE: 'vault:update-note',
   VAULT_RENAME_FILE: 'vault:rename-file',
-  VAULT_GET_FOLDER_VISUALS: 'vault:get-folder-visuals',
-  VAULT_SET_FOLDER_VISUAL: 'vault:set-folder-visual',
-  VAULT_CLEAR_FOLDER_VISUAL: 'vault:clear-folder-visual'
+  VAULT_GET_PROFILE: 'vault:get-profile',
+  VAULT_SET_PROFILE_ROLE: 'vault:set-profile-role',
+  VAULT_RESET_PROFILE_ROLE: 'vault:reset-profile-role',
+  VAULT_LIST_PROFILE_ICONS: 'vault:list-profile-icons'
 });
 
 module.exports = {

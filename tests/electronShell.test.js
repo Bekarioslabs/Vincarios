@@ -9,7 +9,7 @@ const { IPC_CHANNELS } = require('../src/shared/ipc/channels');
 const { DEFAULT_THEME_COLORS } = require('../src/shared/ui/themeDefaults');
 
 test('main window options keep the renderer sandboxed', () => {
-  const options = createWindowOptions(path.join('D:', 'ZEUS_AGENT'));
+  const options = createWindowOptions(path.join('D:', 'Vitruvios_AGENT'));
 
   assert.equal(options.show, true);
   assert.equal(options.backgroundColor, DEFAULT_THEME_COLORS.backgroundPrimary);
@@ -34,22 +34,21 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'PROVIDER_STATUS',
     'SETTINGS_GET',
     'SETTINGS_RESET_PROVIDER_URL',
-    'SETTINGS_RESET_VAULT_ROLE',
     'SETTINGS_SET_EMBEDDINGS',
     'SETTINGS_SET_LAYOUT',
     'SETTINGS_SET_LIMITS',
     'SETTINGS_SET_PROVIDER_URL',
-    'SETTINGS_SET_VAULT_ROLE',
-    'VAULT_CLEAR_FOLDER_VISUAL',
     'VAULT_CREATE_FOLDER',
     'VAULT_CREATE_NOTE',
-    'VAULT_GET_FOLDER_VISUALS',
+    'VAULT_GET_PROFILE',
     'VAULT_LIST_FOLDER',
+    'VAULT_LIST_PROFILE_ICONS',
     'VAULT_READ_IMAGE_ASSET',
     'VAULT_READ_MARKDOWN',
     'VAULT_RENAME_FILE',
+    'VAULT_RESET_PROFILE_ROLE',
     'VAULT_SELECT_FOLDER',
-    'VAULT_SET_FOLDER_VISUAL',
+    'VAULT_SET_PROFILE_ROLE',
     'VAULT_SET_ROOT',
     'VAULT_STATE',
     'VAULT_UPDATE_NOTE'
@@ -69,17 +68,16 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.SETTINGS_SET_LAYOUT, 'settings:set-layout');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_LIMITS, 'settings:set-limits');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS, 'settings:set-embeddings');
-  assert.equal(IPC_CHANNELS.SETTINGS_SET_VAULT_ROLE, 'settings:set-vault-role');
-  assert.equal(IPC_CHANNELS.SETTINGS_RESET_VAULT_ROLE, 'settings:reset-vault-role');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
   assert.equal(IPC_CHANNELS.VAULT_READ_IMAGE_ASSET, 'vault:read-image-asset');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_NOTE, 'vault:create-note');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_FOLDER, 'vault:create-folder');
   assert.equal(IPC_CHANNELS.VAULT_UPDATE_NOTE, 'vault:update-note');
   assert.equal(IPC_CHANNELS.VAULT_RENAME_FILE, 'vault:rename-file');
-  assert.equal(IPC_CHANNELS.VAULT_GET_FOLDER_VISUALS, 'vault:get-folder-visuals');
-  assert.equal(IPC_CHANNELS.VAULT_SET_FOLDER_VISUAL, 'vault:set-folder-visual');
-  assert.equal(IPC_CHANNELS.VAULT_CLEAR_FOLDER_VISUAL, 'vault:clear-folder-visual');
+  assert.equal(IPC_CHANNELS.VAULT_GET_PROFILE, 'vault:get-profile');
+  assert.equal(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS, 'vault:list-profile-icons');
+  assert.equal(IPC_CHANNELS.VAULT_SET_PROFILE_ROLE, 'vault:set-profile-role');
+  assert.equal(IPC_CHANNELS.VAULT_RESET_PROFILE_ROLE, 'vault:reset-profile-role');
 });
 
 test('preload exposes image asset reads without filesystem access', () => {
@@ -156,13 +154,15 @@ test('preload exposes external link opening without filesystem access', () => {
   assert.match(preloadSource, /openExternal\(url\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.APP_OPEN_EXTERNAL, url\)/);
 });
-test('preload exposes dedicated folder appearance configuration without filesystem access', () => {
+test('preload exposes portable Vault Profile configuration without filesystem access', () => {
   const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
 
-  assert.match(preloadSource, /getFolderVisuals\(\)/);
-  assert.match(preloadSource, /setFolderVisual\(payload\)/);
-  assert.match(preloadSource, /clearFolderVisual\(payload\)/);
-  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_GET_FOLDER_VISUALS/);
-  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_SET_FOLDER_VISUAL/);
-  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_CLEAR_FOLDER_VISUAL/);
+  assert.match(preloadSource, /getProfile\(\)/);
+  assert.match(preloadSource, /setProfileRole\(payload\)/);
+  assert.match(preloadSource, /resetProfileRole\(payload\)/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_GET_PROFILE/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_SET_PROFILE_ROLE/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_RESET_PROFILE_ROLE/);
+  assert.match(preloadSource, /listProfileIcons\(\)/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_LIST_PROFILE_ICONS/);
 });

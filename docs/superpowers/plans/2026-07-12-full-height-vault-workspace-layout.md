@@ -216,8 +216,8 @@ Expected: PASS.
 ### Task 4: Update the active UI plan and run the layout acceptance check
 
 **Files:**
-- Modify: `docs/rebuild/ZEUS_V1_IMPLEMENTATION_PLAN.md`
-- Modify: `docs/rebuild/ZEUS_V1_UI_AND_WORKFLOWS.md`
+- Modify: `docs/rebuild/VITRUVIOS_V1_IMPLEMENTATION_PLAN.md`
+- Modify: `docs/rebuild/VITRUVIOS_V1_UI_AND_WORKFLOWS.md`
 
 **Interfaces:**
 - Consumes: the committed layout design and the implemented three-column shell.
@@ -235,7 +235,7 @@ Expected: all JavaScript checks and Node tests pass.
 
 - [ ] **Step 3: Run manual visual acceptance before continuing**
 
-1. Start ZEUS and open a vault from the splash screen.
+1. Start Vitruvios and open a vault from the splash screen.
 2. Confirm Chat, Suggestions, and Session Log still switch normally.
 3. Open a long vault and confirm Files scrolls independently for the full height.
 4. Select Markdown, image, and folder entries; confirm Preview and Selection Actions still render their existing content.
@@ -247,7 +247,7 @@ Expected: all JavaScript checks and Node tests pass.
 - [ ] **Step 4: Commit the implementation**
 
 ```bash
-git add src/renderer/shell/mountShell.js src/renderer/layout/paneResize.js src/renderer/styles/layout.css src/renderer/styles/tokens.css tests/uiCss.test.js tests/accessibilitySource.test.js docs/rebuild/ZEUS_V1_IMPLEMENTATION_PLAN.md docs/rebuild/ZEUS_V1_UI_AND_WORKFLOWS.md
+git add src/renderer/shell/mountShell.js src/renderer/layout/paneResize.js src/renderer/styles/layout.css src/renderer/styles/tokens.css tests/uiCss.test.js tests/accessibilitySource.test.js docs/rebuild/VITRUVIOS_V1_IMPLEMENTATION_PLAN.md docs/rebuild/VITRUVIOS_V1_UI_AND_WORKFLOWS.md
 git commit -m "Use full-height vault workspace columns"
 ```
 

@@ -5,7 +5,7 @@ const { bootstrapElectron } = require('./app/bootstrapElectron');
 
 function main() {
   return {
-    app: 'ZEUS Agent',
+    app: 'Vitruvios',
     status: 'scaffold',
     createVaultContext
   };

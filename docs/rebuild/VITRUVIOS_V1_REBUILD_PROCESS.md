@@ -1,8 +1,8 @@
-# ZEUS V1 Rebuild Process
+# Vitruvios V1 Rebuild Process
 
 ## Current Assumption
 
-The current `D:\ZEUS_AGENT` folder has been backed up externally by Beka.
+The current `D:\Vitruvios_AGENT` folder has been backed up externally by Beka.
 
 The current folder can therefore be treated as replaceable, but destructive cleanup still needs an explicit final go before execution.
 
@@ -31,7 +31,7 @@ For a clean public V1, prefer option 1 or 2. Use option 3 only if preserving the
 
 ## Local Folder Strategy
 
-Because Codex has stable context in `D:\ZEUS_AGENT`, the rebuild may reuse this same local folder after cleanup.
+Because Codex has stable context in `D:\Vitruvios_AGENT`, the rebuild may reuse this same local folder after cleanup.
 
 Recommended sequence:
 
@@ -65,7 +65,7 @@ Recommended sequence:
 
 ## Backup BAT Decision
 
-The old `ZEUS_BACKUP.bat` belongs to the prototype setup.
+The old `Vitruvios_BACKUP.bat` belongs to the prototype setup.
 
 V1 should not inherit it directly.
 

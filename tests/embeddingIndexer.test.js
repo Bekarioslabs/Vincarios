@@ -130,9 +130,9 @@ test('embedding indexer stores body and frontmatter vectors separately', async (
 });
 
 test('splitMarkdownSections removes YAML from body text', () => {
-  const result = splitMarkdownSections('---\ntags:\n  - zeus\n---\n# Title\nBody');
+  const result = splitMarkdownSections('---\ntags:\n  - vitruvios\n---\n# Title\nBody');
 
-  assert.equal(result.frontmatterText, 'tags:\n  - zeus');
+  assert.equal(result.frontmatterText, 'tags:\n  - vitruvios');
   assert.equal(result.bodyText, '# Title\nBody');
 });
 

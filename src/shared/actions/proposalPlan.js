@@ -48,12 +48,12 @@
   
   function getActionSchemaApi() {
     if (typeof require === 'function') return require('./actionSchema');
-    if (typeof window !== 'undefined' && window.ZeusActionSchema) return window.ZeusActionSchema;
-    throw new Error('ZEUS action schema API is not available.');
+    if (typeof window !== 'undefined' && window.VitruviosActionSchema) return window.VitruviosActionSchema;
+    throw new Error('Vitruvios action schema API is not available.');
   }
   
   const api = { parseProposalPlan };
   
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusProposalPlan = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosProposalPlan = Object.freeze(api);
 })();

@@ -45,5 +45,5 @@ test('panel resize maximum preserves the adjacent panel and applies the shared c
 test('resize module announces panel resize start before the first drag move', () => {
   const source = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'src', 'renderer', 'layout', 'paneResize.js'), 'utf8');
 
-  assert.match(source, /document\.body\.classList\.add\('is-resizing'\);[\s\S]*handle\.dispatchEvent\(new CustomEvent\('zeus:panel-resize-start'\)\);/);
+  assert.match(source, /document\.body\.classList\.add\('is-resizing'\);[\s\S]*handle\.dispatchEvent\(new CustomEvent\('vitruvios:panel-resize-start'\)\);/);
 });

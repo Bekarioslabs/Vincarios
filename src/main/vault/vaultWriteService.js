@@ -323,7 +323,7 @@ function toMarkdownFileName(title) {
 }
 
 function appendAudit(fileSystem, vaultRoot, entry) {
-  const auditDir = path.join(vaultRoot, '.zeus');
+  const auditDir = path.join(vaultRoot, '.vitruvios');
   fileSystem.mkdirSync(auditDir, { recursive: true });
   const auditEntry = Object.assign({
     timestamp: new Date().toISOString()

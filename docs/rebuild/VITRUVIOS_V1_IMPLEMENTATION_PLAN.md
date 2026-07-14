@@ -1,6 +1,6 @@
-# ZEUS V1 Implementation Plan
+# Vitruvios V1 Implementation Plan
 
-Audit triage reference: [ZEUS_V1_AUDIT_TRIAGE.md](./ZEUS_V1_AUDIT_TRIAGE.md).
+Audit triage reference: [VITRUVIOS_V1_AUDIT_TRIAGE.md](./VITRUVIOS_V1_AUDIT_TRIAGE.md).
 
 ## Phase 0 - Rebuild Setup
 
@@ -73,7 +73,7 @@ Every remaining implementation phase must include focused tests for the behavior
 - [x] Follow-up regression: normal chat messages use the same visible pending/cancel lifecycle as provider-backed Selection Actions. Pressing Cancel removes the pending message and prevents late assistant responses from being appended.
 - [x] Provider settings foundation: settings store categories, URL override UI/persistence, active provider persistence, and selected model persistence.
 - [x] Limits settings UI: provider timeout, model-list timeout, selected-file context cap, folder/file listing caps, analysis file cap, and review suggestion cap.
-- [x] Vault Profile settings bridge: expose existing folder-role foundation without replacing the Phase 2 core profile logic.
+- [x] Vault Profile: portable active profile at `Vault/.vitruvios/profile.json`; standard role mapping and role visual identity are configured only in Settings.
 - [x] Local-provider URL validation.
 - [x] Add manual provider status refresh button in the topbar; no polling/ticker.
 - [x] Model/capability display: model dropdown exists and Settings shows provider capability badges.
@@ -115,7 +115,7 @@ This phase is inserted before Reviewed Update Flow because V1 should not rely on
 
 ### 5.4.5 English Default Vault
 
-- [x] Create a clean English development test vault near the project folder: `D:\ZEUS_AGENT\dev-vault`.
+- [x] Create a clean English development test vault near the project folder: `D:\Vitruvios_AGENT\dev-vault`.
 - [x] Keep development vault data out of Git unless a deliberately tiny fixture vault is created under `tests/fixtures/`.
 - [x] Switch target V1 default folder labels to English: `00_Inbox`, `01_Daily`, `02_Projects`, `03_Knowledge`, `90_AI_Brain`, `99_Archive`.
 
@@ -135,7 +135,7 @@ This phase is inserted before Reviewed Update Flow because V1 should not rely on
 
 ### 5.4.8 Docs And Tests
 
-- [x] Keep this plan, `ZEUS_V1_UI_AND_WORKFLOWS.md`, and `ZEUS_V1_ARCHITECTURE.md` aligned while implementing 5.4.
+- [x] Keep this plan, `VITRUVIOS_V1_UI_AND_WORKFLOWS.md`, and `VITRUVIOS_V1_ARCHITECTURE.md` aligned while implementing 5.4.
 - [x] Add tests that Selection Actions depend on selected app state, not chat text.
 - [x] Add tests that selection alone does not attach context and explicit Context Basket items do attach context.
 - [x] Add tests for English default vault roles once the default profile is changed.
@@ -179,13 +179,13 @@ Phase 6.5 happens before Phase 7 feature work. Its purpose is to make the curren
 
 - [x] Refine the left navigation into grouped app actions: `WORKSPACE`, `CREATE`, `VAULT`, and bottom `SETTINGS`.
 - [x] Keep `Open Vault` prominent under `VAULT`; keep `Settings` as the stable bottom modal entry.
-- [x] Add collapsed `CREATE` preset structure: `New Note` presets and `New Project` presets without wiring fake creation. Presets must stay user-extensible later, including optional curated ZEUS preset packs.
+- [x] Add collapsed `CREATE` preset structure: `New Note` presets and `New Project` presets without wiring fake creation. Presets must stay user-extensible later, including optional curated Vitruvios preset packs.
 - [x] Keep future left-nav entries as explicit future slots only; placeholders must not look like working features.
 - [x] Rework Settings into a two-pane modal: category menu on the left, active category content on the right.
-- [x] Keep implemented Settings categories wired to the existing settings store: Providers, Limits, and Vault Profile.
+- [x] Keep Providers and Limits app-local; make Vault Profile selected-vault metadata with its own validated service.
 - [x] Add V1-ready Settings categories for Templates, Appearance, Embeddings, Safety, and About without fake functionality.
 - [x] Add dedicated Markdown Properties/YAML style tokens so metadata can be visually distinct from prose and later controlled by Appearance settings.
-- [x] Document project style presets as V1.1 direction: detected through explicit project metadata such as `zeus_style_preset`, ZEUS-only in V1, optional Obsidian CSS snippet export later with explicit user confirmation.
+- [x] Document project style presets as V1.1 direction: detected through explicit project metadata such as `vitruvios_style_preset`, Vitruvios-only in V1, optional Obsidian CSS snippet export later with explicit user confirmation.
 - [x] Keep Settings and UI tokens extensible for later hotkeys, plugin compatibility, custom actions, theme presets, and theme managers that may change shapes such as button radius.
 - [x] Ensure UI-only changes preserve keyboard access, ARIA labels/states, and local scrolling rules.
 - [x] Update UI docs and focused source/style tests for the changed shell/settings structure.
@@ -207,7 +207,7 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 - [x] New Note workflow from deterministic presets adds reviewed `create_note` proposals to the Review Basket.
 - [x] New Project workflow from deterministic presets enters the Review Basket as one `create_from_template` action. The reviewed execution path creates planned folders first through `createFolder`, then planned Markdown files through `createNote`.
 - [x] Template/preset data shape targets vault folder roles instead of hard-coded folder names.
-- [x] Presets remain extensible for custom user presets and later curated ZEUS preset packs through the shared registry shape; user-pack loading is later work.
+- [x] Presets remain extensible for custom user presets and later curated Vitruvios preset packs through the shared registry shape; user-pack loading is later work.
 - [x] No AI improvisation in template creation: the preset registry materializes deterministic create plans.
 - [x] Preset UI binds left navigation preset buttons to Review Basket proposals; no direct writes.
 - [x] Create proposals are edited in the Review Basket before execution; execution no longer repeats the initial title dialog.
@@ -217,7 +217,7 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 
 - [x] External `.md` and `.markdown` files dropped onto the chat become temporary Context Basket items.
 - [x] Dropped Markdown is not copied into the vault automatically.
-- [x] Dropped Markdown shows a ZEUS chat message with an `Import to Inbox` action.
+- [x] Dropped Markdown shows a Vitruvios chat message with an `Import to Inbox` action.
 - [x] `Import to Inbox` adds a reviewed `create_note` proposal; Review Basket edit/execute performs the actual vault write.
 - [x] Images, PDFs, vision analysis, automatic sorting, and manual file-tree move drag/drop remain out of this block.
 
@@ -229,7 +229,7 @@ Status: complete for V1-light.
 - [x] Rename Light stays manual and same-folder only; it does not move files.
 - [x] Rename Light reports clearly that links are not updated in V1.
 - [x] Rename Light writes through main-process vault validation and audit logging, not renderer filesystem access.
-- [x] Move drag-and-drop is explicitly V1.1: it must include deterministic Markdown link-update planning and review before it becomes useful enough for ZEUS.
+- [x] Move drag-and-drop is explicitly V1.1: it must include deterministic Markdown link-update planning and review before it becomes useful enough for Vitruvios.
 - [x] AI rename/move/archive actions are explicitly V1.1: they need safe services, backlink warnings, undo/repair, and batch review before execution.
 
 ### Phase 7.2.5 - Session Activity And Status Messages
@@ -244,7 +244,7 @@ Goal: add a lightweight session-only view so important status messages do not di
 - [x] Route initial app-wide status events through the activity state: vault open and reviewed create/update/template execution. File reads, folder listings, renames, provider errors, and warnings can join the same state when their owning modules are touched.
 - [x] Activity entries include local time, type (`info`, `success`, `warning`, `error`), action label, target path when relevant, and detail text.
 - [x] Render important parts with visual hierarchy using scoped Session Log styles.
-- [x] Keep `.zeus/audit.jsonl`, backup history, restore UI, and persistent event history in V1.1/V1.2. Session Log is not audit history.
+- [x] Keep `.vitruvios/audit.jsonl`, backup history, restore UI, and persistent event history in V1.1/V1.2. Session Log is not audit history.
 - [x] Test that activity state is renderer-local, session-only, and does not replace safety/audit services.
 ### Phase 7.3 - Inbox Cleanup Light
 
@@ -252,7 +252,7 @@ Status: complete for V1-light.
 
 - [x] Cleanup starts as a grouped report, not hundreds of Basket items.
 - [x] Report groups include summaries, loose Markdown notes, subfolders, AI response notes, and other files.
-- [x] `Inbox Review` in the left navigation scans the Inbox plus one direct subfolder level, generates a saveable report-only ZEUS chat response, and creates no Review Basket actions.
+- [x] `Inbox Review` in the left navigation scans the Inbox plus one direct subfolder level, generates a saveable report-only Vitruvios chat response, and creates no Review Basket actions.
 - [x] The report offers an explicit `Scan nested folders` follow-up for deeper Inbox structure scans without reading file contents.
 - [x] Large batch execution stays out of V1 unless it later fits the existing review/update safety path.
 
@@ -261,13 +261,13 @@ Status: complete for V1-light.
 - [x] Choose local embedding runtime and multilingual-capable base model: Transformers.js / ONNX with `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`; use `Xenova/paraphrase-multilingual-MiniLM-L12-v2` as the Transformers.js artifact source.
 - [x] Record the Apache-2.0 model/license decision in Settings and app settings normalization.
 - [x] Add settings-store foundation for bundled model versus custom local model path. UI controls for choosing a custom path are still pending.
-- [x] Prepare embedding model artifact storage outside normal vault notes: bundled model metadata and manifest live under project `.zeus/models/embeddings/...`.
-- [x] Verify the pinned local artifact set with source, license, expected files, revision, and SHA256 checks. The local development copy lives under project `.zeus/models/embeddings/...` and is not committed to Git.
+- [x] Prepare embedding model artifact storage outside normal vault notes: bundled model metadata and manifest live under project `.vitruvios/models/embeddings/...`.
+- [x] Verify the pinned local artifact set with source, license, expected files, revision, and SHA256 checks. The local development copy lives under project `.vitruvios/models/embeddings/...` and is not committed to Git.
 - [x] Add the local embedding runtime service. It loads the bundled model path through Transformers.js/ONNX, disables remote model loading, caches the extractor, and returns vectors only.
 - [x] Add Markdown discovery for indexing: recursive Markdown-only scan, protected dot-folder skip, no non-Markdown content.
-- [x] Add the local embedding indexer service: chunks Markdown, embeds changed documents, skips unchanged hash/mtime records, and writes document vectors to selected-vault `.zeus/index`.
-- [ ] Decide final V1 distribution mode: model bundled in release build if practical; source/dev users get controlled download script or app download flow. Do not commit model artifacts to Git.
-- [x] Decide index storage boundary: selected-vault `.zeus/index` by default. `.zeus` is internal app data, not normal vault notes or provider context.
+- [x] Add the local embedding indexer service: chunks Markdown, embeds changed documents, skips unchanged hash/mtime records, and writes document vectors to selected-vault `.vitruvios/index`.
+- [x] Defer final embedding distribution choice to the Phase 9 release-artifact gate: decide bundled model versus controlled download, document the license/source/checksum path, and never commit model artifacts to Git.
+- [x] Decide index storage boundary: selected-vault `.vitruvios/index` by default. `.vitruvios` is internal app data, not normal vault notes or provider context.
 - [x] Index schema includes path, hash, modified time, chunk metadata, vector data, and separate body/frontmatter vector fields for sharper similarity scoring.
 - [x] Reindex decision foundation: unchanged hash/mtime skips work; changed hash/mtime or changed model requires reindex. User-facing reindex controls remain pending.
 - [x] Embeddings are separate from chat providers; no cloud embeddings in V1.
@@ -280,7 +280,7 @@ Status: complete for V1-light. Metadata index remains a documented V1.1 architec
 - [x] Link candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
 - [x] Tag candidates: selected Markdown files expose `Suggest tags`, which creates local heuristic `metadata_candidate` suggestions with full `currentContent` and `proposedContent`. Selected candidates can enter the Review Basket as reviewed `update_note` proposals. The V1 heuristic is role-aware, avoids hard-coded project-folder names, ignores sentence-like chat filenames, prefers strong project/file-role/structural-folder/title signals, and avoids broad stopword-list growth. AI/embedding-generated tag candidates remain later refinement work.
 - [x] Metadata/YAML assist for V1 create flows: Save as Note, summaries, new-note/project presets, and Markdown imports attach deterministic YAML through the shared generated-note metadata policy. The Create Edit view exposes the full YAML before execution. Existing-note update metadata continues through the separate reviewed `update_note` diff path.
-- [x] Metadata index planning only: future structured index is documented under selected-vault `.zeus/index/metadata/` for notes, tags, links, template metadata, project/file-role summaries, and source hashes. Do not implement the index in V1 and do not overload the embedding index with this data.
+- [x] Metadata index planning only: future structured index is documented under selected-vault `.vitruvios/index/metadata/` for notes, tags, links, template metadata, project/file-role summaries, and source hashes. Do not implement the index in V1 and do not overload the embedding index with this data.
 - [x] Folder candidates moved to V1.1. Do not implement in V1 unless the V1 necessity gate explicitly reclassifies them as must-have.
 - [x] Suggestions enter grouped reports or Review Basket proposals only through registered suggestion/action types. Current conversion path supports `metadata_candidate` only.
 - [x] Concrete suggestion previews are V1-ready for `metadata_candidate` through the shared Markdown diff preview. Move plans, duplicate comparison, link diffs, and merge previews are V1.1 because their executable services are not V1 scope.
@@ -291,7 +291,7 @@ Status: complete for V1-light. Metadata index remains a documented V1.1 architec
 
 - [x] Add a workspace tab foundation for `Chat`, `Suggestions`, and later `Session Log` without moving provider or vault logic into the workspace UI.
 - [x] Add a Suggestions renderer module that can show grouped suggestion items, selected-item detail, compact status/score labels, checkboxes, and dismiss controls.
-- [x] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat gets only a short status line, ZEUS does not auto-switch workspaces, and the Suggestions tab shows an item-count indicator.
+- [x] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat gets only a short status line, Vitruvios does not auto-switch workspaces, and the Suggestions tab shows an item-count indicator.
 - [x] Keep Similar Notes report-only until a future suggestion converter creates concrete Review Basket actions.
 - [x] Define the conversion boundary: `Add selected to Review Basket` is disabled until selected suggestions map to supported concrete action types. Current supported conversion is `metadata_candidate` with complete `currentContent` and `proposedContent` into reviewed `update_note`; similar notes remain report-only.
 - [x] Preserve the right-side Files/Preview area; Suggestions is a main workspace, not a modal that hides the vault context.
@@ -308,9 +308,9 @@ Status: complete for V1-light. Metadata index remains a documented V1.1 architec
 
 Status: complete for V1 rendering scope. Further plugin rendering, callouts, math/Mermaid, and editor-toolbar work are V1.1/V1.2 unless the Phase 7.7 necessity gate reclassifies a specific item.
 
-- [x] Audit current preview behavior against Obsidian core Markdown and record Full/Partial/Missing/Intentional Difference status in ZEUS_V1_MARKDOWN_COMPATIBILITY.md.
+- [x] Audit current preview behavior against Obsidian core Markdown and record Full/Partial/Missing/Intentional Difference status in VITRUVIOS_V1_MARKDOWN_COMPATIBILITY.md.
 - [x] Add a non-executed compatibility fixture covering core syntax and explicit plugin-code-block examples.
-- [x] Confirm the final V1 rendering subset once: CommonMark basics, YAML properties display, wikilinks/Markdown links, task boxes, highlights/comments, image embeds, standalone image preview, and safe external-link confirmation. The subset is documented in `ZEUS_V1_MARKDOWN_COMPATIBILITY.md`.
+- [x] Confirm the final V1 rendering subset once: CommonMark basics, YAML properties display, wikilinks/Markdown links, task boxes, highlights/comments, image embeds, standalone image preview, and safe external-link confirmation. The subset is documented in `VITRUVIOS_V1_MARKDOWN_COMPATIBILITY.md`.
 - [x] Replace the hand-written block/inline regex renderer with pinned `markdown-it` 14.3.0 behind focused engine, Obsidian-extension, Properties, and facade modules.
 - [x] Support standards-based soft line breaks, emphasis variants, strikethrough, nested lists, horizontal rules, inline code, and escapes; add basic Obsidian highlight and inline-comment handling.
 - [x] Bundle the browser engine and MIT license locally, require all Markdown submodules at startup, and keep raw HTML disabled.
@@ -338,7 +338,7 @@ Status: complete.
 
 Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work in small testable slices. The external UI/UX proposal files were reviewed as design input and then archived outside the active docs. The accepted goal is to bring their useful fixes and polish into V1 iteratively instead of deferring them wholesale to V1.1.
 
-- [x] Review the external UI/UX proposal files together with Beka. Treat them as design input, map every item through ZEUS ownership boundaries, archive them out of active docs, and implement only through focused app modules/styles.
+- [x] Review the external UI/UX proposal files together with Beka. Treat them as design input, map every item through Vitruvios ownership boundaries, archive them out of active docs, and implement only through focused app modules/styles.
 - [x] 7.7.1 Token/CSS foundation: `tokens.css` now owns primitive/semantic palette comments, status `-rgb` tokens, `--status-warning`, action color tokens, diff/score tokens, radius tokens, `--transition-fast`, and selection/scrollbar theming. Status/diff/suggestion score colors now use tokens without layout behavior changes.
 - [x] 7.7.2 CSS hardcode cleanup: raw status/action colors, score colors, diff colors, common radii, icon filters, modal backdrops, and shared shadows are centralized through `tokens.css`. Intentional exceptions remain for geometric values such as `border-radius: 0` on flat file rows and `50%` for circular dots/spinners.
 - [x] 7.7.3 Local scrolling and containment: Review Basket and Context Basket now have bounded local scroll areas so long lists do not push the chat input out of view.
@@ -348,27 +348,28 @@ Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work i
 - [x] 7.7.7 Visual polish pass: Settings/category icons, provider-mode privacy badge, subtle active-state glow, centralized file-row update flash, and consistent hover/micro-transition behavior now use the token system. File-row flash is handled through renderer update flash state, applies only to visible rows without tree rebuilds, and stays visually distinct from selected rows. The provider badge is not hard-coded as Local Only; it is provider privacy based so future cloud/external providers can change the label.
   - [x] Settings/category icons: the Providers settings category uses the semantic plug icon, the main-screen Settings button uses the gear icon, and both paths render through existing Lucide icon helpers and tokenized icon filters.
 - [x] 7.7.8 Loading and score presentation: provider-backed and embedding-backed waits continue to use the existing lightweight pending chat message with spinner; no extra skeleton layer was added because it would duplicate feedback. Similar Notes/Suggestions should use a real compact score-ring component inspired by `docs/Design_index.html`, not oval score pills or list meter bars. The ring shows the percentage inside the circle; explanatory text can sit beside it for clarity. Score colors use the shared score tokens, not ad-hoc green/amber/orange/red values. Medium/yellow must remain visibly brighter than weak/orange.
-- [ ] 7.7.9 Final visual reference alignment: compare the app against `docs/Design_index.html`, keep ZEUS compact and utilitarian, and avoid copying demo-only structures that do not fit the real app.
+- [x] 7.7.9 Final visual reference alignment: compare the app against `docs/Design_index.html`, keep Vitruvios compact and utilitarian, and avoid copying demo-only structures that do not fit the real app. Manual visual review is green.
 - [x] Before V1 freeze, clarify Suggestions type separation: Similar Notes and Metadata/Tags are visually separated by suggestion group headers. Group headers can select only visible, non-dismissed items in that group. `Clear selected` hides selected suggestions from the current session, while `Add selected to Review Basket` remains limited to convertible suggestion types such as metadata candidates.
-- [ ] Create a concise dependency/flow overview (preferably graphical) showing how UI actions, policies, Review Basket, main services, and providers connect.
-- [ ] Re-check whether Recent Files/Homepage light, broken-link/orphan scan, and project note maintenance are V1-must or V1.1.
-- [ ] Anything not needed for a presentable V1 moves to the V1.1/V1.2 Backlog before Phase 8 freeze work.
+- [x] Create a concise V1 request/write flow overview in `VITRUVIOS_V1_ARCHITECTURE.md`, showing UI actions, provider boundaries, Review Basket, Main safety, Vault Services, backup, and audit.
+- [x] Classify Recent Files, Homepage light, broken-link/orphan scans, and project-note maintenance as V1.1. They do not block safe, presentable V1 workflows.
+- [x] Move non-essential interaction-density and plugin-compatibility ideas to the V1.1/V1.2 Backlog before the Phase 8 scope-freeze review.
 
 ### Phase 7.8 - Folder Visual Identity
 
-Status: planned for V1 consideration before Phase 8. This replaces the earlier "Folder-Role color dots" idea with a fuller but still small navigation aid.
+Status: complete for V1. This replaces the earlier "Folder-Role color dots" idea with a fuller but still small navigation aid.
 
-- [x] Support visual identity only for top-level folders in V1: icon plus color. English default roots render with semantic local Lucide icons and token-driven colors; unknown or nested folders retain the neutral folder icon until an explicit vault profile override exists.
-- [x] Store ZEUS-owned folder visual settings under selected-vault `.zeus/profile.json`, not `.obsidian`.
+- [x] Support visual identity only for top-level folders in V1: icon plus color. Active top-level Vault Role mappings render with semantic local Lucide icons and token-driven colors; unknown and nested folders retain the neutral folder icon in V1.
+- [x] Store Vitruvios-owned standard-role mappings and visual settings under selected-vault `.vitruvios/profile.json`, not `.obsidian`.
 - [x] Treat folder visuals as manual low-risk UI configuration writes, not Markdown/content writes. They intentionally bypass Review Basket, content diff, note-backup, and content-audit pipelines through a dedicated main-process service.
-- [x] Keep `.obsidian` read-only for future compatibility/import layers such as Iconize; do not write ZEUS UI state there.
-- [x] Use a fixed V1 icon/color set from the existing Lucide/icon and token systems. The File Tree exposes it through a top-level-folder context menu and focused modal with Apply, Cancel, and Reset.
-- [x] Design the data shape so future Templates and Vault Profiles can provide folder roles, icons, and colors when creating/importing project structures. `profile.json` preserves unrelated future fields and stores only explicit `folderVisuals` overrides.
-- [ ] Keep full Iconize compatibility, per-file visuals, custom SVGs, and deep-folder styling in V1.1/V1.2 unless reclassified by freeze review.
+- [x] Keep `.obsidian` read-only for future compatibility/import layers such as Iconize; do not write Vitruvios UI state there.
+- [x] Configure each role through Settings with a built-in Lucide icon picker or safe local SVG list from `Vault/.vitruvios/icons/`, plus a fixed token-color palette. The File Tree remains display-only.
+- [x] Make File Tree visual identity display-only; configure role assignments, icons, and colors only through `Settings -> Vault Profile`. `profile.json` preserves unrelated future fields and migrates legacy path-keyed `folderVisuals` to role-keyed visuals when possible.
+- [x] Allow a local static SVG per role by listing only validated files already placed in portable `Vault/.vitruvios/icons/`; the profile stores only the relative path. V1 has no file-import dialog and no arbitrary custom colors.
+- [x] Defer full Iconize compatibility, per-file visuals, icon packs, and deep-folder styling to V1.1/V1.2.
 
 ### Phase 7.9 - UI Density, Visual System, And Collapse
 
-Status: in progress before Phase 8. Goal: reduce visible clutter without hiding core safety state or changing action semantics. The visual target is a compact local work tool: quiet raised neutral surfaces, darker Chat/Preview focus surfaces, restrained structural dividers, flat navigation/action rows, and warm amber only for active or primary states.
+Status: complete for V1. Goal: reduce visible clutter without hiding core safety state or changing action semantics. The visual target is a compact local work tool: quiet raised neutral surfaces, darker Chat/Preview focus surfaces, restrained structural dividers, flat navigation/action rows, and warm amber only for active or primary states.
 
 Implementation rule: work from large visible impact to fine polish. Each block gets a manual visual checkpoint before the next block. Components consume shared tokens and variants; no new local color, radius, icon-size, text-size, or control-size exceptions without a reusable documented purpose.
 
@@ -388,35 +389,35 @@ Implementation rule: work from large visible impact to fine polish. Each block g
 - [x] Inventory current surface, border, text, icon, radius, spacing, and tool-control values before visual changes.
 - [x] Define a small semantic token scale for surface roles, text roles, type sizes, icon sizes, control sizes, radius, and spacing. Theme changes must be token-driven.
 - [x] Define shared component patterns for compact tool controls, Files/Selection Actions panel headers, and the baseline flat Selection Action row in `components.css`; owner styles retain only local layout and state geometry.
-  - [ ] Extend shared patterns to flat navigation rows, framed context packets, and active states.
-- [ ] Keep structural dividers only; remove decorative per-button and redundant toolbar dividers as components migrate.
+  - [x] Extend shared patterns to flat navigation rows, framed context packets, and active states.
+- [x] Keep structural dividers only; remove decorative per-button and redundant toolbar dividers as components migrate.
 
 #### 7.9.2 Left Navigation Refresh
 
-- [ ] Move the expanded left navigation from outlined buttons to flat semantic icon/text rows with a subtle active surface.
-- [ ] Keep section hierarchy through compact muted labels, spacing, and minimal structural separators.
-- [ ] Preserve the current icon rail behavior, hover titles, keyboard accessibility, preset expansion, and app-local persistence.
-- [ ] Manual checkpoint: compare expanded and collapsed navigation with the agreed visual references before continuing.
+- [x] Move the expanded left navigation from outlined buttons to flat semantic icon/text rows with a subtle active surface.
+- [x] Keep section hierarchy through compact muted labels, spacing, and minimal structural separators.
+- [x] Preserve the current icon rail behavior, hover titles, keyboard accessibility, preset expansion, and app-local persistence.
+- [x] Manual checkpoint: compare expanded and collapsed navigation with the agreed visual references before continuing.
 
 #### 7.9.3 Shared Toolbars And Collapse Geometry
 
-- [ ] Apply the shared compact tool-control pattern to navigation collapse, Files refresh/collapse, Selection Actions collapse, and Markdown Back/Forward controls.
-- [ ] Make Files and Selection Actions header/control geometry aligned in expanded and collapsed states.
-- [ ] Enforce collapse direction and fixed-neighbor behavior: a collapse must not make sibling panels grow or leak content into Preview.
-- [ ] Keep the outer Chat/Vault resize usable when Rails are collapsed; inner resize controls only disable where their owned panel is collapsed.
-- [ ] Manual checkpoint: test every Files/Actions open-collapse combination and outer resize at narrow and wide window sizes.
+- [x] Apply the shared compact tool-control pattern to navigation collapse, Files refresh/collapse, Selection Actions collapse, and Markdown Back/Forward controls.
+- [x] Make Files and Selection Actions header/control geometry aligned in expanded and collapsed states.
+- [x] Enforce collapse direction and fixed-neighbor behavior: a collapse must not make sibling panels grow or leak content into Preview.
+- [x] Keep the outer Chat/Vault resize usable when Rails are collapsed; inner resize controls only disable where their owned panel is collapsed.
+- [x] Manual checkpoint: test every Files/Actions open-collapse combination and outer resize at narrow and wide window sizes.
 
 #### 7.9.4 Files And Selection Actions Visual Refresh
 
-- [ ] Simplify the Files toolbar to compact Refresh and Collapse icon controls without decorative vertical dividers.
-- [x] Reduce Selection Action row visual weight: flat icon/text actions, semantic category dot and execution marker, clear active/blocked state, no persistent card grid. Targeted checks are green; manual visual checkpoint pending.
-- [ ] Keep permission, provider, embedding, lock, and selection state visible without relying on color alone.
+- [x] Simplify the Files toolbar to compact Refresh and Collapse icon controls without decorative vertical dividers.
+- [x] Reduce Selection Action row visual weight: flat icon/text actions, semantic category dot and execution marker, clear active/blocked state, no persistent card grid. Targeted checks and manual visual checkpoint are green.
+- [x] Keep permission, provider, embedding, lock, and selection state visible without relying on color alone.
 
 #### 7.9.5 Compact Review And Context Baskets
 
-- [ ] Make Review Basket and Context Basket default-collapsed with compact headers, counts, and preserved keyboard/accessible state.
-- [ ] Reduce basket vertical footprint and local list density without hiding review safety state.
-- [ ] Render Context items as compact framed packets with target icon, short label, and restrained path context.
+- [x] Make Review Basket and Context Basket default-collapsed with compact headers, counts, and preserved keyboard/accessible state.
+- [x] Reduce basket vertical footprint and local list density without hiding review safety state.
+- [x] Render Context items as compact framed packets with target icon, short label, and restrained path context.
 
 #### 7.9.6 Preview And Status Polish
 
@@ -426,19 +427,45 @@ Implementation rule: work from large visible impact to fine polish. Each block g
 
 #### 7.9.7 Responsive, Theme, And Accessibility Final Pass
 
-- [ ] Test all collapse combinations, keyboard/focus behavior, tooltips, and local scrolling at narrow and wide desktop widths.
-- [ ] Verify Dark mode and future Light mode use the same semantic tokens and no component-local recolor exceptions.
-- [ ] Run UI source/accessibility checks plus the full suite; document any intentionally deferred polish before Phase 8.
+- [x] Test all collapse combinations, keyboard/focus behavior, tooltips, and local scrolling at narrow and wide desktop widths.
+- [x] Verify Dark mode and future Light mode use the same semantic tokens and no component-local recolor exceptions.
+- [x] Run UI source/accessibility checks plus the full suite; document any intentionally deferred polish before scope is frozen in Phase 8.
 
-#### Deferred Interaction Density Follow-Ups
+#### Deferred To V1.1: Interaction Density Follow-Ups
 
 - [ ] Move File Tree permission controls (`R`/`W`) to row hover/focus while preserving direct/inherited/off state and keyboard reachability.
 - [ ] Decide whether Session Log becomes a compact bottom-bar activity drawer instead of a prominent Workspace entry.
 - [ ] Add Focus Mode only after individual collapses are visually stable; it coordinates icon rail, Files, and Context Basket and persists app-locally.
 
-## Phase 8 - V1 Freeze And Release Baseline
+## Phase 8 - V1 Product Readiness And Scope Freeze
 
-V1 is done when all current V1 phases are complete and a sober freeze review finds no remaining must-have gaps. New findings are classified as V1-must only when they block safety, core usefulness, or external testing; otherwise they move to V1.1 or the Parking Lot.
+Phase 8 finishes the product before release hardening starts. It may add only small, complete, safety-preserving V1 workflows. Each accepted item needs a named owner, targeted tests, manual UI verification, and updated docs. It is not a reopening of broad V1.1 ideas.
+
+### 8.1 Product Identity And First-Run Experience
+
+- [ ] Decide the final product name and public one-sentence description before changing visible branding.
+- [ ] Decide and document whether public positioning leads with an independent local-first Markdown/project workspace, while stating Obsidian-vault compatibility as a supported workflow with explicit limits.
+- [ ] Apply the chosen name and description consistently to splash, app chrome, README, package/build metadata, and release material in one controlled branding change.
+- [ ] Upgrade the splash/start screen into a useful first-run surface: primary Open Vault action, last-opened vault when available, local-provider/privacy status, and no fake controls.
+
+### 8.2 Folder Actions And AI Response Consistency
+
+- [ ] Replace separate `List folder` and `Analyze folder` actions with deterministic `Inspect Folder`: direct-level counts plus grouped Folder/Markdown entries, no note-content reads, and a `Check whole tree` follow-up using the same structured renderer.
+- [ ] Add one reusable Folder Scope form for provider-backed folder operations. V1 options: current folder or subfolders, bounded depth, Markdown-only file type, max files, and existing hard total-context cap.
+- [ ] Make Folder Context add a visible snapshot package of the selected Markdown files to Context Basket. The packet must show scope and effective limits; it must never silently include an unbounded tree.
+- [ ] Make Folder Summary use the same Folder Scope form. It may summarize selected Markdown files only; images/PDFs remain excluded in V1 while the configuration model remains extensible for future file types.
+- [ ] Add Settings -> Action Defaults for Folder Context and Folder Summary. Defaults initialize action forms but per-run choices remain visible and session-local.
+- [ ] Standardize deterministic action output and provider-generated AI response surfaces: stable Markdown structure, readable headings/lists, consistent Save-as-Note behavior, and deterministic generated-note metadata where the creating flow already owns metadata.
+
+### 8.3 Final V1 Scope Gate
+
+- [ ] Re-evaluate V1.1/V1.2 candidates once against safety, core usefulness, implementation completeness, and regression risk. Reclassify only small, self-contained candidates with a defined owner and test plan.
+- [ ] Move every rejected candidate back to the explicit V1.1/V1.2 Backlog with a short reason.
+- [ ] Freeze V1 scope. After this point, only security, data-loss, core workflow, or external-test blockers may enter V1.
+
+## Phase 9 - V1 Freeze And Release Baseline
+
+V1 is done when all current V1 phases are complete and the release gates below are green. New findings after the Phase 8 scope freeze are V1-must only when they block safety, core usefulness, or external testing; otherwise they move to V1.1 or the Parking Lot.
 
 - [ ] README update, including clear beta trust boundaries and build-it-yourself guidance.
 - [ ] Architecture docs update.
@@ -451,7 +478,7 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Release artifact gate: build from clean checkout, generate SHA256 checksums, and publish checksums with the release notes.
 - [ ] Document unsigned-build status until code signing exists; do not imply OS-level trust before signing is implemented.
 - [ ] Package/build check.
-- [ ] V1 freeze decision.
+- [ ] V1 freeze decision and beta release candidate.
 
 ## V1.1 / V1.2 Backlog
 
@@ -461,6 +488,8 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Folder Context Index maps if they did not pass the V1 necessity review.
 - [ ] Slim Brain OS integration with explicit load order, validation, and no ability to override code-side safety laws.
 - [ ] Search within vault.
+- [ ] Recent Files and Homepage light, including their app-local placement and persistence rules.
+- [ ] Broken-link/orphan scans and project-note maintenance reports as report-only cleanup foundations.
 - [ ] Audit log / backup history UI with restore-oriented controls.
 - [ ] End-to-end Electron tests.
 - [ ] Async or worker-based deep folder crawling for very large vaults.
@@ -469,7 +498,7 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Plugin-style extension points for community contributions.
 - [ ] More complete settings UI, including hotkeys and theme presets.
 - [ ] Template V1.1 planning input: Beka's private Book project notes are local-only and intentionally ignored by Git. Revisit them when designing richer template/preset workflows.
-- [ ] Vault Profile V1.1: multiple named profiles, custom folder roles, and `Choose from Vault folders` path picker with inside-vault validation.
+- [ ] Vault Profile V1.1: named profile library, custom folder roles, and multiple project destinations (for example work/private) that Template creation can select explicitly.
 - [ ] Chat action display setting: allow hover actions such as `Save as Note`, `Copy`, and future message actions to render as text, Lucide SVG icons, or icon+text without changing chat action logic.
 - [ ] Suggestions score display setting: allow the explanatory match text beside score rings to be hidden for users who only want the ring/percentage. This must be a presentation setting only; score thresholds, suggestion ranking, and Review Basket conversion logic stay unchanged.
 - [ ] Context Basket type badge polish: optional distinct badge/border colors for `MD`, `DIR`, future `IMG`, `PDF`, `FILE`, and unknown targets. These colors must remain separate from Selection Action behavior colors.
@@ -477,20 +506,20 @@ V1 is done when all current V1 phases are complete and a sober freeze review fin
 - [ ] Detachable/undocked Markdown preview window for multi-monitor workflows.
 - [ ] Vision analysis and image tagging gated by model capability.
 - [ ] Obsidian plugin compatibility audit for common workflows: Templater, Dataview, Tasks, Advanced Tables, Calendar, Kanban, Iconize, Style Settings, Omnisearch, Smart Connections, Tag Wrangler, Linter, Mindmap, Homepage, Recent Files, and Make.md.
-- [ ] Optional Iconize compatibility: detect Iconize metadata when safe and mirror icons in ZEUS UI without requiring Iconize.
+- [ ] Optional Iconize compatibility: detect Iconize metadata when safe and mirror icons in Vitruvios UI without requiring Iconize.
 - [ ] Style Settings compatibility research: read/import visual settings only through explicit user choice; do not write `.obsidian` automatically.
 - [ ] Kanban and Mindmap support should start as rendering/fallback research, not full plugin reimplementation.
 - [ ] Export actions: Markdown and HTML first, designed so more formats can be added later.
 - [ ] Editing toolbar light for Markdown edit mode: basic bold, italic, heading/size-like Markdown, and later color/style helpers only if they stay Markdown-safe.
-- [ ] ZEUS plugin/extension architecture research: define how future community modules register actions, settings, target types, and review flows without bypassing safety laws.
+- [ ] Vitruvios plugin/extension architecture research: define how future community modules register actions, settings, target types, and review flows without bypassing safety laws.
 - [ ] Natural Action Control (V2.1 candidate): optional toggle that lets the model map natural language to existing registered Selection Actions. It must only execute predefined app actions through the same permission, review, backup, and audit boundaries. The recognition layer may use prompts or trigger rules, but it must live in its own module and never create new hidden capabilities.
 - [ ] Chat Sessions / conversation history as a later V2 feature: session list, resume, delete, privacy rules, and per-vault/global storage decisions.
 
-- [ ] Persistent Suggestion Sessions: optionally store open suggestion groups under selected-vault `.zeus/` with created time, source target, index/model version or file hashes, status, and stale validation. Current V1 Suggestions remain intentionally session-only and disappear on reload/restart.
+- [ ] Persistent Suggestion Sessions: optionally store open suggestion groups under selected-vault `.vitruvios/` with created time, source target, index/model version or file hashes, status, and stale validation. Current V1 Suggestions remain intentionally session-only and disappear on reload/restart.
 - [ ] Merge Workspace for similar/complementary notes: compare two source notes, show A/B diff, create a reviewed third merged file, and optionally archive the sources only after explicit confirmation. This must become a dedicated `merge_notes` action, not an overloaded `update_note`.
 - [ ] Link candidates from embeddings/metadata: suggest exact Markdown link insertions with a visible line diff before converting to reviewed `update_note` proposals.
 - [ ] Folder/destination candidates: suggest target folders using embeddings plus metadata index signals, but execute only through future reviewed move/link-update services.
-- [ ] Structured metadata index under selected-vault `.zeus/index/metadata/`: store schema-versioned note facts, tags, parsed links/unresolved links, template roles, project/file-role hints, source hashes, stale markers, and optional reviewed summaries separate from vector embeddings. Rebuild from the vault; never use it as authority for unreviewed writes.
+- [ ] Structured metadata index under selected-vault `.vitruvios/index/metadata/`: store schema-versioned note facts, tags, parsed links/unresolved links, template roles, project/file-role hints, source hashes, stale markers, and optional reviewed summaries separate from vector embeddings. Rebuild from the vault; never use it as authority for unreviewed writes.
 - [ ] Plugin block fallback registry: detect common unsupported Obsidian plugin blocks, preserve source, and render a clear unsupported-plugin notice without executing plugin code.
 - [ ] Editor Light expansion if needed: formatting buttons, Markdown-safe insertions, optional detached editor/preview workflows, and later style helpers.
 ## Parking Lot

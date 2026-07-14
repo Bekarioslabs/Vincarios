@@ -156,15 +156,15 @@
   }
 
 function getIntentApi() {
-    if (typeof window !== 'undefined' && window.ZeusContextIntent) return window.ZeusContextIntent;
+    if (typeof window !== 'undefined' && window.VitruviosContextIntent) return window.VitruviosContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');
-    throw new Error('ZEUS context intent API is not available.');
+    throw new Error('Vitruvios context intent API is not available.');
   }
 
   function getPackageBuilderApi() {
-    if (typeof window !== 'undefined' && window.ZeusContextPackageBuilder) return window.ZeusContextPackageBuilder;
+    if (typeof window !== 'undefined' && window.VitruviosContextPackageBuilder) return window.VitruviosContextPackageBuilder;
     if (typeof module !== 'undefined' && module.exports) return require('./contextPackageBuilder');
-    throw new Error('ZEUS context package builder API is not available.');
+    throw new Error('Vitruvios context package builder API is not available.');
   }
 
   const api = {
@@ -174,5 +174,5 @@ function getIntentApi() {
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusContextState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosContextState = Object.freeze(api);
 })();

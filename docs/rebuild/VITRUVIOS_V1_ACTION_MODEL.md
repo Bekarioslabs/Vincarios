@@ -1,4 +1,4 @@
-# ZEUS V1 Action Model
+# Vitruvios V1 Action Model
 
 ## Core Workflow
 
@@ -49,7 +49,7 @@ Each proposal item should show:
 
 The user can select multiple items and click one execute button.
 
-Current implemented slice: assistant `Save as Note` creates a selected `create_note` proposal, and external Markdown drops can create reviewed `create_note` import proposals through `Import to Inbox`. The Review Basket can select, dismiss any visible entry, clear pending suggestions, clear executed suggestions, show compact diff summaries, and open dedicated preview modals. Selected `create_note` proposals execute after an in-app Create Note preview with an editable title field. After a successful create, the app refreshes the Files tree through the file panel refresh path so the new note becomes visible without manual refresh. After a successful update, the app refreshes the currently loaded preview when it matches the updated target path. Selected `update_note` proposals are executable only when they carry `targetPath`, `currentContent`, and `proposedContent`; they are unselected by default, require an Apply Update diff preview, write through the preload vault API, create a backup in `.zeus/backups/YYYY-MM-DD/...`, reject stale content if the file changed since proposal creation, update the Markdown file, and append audit entries in `.zeus/audit.jsonl`. No-change update proposals remain visible for diagnosis but are marked non-executable. Failed review executions display the returned vault error on the basket item so stale content, no-change, and frontmatter/update issues are visible without guessing.
+Current implemented slice: assistant `Save as Note` creates a selected `create_note` proposal, and external Markdown drops can create reviewed `create_note` import proposals through `Import to Inbox`. The Review Basket can select, dismiss any visible entry, clear pending suggestions, clear executed suggestions, show compact diff summaries, and open dedicated preview modals. Selected `create_note` proposals execute after an in-app Create Note preview with an editable title field. After a successful create, the app refreshes the Files tree through the file panel refresh path so the new note becomes visible without manual refresh. After a successful update, the app refreshes the currently loaded preview when it matches the updated target path. Selected `update_note` proposals are executable only when they carry `targetPath`, `currentContent`, and `proposedContent`; they are unselected by default, require an Apply Update diff preview, write through the preload vault API, create a backup in `.vitruvios/backups/YYYY-MM-DD/...`, reject stale content if the file changed since proposal creation, update the Markdown file, and append audit entries in `.vitruvios/audit.jsonl`. No-change update proposals remain visible for diagnosis but are marked non-executable. Failed review executions display the returned vault error on the basket item so stale content, no-change, and frontmatter/update issues are visible without guessing.
 
 Phase 3 is complete at this core foundation boundary. `insert_into_note`, `move_note`, `rename_note`, and `archive_note` remain known schema types so model output can be classified safely, but they are deliberately non-executable until their own reviewed services exist. Manual F2 Rename Light is separate from AI `rename_note`: it is same-folder only, app-initiated from the File Tree, audited, and explicitly does not update links in V1. This prevents accidental AI execution while keeping the future action vocabulary stable.
 
@@ -81,7 +81,7 @@ Required gates before proposal generation:
 
 This is intentionally whole-note content replacement for V1. It must not rename, move, retarget, create, archive, or delete files. Partial insert/replace and richer diff editing belong to V1.1/V1.2 and should extend the same proposal/review/update service boundary instead of creating a second write path.
 
-Read-context actions are a separate lightweight chat path, not direct provider file access. Selected-folder listing requests are handled first by a request-scoped preflight: when the current selection is a folder with `R` active, the renderer calls the preload vault API and appends the folder listing as a ZEUS message before provider generation. Supported `list_folder` model-action envelopes remain a fallback: the renderer parses them, verifies that the requested folder is inside the active selected folder or selected-file parent folder, calls the preload vault API, and appends the folder listing as a ZEUS message. Unsupported or out-of-selection read actions are blocked instead of being executed or shown as raw tool-call text.
+Read-context actions are a separate lightweight chat path, not direct provider file access. Selected-folder listing requests are handled first by a request-scoped preflight: when the current selection is a folder with `R` active, the renderer calls the preload vault API and appends the folder listing as a Vitruvios message before provider generation. Supported `list_folder` model-action envelopes remain a fallback: the renderer parses them, verifies that the requested folder is inside the active selected folder or selected-file parent folder, calls the preload vault API, and appends the folder listing as a Vitruvios message. Unsupported or out-of-selection read actions are blocked instead of being executed or shown as raw tool-call text.
 
 ## V1 Actions
 
@@ -117,7 +117,7 @@ Suggestion actions:
 
 Suggestions are not Review Basket actions. A suggestion is an analysis result that may later become one or more concrete reviewed actions.
 
-Current V1 suggestion state is session-only renderer state. Suggestions intentionally disappear on app restart or reload. Persistent suggestion sessions are later work and must live under `.zeus/`, not normal vault notes. A persisted suggestion must carry enough validation data such as creation time, source target, index/model version or file hashes, status, and stale-state checks before it can be shown again.
+Current V1 suggestion state is session-only renderer state. Suggestions intentionally disappear on app restart or reload. Persistent suggestion sessions are later work and must live under `.vitruvios/`, not normal vault notes. A persisted suggestion must carry enough validation data such as creation time, source target, index/model version or file hashes, status, and stale-state checks before it can be shown again.
 
 V1 direction:
 
@@ -154,8 +154,8 @@ Merging similar notes is later work, not part of the current V1 executable actio
 Minimum flow:
 
 1. User selects two source notes from a suggestion group such as `near_duplicate` or `complementary_note`.
-2. ZEUS shows a comparison diff between source A and source B, including overlaps, additions, and conflicts.
-3. ZEUS creates or requests a reviewed merged version as a third file candidate.
+2. Vitruvios shows a comparison diff between source A and source B, including overlaps, additions, and conflicts.
+3. Vitruvios creates or requests a reviewed merged version as a third file candidate.
 4. User reviews the final merged file, target folder, and file name before execution.
 5. Execution creates the merged file and records an audit entry.
 6. Archiving source A and source B is optional and must require explicit confirmation. Conservative mode keeps both sources in place.
@@ -181,9 +181,9 @@ The user should not need to know action names. The UI and model choose the corre
 - New-file `create_note` actions need a Create Preview and explicit confirmation.
 - Create and write flows support reviewed Metadata/YAML assist where useful. Save as Note, summaries, Markdown imports, and note/project presets receive deterministic metadata before entering the Review Basket. The existing Create Edit view exposes the resulting YAML as part of the editable Markdown content, so the user can change or remove it before execution.
 - Metadata responsibility is split deliberately: a preset or create flow supplies declarative values such as `type`, `tags`, or a more specific `source`; `src/shared/metadata/generatedNoteMetadata.js` validates those values, adds app-owned origin fields, merges them into existing frontmatter, and serializes YAML consistently. Presets never implement their own YAML writer.
-- Preset files also declare a stable internal semantic `role` such as `brainstorm`, `references`, `tasks`, or `log`. The filename may be translated or renamed without changing that role. `role` guides ZEUS internally; visible YAML `type` and `tags` are preset-provided values. Future custom presets must declare these values instead of relying on filename inference.
+- Preset files also declare a stable internal semantic `role` such as `brainstorm`, `references`, `tasks`, or `log`. The filename may be translated or renamed without changing that role. `role` guides Vitruvios internally; visible YAML `type` and `tags` are preset-provided values. Future custom presets must declare these values instead of relying on filename inference.
 - Existing frontmatter values are preserved. Default tags are merged without duplicates; other defaults are added only when the field is missing. This keeps imported Markdown intact while still recording its reviewed import origin.
-- App-owned fields are `tags`, `type`, `status`, `source`, `created_at`, and `origin_action`. ZEUS does not emit `created_by`. Current origins are Save as Note, file summary, folder summary, Markdown import, preset creation, and the reserved future AI-draft origin.
+- App-owned fields are `tags`, `type`, `status`, `source`, `created_at`, and `origin_action`. Vitruvios does not emit `created_by`. Current origins are Save as Note, file summary, folder summary, Markdown import, preset creation, and the reserved future AI-draft origin.
 - LLM-generated extra metadata remains optional and must enter the same visible review boundary. Providers do not write or silently enrich metadata.
 - Any existing-file write needs diff. `update_note` is the only implemented existing-file write in Phase 3: it requires current/proposed content, explicit Apply Update confirmation, backup, stale-content validation, and audit logging. Other existing-file write types remain non-executable until their services exist.
 - Archive/trash actions need explicit confirmation. Permanent deletion is not a normal V1 assistant action.

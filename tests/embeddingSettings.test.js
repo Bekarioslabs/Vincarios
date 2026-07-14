@@ -1,4 +1,4 @@
-﻿const test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   DEFAULT_EMBEDDINGS,
@@ -15,7 +15,7 @@ test('settings expose MiniLM as the V1 bundled embedding default', () => {
   assert.equal(settings.embeddings.bundledModelId, DEFAULT_EMBEDDINGS.defaultModelId);
   assert.equal(settings.embeddings.artifactRepoId, 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
   assert.equal(settings.embeddings.dimensions, 384);
-  assert.equal(settings.embeddings.indexLocation, 'vault-zeus');
+  assert.equal(settings.embeddings.indexLocation, 'vault-vitruvios');
 });
 
 test('settings normalize custom local embedding model path without changing provider settings', () => {

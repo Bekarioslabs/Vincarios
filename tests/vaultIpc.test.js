@@ -134,19 +134,36 @@ test('vault IPC also sets embedding root after folder selection and direct root 
   ]);
 });
 
-test('vault IPC exposes low-risk top-level folder appearance settings through a dedicated service', async () => {
+test('vault IPC exposes the portable Vault Profile service', async () => {
   const handlers = new Map();
   const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
   const readService = { setRoot() {}, getState() { return {}; }, listFolder() {}, readMarkdown() {} };
-  const visualService = {
-    getFolderVisuals() { return { ok: true, visuals: { '00_Inbox': { icon: 'inbox', color: 'amber' } } }; },
-    setFolderVisual(payload) { return { ok: true, payload }; },
-    clearFolderVisual(payload) { return { ok: true, payload }; }
+  const profileService = {
+    getProfile() { return { ok: true, profile: { roles: { inbox: 'Inbox' } } }; },
+    setRole(payload) { return { ok: true, profile: { roles: { [payload.role]: payload.folderPath } } }; },
+    resetRole(payload) { return { ok: true, profile: { roles: {}, reset: payload.role } }; }
   };
 
-  registerVaultIpc(ipcMain, {}, null, readService, null, null, visualService);
+  registerVaultIpc(ipcMain, {}, null, readService, null, null, profileService);
 
-  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_GET_FOLDER_VISUALS)(), { ok: true, visuals: { '00_Inbox': { icon: 'inbox', color: 'amber' } } });
-  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_SET_FOLDER_VISUAL)(null, { path: '00_Inbox' }), { ok: true, payload: { path: '00_Inbox' } });
-  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_CLEAR_FOLDER_VISUAL)(null, { path: '00_Inbox' }), { ok: true, payload: { path: '00_Inbox' } });
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_GET_PROFILE)(), { ok: true, profile: { roles: { inbox: 'Inbox' } } });
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_SET_PROFILE_ROLE)(null, { role: 'inbox', folderPath: 'Inbox' }), { ok: true, profile: { roles: { inbox: 'Inbox' } } });
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_RESET_PROFILE_ROLE)(null, { role: 'inbox' }), { ok: true, profile: { roles: {}, reset: 'inbox' } });
+});
+
+test('vault IPC lists local profile SVGs through the main-process service', () => {
+  const handlers = new Map();
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const readService = { setRoot() {}, getState() { return {}; }, listFolder() {}, readMarkdown() {} };
+  const profileService = {
+    listLocalIcons() {
+      return { ok: true, icons: [{ kind: 'custom', path: '.vitruvios/icons/compass.svg' }] };
+    }
+  };
+
+  registerVaultIpc(ipcMain, {}, null, readService, null, null, profileService);
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS)(), {
+    ok: true,
+    icons: [{ kind: 'custom', path: '.vitruvios/icons/compass.svg' }]
+  });
 });

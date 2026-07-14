@@ -1,11 +1,11 @@
-# ZEUS V1 UI And Workflows
+# Vitruvios V1 UI And Workflows
 
 ## Typography And Assets
 
 - V1 bundles Inter locally from `src/renderer/assets/fonts/InterVariable.woff2`; third-party font licenses live under `third_party/inter/` and must ship with release builds.
 - Lucide SVG icons are bundled locally under `src/renderer/assets/icons/lucide/`; semantic mappings live in `src/renderer/icons/iconRegistry.js`, so individual icons can be replaced without touching UI components. License notices live under `third_party/lucide/`.
-- `docs/Design_index.html` is the active visual reference for Phase 7.7 polish patterns such as soft-disabled locks, empty states, trust badges, score presentation, hover behavior, and token usage. Use it as design direction, but adapt patterns through existing ZEUS modules and tokens instead of copying demo markup blindly.
-- Repeated UI element rules live in `docs/rebuild/ZEUS_V1_UI_COMPONENT_RULES.md`. Use that file before changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls.
+- `docs/Design_index.html` is the active visual reference for Phase 7.7 polish patterns such as soft-disabled locks, empty states, trust badges, score presentation, hover behavior, and token usage. Use it as design direction, but adapt patterns through existing Vitruvios modules and tokens instead of copying demo markup blindly.
+- Repeated UI element rules live in `docs/rebuild/VITRUVIOS_V1_UI_COMPONENT_RULES.md`. Use that file before changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls.
 
 ## Main Layout
 
@@ -21,7 +21,7 @@ Chat input auto-grows within bounded limits for longer prompts. Once it reaches 
 
 ## Visual Direction
 
-ZEUS V1 uses a compact, tool-first visual system: softly raised neutral app surfaces, darker Chat and Preview focus surfaces, restrained structural dividers, and warm amber only for active or primary states. Navigation and Selection Actions favor flat icon/text rows over a grid of outlined buttons. Repeated utility controls share one compact icon-control treatment.
+Vitruvios V1 uses a compact, tool-first visual system: softly raised neutral app surfaces, darker Chat and Preview focus surfaces, restrained structural dividers, and warm amber only for active or primary states. Navigation and Selection Actions favor flat icon/text rows over a grid of outlined buttons. Repeated utility controls share one compact icon-control treatment.
 
 Collapse is deterministic space management. A panel contracts toward the left, retains a visible boundary, clips its own contents, and must not silently resize its neighbors. Resize remains an explicit user operation. Layout preferences remain app-local and persist across restarts.
 
@@ -87,7 +87,7 @@ Each entry should carry structured fields:
 
 The UI should make the action and warning readable without turning the list into a second audit system. Example: `Renamed` can use success color, the path stays neutral, and `Links were not updated in V1` can use warning color.
 
-Session Log is not audit history. Persistent audit and restore-oriented history belong to `.zeus/audit.jsonl` and later backup/history UI work, not this session activity view.
+Session Log is not audit history. Persistent audit and restore-oriented history belong to `.vitruvios/audit.jsonl` and later backup/history UI work, not this session activity view.
 ## Review Basket
 
 The review basket is the central V1 UX.
@@ -108,8 +108,8 @@ Each item can be checked or unchecked. The final execute button applies only sel
 
 ```text
 Select Inbox
--> Ask ZEUS to analyze
--> ZEUS reads allowed files
+-> Ask Vitruvios to analyze
+-> Vitruvios reads allowed files
 -> embeddings provide similar-note candidates
 -> AI creates proposal plan
 -> user reviews grouped suggestions
@@ -202,8 +202,8 @@ V1 uses separate Read and Write permissions.
 
 Meaning:
 
-- Read: ZEUS may read the file/folder as context.
-- Write: ZEUS may propose write actions for the file/folder.
+- Read: Vitruvios may read the file/folder as context.
+- Write: Vitruvios may propose write actions for the file/folder.
 - Write never means silent execution.
 
 Permission state has three visible levels:
@@ -216,7 +216,7 @@ Folder permissions inherit to children. Child files/folders may override inherit
 
 The UI must make direct vs inherited state understandable without making inherited permissions look like an error. Direct on is full accent with an inner accent signal, inherited on is lighter with a dashed outline, and off remains visually inactive. Selection Actions that are blocked by missing R/W stay clickable so they can show app guidance. Their default state stays neutral/gray with a subtle lock icon. Category accent colors appear only when the action is actually available; hover may show normal subtle feedback and the tooltip explains the blocked reason without adding noisy warning styling.
 
-Dot folders and runtime/private folders such as `.obsidian`, `.zeus`, and `.zeus_backups` remain blocked regardless of UI state.
+Dot folders and runtime/private folders such as `.obsidian`, `.vitruvios`, and `.vitruvios_backups` remain blocked regardless of UI state.
 
 Permission shortcuts:
 
@@ -233,7 +233,7 @@ Recursive permission application must not read Markdown contents. It only needs 
 While a provider request is running, the Send button becomes `Cancel`. Cancel uses the request id and `chat:cancel` IPC to abort the active provider request through `AbortController`. The renderer also checks the active request id before applying a response so late canceled responses cannot appear in chat. Internal provider timeouts are reported as provider errors, not as user-canceled requests.
 ## Chat Message Metadata
 
-- ZEUS chat messages show hover metadata below the bubble: `Save as Note` and `Copy` on the left, local time on the right. Persistent follow-up actions such as `Check whole tree` stay in the visible action row below the message. Chat session persistence is not V1 and belongs to the future backlog.
+- Vitruvios chat messages show hover metadata below the bubble: `Save as Note` and `Copy` on the left, local time on the right. Persistent follow-up actions such as `Check whole tree` stay in the visible action row below the message. Chat session persistence is not V1 and belongs to the future backlog.
 
 ## Chat Markdown Rendering Decisions
 
@@ -298,7 +298,7 @@ V1 action categories:
 - `Write`: creates or updates only through reviewed write flows.
 - `Organize`: reserved for later move/rename/archive workflows.
 
-Missing permissions for Selection Actions are handled by app logic before provider calls. Permission-blocked actions stay visible as muted, clickable soft-disabled buttons. Hover shows the reason; clicking shows a ZEUS chat bubble with the same guidance and a retry action where applicable. Read/context actions explain that `R` is required. Write actions explain that both `R` and `W` are required when they need loaded content plus write permission. These messages come from the shared Selection Action permission text helper, not from duplicated per-action strings. ZEUS does not send these blocked requests to the model and does not silently do nothing.
+Missing permissions for Selection Actions are handled by app logic before provider calls. Permission-blocked actions stay visible as muted, clickable soft-disabled buttons. Hover shows the reason; clicking shows a Vitruvios chat bubble with the same guidance and a retry action where applicable. Read/context actions explain that `R` is required. Write actions explain that both `R` and `W` are required when they need loaded content plus write permission. These messages come from the shared Selection Action permission text helper, not from duplicated per-action strings. Vitruvios does not send these blocked requests to the model and does not silently do nothing.
 
 Current V1 foundation actions:
 
@@ -308,7 +308,7 @@ Current V1 foundation actions:
 - inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.
 - Selection Action presentation comes from the Action Registry: short labels keep rows scannable, semantic Lucide icons remain centrally replaceable, category dots show Context/Read/Write/Organize as a supporting cue, and tooltips/accessible labels keep the full action meaning available. Action rows do not use category-color borders.
 - Execution kinds are explicit: `app` means deterministic app work with no model call; `embedding` means local similarity inference; `provider` means a local provider request when the action is submitted. File/folder context and tag suggestions are currently `app`, Similar Notes is `embedding`, and summaries/content-update proposals are `provider`.
-- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working. `Summarize MD files` reads only direct Markdown files from the selected folder, applies Settings/Limits caps, ignores images/PDFs/attachments, and returns a normal saveable ZEUS answer. Summary answers suggest editable Save-as-Note titles in the form `Summary - MD - <file name> - YYYY-MM-DD` for Markdown files and `Summary - DIR - <folder name> - YYYY-MM-DD` for folders. They default to `AI Responses/Summaries` under the configured Inbox role.
+- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working. `Summarize MD files` reads only direct Markdown files from the selected folder, applies Settings/Limits caps, ignores images/PDFs/attachments, and returns a normal saveable Vitruvios answer. Summary answers suggest editable Save-as-Note titles in the form `Summary - MD - <file name> - YYYY-MM-DD` for Markdown files and `Summary - DIR - <folder name> - YYYY-MM-DD` for folders. They default to `AI Responses/Summaries` under the configured Inbox role.
 - future custom actions belong behind Settings and must produce visible proposals or context items, not direct writes.
 
 ## Context System Decisions
@@ -327,18 +327,18 @@ Selected context is explicit, visible, request-scoped, and deterministic:
 - Context Basket target types are represented by badges such as `DIR`, `MD`, `IMG`, `PDF`, `FILE`, and unknown. V1 may keep them visually neutral. Later polish may use target-type badge or border colors, but those colors must remain separate from Selection Action behavior colors.
 - Selection Actions use behavior categories with stable color slots: Context, Read, Write, and later Organize.
 - attached context is not stored back into chat history.
-- if Read is not active for an explicit app action, ZEUS must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
+- if Read is not active for an explicit app action, Vitruvios must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 - missing-Read and missing-Write blocks show a clear permission message, but no retry button. After enabling R or W, the user repeats the visible Selection Action or request explicitly. Permission-confirmation text such as es ist freigegeben must not become a broad prompt trigger.
 - if the selected target changes before retry, the retry must stop with a clear mismatch message instead of applying the old blocked action to the new target.
-- if the selected file has permission but no loaded content, ZEUS should instruct the user to reselect/click the file or refresh the preview inside ZEUS, not switch to external upload instructions.
+- if the selected file has permission but no loaded content, Vitruvios should instruct the user to reselect/click the file or refresh the preview inside Vitruvios, not switch to external upload instructions.
 - folder-scoped follow-up prompts are guidance-only in V1. The app should point the user to Selection Actions instead of inferring a parent folder from wording.
 - selected folder listing is executed by the deterministic `List folder` Selection Action when `R` is active. Natural-language folder wording may show only this inline help: `Use "List folder" in Selection Actions to inspect the selected folder.` It must not list, read, or create blocked actions by itself. The `List folder` message may offer `Check whole tree` as a follow-up app button for recursive structure listing. Pending scope replies and existing blocked-action retries remain app-state driven. Supported `list_folder` model-action envelopes remain a fallback and are checked against active app state before execution. Visible app-generated folder listings must not be stored back into provider chat history with their file names; history receives only a short app-result marker so old listings cannot become stale model context. Context intent stays narrow: pending-action replies, existing blocked-action retries, and help-only selection-action guidance. It must not grow into one-off typo lists, deictic "here/it" guesses, or broad fuzzy prompt matching.
 
 For selected folders:
-- ZEUS may use the folder path as the active target.
-- ZEUS must not blindly load every file in the folder without an explicit analysis workflow and limits.
-- Future Folder Context Index workflow: when a folder is selected, ZEUS may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
-- Persistent Folder Context Indexes must be stored in `.zeus/` or a configured cache location, not blindly as normal vault notes.
+- Vitruvios may use the folder path as the active target.
+- Vitruvios must not blindly load every file in the folder without an explicit analysis workflow and limits.
+- Future Folder Context Index workflow: when a folder is selected, Vitruvios may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
+- Persistent Folder Context Indexes must be stored in `.vitruvios/` or a configured cache location, not blindly as normal vault notes.
 
 - Current folder controller: `PendingActionState` plus `FolderContextController` resolves only open scope choices and explicit app flows. Short replies like 'all' or 'alle' only resolve an existing pending folder action; without a pending action they are intercepted with a short app-level clarification and do not reach the provider. Folder listings are capped by `contextLimits` and show explicit limit markers when the cap is reached.
 
@@ -355,7 +355,7 @@ Markdown drag and drop in V1:
 
 - External `.md` and `.markdown` files dropped into chat become temporary Context Basket items immediately.
 - They are not automatically copied into the vault.
-- The chat shows a ZEUS message for the drop with an `Import to Inbox` action.
+- The chat shows a Vitruvios message for the drop with an `Import to Inbox` action.
 - `Import to Inbox` adds a reviewed `create_note` proposal; Review Basket edit/execute performs the actual vault write.
 - The default import target is the configured Inbox role. Filename/title remain editable in the Review Basket before execution.
 - Detecting dropped files that already belong to the opened vault is a later refinement; this V1 slice handles external Markdown drops only.
@@ -406,8 +406,8 @@ Focus Mode:
 Persistence:
 
 - Collapse states and Focus Mode are app-local user preferences.
-- Store them in app settings, not selected-vault `.zeus/` metadata.
-- Folder Visual Identity remains different: it is vault metadata because it describes that vault's top-level folder appearance. The six English default roots (`00_Inbox`, `01_Daily`, `02_Projects`, `03_Knowledge`, `90_AI_Brain`, `99_Archive`) receive semantic icon/color identities. Unknown and nested folders remain neutral. A right-click on an existing top-level folder opens `Folder appearance...`; the modal offers the fixed V1 icon/color set, Apply, Cancel, and Reset. It persists only explicit overrides in selected-vault `.zeus/profile.json`; Reset returns to the default identity or neutral fallback.
+- Store them in app settings, not selected-vault `.vitruvios/` metadata.
+- Folder Visual Identity is portable vault metadata because it describes that vault's top-level structure. The six standard Vault Roles (`inbox`, `daily`, `projects`, `knowledge`, `brain`, `archive`) receive semantic icon/color identities through the active top-level role mapping. Unknown and nested folders remain neutral, even if their names match a default root. Settings > Vault Profile is the sole configuration surface: each role selects an actual top-level folder, a built-in Lucide icon or a validated static local SVG already placed in `Vault/.vitruvios/icons/`, plus one fixed token-palette color. `.vitruvios/profile.json` stores only a relative SVG path, never a machine-specific path. V1 deliberately has no SVG file-import dialog and no arbitrary custom hex colors. The File Tree is display-only. Reset restores detected standard-role defaults when present, otherwise leaves the role unassigned. While Settings stays open, each role keeps its own local draft: only changed rows enable Save, saving one row preserves other unsaved rows, and top-level folders assigned to another effective role are disabled in that row's dropdown. Closing Settings discards unsaved drafts; main-process uniqueness validation remains the final safeguard.
 
 Implementation ownership:
 
@@ -427,7 +427,7 @@ Current V1 Settings implementation:
 - Active provider and selected model are persisted through the provider model service.
 - Saving or resetting a provider URL refreshes provider status through an app event, not through direct module coupling.
 - `Limits` exposes the V1 caps for provider timeout, model-list timeout, selected-file context, folder/file listing, analysis file count, and review suggestion count.
-- `Vault Profile` exposes folder-role overrides through the settings bridge while preserving the Phase 2 vault-profile defaults and helpers.
+- `Vault Profile` configures the opened vault through a portable `.vitruvios/profile.json`, while preserving the Phase 2 vault-profile helpers for consumers.
 
 Future sections such as Embeddings, Safety, Templates, hotkeys, and themes must extend the same settings store categories instead of creating parallel config files or provider-specific state.
 
@@ -492,7 +492,7 @@ The app should not drop the user directly into an empty workspace.
 
 V1 should start with a simple splash/start screen:
 
-- ZEUS Agent name/logo area
+- Final product name/logo area; name and public positioning are a Phase 8 decision.
 - primary `Open Vault` action
 - later: recent vaults if useful
 
@@ -527,12 +527,12 @@ Files, Selection Actions, and Markdown Preview use the full available vault-pane
 
 Responsive rules:
 
-- Files stays within `170�340px`; Selection Actions stays within `220�360px`. Shared resize logic protects the adjacent panel before applying those caps.
+- Files stays within `170-340px`; Selection Actions stays within `220-360px`. Shared resize logic protects the adjacent panel before applying those caps.
 - Markdown Preview is the flexible remainder. At narrow widths it may shrink to `0px`, but it must never push Files or Selection Actions outside the visible Vault panel.
 - The whole app shell does not gain a document-level vertical scrollbar during normal use.
 - Scroll remains local to file tree, Selection Actions, Markdown Preview, chat history, Review Basket, and Context Basket.
 - Collapsed Review Basket and Context Basket rows follow their compact content height and must not reserve empty spacer rows in Chat.
-- The current full-height layout supports persisted collapse for left navigation, Files, and Selection Actions. Focus Mode and compact/default-collapsed Baskets remain later Phase 7.9 slices.
+- The current full-height layout supports persisted collapse for left navigation, Files, and Selection Actions. Review Basket and Context Basket are compact and default-collapsed; Focus Mode remains a V1.1 follow-up.
 - Future detachable preview remains a valid follow-up but is not part of V1.
 
 ### Selection Actions Panel
@@ -553,9 +553,17 @@ Current V1 foundation actions for selected Markdown files:
 - Find similar notes
 - Propose update
 
-Find similar notes uses the local embedding index and keeps the chat output compact. Clicking it opens a compact options form directly below the related Selection Action, with Settings-backed defaults for mode, minimum match, content/metadata weight, and max results. Selection Action option forms are owned by their action row; only one inline action form should be open at a time. The same field order is used in Settings and in the per-run form. The form remembers the last used values for the current app session; Settings remain the restart defaults. `Refresh index first` is explicit and should be used after copying, moving, or editing Markdown files outside the index. Results are shown in the Suggestions workspace as grouped candidates with percentages, strong/medium/weak/noisy labels, content/metadata detail, and a low-content warning in the group summary when applicable. Chat receives only a short status line. ZEUS does not automatically switch workspaces; the Suggestions workspace button shows an item-count indicator while open suggestion items exist. If no candidates are returned, ZEUS keeps the result in chat/status and does not open an empty Suggestions group. This action does not create Review Basket actions by itself.
+Find similar notes uses the local embedding index and keeps the chat output compact. Clicking it opens a compact options form directly below the related Selection Action, with Settings-backed defaults for mode, minimum match, content/metadata weight, and max results. Selection Action option forms are owned by their action row; only one inline action form should be open at a time. The same field order is used in Settings and in the per-run form. The form remembers the last used values for the current app session; Settings remain the restart defaults. `Refresh index first` is explicit and should be used after copying, moving, or editing Markdown files outside the index. Results are shown in the Suggestions workspace as grouped candidates with percentages, strong/medium/weak/noisy labels, content/metadata detail, and a low-content warning in the group summary when applicable. Chat receives only a short status line. Vitruvios does not automatically switch workspaces; the Suggestions workspace button shows an item-count indicator while open suggestion items exist. If no candidates are returned, Vitruvios keeps the result in chat/status and does not open an empty Suggestions group. This action does not create Review Basket actions by itself.
 
 Future actions can be added through the same registry and handler structure, for example `Find related notes`, `Inbox Review`, move/rename, image actions, or later custom actions. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
+
+### Phase 8 Folder Action Consolidation
+
+Current Folder Context is only a path marker; it does not include folder contents. Phase 8 replaces that weak behavior with one reusable Folder Scope form shared by Folder Context and Folder Summary. V1 scope controls are current folder/subfolders, bounded depth, Markdown-only files, max files, and the existing hard total-context cap. The resulting Context Basket item is a visible snapshot package with scope and effective-limit metadata, never a silent unbounded tree read.
+
+`Inspect Folder` replaces the separate `List folder` and `Analyze folder` actions. It is deterministic and content-free: direct-level counts plus grouped folders and Markdown files, with a `Check whole tree` follow-up rendered by the same structured formatter. Folder Summary uses the same scope model but calls the provider only after the bounded Markdown selection is visible. Images and PDFs remain excluded in V1; the scope data shape must allow future target-type extensions without changing folder-action ownership.
+
+Settings -> Action Defaults will hold restart defaults for Folder Context and Folder Summary. Per-run forms remain explicit and may use session-local last values, just like Similar Notes. Similar Notes stays under Embeddings because its settings belong to index/search behavior rather than folder scope.
 
 
 ## Metadata Index Planning
@@ -576,7 +584,7 @@ Planned V1.1 examples:
 - folder candidates can use configured folder roles, project paths, tags, and semantic similarity, then propose a reviewed move/link-update action only after future move services exist.
 - richer tag suggestions can prefer tag patterns already present in the vault instead of growing broad word/stopword lists.
 
-The metadata index must live under selected-vault `.zeus/index/metadata/`, remain hidden from normal vault context, and be rebuildable. It must not produce automatic cleanup or silent file edits.
+The metadata index must live under selected-vault `.vitruvios/index/metadata/`, remain hidden from normal vault context, and be rebuildable. It must not produce automatic cleanup or silent file edits.
 ## Workspace Tabs Direction
 
 The main work area should support three V1/V1.x workspaces:
@@ -670,7 +678,7 @@ SETTINGS
   Settings
 ```
 
-`New Note` and `New Project` are preset toggles and are collapsed by default. Expanding them pushes lower actions down. Presets are user-extensible later; curated ZEUS preset packs must use the same preset mechanism instead of hard-coded special paths. If preset lists grow, the left column gets local scrolling or grouped sections instead of overflowing. Left navigation entries must stay app-level commands; target-specific actions belong in Selection Actions.
+`New Note` and `New Project` are preset toggles and are collapsed by default. Expanding them pushes lower actions down. Presets are user-extensible later; curated Vitruvios preset packs must use the same preset mechanism instead of hard-coded special paths. If preset lists grow, the left column gets local scrolling or grouped sections instead of overflowing. Left navigation entries must stay app-level commands; target-specific actions belong in Selection Actions.
 
 Settings target:
 
@@ -682,22 +690,21 @@ Settings Modal
 
 Current wired categories stay Providers, Limits, and Vault Profile. V1-ready categories are Providers, Limits, Vault Profile, Templates, Appearance, Embeddings, Safety, and About. Future/inactive categories may be visible only if they are clearly marked as not configured yet and do not imply fake functionality. Later hotkeys, plugin compatibility, custom actions, and theme presets must extend this same settings module and store shape instead of creating parallel configuration paths.
 
-Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with a left category menu and one active right-side category panel. Providers, Limits, and Vault Profile remain wired to the existing settings store. Templates, Appearance, Safety, and About are visible info-only slots until real modules exist. Embeddings now shows the V1 default decision: MiniLM multilingual default, Apache-2.0 license, Transformers.js / ONNX runtime target, and vault `.zeus/index` storage. It also owns Similar Notes defaults in the same order as the action form: mode, minimum match, content/metadata weight slider, and max results. Custom model path controls and broader rebuild controls remain pending follow-up work; the per-search form already has explicit refresh before search.
+Current Phase 6.5 Settings implementation: the modal uses a two-pane layout with a left category menu and one active right-side category panel. Providers and Limits remain app-local settings; Vault Profile is a dedicated portable vault-profile editor. Templates, Appearance, Safety, and About are visible info-only slots until real modules exist. Embeddings now shows the V1 default decision: MiniLM multilingual default, Apache-2.0 license, Transformers.js / ONNX runtime target, and vault `.vitruvios/index` storage. It also owns Similar Notes defaults in the same order as the action form: mode, minimum match, content/metadata weight slider, and max results. Custom model path controls and broader rebuild controls remain pending follow-up work; the per-search form already has explicit refresh before search.
 
-Phase 7.7 polish: settings category buttons may use existing semantic Lucide icons. Icons are decorative, rendered by the settings module through ZeusIconRenderer, and styled through shared icon filter tokens so themes can adjust them later.
+Phase 7.7 polish: settings category buttons may use existing semantic Lucide icons. Icons are decorative, rendered by the settings module through VitruviosIconRenderer, and styled through shared icon filter tokens so themes can adjust them later.
 
 Phase 7.7 polish keeps micro-interactions tokenized: active navigation/settings states use subtle inset glow, recently written visible file rows flash after reviewed writes, and reduced-motion users keep instant file-row state changes. File-row update flash is owned by the centralized renderer update flash state, toggles classes on visible rows only, and must not rebuild or auto-expand the file tree.
 
-Phase 7.7 loading/score decision: local provider and embedding operations use the existing pending chat message with spinner as the canonical wait state. Suggestions use a compact score-ring component for similarity scores, inspired by `docs/Design_index.html` and implemented through ZEUS modules/tokens rather than copied demo markup. Do not use oval score pills or inline list meter bars for similarity scores. The ring shows the percentage inside the circle; optional explanatory text such as `Strong match`, `Medium match`, `Possible match`, or `Weak match` may appear beside it. Later Appearance/Settings can hide that explanatory text for users who only need the ring. Medium/yellow must use a visibly brighter amber/yellow token than weak/orange.
+Phase 7.7 loading/score decision: local provider and embedding operations use the existing pending chat message with spinner as the canonical wait state. Suggestions use a compact score-ring component for similarity scores, inspired by `docs/Design_index.html` and implemented through Vitruvios modules/tokens rather than copied demo markup. Do not use oval score pills or inline list meter bars for similarity scores. The ring shows the percentage inside the circle; optional explanatory text such as `Strong match`, `Medium match`, `Possible match`, or `Weak match` may appear beside it. Later Appearance/Settings can hide that explanatory text for users who only need the ring. Medium/yellow must use a visibly brighter amber/yellow token than weak/orange.
 
 Vault Profile and Templates relationship:
 
 - Vault Profile defines where roles live in the vault, for example Inbox, Projects, Knowledge, Archive, and Brain.
 - Templates define what gets created, for example a project folder structure or a note draft.
 - Templates must target folder roles instead of hard-coded folder names, so a `New Project` preset creates under the configured `projects` role.
-- V1 keeps one active editable vault profile. Later versions may add multiple named vault profiles and custom roles such as Assets, Clients, Writing, or Research.
-- Future role path selection should prefer a `Choose from Vault folders` picker. It must list folders from the opened vault and validate that the selected path stays inside the vault. A native OS folder picker is not the preferred default because it can point outside the vault.
-- Manual path editing may remain available for power users, but it must be validated by the same vault-profile service.
+- V1 keeps one active editable vault profile, maps only the six standard roles, and uses a top-level folder dropdown sourced from the opened vault. A foreign vault begins unassigned unless a standard root is actually present.
+- V1.1 may add multiple named profiles, custom roles such as Assets, Clients, Writing, or Research, and multiple project destinations such as work/private. Create Project will then select a configured destination role instead of hard-coding a path.
 
 Markdown Properties/YAML display should be visually distinct from normal prose through dedicated CSS tokens such as `--metadata-accent`, `--metadata-background`, and `--metadata-border`. V1 may use an amber/ember-like default, but the color should be token-based so Appearance settings can change it later.
 
@@ -705,23 +712,23 @@ Current Phase 6.5 implementation: Markdown preview Properties use the dedicated 
 
 Project style presets are a future workflow, not a Phase 6.5 implementation target. The intended model is:
 
-1. ZEUS app theme controls the application UI.
-2. Markdown preview theme controls how notes render inside ZEUS.
+1. Vitruvios app theme controls the application UI.
+2. Markdown preview theme controls how notes render inside Vitruvios.
 3. Optional project style presets can later influence Markdown preview and generated template structure for a project.
 
-Project style presets should be detected through explicit project metadata such as `zeus_style_preset` in a project home note, not guessed from folder names. They must not inject inline HTML/styles into normal Markdown notes. For Obsidian parity, V1 keeps styles ZEUS-only plus Markdown-compatible structure. A future V1.1 feature may optionally export an Obsidian CSS snippet, but only after explicit user confirmation and never by silently writing into `.obsidian`.
+Project style presets should be detected through explicit project metadata such as `vitruvios_style_preset` in a project home note, not guessed from folder names. They must not inject inline HTML/styles into normal Markdown notes. For Obsidian parity, V1 keeps styles Vitruvios-only plus Markdown-compatible structure. A future V1.1 feature may optionally export an Obsidian CSS snippet, but only after explicit user confirmation and never by silently writing into `.obsidian`.
 
 Obsidian plugin compatibility direction:
 
-The active Obsidian-core compatibility matrix, intentional differences, plugin fallback boundary, and implementation order live in `docs/rebuild/ZEUS_V1_MARKDOWN_COMPATIBILITY.md`. Phase 7.6 changes must update that matrix instead of scattering compatibility claims through renderer code or unrelated docs.
+The active Obsidian-core compatibility matrix, intentional differences, plugin fallback boundary, and implementation order live in `docs/rebuild/VITRUVIOS_V1_MARKDOWN_COMPATIBILITY.md`. Phase 7.6 changes must update that matrix instead of scattering compatibility claims through renderer code or unrelated docs.
 
-Current Phase 7.6 foundation: ZEUS uses pinned `markdown-it` behind focused renderer modules for the standard engine, Obsidian-specific syntax, Properties, and the public rendering facade. Raw HTML is disabled. Chat and Markdown Preview consume the same facade, so later core improvements apply consistently without duplicating parsing logic.
+Current Phase 7.6 foundation: Vitruvios uses pinned `markdown-it` behind focused renderer modules for the standard engine, Obsidian-specific syntax, Properties, and the public rendering facade. Raw HTML is disabled. Chat and Markdown Preview consume the same facade, so later core improvements apply consistently without duplicating parsing logic.
 
-ZEUS does not execute Obsidian plugins. Compatibility means one of three safe things:
+Vitruvios does not execute Obsidian plugins. Compatibility means one of three safe things:
 
 1. render common Markdown/plugin output well enough that the vault remains readable.
 2. optionally read harmless plugin metadata after explicit user choice.
-3. rebuild useful workflows as ZEUS Selection Actions or Review Basket proposals.
+3. rebuild useful workflows as Vitruvios Selection Actions or Review Basket proposals.
 
 Candidate plugins to research after V1 core remains stable: Templater, Dataview, Tasks, Advanced Tables, Calendar, Kanban, Iconize, Style Settings, Omnisearch, Smart Connections, Tag Wrangler, Linter, Mindmap, Homepage, Recent Files, and Make.md.
 

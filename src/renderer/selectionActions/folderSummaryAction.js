@@ -17,7 +17,7 @@
         {
           role: 'system',
           content: [
-            'You are ZEUS Agent summarizing Markdown files in one selected folder.',
+            'You are Vitruvios summarizing Markdown files in one selected folder.',
             'Use only the provided Markdown file contents.',
             'Be concise and concrete.',
             'Do not propose edits, moves, tags, links, or write actions unless the user asks for them.',
@@ -111,5 +111,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.ZeusFolderSummaryAction = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VitruviosFolderSummaryAction = Object.freeze(api);
 })();
