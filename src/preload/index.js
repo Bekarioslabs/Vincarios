@@ -36,6 +36,7 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_GET_PROFILE: 'vault:get-profile',
   VAULT_SET_PROFILE_ROLE: 'vault:set-profile-role',
   VAULT_RESET_PROFILE_ROLE: 'vault:reset-profile-role',
+  VAULT_SET_PROFILE_APPEARANCE: 'vault:set-profile-appearance',
   VAULT_LIST_PROFILE_ICONS: 'vault:list-profile-icons'
 });
 
@@ -141,6 +142,9 @@ const vitruvios = Object.freeze({
     },
     resetProfileRole(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_RESET_PROFILE_ROLE, payload);
+    },
+    setProfileAppearance(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_SET_PROFILE_APPEARANCE, payload);
     },
     listProfileIcons() {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS);

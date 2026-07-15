@@ -141,7 +141,8 @@ test('vault IPC exposes the portable Vault Profile service', async () => {
   const profileService = {
     getProfile() { return { ok: true, profile: { roles: { inbox: 'Inbox' } } }; },
     setRole(payload) { return { ok: true, profile: { roles: { [payload.role]: payload.folderPath } } }; },
-    resetRole(payload) { return { ok: true, profile: { roles: {}, reset: payload.role } }; }
+    resetRole(payload) { return { ok: true, profile: { roles: {}, reset: payload.role } }; },
+    setAppearance(payload) { return { ok: true, profile: { appearance: payload } }; }
   };
 
   registerVaultIpc(ipcMain, {}, null, readService, null, null, profileService);
@@ -149,6 +150,7 @@ test('vault IPC exposes the portable Vault Profile service', async () => {
   assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_GET_PROFILE)(), { ok: true, profile: { roles: { inbox: 'Inbox' } } });
   assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_SET_PROFILE_ROLE)(null, { role: 'inbox', folderPath: 'Inbox' }), { ok: true, profile: { roles: { inbox: 'Inbox' } } });
   assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_RESET_PROFILE_ROLE)(null, { role: 'inbox' }), { ok: true, profile: { roles: {}, reset: 'inbox' } });
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_SET_PROFILE_APPEARANCE)(null, { themeOverride: 'light' }), { ok: true, profile: { appearance: { themeOverride: 'light' } } });
 });
 
 test('vault IPC lists local profile SVGs through the main-process service', () => {

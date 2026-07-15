@@ -7,6 +7,7 @@ const { createVaultContext } = require('./vaultContext');
 const { DEFAULT_FOLDERS } = require('../../shared/vaultProfile/defaults');
 const { normalizeRoleVisuals, normalizeTopLevelFolderVisuals } = require('../../shared/vaultProfile/folderVisuals');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
+const { normalizeVaultThemeOverride } = require('../../shared/settings/theme');
 
 const PROFILE_RELATIVE_PATH = path.join(CURRENT_INTERNAL_NAMESPACE, 'profile.json');
 const PROFILE_VERSION = 2;
@@ -65,6 +66,15 @@ function createVaultProfileService(options) {
     return saveAndResolve(current.vault.root, raw);
   }
 
+  function setAppearance(input) {
+    const current = requireVault();
+    if (!current.ok) return current;
+    const profile = readProfile(current.vault.root);
+    if (!profile.ok) return profile;
+    const raw = migrateLegacyVisuals(current.vault.root, profile.value);
+    raw.appearance = normalizeAppearance(input);
+    return saveAndResolve(current.vault.root, raw);
+  }
   function listLocalIcons() {
     const current = requireVault();
     if (!current.ok) return current;
@@ -156,6 +166,7 @@ function createVaultProfileService(options) {
     return {
       version: PROFILE_VERSION,
       roles,
+      appearance: normalizeAppearance(normalized.appearance),
       roleVisuals: hydrateCustomIconSources(root, normalized.roleVisuals, fileSystem)
     };
   }
@@ -202,7 +213,7 @@ function createVaultProfileService(options) {
     return vault ? { ok: true, vault } : fail('vault_not_open', 'No vault is open.');
   }
 
-  return { setRoot, getProfile, setRole, resetRole, listLocalIcons };
+  return { setRoot, getProfile, setRole, resetRole, setAppearance, listLocalIcons };
 }
 
 function hydrateCustomIconSources(root, roleVisuals, fileSystem) {
@@ -246,6 +257,7 @@ function normalizeProfile(value, options) {
   const normalized = Object.assign({}, profile, {
     version: PROFILE_VERSION,
     roles: normalizeRoleAssignments(profile.roles),
+    appearance: normalizeAppearance(profile.appearance),
     roleVisuals: normalizeRoleVisuals(profile.roleVisuals)
   });
   if (options.preserveLegacy !== false && profile.folderVisuals) {
@@ -256,6 +268,10 @@ function normalizeProfile(value, options) {
   return normalized;
 }
 
+function normalizeAppearance(value) {
+  const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  return { themeOverride: normalizeVaultThemeOverride(input.themeOverride) };
+}
 function normalizeRoleAssignments(value) {
   const source = value && typeof value === 'object' ? value : {};
   return ROLE_IDS.reduce((result, role) => {
@@ -287,7 +303,7 @@ function sameFolder(left, right) {
 }
 
 function createEmptyProfile() {
-  return { version: PROFILE_VERSION, roles: {}, roleVisuals: {} };
+  return { version: PROFILE_VERSION, roles: {}, appearance: normalizeAppearance(), roleVisuals: {} };
 }
 
 function ok(value) {
@@ -303,5 +319,6 @@ module.exports = {
   ROLE_IDS,
   createVaultProfileService,
   normalizeProfile,
+  normalizeAppearance,
   normalizeRoleInput
 };

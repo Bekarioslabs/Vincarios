@@ -56,6 +56,7 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
   ipcMain.handle(IPC_CHANNELS.VAULT_GET_PROFILE, () => callVaultProfileService(vaultProfileService, 'getProfile'));
   ipcMain.handle(IPC_CHANNELS.VAULT_SET_PROFILE_ROLE, (_event, payload) => callVaultProfileService(vaultProfileService, 'setRole', payload));
   ipcMain.handle(IPC_CHANNELS.VAULT_RESET_PROFILE_ROLE, (_event, payload) => callVaultProfileService(vaultProfileService, 'resetRole', payload));
+  ipcMain.handle(IPC_CHANNELS.VAULT_SET_PROFILE_APPEARANCE, (_event, payload) => callVaultProfileService(vaultProfileService, 'setAppearance', payload));
   ipcMain.handle(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS, () => callVaultProfileService(vaultProfileService, 'listLocalIcons'));
 }
 

@@ -38,3 +38,14 @@ test('Vault Profile state keeps an ephemeral custom SVG source for renderer disp
     color: { kind: 'token', id: 'violet-600' }
   });
 });
+test('Vault Profile state exposes a normalized theme override', async () => {
+  const state = createVaultProfileState({
+    helpers,
+    api: { vault: { async getProfile() { return { ok: true, profile: { appearance: { themeOverride: 'dark' } } }; } } }
+  });
+
+  await state.load();
+  assert.equal(state.getThemeOverride(), 'dark');
+  state.replace({ appearance: { themeOverride: 'unsupported' } });
+  assert.equal(state.getThemeOverride(), 'inherit');
+});

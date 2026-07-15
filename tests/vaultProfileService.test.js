@@ -96,3 +96,16 @@ test('vault profile lists only safe local SVG icons from the portable icon folde
   assert.equal(result.icons[0].path, '.vitruvios/icons/briefcase.svg');
   assert.match(result.icons[0].src, /^data:image\/svg\+xml;base64,/);
 });
+test('vault profile persists a normalized appearance theme override', () => {
+  const root = createTempVault();
+  const service = createVaultProfileService();
+  service.setRoot(root);
+
+  const result = service.setAppearance({ themeOverride: 'light' });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.profile.appearance.themeOverride, 'light');
+  const saved = JSON.parse(fs.readFileSync(path.join(root, PROFILE_RELATIVE_PATH), 'utf8'));
+  assert.equal(saved.appearance.themeOverride, 'light');
+  assert.equal(service.setAppearance({ themeOverride: 'system' }).profile.appearance.themeOverride, 'inherit');
+});

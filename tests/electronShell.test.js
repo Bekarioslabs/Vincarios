@@ -51,6 +51,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'VAULT_RENAME_FILE',
     'VAULT_RESET_PROFILE_ROLE',
     'VAULT_SELECT_FOLDER',
+    'VAULT_SET_PROFILE_APPEARANCE',
     'VAULT_SET_PROFILE_ROLE',
     'VAULT_SET_ROOT',
     'VAULT_STATE',
@@ -83,6 +84,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS, 'vault:list-profile-icons');
   assert.equal(IPC_CHANNELS.VAULT_SET_PROFILE_ROLE, 'vault:set-profile-role');
   assert.equal(IPC_CHANNELS.VAULT_RESET_PROFILE_ROLE, 'vault:reset-profile-role');
+  assert.equal(IPC_CHANNELS.VAULT_SET_PROFILE_APPEARANCE, 'vault:set-profile-appearance');
 });
 
 test('preload exposes image asset reads without filesystem access', () => {
@@ -170,4 +172,11 @@ test('preload exposes portable Vault Profile configuration without filesystem ac
   assert.match(preloadSource, /IPC_CHANNELS\.VAULT_RESET_PROFILE_ROLE/);
   assert.match(preloadSource, /listProfileIcons\(\)/);
   assert.match(preloadSource, /IPC_CHANNELS\.VAULT_LIST_PROFILE_ICONS/);
+});
+
+test('preload exposes vault appearance updates without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /setProfileAppearance\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.VAULT_SET_PROFILE_APPEARANCE, payload\)/);
 });

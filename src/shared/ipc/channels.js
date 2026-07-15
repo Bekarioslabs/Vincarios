@@ -32,6 +32,7 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_GET_PROFILE: 'vault:get-profile',
   VAULT_SET_PROFILE_ROLE: 'vault:set-profile-role',
   VAULT_RESET_PROFILE_ROLE: 'vault:reset-profile-role',
+  VAULT_SET_PROFILE_APPEARANCE: 'vault:set-profile-appearance',
   VAULT_LIST_PROFILE_ICONS: 'vault:list-profile-icons'
 });
 

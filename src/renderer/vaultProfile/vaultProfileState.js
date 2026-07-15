@@ -5,8 +5,9 @@
     options = options || {};
     const api = options.api || null;
     const helpers = options.helpers || getFolderVisualHelpers();
+    const theme = options.theme || getThemeHelpers();
     const listeners = new Set();
-    let profile = { roles: {}, roleVisuals: {} };
+    let profile = { roles: {}, appearance: { themeOverride: 'inherit' }, roleVisuals: {} };
 
     async function load() {
       if (!api || !api.vault || typeof api.vault.getProfile !== 'function') return snapshot();
@@ -34,10 +35,15 @@
       return snapshot().profile;
     }
 
+    function getThemeOverride() {
+      return profile.appearance.themeOverride;
+    }
+
     function snapshot() {
       return Object.freeze({
         profile: Object.freeze({
           roles: Object.freeze(Object.assign({}, profile.roles)),
+          appearance: Object.freeze(Object.assign({}, profile.appearance)),
           roleVisuals: Object.freeze(Object.assign({}, profile.roleVisuals))
         })
       });
@@ -63,6 +69,7 @@
       });
       return {
         roles,
+        appearance: normalizeAppearance(input.appearance),
         roleVisuals: preserveCustomIconSources(
           helpers && typeof helpers.normalizeRoleVisuals === 'function'
             ? helpers.normalizeRoleVisuals(input.roleVisuals)
@@ -72,6 +79,14 @@
       };
     }
 
+    function normalizeAppearance(value) {
+      const fallback = 'inherit';
+      return {
+        themeOverride: theme && typeof theme.normalizeVaultThemeOverride === 'function'
+          ? theme.normalizeVaultThemeOverride(value && value.themeOverride)
+          : fallback
+      };
+    }
     function preserveCustomIconSources(normalizedVisuals, sourceVisuals) {
       const result = Object.assign({}, normalizedVisuals || {});
       Object.keys(result).forEach((roleId) => {
@@ -87,7 +102,7 @@
       return result;
     }
 
-    return Object.freeze({ load, replace, getFolderVisual, getProfile, snapshot, subscribe });
+    return Object.freeze({ load, replace, getFolderVisual, getProfile, getThemeOverride, snapshot, subscribe });
   }
 
   function normalizeTopLevelPath(value) {
@@ -95,6 +110,11 @@
     return path && !path.includes('/') ? path : '';
   }
 
+  function getThemeHelpers() {
+    if (typeof window !== 'undefined' && window.VitruviosTheme) return window.VitruviosTheme;
+    if (typeof module !== 'undefined' && module.exports) return require('../../shared/settings/theme');
+    return null;
+  }
   function getFolderVisualHelpers() {
     if (typeof window !== 'undefined' && window.VitruviosFolderVisuals) return window.VitruviosFolderVisuals;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/vaultProfile/folderVisuals');
