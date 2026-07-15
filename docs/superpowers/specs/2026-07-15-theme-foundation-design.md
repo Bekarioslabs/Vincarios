@@ -48,3 +48,12 @@ No theme presets, custom accent pickers, or per-project styles are included in t
 - Targeted renderer tests cover root attribute updates and immediate settings changes.
 - Manual test: open splash, switch app mode, open a vault, set/clear override, reopen the vault, and confirm persistence.
 - Full test suite before commit.
+
+## Future Theme Packages
+
+V1 prepares, but does not load or manage, shareable theme packages. V1.1 may discover validated JSON files under the portable app path `.vitruvios/themes/`.
+
+- A package extends the built-in `dark` or `light` theme and may override only an allow-listed semantic token registry.
+- Allowed values will be colors, a bounded typography scale, control radii, and approved shadow or opacity values.
+- Arbitrary CSS, layout geometry, URLs, JavaScript, and component-specific selectors are never valid package content.
+- A vault may later select an installed package through its Vault Profile; the package itself remains app-portable and shareable.
