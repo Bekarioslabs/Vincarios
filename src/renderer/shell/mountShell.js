@@ -4,7 +4,8 @@
   function mountShell(root, api) {
     if (!root) return Promise.resolve();
 
-    return getAppInfo(api).then(async (info) => {
+    const themeController = createThemeController(api);
+    return themeController.load().catch(() => themeController.snapshot()).then(() => getAppInfo(api)).then(async (info) => {
       root.innerHTML = '';
       const app = document.createElement('main');
       app.className = 'app-shell is-start';
@@ -182,7 +183,7 @@
       const vaultProfileState = window.VitruviosVaultProfileState
         ? window.VitruviosVaultProfileState.createVaultProfileState({ api })
         : null;
-      const vaultUi = { filePanel: null, vaultProfileState, updateFlashState };
+      const vaultUi = { filePanel: null, vaultProfileState, updateFlashState, themeController };
       const reviewBasket = mountOptional('review basket', globalStatus, () => window.VitruviosReviewBasket
         ? window.VitruviosReviewBasket.mountReviewBasket({ app, status: globalStatus, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
         : null);
@@ -202,6 +203,13 @@
     });
   }
 
+
+  function createThemeController(api) {
+    if (!window.VitruviosThemeController || typeof window.VitruviosThemeController.createThemeController !== 'function') {
+      throw new Error('vitruvios theme controller is not available.');
+    }
+    return window.VitruviosThemeController.createThemeController({ api });
+  }
 
   function createPanelLayoutState() {
     if (!window.VitruviosPanelLayoutState || typeof window.VitruviosPanelLayoutState.createPanelLayoutState !== 'function') {
@@ -808,6 +816,7 @@
       app.classList.remove('is-start');
       filePanel.setVaultName(vaultName || 'Vault');
       await filePanel.openRoot();
+      refreshVaultThemeOverride(vaultUi);
       if (startupScreen && typeof startupScreen.recordRecentVault === 'function') {
         try {
           await startupScreen.recordRecentVault(root);
@@ -856,6 +865,16 @@
       await completeVaultOpen(selected.root);
 
     }));
+  }
+
+  function refreshVaultThemeOverride(vaultUi) {
+    const controller = vaultUi && vaultUi.themeController;
+    const profileState = vaultUi && vaultUi.vaultProfileState;
+    if (!controller || typeof controller.setVaultOverride !== 'function') return;
+    const override = profileState && typeof profileState.getThemeOverride === 'function'
+      ? profileState.getThemeOverride()
+      : 'inherit';
+    controller.setVaultOverride(override);
   }
 
   function baseName(value) {

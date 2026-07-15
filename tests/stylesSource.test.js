@@ -185,3 +185,13 @@ test('Inbox Cleanup group headings use the shared Ember text accent', () => {
   assert.match(css, /\.chat-message-inbox-cleanup \.chat-message-markdown h3/);
   assert.match(css, /color: var\(--text-accent\)/);
 });
+test('light theme overrides semantic tokens without component-specific light rules', () => {
+  const tokens = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+
+  assert.match(tokens, /:root\[data-theme="light"\]/);
+  assert.match(tokens, /--background-primary:/);
+  assert.match(tokens, /--text-normal:/);
+  assert.match(tokens, /--metadata-background:/);
+  assert.match(tokens, /--selection-background:/);
+  assert.match(tokens, /--overlay-backdrop-background:/);
+});
