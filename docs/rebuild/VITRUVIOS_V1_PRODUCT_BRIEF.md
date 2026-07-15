@@ -1,23 +1,23 @@
-# Vitruvios V1 Product Brief
+# vitruvios V1 Product Brief
 
 ## One-Sentence Product
 
-Vitruvios is a local Obsidian-vault assistant that helps users safely analyze, organize, connect, and update Markdown notes through visible, reviewable, reversible actions.
+vitruvios is a local-first Markdown and project workspace that helps users safely analyze, organize, connect, and update notes through visible, reviewable, reversible actions. Obsidian-style vault compatibility is a supported workflow, not the product's entire identity.
 
 ## Phase 8 Positioning Gate
 
-The current internal product wording remains provisional until Phase 8. Before splash/README/build branding changes, decide the final name and whether external communication leads with an independent local-first Markdown/project workspace, with Obsidian-vault compatibility stated as a supported workflow rather than Vitruvios's only identity.
+The Phase 8 positioning decision is complete: the public name is styled as lowercase `vitruvios`. External communication leads with an independent local-first Markdown/project workspace and presents Obsidian-style vault compatibility as a supported workflow with explicit limits.
 ## Product Truth
 
-- Vitruvios is note-first, not agent-first.
-- Vitruvios complements Obsidian instead of replacing it.
-- Vitruvios works primarily with Markdown files.
-- Vitruvios should make vault organization easier, not become a general automation harness.
+- vitruvios is note-first, not agent-first.
+- vitruvios complements Obsidian instead of replacing it.
+- vitruvios works primarily with Markdown files.
+- vitruvios should make vault organization easier, not become a general automation harness.
 - AI suggests; the app validates, previews, backs up, logs, and executes.
 
 ## V1 User Promise
 
-Vitruvios helps users clean up and maintain their vault without hidden file access, cloud dependency, or blind autonomous edits.
+vitruvios helps users clean up and maintain their vault without hidden file access, cloud dependency, or blind autonomous edits.
 
 ## V1 Core Features
 
@@ -60,6 +60,6 @@ Manual UI actions are separate from AI actions.
 
 ## Success Criteria
 
-- A non-technical Obsidian user can open a vault, let Vitruvios inspect allowed notes, review suggestions, and apply selected changes with confidence.
+- A non-technical Obsidian user can open a vault, let vitruvios inspect allowed notes, review suggestions, and apply selected changes with confidence.
 - No risky write happens without preview, backup, and audit log.
 - The codebase is small enough that a new developer can understand the main flow in one session.

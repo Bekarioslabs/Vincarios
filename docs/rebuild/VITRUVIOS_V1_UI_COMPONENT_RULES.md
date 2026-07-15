@@ -1,6 +1,6 @@
-# Vitruvios V1 UI Component Rules
+# vitruvios V1 UI Component Rules
 
-This file is the active reference for repeated UI elements in Vitruvios V1. Use it before adding or changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls.
+This file is the active reference for repeated UI elements in vitruvios V1. Use it before adding or changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls.
 
 ## Source Of Truth
 
@@ -11,7 +11,7 @@ This file is the active reference for repeated UI elements in Vitruvios V1. Use 
 
 ## Visual System Direction
 
-Vitruvios is a compact local work tool, not a card-heavy dashboard. Its visual character is quiet dark surfaces, precise spacing, restrained depth, and warm amber used only for meaningful active or primary states.
+vitruvios is a compact local work tool, not a card-heavy dashboard. Its visual character is quiet dark surfaces, precise spacing, restrained depth, and warm amber used only for meaningful active or primary states.
 
 - App chrome and navigation use softly raised neutral surfaces. Chat and Markdown Preview remain the darker reading/focus surfaces.
 - Prefer subtle surface contrast and restrained inset/shadow depth over decorative borders. Do not add gradients, glow decoration, or heavy neumorphism.
@@ -30,7 +30,7 @@ Vitruvios is a compact local work tool, not a card-heavy dashboard. Its visual c
 
 ## Icon-First Familiarity
 
-- Vitruvios users are expected to come from Obsidian. Mature UI surfaces should feel familiar: compact icon-first controls, hover tooltips, accessible labels, and context menus where appropriate.
+- vitruvios users are expected to come from Obsidian. Mature UI surfaces should feel familiar: compact icon-first controls, hover tooltips, accessible labels, and context menus where appropriate.
 - Text labels are useful during early scaffolding or for primary/rare actions, but dense repeated actions should move toward icon-only or icon+tooltip patterns once the interaction is clear.
 - Icon-only must never mean inaccessible: every icon control needs a semantic name, `aria-label`, keyboard access, and a visible hover/focus explanation.
 - Do not hide safety-critical state. Permissions, pending writes, failed actions, and active context must remain discoverable even when labels collapse.

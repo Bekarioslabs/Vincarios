@@ -280,12 +280,14 @@
     const createdAt = normalizeMessageDate(options.createdAt);
     const message = document.createElement('article');
     message.className = 'chat-message chat-message-' + role;
+    if (options.presentation === 'summary') message.classList.add('chat-message-summary');
+    if (options.presentation === 'inbox-cleanup') message.classList.add('chat-message-inbox-cleanup');
     if (options.pending) message.classList.add('chat-message-pending');
     message.dataset.createdAt = createdAt.toISOString();
 
     const label = document.createElement('div');
     label.className = 'chat-message-label';
-    label.textContent = role === 'user' ? 'You' : 'Vitruvios';
+    label.textContent = role === 'user' ? 'You' : 'vitruvios';
 
     const body = document.createElement('div');
     body.className = 'chat-message-body';

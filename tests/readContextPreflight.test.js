@@ -28,7 +28,7 @@ test('read context preflight shows folder action guidance instead of listing sel
 
   assert.equal(result.handled, true);
   assert.equal(result.kind, 'message');
-  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.match(result.message, /Use "Inspect Folder" in Selection Actions/);
   assert.deepEqual(calls, []);
 });
 
@@ -54,7 +54,7 @@ test('read context preflight shows folder action guidance even when selected fol
 
   assert.equal(result.handled, true);
   assert.equal(called, false);
-  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.match(result.message, /Use "Inspect Folder" in Selection Actions/);
 });
 
 test('read context preflight ignores general questions for selected folders', async () => {
@@ -164,7 +164,7 @@ test('read context preflight shows selection-action guidance for folder wording 
 
   assert.equal(result.handled, true);
   assert.equal(result.kind, 'message');
-  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.match(result.message, /Use "Inspect Folder" in Selection Actions/);
   assert.equal(blockedState.snapshot(), null);
 });
 
@@ -379,7 +379,7 @@ test('read context preflight does not list explicit context folders from natural
   });
 
   assert.equal(result.handled, true);
-  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.match(result.message, /Use "Inspect Folder" in Selection Actions/);
   assert.deepEqual(calls, []);
 });
 
@@ -408,6 +408,6 @@ test('read context preflight does not choose between multiple context folders fr
   });
 
   assert.equal(result.handled, true);
-  assert.match(result.message, /Use "List folder" in Selection Actions/);
+  assert.match(result.message, /Use "Inspect Folder" in Selection Actions/);
   assert.deepEqual(calls, []);
 });

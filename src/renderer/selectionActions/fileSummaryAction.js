@@ -14,10 +14,11 @@
         {
           role: 'system',
           content: [
-            'You are Vitruvios summarizing one selected Markdown file.',
+            'You are vitruvios summarizing one selected Markdown file.',
             'Be concise and concrete.',
             'Do not propose edits, moves, tags, links, or write actions unless the user asks for them.',
-            'If the file is mostly structure, summarize its purpose and main sections.'
+            'If the file is mostly structure, summarize its purpose and main sections.',
+            getSummaryPresentation().buildFileSummaryFormatInstruction()
           ].join('\n')
         },
         {
@@ -37,6 +38,12 @@
       path: normalized.path,
       truncated: normalized.truncated
     };
+  }
+
+  function getSummaryPresentation() {
+    if (typeof window !== 'undefined' && window.VitruviosSummaryResponsePresentation) return window.VitruviosSummaryResponsePresentation;
+    if (typeof module !== 'undefined' && module.exports) return require('./summaryResponsePresentation');
+    throw new Error('vitruvios summary response presentation is not available.');
   }
 
   function normalizeSummarySelection(selection, options) {

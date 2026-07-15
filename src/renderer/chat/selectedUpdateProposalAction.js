@@ -33,7 +33,7 @@
         {
           role: 'system',
           content: [
-            'You are Vitruvios preparing a reviewed whole-note update proposal.',
+            'You are vitruvios preparing a reviewed whole-note update proposal.',
             'Return only JSON. Do not use Markdown fences.',
             'V1 supports whole-note replacement only. Do not emit partial patches.',
             'The app will show a diff before anything is written.',

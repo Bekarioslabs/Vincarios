@@ -4,7 +4,7 @@ const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 
 function registerAppIpc(ipcMain, options) {
   options = options || {};
-  const appName = options.appName || 'Vitruvios';
+  const appName = options.appName || 'vitruvios';
   const version = options.version || '0.1.0';
   const shell = options.shell || null;
 

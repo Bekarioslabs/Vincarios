@@ -57,7 +57,7 @@
       label: 'Scan nested folders',
       onClick: () => runInboxCleanupReport({ api, chatLog, status, mode: 'nested' })
     }];
-    appendReportMessage(chatLog, markdown, { allowSave: true, suggestedTitle: 'Inbox Cleanup Report', responseSubfolder: 'Cleanup Reports', actions });
+    appendReportMessage(chatLog, markdown, { allowSave: true, presentation: 'inbox-cleanup', suggestedTitle: 'Inbox Cleanup Report', responseSubfolder: 'Cleanup Reports', actions });
     setText(status, mode === 'nested' ? 'Nested inbox cleanup report ready.' : 'Inbox cleanup report ready.');
     return { ok: true, report };
   }

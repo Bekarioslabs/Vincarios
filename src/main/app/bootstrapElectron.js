@@ -60,7 +60,7 @@ function bootstrapElectron(electron, options) {
 
   registerChatIpc(ipcMain, chatService);
   registerAppIpc(ipcMain, {
-    appName: 'Vitruvios',
+    appName: 'vitruvios',
     version: app.getVersion ? app.getVersion() : '0.1.0',
     shell: electron.shell
   });

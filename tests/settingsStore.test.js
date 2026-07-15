@@ -161,3 +161,25 @@ test('settings store persists app-local panel layout preferences', () => {
   const reloaded = createSettingsStore({ filePath });
   assert.equal(reloaded.getSettings().layout.panels.selectionActionsCollapsed, true);
 });
+
+test('settings store keeps a portable two-entry recent vault history', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const filePath = path.join(dir, 'settings.json');
+  const store = createSettingsStore({ filePath });
+
+  const result = store.setRecentVaults({
+    recentVaults: [
+      { path: 'D:\\Vaults\\One', name: 'One', lastOpenedAt: '2026-07-14T10:00:00.000Z' },
+      { path: 'D:/Vaults/One/', name: 'Duplicate', lastOpenedAt: '2026-07-14T10:01:00.000Z' },
+      { path: 'D:/Vaults/Two', name: 'Two', lastOpenedAt: '2026-07-14T10:02:00.000Z' },
+      { path: 'D:/Vaults/Three', name: 'Three', lastOpenedAt: '2026-07-14T10:03:00.000Z' }
+    ]
+  });
+
+  assert.equal(result.ok, true);
+  const reloaded = createSettingsStore({ filePath }).getSettings();
+  assert.deepEqual(reloaded.startup.recentVaults.map((entry) => entry.path), [
+    'D:/Vaults/One',
+    'D:/Vaults/Two'
+  ]);
+});

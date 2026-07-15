@@ -18,6 +18,7 @@ test('settings IPC exposes get and provider URL override actions', async () => {
     resetProviderUrlOverride(providerId) { return { ok: true, providerId }; },
     setLimits(payload) { return { ok: true, limits: payload }; },
     setEmbeddingSettings(payload) { return { ok: true, embeddings: payload }; },
+    setActionDefaults(payload) { return { ok: true, actionDefaults: payload }; },
     setLayoutPreferences(payload) { return { ok: true, layout: payload }; }
   };
 
@@ -28,6 +29,7 @@ test('settings IPC exposes get and provider URL override actions', async () => {
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_RESET_PROVIDER_URL), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_LIMITS), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS), true);
+  assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_ACTION_DEFAULTS), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_LAYOUT), true);
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_GET)(), { version: 1 });
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_PROVIDER_URL)(null, { providerId: 'ollama', baseUrl: 'http://localhost:11435' }), {
@@ -47,8 +49,28 @@ test('settings IPC exposes get and provider URL override actions', async () => {
     ok: true,
     embeddings: { similarNotes: { maxResults: 5 } }
   });
+  assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_ACTION_DEFAULTS)(null, { folderSummary: { maxFiles: 12 } }), {
+    ok: true,
+    actionDefaults: { folderSummary: { maxFiles: 12 } }
+  });
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_LAYOUT)(null, { panels: { selectionActionsCollapsed: true } }), {
     ok: true,
     layout: { panels: { selectionActionsCollapsed: true } }
+  });
+});
+
+test('settings IPC persists recent vault history through the settings service', async () => {
+  const handlers = new Map();
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const service = {
+    getSettings() { return { version: 1 }; },
+    setRecentVaults(payload) { return { ok: true, startup: payload }; }
+  };
+
+  registerSettingsIpc(ipcMain, service);
+  assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_RECENT_VAULTS), true);
+  assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_RECENT_VAULTS)(null, { recentVaults: [] }), {
+    ok: true,
+    startup: { recentVaults: [] }
   });
 });

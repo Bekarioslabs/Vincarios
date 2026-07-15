@@ -233,3 +233,56 @@ test('file panel opens selected images in the preview controller', async () => {
     else global.document = previousDocument;
   }
 });
+
+test('file panel reloads the root listing when another vault is opened', async () => {
+  const previousWindow = global.window;
+  const previousDocument = global.document;
+  const navigator = require('../src/renderer/files/fileNavigator');
+  const keyboard = require('../src/renderer/files/fileTreeKeyboard');
+  const permissions = require('../src/renderer/permissions/permissionState');
+  const { mountFilePanel } = require('../src/renderer/files/mountFilePanel');
+
+  global.document = { createElement: createNode };
+  global.window = {
+    VitruviosFileNavigator: navigator,
+    VitruviosFileTreeKeyboard: keyboard,
+    VitruviosIconRenderer: {
+      createIconElement(name, className) {
+        const icon = createNode('img');
+        icon.iconName = name;
+        icon.className = className || '';
+        return icon;
+      }
+    }
+  };
+
+  try {
+    const root = createRoot();
+    let calls = 0;
+    const api = {
+      vault: {
+        listFolder() {
+          calls += 1;
+          return Promise.resolve({ ok: true, entries: [] });
+        }
+      }
+    };
+    const panel = mountFilePanel({
+      api,
+      root,
+      permissionState: permissions.createPermissionState(),
+      navigator: navigator.createFileNavigator(),
+      keyboard
+    });
+
+    await panel.openRoot();
+    await panel.openRoot();
+
+    assert.equal(calls, 2);
+  } finally {
+    if (previousWindow === undefined) delete global.window;
+    else global.window = previousWindow;
+    if (previousDocument === undefined) delete global.document;
+    else global.document = previousDocument;
+  }
+});

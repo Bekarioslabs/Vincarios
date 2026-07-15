@@ -17,13 +17,14 @@
       '## Context Basket',
       '',
       'Context source: context_basket',
-      'These context items were explicitly added by the user through Vitruvios UI. Plain file-tree selection is not context.',
+      'These context items were explicitly added by the user through vitruvios UI. Plain file-tree selection is not context.',
       '',
       normalizedItems.map((item, index) => renderContextItem(item, index + 1, maxChars)).join('\n')
     ]);
   }
 
   function renderContextItem(item, index, maxChars) {
+    if (item.kind === 'folder_snapshot') return renderFolderSnapshot(item, index);
     if (item.kind === 'folder') {
       return [
         '### Context Item ' + index,
@@ -55,16 +56,77 @@
     ].join('\n');
   }
 
+  function renderFolderSnapshot(item, index) {
+    const scope = item.scope || {};
+    const limits = item.effectiveLimits || {};
+    const files = Array.isArray(item.files) ? item.files : [];
+    const scopeLabel = scope.scope === 'subfolders'
+      ? 'subfolders (maximum depth: ' + String(scope.maxDepth || 1) + ')'
+      : 'current folder only';
+    const lines = [
+      '### Context Item ' + index,
+      '',
+      'Selected type: folder Markdown snapshot',
+      'Path: ' + item.path,
+      'Scope: ' + scopeLabel,
+      'Effective limits: Markdown only; up to ' + String(limits.maxFiles || scope.maxFiles || files.length) + ' notes; up to ' + String(limits.maxTotalChars || 0) + ' total characters.',
+      'Included Markdown notes: ' + String(files.length),
+      item.truncated ? 'Status: snapshot truncated by its configured scope or character limit.' : 'Status: full snapshot within configured limits.',
+      ''
+    ];
+    files.forEach((file) => {
+      lines.push('#### Included note', 'Path: ' + file.path, file.truncated ? 'Status: content truncated by the total snapshot character limit.' : 'Status: full included note content.', '', '```md', file.content, '```', '');
+    });
+    return lines.join('\n');
+  }
+
   function normalizeContextItem(item) {
     if (!item) return null;
-    const kind = item.kind === 'folder' ? 'folder' : 'file';
+    const kind = item.kind === 'folder_snapshot' ? 'folder_snapshot' : item.kind === 'folder' ? 'folder' : 'file';
     const path = normalizeContextPath(item.path || '');
     if (!path) return null;
-    return {
+    const normalized = {
       kind,
       path,
       content: typeof item.content === 'string' ? item.content : ''
     };
+    if (kind === 'folder_snapshot') {
+      normalized.scope = normalizeSnapshotScope(item.scope);
+      normalized.effectiveLimits = normalizeSnapshotLimits(item.effectiveLimits);
+      normalized.files = normalizeSnapshotFiles(item.files);
+      normalized.truncated = item.truncated === true;
+    }
+    return normalized;
+  }
+
+  function normalizeSnapshotScope(scope) {
+    scope = scope || {};
+    return {
+      scope: scope.scope === 'subfolders' ? 'subfolders' : 'current',
+      maxDepth: positiveIntegerOrZero(scope.maxDepth),
+      maxFiles: positiveIntegerOrZero(scope.maxFiles)
+    };
+  }
+
+  function normalizeSnapshotLimits(limits) {
+    limits = limits || {};
+    return {
+      maxFiles: positiveIntegerOrZero(limits.maxFiles),
+      maxTotalChars: positiveIntegerOrZero(limits.maxTotalChars)
+    };
+  }
+
+  function normalizeSnapshotFiles(files) {
+    return (Array.isArray(files) ? files : []).map((file) => {
+      const path = normalizeContextPath(file && file.path);
+      if (!path) return null;
+      return { path, content: file && typeof file.content === 'string' ? file.content.replace(/\r\n?/g, '\n') : '', truncated: file && file.truncated === true };
+    }).filter(Boolean);
+  }
+
+  function positiveIntegerOrZero(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? Math.floor(number) : 0;
   }
 
   function parentFolderOf(path) {
@@ -93,7 +155,7 @@
   function getLimitsApi() {
     if (typeof window !== 'undefined' && window.VitruviosContextLimits) return window.VitruviosContextLimits;
     if (typeof module !== 'undefined' && module.exports) return require('./contextLimits');
-    throw new Error('Vitruvios context limits API is not available.');
+    throw new Error('vitruvios context limits API is not available.');
   }
 
   function getStateApi() {

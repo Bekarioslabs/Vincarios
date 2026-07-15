@@ -84,3 +84,24 @@ test('context builder truncates long explicit Markdown context items with an exp
   assert.match(context.content, /truncated/);
   assert.doesNotMatch(context.content, /34567890\n```/);
 });
+
+test('context builder attaches visible, bounded folder Markdown snapshots', () => {
+  const context = buildChatContextPackage({
+    contextItems: [{
+      kind: 'folder_snapshot',
+      path: '03_Knowledge/Animals',
+      scope: { scope: 'subfolders', maxDepth: 2, maxFiles: 10, fileType: 'markdown' },
+      effectiveLimits: { maxTotalChars: 100 },
+      files: [{ path: '03_Knowledge/Animals/Whales.md', content: '# Whales', truncated: false }],
+      totalChars: 8,
+      truncated: false
+    }]
+  });
+
+  assert.match(context.content, /Selected type: folder Markdown snapshot/);
+  assert.match(context.content, /Scope: subfolders \(maximum depth: 2\)/);
+  assert.match(context.content, /Effective limits: Markdown only; up to 10 notes; up to 100 total characters\./);
+  assert.match(context.content, /Included Markdown notes: 1/);
+  assert.match(context.content, /Path: 03_Knowledge\/Animals\/Whales\.md/);
+  assert.match(context.content, /```md\n# Whales\n```/);
+});

@@ -2,7 +2,7 @@
   "name": "vitruvios",
   "version": "0.1.0",
   "private": true,
-  "description": "Local-first Markdown and project workspace with visible, reviewable AI workflows.",
+  "description": "Local-first Markdown assistant with visible, reviewable AI workflows.",
   "main": "src/main/index.js",
   "engines": {
     "node": ">=22.12.0"

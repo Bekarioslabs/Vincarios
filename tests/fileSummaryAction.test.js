@@ -10,6 +10,7 @@ test('file summary accepts one readable Markdown selection', () => {
   assert.equal(result.ok, true);
   assert.equal(result.messages.length, 2);
   assert.match(result.messages[0].content, /summarizing one selected Markdown file/);
+  assert.match(result.messages[0].content, /### Key points/);
   assert.match(result.messages[1].content, /Path: 03_Knowledge\/A\.md/);
   assert.match(result.messages[1].content, /```md\n# A\nBody\n```/);
 });
@@ -27,4 +28,12 @@ test('file summary truncates large Markdown content through a central limit', ()
   assert.equal(result.ok, true);
   assert.equal(result.truncated, true);
   assert.match(result.messages[1].content, /truncated to 12000 characters/);
+});
+test('file summary respects the configured source character limit', () => {
+  const content = 'a'.repeat(15001);
+  const result = buildFileSummaryMessages({ kind: 'file', path: 'A.md', readAllowed: true, content }, { maxChars: 15000 });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.truncated, true);
+  assert.match(result.messages[1].content, /truncated to 15000 characters/);
 });

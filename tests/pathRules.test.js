@@ -23,7 +23,7 @@ test('normalizes simple vault-relative paths', () => {
 test('rejects absolute, URL, drive-qualified, and traversal paths', () => {
   const cases = [
     'C:\\Users\\beka\\secret.md',
-    'D:/Vitruvios_AGENT/Vitruvios/Note.md',
+    'D:/Vitruvios_AGENT/vitruvios/Note.md',
     '/etc/passwd',
     '\\\\server\\share\\file.md',
     'file:///D:/vault/file.md',

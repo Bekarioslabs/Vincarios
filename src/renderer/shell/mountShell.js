@@ -9,14 +9,18 @@
       const app = document.createElement('main');
       app.className = 'app-shell is-start';
       app.innerHTML = [
-        '<section class="start-screen">',
-        '  <div class="start-kicker">Local-first Markdown assistant</div>',
-        '  <h1>Vitruvios</h1>',
-        '  <p>Open an Obsidian vault to analyze, organize, and review Markdown changes safely.</p>',
-        '  <button type="button" class="start-open" data-open-vault>Open Vault</button>',
+        '<section class="start-screen" data-startup-screen aria-label="Welcome to vitruvios">',
+        '  <div class="start-screen-content">',
+        '    <div class="start-logo-slot" aria-hidden="true"><img src="./src/renderer/assets/brand/vitruvios-logo-placeholder_white.svg" alt=""></div>',
+        '    <h1 class="start-wordmark"><span>vitruv</span><span>ios</span></h1>',
+        '    <p class="start-kicker">Local-first Markdown assistant</p>',
+        '    <button type="button" class="start-open" data-open-vault>Open Vault</button>',
+        '    <section class="startup-recent" data-startup-recent aria-live="polite"></section>',
+        '    <section class="startup-providers" data-startup-providers aria-label="Local provider availability"></section>',
+        '  </div>',
         '</section>',
         '<header class="titlebar">',
-        '  <div class="titlebar-brand">Vitruvios</div>',
+        '  <div class="titlebar-brand" aria-label="vitruvios"><span>vitruv</span><span>ios</span></div>',
         '  <div class="titlebar-spacer"></div>',
         '  <div class="topbar-actions" aria-label="Provider status" data-provider-status-widget>',
         '    <span id="provider-status" class="status-pill" data-provider-status="offline">',
@@ -201,7 +205,7 @@
 
   function createPanelLayoutState() {
     if (!window.VitruviosPanelLayoutState || typeof window.VitruviosPanelLayoutState.createPanelLayoutState !== 'function') {
-      throw new Error('Vitruvios panel layout state is not available.');
+      throw new Error('vitruvios panel layout state is not available.');
     }
     return window.VitruviosPanelLayoutState.createPanelLayoutState();
   }
@@ -564,7 +568,7 @@
     const filePanel = vaultUi && vaultUi.filePanel;
     if (!item || !filePanel) return;
     if (item.kind === 'file' && typeof filePanel.revealPath === 'function') filePanel.revealPath(item.path);
-    if (item.kind === 'folder' && typeof filePanel.revealFolder === 'function') filePanel.revealFolder(item.path);
+    if ((item.kind === 'folder' || item.kind === 'folder_snapshot') && typeof filePanel.revealFolder === 'function') filePanel.revealFolder(item.path);
   }
   async function executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) {
     const result = await executeReviewProposal(api, proposal, vaultUi);
@@ -741,10 +745,10 @@
       try {
         return await api.appInfo();
       } catch (error) {
-        return { name: 'Vitruvios', version: 'unavailable' };
+        return { name: 'vitruvios', version: 'unavailable' };
       }
     }
-    return { name: 'Vitruvios', version: '0.1.0' };
+    return { name: 'vitruvios', version: '0.1.0' };
   }
 
   function wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout) {
@@ -793,6 +797,45 @@
       if (vaultUi) vaultUi.filePanel = filePanel;
     }
 
+    const startupScreen = window.VitruviosStartup && typeof window.VitruviosStartup.mountStartupScreen === 'function'
+      ? window.VitruviosStartup.mountStartupScreen({ app, api, onOpenRecent: openRecentVault })
+      : null;
+
+    async function completeVaultOpen(root) {
+      const vaultName = baseName(root);
+      setText(statusBar, 'Vault opened.');
+      recordActivityFromStatus(app, 'success', 'Vault opened', vaultName || 'Vault', '');
+      app.classList.remove('is-start');
+      filePanel.setVaultName(vaultName || 'Vault');
+      await filePanel.openRoot();
+      if (startupScreen && typeof startupScreen.recordRecentVault === 'function') {
+        try {
+          await startupScreen.recordRecentVault(root);
+        } catch (error) {
+          // A local recent-history write must not make a successfully opened vault fail.
+        }
+      }
+    }
+
+    async function openRecentVault(root) {
+      if (!api || !api.vault || typeof api.vault.setRoot !== 'function') {
+        setText(statusBar, 'Vault API unavailable.');
+        return;
+      }
+      if (!filePanel) {
+        setText(statusBar, 'File panel unavailable.');
+        return;
+      }
+
+      setText(statusBar, 'Opening recent vault...');
+      const opened = await api.vault.setRoot(root);
+      if (!opened || !opened.ok) {
+        setText(statusBar, (opened && opened.message) || 'Recent vault is unavailable.');
+        return;
+      }
+      await completeVaultOpen(opened.root || root);
+    }
+
     openButtons.forEach((openButton) => openButton.addEventListener('click', async () => {
       if (!api || !api.vault) {
         setText(statusBar, 'Vault API unavailable.');
@@ -810,12 +853,8 @@
         return;
       }
 
-      const vaultName = baseName(selected.root);
-      setText(statusBar, 'Vault opened.');
-      recordActivityFromStatus(app, 'success', 'Vault opened', vaultName || 'Vault', '');
-      app.classList.remove('is-start');
-      filePanel.setVaultName(vaultName || 'Vault');
-      await filePanel.openRoot();
+      await completeVaultOpen(selected.root);
+
     }));
   }
 

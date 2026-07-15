@@ -58,18 +58,18 @@ test('context basket labels use compact basename while keeping full path in titl
   assert.equal(basket.formatItemLabel({ kind: 'folder', path: '02_Projects/StarLu' }), 'StarLu');
   assert.equal(basket.formatItemTitle({ kind: 'file', path: '02_Projects/StarLu/Tasks.md' }), '02_Projects/StarLu/Tasks.md');
 });
-test('list folder messages expose a whole-tree follow-up through the folder controller', () => {
+test('folder inspection exposes the bounded tree follow-up through the folder controller', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
   assert.match(source, /Check whole tree/);
-  assert.match(source, /appendActionMessage\(formatFolderListing\(snapshot\.path, result\),/);
-  assert.match(source, /listFolderTree/);
-  assert.match(source, /formatRecursiveFolderListing/);
+  assert.match(source, /inspectFolderTree/);
+  assert.match(source, /maxDepth: options\.maxDepth/);
+  assert.match(source, /maxListedFiles: options\.maxFiles/);
+  assert.match(source, /buildFolderTreeInspectionReport/);
   assert.match(source, /chat-message-actions/);
   assert.match(source, /chat-message-action-button/);
   assert.doesNotMatch(source, /chat-message-action';/);
 });
-
 test('summarize file uses the dedicated summary action module and provider API', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
@@ -87,12 +87,20 @@ test('provider-backed selection actions use removable pending action messages', 
   assert.match(source, /chat-message-pending/);
   assert.match(source, /removeNode\(pending\)/);
 });
-test('folder analyze action is wired to the folder analysis handler', () => {
+test('folder inspect action opens a bounded scope form and uses the shared inspection renderer', () => {
+  const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const registry = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'actionRegistry.js'), 'utf8');
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
 
-  assert.match(source, /action\.id === 'folder\.analyze'/);
-  assert.match(source, /analyzeFolder\(snapshot\)/);
-  assert.match(source, /formatFolderAnalysis\(snapshot\.path, result\)/);
+  assert.equal(index.includes('./src/renderer/selectionActions/folderScopeOptions.js'), true);
+  assert.equal(index.includes('./src/renderer/selectionActions/folderInspectAction.js'), true);
+  assert.match(registry, /id: 'folder\.inspect'/);
+  assert.doesNotMatch(registry, /id: 'folder\.listCurrent'/);
+  assert.doesNotMatch(registry, /id: 'folder\.analyze'/);
+  assert.match(source, /renderFolderInspectForm\(snapshot, host\)/);
+  assert.match(source, /normalizeFolderScopeOptions/);
+  assert.match(source, /buildFolderInspectionReport/);
+  assert.match(source, /buildFolderTreeInspectionReport/);
 });
 test('folder markdown summary action is loaded and wired through the selection action panel', () => {
   const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -100,7 +108,9 @@ test('folder markdown summary action is loaded and wired through the selection a
 
   assert.equal(index.includes('./src/renderer/selectionActions/folderSummaryAction.js'), true);
   assert.match(source, /folder\.summarizeMarkdown/);
-  assert.match(source, /summarizeFolderMarkdown\(snapshot\)/);
+  assert.match(source, /renderFolderSummaryForm\(snapshot, host\)/);
+  assert.match(source, /summarizeFolderMarkdown\(snapshot, scopeOptions\)/);
+  assert.match(source, /listScopedMarkdownFiles/);
   assert.match(source, /buildFolderMarkdownSummaryMessages/);
   assert.match(source, /api\.vault\.readMarkdown/);
 });
@@ -163,4 +173,15 @@ test('Markdown highlights use dedicated theme tokens and scoped styles', () => {
   assert.match(markdown, /\.markdown-preview mark/);
   assert.match(markdown, /var\(--markdown-highlight-background\)/);
   assert.match(markdown, /var\(--markdown-highlight-text\)/);
+});
+
+test('summary descriptions use a scoped muted presentation rule', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/layout.css'), 'utf8');
+  assert.match(css, /\.chat-message-summary \.chat-message-markdown li > p \+ p/);
+  assert.match(css, /color: var\(--text-muted\)/);
+});
+test('Inbox Cleanup group headings use the shared Ember text accent', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/layout.css'), 'utf8');
+  assert.match(css, /\.chat-message-inbox-cleanup \.chat-message-markdown h3/);
+  assert.match(css, /color: var\(--text-accent\)/);
 });

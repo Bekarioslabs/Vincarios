@@ -30,19 +30,19 @@ function createMainWindow(electron, options) {
   const win = new BrowserWindow(createWindowOptions(projectRoot));
 
   win.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
-    console.error('Vitruvios window failed to load:', errorCode, errorDescription);
+    console.error('vitruvios window failed to load:', errorCode, errorDescription);
   });
 
   win.webContents.on('preload-error', (_event, preloadPath, error) => {
-    console.error('Vitruvios preload failed:', preloadPath, error);
+    console.error('vitruvios preload failed:', preloadPath, error);
   });
 
   win.webContents.on('render-process-gone', (_event, details) => {
-    console.error('Vitruvios renderer process gone:', details);
+    console.error('vitruvios renderer process gone:', details);
   });
 
   win.loadFile(path.join(projectRoot, 'index.html')).catch((error) => {
-    console.error('Vitruvios loadFile failed:', error);
+    console.error('vitruvios loadFile failed:', error);
   });
 
   return win;

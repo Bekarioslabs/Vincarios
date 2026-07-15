@@ -26,8 +26,15 @@
     { name: 'VitruviosSelectionActionCategories', globalName: 'VitruviosSelectionActionCategories', methods: ['getActionCategory'] },
     { name: 'VitruviosSelectionActionPermissionText', globalName: 'VitruviosSelectionActionPermissionText', methods: ['fileReadReason', 'folderReadReason', 'fileWriteReason', 'missingPermissionMessage'] },
     { name: 'VitruviosSelectionActionRegistry', globalName: 'VitruviosSelectionActionRegistry', methods: ['getSelectionActions', 'getTargetKind'] },
+    { name: 'VitruviosSummaryResponsePresentation', globalName: 'VitruviosSummaryResponsePresentation', methods: ['formatFileSummaryResponse', 'formatFolderSummaryResponse'] },
     { name: 'VitruviosFileSummaryAction', globalName: 'VitruviosFileSummaryAction', methods: ['buildFileSummaryMessages'] },
     { name: 'VitruviosFolderSummaryAction', globalName: 'VitruviosFolderSummaryAction', methods: ['buildFolderMarkdownSummaryMessages'] },
+    { name: 'VitruviosActionDefaults', globalName: 'VitruviosActionDefaults', methods: ['getFolderActionDefault'] },
+    { name: 'VitruviosFolderScopeOptions', globalName: 'VitruviosFolderScopeOptions', methods: ['normalizeFolderScopeOptions'] },
+    { name: 'VitruviosFolderScopeForm', globalName: 'VitruviosFolderScopeForm', methods: ['mountFolderScopeForm'] },
+    { name: 'VitruviosFolderMarkdownScopeReader', globalName: 'VitruviosFolderMarkdownScopeReader', methods: ['listScopedMarkdownFiles'] },
+    { name: 'VitruviosFolderInspectAction', globalName: 'VitruviosFolderInspectAction', methods: ['buildFolderInspectionReport'] },
+    { name: 'VitruviosFolderContextSnapshotAction', globalName: 'VitruviosFolderContextSnapshotAction', methods: ['buildFolderContextSnapshot'] },
     { name: 'VitruviosTagCandidateAction', globalName: 'VitruviosTagCandidateAction', methods: ['buildTagCandidates', 'extractTags', 'applyTagsToMarkdown'] },
     { name: 'VitruviosSelectionActions', globalName: 'VitruviosSelectionActions', methods: ['mountSelectionActions'] },
     { name: 'VitruviosPermissionState', globalName: 'VitruviosPermissionState' },
@@ -51,6 +58,7 @@
     { name: 'VitruviosMarkdownDropController', globalName: 'VitruviosMarkdownDropController', methods: ['mountMarkdownDropController'] },
     { name: 'VitruviosChat', globalName: 'VitruviosChat', methods: ['mountChat', 'appendMessage'] },
     { name: 'VitruviosProviderStatus', globalName: 'VitruviosProviderStatus', methods: ['mountProviderStatus'] },
+    { name: 'VitruviosStartup', globalName: 'VitruviosStartup', methods: ['mountStartupScreen'] },
     { name: 'VitruviosSettingsPanel', globalName: 'VitruviosSettingsPanel', methods: ['mountSettingsPanel'] },
     { name: 'VitruviosShell', globalName: 'VitruviosShell', methods: ['mountShell'] }
   ]);
@@ -65,7 +73,7 @@
   }
 
   function validateRendererModules(runtime) {
-    if (!runtime) return { ok: false, message: 'Vitruvios renderer runtime is not available.' };
+    if (!runtime) return { ok: false, message: 'vitruvios renderer runtime is not available.' };
 
     const missing = [];
     REQUIRED_RENDERER_MODULES.forEach((module) => {
@@ -82,7 +90,7 @@
     if (missing.length > 0) {
       return {
         ok: false,
-        message: 'Vitruvios startup failed. Missing renderer module(s): ' + missing.join(', ')
+        message: 'vitruvios startup failed. Missing renderer module(s): ' + missing.join(', ')
       };
     }
 
@@ -94,7 +102,7 @@
     root.innerHTML = '';
     const panel = document.createElement('main');
     panel.className = 'startup-error';
-    panel.innerHTML = '<h1>Vitruvios startup failed</h1><p></p>';
+    panel.innerHTML = '<h1>vitruvios startup failed</h1><p></p>';
     panel.querySelector('p').textContent = message;
     root.appendChild(panel);
   }

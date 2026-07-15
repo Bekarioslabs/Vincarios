@@ -1,8 +1,8 @@
-# Vitruvios
+# vitruvios
 
-Vitruvios is a local, review-first assistant for Obsidian-style Markdown vaults.
+**Local-first Markdown assistant.**
 
-It helps users analyze, organize, connect, and update notes through visible, reviewable, reversible actions.
+vitruvios is a local-first Markdown and project workspace for analyzing, organizing, connecting, and updating notes through visible, reviewable, reversible actions. It supports Obsidian-style vaults without trying to replace Obsidian.
 
 ## Status
 
@@ -30,7 +30,7 @@ Permission shortcuts:
 
 ## Starting On Windows
 
-Use `start.bat` for the local Electron app when `npm` is not available in the shell. The launcher keeps Electron user data, disk cache, and app settings portable under `D:\Vitruvios_AGENT\.vitruvios\`. Vault-specific Vitruvios data such as backups, audit logs, and future embedding indexes live under the opened vault's `.vitruvios/` folder.
+Use `start.bat` for the local Electron app when `npm` is not available in the shell. The launcher keeps Electron user data, disk cache, and app settings portable inside the project folder's `.vitruvios/` directory. Vault-specific vitruvios data such as backups, audit logs, and embedding indexes live under the opened vault's `.vitruvios/` folder.
 ## Planning Docs
 
 Start here:

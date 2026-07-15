@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const { main, bootstrapElectron, shouldBootstrapElectron } = require('../src/main/index.js');
 
 test('scaffold exposes main and Electron bootstrap points', () => {
-  assert.equal(main().app, 'Vitruvios');
+  assert.equal(main().app, 'vitruvios');
   assert.equal(typeof bootstrapElectron, 'function');
 });
 

@@ -1,4 +1,4 @@
-# Vitruvios V1 Architecture
+# vitruvios V1 Architecture
 
 ## Core Shape
 
@@ -36,7 +36,7 @@ flowchart LR
   Vault --> UI
 ```
 
-Provider services have no vault-service edge. They receive only request-scoped text prepared by Vitruvios and never own path validation, backups, audit entries, or execution.
+Provider services have no vault-service edge. They receive only request-scoped text prepared by vitruvios and never own path validation, backups, audit entries, or execution.
 
 ## Suggested Source Structure
 
@@ -84,7 +84,7 @@ docs/
 - Vault services read/write/list files only after safety validation.
 - Safety rules are code-side laws, not prompt wishes.
 - Prompt rules live in a dedicated module, not scattered through UI code.
-- Renderer modules are browser-first. They must use loaded `window.Vitruvios...` APIs before CommonJS `require(...)` fallbacks; `require(...)` exists only so the same modules can run in Node tests.
+- Renderer modules are browser-first. They must use loaded `window.vitruvios...` APIs before CommonJS `require(...)` fallbacks; `require(...)` exists only so the same modules can run in Node tests.
 - Review state is its own concept, not just chat messages.
 - Suggestions are their own concept between analysis and Review Basket execution. They must not be hidden in chat text.
 - Context control and permission state are their own modules, not hidden inside chat or file-tree rendering.

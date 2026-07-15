@@ -1,10 +1,10 @@
-# Vitruvios V1 UI And Workflows
+# vitruvios V1 UI And Workflows
 
 ## Typography And Assets
 
 - V1 bundles Inter locally from `src/renderer/assets/fonts/InterVariable.woff2`; third-party font licenses live under `third_party/inter/` and must ship with release builds.
 - Lucide SVG icons are bundled locally under `src/renderer/assets/icons/lucide/`; semantic mappings live in `src/renderer/icons/iconRegistry.js`, so individual icons can be replaced without touching UI components. License notices live under `third_party/lucide/`.
-- `docs/Design_index.html` is the active visual reference for Phase 7.7 polish patterns such as soft-disabled locks, empty states, trust badges, score presentation, hover behavior, and token usage. Use it as design direction, but adapt patterns through existing Vitruvios modules and tokens instead of copying demo markup blindly.
+- `docs/Design_index.html` is the active visual reference for Phase 7.7 polish patterns such as soft-disabled locks, empty states, trust badges, score presentation, hover behavior, and token usage. Use it as design direction, but adapt patterns through existing vitruvios modules and tokens instead of copying demo markup blindly.
 - Repeated UI element rules live in `docs/rebuild/VITRUVIOS_V1_UI_COMPONENT_RULES.md`. Use that file before changing buttons, modals, badges, score indicators, action rows, status feedback, or icon-only controls.
 
 ## Main Layout
@@ -21,7 +21,7 @@ Chat input auto-grows within bounded limits for longer prompts. Once it reaches 
 
 ## Visual Direction
 
-Vitruvios V1 uses a compact, tool-first visual system: softly raised neutral app surfaces, darker Chat and Preview focus surfaces, restrained structural dividers, and warm amber only for active or primary states. Navigation and Selection Actions favor flat icon/text rows over a grid of outlined buttons. Repeated utility controls share one compact icon-control treatment.
+vitruvios V1 uses a compact, tool-first visual system: softly raised neutral app surfaces, darker Chat and Preview focus surfaces, restrained structural dividers, and warm amber only for active or primary states. Navigation and Selection Actions favor flat icon/text rows over a grid of outlined buttons. Repeated utility controls share one compact icon-control treatment.
 
 Collapse is deterministic space management. A panel contracts toward the left, retains a visible boundary, clips its own contents, and must not silently resize its neighbors. Resize remains an explicit user operation. Layout preferences remain app-local and persist across restarts.
 
@@ -69,7 +69,13 @@ Current Phase 7.1 state: deterministic note/project presets live in `src/shared/
 
 ## Options Menu V1
 
+Folder Context and Folder Summary defaults initialize their visible scope forms. Each execution stays editable and never overwrites a saved default.
+
 Keep settings minimal and focused. The confirmed V1 sections are defined below in `Options Menu Decisions`.
+
+## Action Output Presentation
+
+Inspect Folder uses app-owned Markdown reports: a clear heading, compact path metadata, grouped entries, and an explicit no-content-read notice. File and Folder Summary responses use the same presentation boundary: vitruvios supplies the title and source/scope metadata; the provider supplies a concise Markdown body with stable section headings. File Summary reads up to its portable `Settings -> Actions -> File Summary -> Source chars` default (1,000–60,000; 12,000 by default) and discloses truncation in the app-owned source metadata. Folder Summary requests `### Included notes` entries as a bold code-styled filename followed by a separated muted italic purpose description, scoped only to summary messages. This keeps Save as Note readable without making free chat replies artificially rigid.
 
 ## Session Activity Status
 
@@ -108,8 +114,8 @@ Each item can be checked or unchecked. The final execute button applies only sel
 
 ```text
 Select Inbox
--> Ask Vitruvios to analyze
--> Vitruvios reads allowed files
+-> Ask vitruvios to analyze
+-> vitruvios reads allowed files
 -> embeddings provide similar-note candidates
 -> AI creates proposal plan
 -> user reviews grouped suggestions
@@ -202,8 +208,8 @@ V1 uses separate Read and Write permissions.
 
 Meaning:
 
-- Read: Vitruvios may read the file/folder as context.
-- Write: Vitruvios may propose write actions for the file/folder.
+- Read: vitruvios may read the file/folder as context.
+- Write: vitruvios may propose write actions for the file/folder.
 - Write never means silent execution.
 
 Permission state has three visible levels:
@@ -233,7 +239,7 @@ Recursive permission application must not read Markdown contents. It only needs 
 While a provider request is running, the Send button becomes `Cancel`. Cancel uses the request id and `chat:cancel` IPC to abort the active provider request through `AbortController`. The renderer also checks the active request id before applying a response so late canceled responses cannot appear in chat. Internal provider timeouts are reported as provider errors, not as user-canceled requests.
 ## Chat Message Metadata
 
-- Vitruvios chat messages show hover metadata below the bubble: `Save as Note` and `Copy` on the left, local time on the right. Persistent follow-up actions such as `Check whole tree` stay in the visible action row below the message. Chat session persistence is not V1 and belongs to the future backlog.
+- vitruvios chat messages show hover metadata below the bubble: `Save as Note` and `Copy` on the left, local time on the right. Persistent follow-up actions such as `Check whole tree` stay in the visible action row below the message. Chat session persistence is not V1 and belongs to the future backlog.
 
 ## Chat Markdown Rendering Decisions
 
@@ -298,7 +304,7 @@ V1 action categories:
 - `Write`: creates or updates only through reviewed write flows.
 - `Organize`: reserved for later move/rename/archive workflows.
 
-Missing permissions for Selection Actions are handled by app logic before provider calls. Permission-blocked actions stay visible as muted, clickable soft-disabled buttons. Hover shows the reason; clicking shows a Vitruvios chat bubble with the same guidance and a retry action where applicable. Read/context actions explain that `R` is required. Write actions explain that both `R` and `W` are required when they need loaded content plus write permission. These messages come from the shared Selection Action permission text helper, not from duplicated per-action strings. Vitruvios does not send these blocked requests to the model and does not silently do nothing.
+Missing permissions for Selection Actions are handled by app logic before provider calls. Permission-blocked actions stay visible as muted, clickable soft-disabled buttons. Hover shows the reason; clicking shows a vitruvios chat bubble with the same guidance and a retry action where applicable. Read/context actions explain that `R` is required. Write actions explain that both `R` and `W` are required when they need loaded content plus write permission. These messages come from the shared Selection Action permission text helper, not from duplicated per-action strings. vitruvios does not send these blocked requests to the model and does not silently do nothing.
 
 Current V1 foundation actions:
 
@@ -308,7 +314,7 @@ Current V1 foundation actions:
 - inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.
 - Selection Action presentation comes from the Action Registry: short labels keep rows scannable, semantic Lucide icons remain centrally replaceable, category dots show Context/Read/Write/Organize as a supporting cue, and tooltips/accessible labels keep the full action meaning available. Action rows do not use category-color borders.
 - Execution kinds are explicit: `app` means deterministic app work with no model call; `embedding` means local similarity inference; `provider` means a local provider request when the action is submitted. File/folder context and tag suggestions are currently `app`, Similar Notes is `embedding`, and summaries/content-update proposals are `provider`.
-- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working. `Summarize MD files` reads only direct Markdown files from the selected folder, applies Settings/Limits caps, ignores images/PDFs/attachments, and returns a normal saveable Vitruvios answer. Summary answers suggest editable Save-as-Note titles in the form `Summary - MD - <file name> - YYYY-MM-DD` for Markdown files and `Summary - DIR - <folder name> - YYYY-MM-DD` for folders. They default to `AI Responses/Summaries` under the configured Inbox role.
+- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working. `Summarize MD files` reads only direct Markdown files from the selected folder, applies Settings/Limits caps, ignores images/PDFs/attachments, and returns a normal saveable vitruvios answer. Summary answers suggest editable Save-as-Note titles in the form `Summary - MD - <file name> - YYYY-MM-DD` for Markdown files and `Summary - DIR - <folder name> - YYYY-MM-DD` for folders. They default to `AI Responses/Summaries` under the configured Inbox role.
 - future custom actions belong behind Settings and must produce visible proposals or context items, not direct writes.
 
 ## Context System Decisions
@@ -327,17 +333,17 @@ Selected context is explicit, visible, request-scoped, and deterministic:
 - Context Basket target types are represented by badges such as `DIR`, `MD`, `IMG`, `PDF`, `FILE`, and unknown. V1 may keep them visually neutral. Later polish may use target-type badge or border colors, but those colors must remain separate from Selection Action behavior colors.
 - Selection Actions use behavior categories with stable color slots: Context, Read, Write, and later Organize.
 - attached context is not stored back into chat history.
-- if Read is not active for an explicit app action, Vitruvios must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
+- if Read is not active for an explicit app action, vitruvios must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 - missing-Read and missing-Write blocks show a clear permission message, but no retry button. After enabling R or W, the user repeats the visible Selection Action or request explicitly. Permission-confirmation text such as es ist freigegeben must not become a broad prompt trigger.
 - if the selected target changes before retry, the retry must stop with a clear mismatch message instead of applying the old blocked action to the new target.
-- if the selected file has permission but no loaded content, Vitruvios should instruct the user to reselect/click the file or refresh the preview inside Vitruvios, not switch to external upload instructions.
+- if the selected file has permission but no loaded content, vitruvios should instruct the user to reselect/click the file or refresh the preview inside vitruvios, not switch to external upload instructions.
 - folder-scoped follow-up prompts are guidance-only in V1. The app should point the user to Selection Actions instead of inferring a parent folder from wording.
 - selected folder listing is executed by the deterministic `List folder` Selection Action when `R` is active. Natural-language folder wording may show only this inline help: `Use "List folder" in Selection Actions to inspect the selected folder.` It must not list, read, or create blocked actions by itself. The `List folder` message may offer `Check whole tree` as a follow-up app button for recursive structure listing. Pending scope replies and existing blocked-action retries remain app-state driven. Supported `list_folder` model-action envelopes remain a fallback and are checked against active app state before execution. Visible app-generated folder listings must not be stored back into provider chat history with their file names; history receives only a short app-result marker so old listings cannot become stale model context. Context intent stays narrow: pending-action replies, existing blocked-action retries, and help-only selection-action guidance. It must not grow into one-off typo lists, deictic "here/it" guesses, or broad fuzzy prompt matching.
 
 For selected folders:
-- Vitruvios may use the folder path as the active target.
-- Vitruvios must not blindly load every file in the folder without an explicit analysis workflow and limits.
-- Future Folder Context Index workflow: when a folder is selected, Vitruvios may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
+- vitruvios may use the folder path as the active target.
+- vitruvios must not blindly load every file in the folder without an explicit analysis workflow and limits.
+- Future Folder Context Index workflow: when a folder is selected, vitruvios may count Markdown files and subfolders first, then ask whether to list and remember the folder structure.
 - Persistent Folder Context Indexes must be stored in `.vitruvios/` or a configured cache location, not blindly as normal vault notes.
 
 - Current folder controller: `PendingActionState` plus `FolderContextController` resolves only open scope choices and explicit app flows. Short replies like 'all' or 'alle' only resolve an existing pending folder action; without a pending action they are intercepted with a short app-level clarification and do not reach the provider. Folder listings are capped by `contextLimits` and show explicit limit markers when the cap is reached.
@@ -355,7 +361,7 @@ Markdown drag and drop in V1:
 
 - External `.md` and `.markdown` files dropped into chat become temporary Context Basket items immediately.
 - They are not automatically copied into the vault.
-- The chat shows a Vitruvios message for the drop with an `Import to Inbox` action.
+- The chat shows a vitruvios message for the drop with an `Import to Inbox` action.
 - `Import to Inbox` adds a reviewed `create_note` proposal; Review Basket edit/execute performs the actual vault write.
 - The default import target is the configured Inbox role. Filename/title remain editable in the Review Basket before execution.
 - Detecting dropped files that already belong to the opened vault is a later refinement; this V1 slice handles external Markdown drops only.
@@ -490,13 +496,15 @@ These findings came from the first runnable Electron scaffold. They are product/
 
 The app should not drop the user directly into an empty workspace.
 
-V1 should start with a simple splash/start screen:
+V1 starts with a compact, useful splash/start screen:
 
-- Final product name/logo area; name and public positioning are a Phase 8 decision.
-- primary `Open Vault` action
-- later: recent vaults if useful
+- The wordmark is tokenized: `Vitruv` uses the active accent and `ios` uses strong interface text.
+- `Open Vault` is the primary action and remains available inside the app.
+- The two most recently opened vault roots are stored in portable app-local settings. A recent entry reuses the validated vault-root IPC path. Removing it only clears history; it never touches vault files.
+- A quiet local-provider preview shows LM Studio and Ollama availability only. It does not expose model selectors or provider configuration.
+- The screen has no reindex toggle, theme selector, or fake New Vault control.
 
-`Open Vault` can remain available inside the app, but the first-run/opening experience should feel intentional and central, similar to the prototype.
+A profile-based `New Vault` flow and vault-bound theme selection remain future work. The first-run/opening experience should feel intentional and central, similar to the prototype.
 
 ### File List / Tree
 
@@ -553,7 +561,7 @@ Current V1 foundation actions for selected Markdown files:
 - Find similar notes
 - Propose update
 
-Find similar notes uses the local embedding index and keeps the chat output compact. Clicking it opens a compact options form directly below the related Selection Action, with Settings-backed defaults for mode, minimum match, content/metadata weight, and max results. Selection Action option forms are owned by their action row; only one inline action form should be open at a time. The same field order is used in Settings and in the per-run form. The form remembers the last used values for the current app session; Settings remain the restart defaults. `Refresh index first` is explicit and should be used after copying, moving, or editing Markdown files outside the index. Results are shown in the Suggestions workspace as grouped candidates with percentages, strong/medium/weak/noisy labels, content/metadata detail, and a low-content warning in the group summary when applicable. Chat receives only a short status line. Vitruvios does not automatically switch workspaces; the Suggestions workspace button shows an item-count indicator while open suggestion items exist. If no candidates are returned, Vitruvios keeps the result in chat/status and does not open an empty Suggestions group. This action does not create Review Basket actions by itself.
+Find similar notes uses the local embedding index and keeps the chat output compact. Clicking it opens a compact options form directly below the related Selection Action, with Settings-backed defaults for mode, minimum match, content/metadata weight, and max results. Selection Action option forms are owned by their action row; only one inline action form should be open at a time. The same field order is used in Settings and in the per-run form. The form remembers the last used values for the current app session; Settings remain the restart defaults. `Refresh index first` is explicit and should be used after copying, moving, or editing Markdown files outside the index. Results are shown in the Suggestions workspace as grouped candidates with percentages, strong/medium/weak/noisy labels, content/metadata detail, and a low-content warning in the group summary when applicable. Chat receives only a short status line. vitruvios does not automatically switch workspaces; the Suggestions workspace button shows an item-count indicator while open suggestion items exist. If no candidates are returned, vitruvios keeps the result in chat/status and does not open an empty Suggestions group. This action does not create Review Basket actions by itself.
 
 Future actions can be added through the same registry and handler structure, for example `Find related notes`, `Inbox Review`, move/rename, image actions, or later custom actions. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
 
@@ -678,7 +686,7 @@ SETTINGS
   Settings
 ```
 
-`New Note` and `New Project` are preset toggles and are collapsed by default. Expanding them pushes lower actions down. Presets are user-extensible later; curated Vitruvios preset packs must use the same preset mechanism instead of hard-coded special paths. If preset lists grow, the left column gets local scrolling or grouped sections instead of overflowing. Left navigation entries must stay app-level commands; target-specific actions belong in Selection Actions.
+`New Note` and `New Project` are preset toggles and are collapsed by default. Expanding them pushes lower actions down. Presets are user-extensible later; curated vitruvios preset packs must use the same preset mechanism instead of hard-coded special paths. If preset lists grow, the left column gets local scrolling or grouped sections instead of overflowing. Left navigation entries must stay app-level commands; target-specific actions belong in Selection Actions.
 
 Settings target:
 
@@ -696,7 +704,7 @@ Phase 7.7 polish: settings category buttons may use existing semantic Lucide ico
 
 Phase 7.7 polish keeps micro-interactions tokenized: active navigation/settings states use subtle inset glow, recently written visible file rows flash after reviewed writes, and reduced-motion users keep instant file-row state changes. File-row update flash is owned by the centralized renderer update flash state, toggles classes on visible rows only, and must not rebuild or auto-expand the file tree.
 
-Phase 7.7 loading/score decision: local provider and embedding operations use the existing pending chat message with spinner as the canonical wait state. Suggestions use a compact score-ring component for similarity scores, inspired by `docs/Design_index.html` and implemented through Vitruvios modules/tokens rather than copied demo markup. Do not use oval score pills or inline list meter bars for similarity scores. The ring shows the percentage inside the circle; optional explanatory text such as `Strong match`, `Medium match`, `Possible match`, or `Weak match` may appear beside it. Later Appearance/Settings can hide that explanatory text for users who only need the ring. Medium/yellow must use a visibly brighter amber/yellow token than weak/orange.
+Phase 7.7 loading/score decision: local provider and embedding operations use the existing pending chat message with spinner as the canonical wait state. Suggestions use a compact score-ring component for similarity scores, inspired by `docs/Design_index.html` and implemented through vitruvios modules/tokens rather than copied demo markup. Do not use oval score pills or inline list meter bars for similarity scores. The ring shows the percentage inside the circle; optional explanatory text such as `Strong match`, `Medium match`, `Possible match`, or `Weak match` may appear beside it. Later Appearance/Settings can hide that explanatory text for users who only need the ring. Medium/yellow must use a visibly brighter amber/yellow token than weak/orange.
 
 Vault Profile and Templates relationship:
 
@@ -712,23 +720,23 @@ Current Phase 6.5 implementation: Markdown preview Properties use the dedicated 
 
 Project style presets are a future workflow, not a Phase 6.5 implementation target. The intended model is:
 
-1. Vitruvios app theme controls the application UI.
-2. Markdown preview theme controls how notes render inside Vitruvios.
+1. vitruvios app theme controls the application UI.
+2. Markdown preview theme controls how notes render inside vitruvios.
 3. Optional project style presets can later influence Markdown preview and generated template structure for a project.
 
-Project style presets should be detected through explicit project metadata such as `vitruvios_style_preset` in a project home note, not guessed from folder names. They must not inject inline HTML/styles into normal Markdown notes. For Obsidian parity, V1 keeps styles Vitruvios-only plus Markdown-compatible structure. A future V1.1 feature may optionally export an Obsidian CSS snippet, but only after explicit user confirmation and never by silently writing into `.obsidian`.
+Project style presets should be detected through explicit project metadata such as `vitruvios_style_preset` in a project home note, not guessed from folder names. They must not inject inline HTML/styles into normal Markdown notes. For Obsidian parity, V1 keeps styles vitruvios-only plus Markdown-compatible structure. A future V1.1 feature may optionally export an Obsidian CSS snippet, but only after explicit user confirmation and never by silently writing into `.obsidian`.
 
 Obsidian plugin compatibility direction:
 
 The active Obsidian-core compatibility matrix, intentional differences, plugin fallback boundary, and implementation order live in `docs/rebuild/VITRUVIOS_V1_MARKDOWN_COMPATIBILITY.md`. Phase 7.6 changes must update that matrix instead of scattering compatibility claims through renderer code or unrelated docs.
 
-Current Phase 7.6 foundation: Vitruvios uses pinned `markdown-it` behind focused renderer modules for the standard engine, Obsidian-specific syntax, Properties, and the public rendering facade. Raw HTML is disabled. Chat and Markdown Preview consume the same facade, so later core improvements apply consistently without duplicating parsing logic.
+Current Phase 7.6 foundation: vitruvios uses pinned `markdown-it` behind focused renderer modules for the standard engine, Obsidian-specific syntax, Properties, and the public rendering facade. Raw HTML is disabled. Chat and Markdown Preview consume the same facade, so later core improvements apply consistently without duplicating parsing logic.
 
-Vitruvios does not execute Obsidian plugins. Compatibility means one of three safe things:
+vitruvios does not execute Obsidian plugins. Compatibility means one of three safe things:
 
 1. render common Markdown/plugin output well enough that the vault remains readable.
 2. optionally read harmless plugin metadata after explicit user choice.
-3. rebuild useful workflows as Vitruvios Selection Actions or Review Basket proposals.
+3. rebuild useful workflows as vitruvios Selection Actions or Review Basket proposals.
 
 Candidate plugins to research after V1 core remains stable: Templater, Dataview, Tasks, Advanced Tables, Calendar, Kanban, Iconize, Style Settings, Omnisearch, Smart Connections, Tag Wrangler, Linter, Mindmap, Homepage, Recent Files, and Make.md.
 

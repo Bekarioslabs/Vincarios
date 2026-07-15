@@ -59,6 +59,7 @@
 
     async function openRoot() {
       refreshButton.disabled = false;
+      entriesByFolder.clear();
       navigator.openFolder('');
       await ensureFolderLoaded('');
       if (vaultProfileState && typeof vaultProfileState.load === 'function') await vaultProfileState.load();

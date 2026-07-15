@@ -35,3 +35,10 @@ test('inbox cleanup offers an explicit nested folder scan follow-up', () => {
   assert.match(cleanupSource, /collectNestedFolderEntries/);
   assert.match(cleanupSource, /mode: 'nested'/);
 });
+test('inbox cleanup reports use a dedicated Ember heading presentation', () => {
+  const cleanupSource = fs.readFileSync(path.join(root, 'src/renderer/cleanup/mountInboxCleanup.js'), 'utf8');
+  const chatSource = fs.readFileSync(path.join(root, 'src/renderer/chat/mountChat.js'), 'utf8');
+
+  assert.match(cleanupSource, /presentation: 'inbox-cleanup'/);
+  assert.match(chatSource, /chat-message-inbox-cleanup/);
+});

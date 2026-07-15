@@ -50,7 +50,7 @@
       '  <header class="settings-header">',
       '    <div>',
       '      <div class="settings-kicker">Settings</div>',
-      '      <h2>Vitruvios Settings</h2>',
+      '      <h2>vitruvios Settings</h2>',
       '    </div>',
       '    <button type="button" class="settings-icon-button" data-settings-close aria-label="Close settings"></button>',
       '  </header>',
@@ -58,6 +58,7 @@
       '    <nav class="settings-category-menu" aria-label="Settings categories">',
       '      <button type="button" class="settings-category-button is-active" data-settings-category="providers" aria-controls="settings-panel-providers" aria-selected="true" data-settings-icon="plug">Providers</button>',
       '      <button type="button" class="settings-category-button" data-settings-category="limits" aria-controls="settings-panel-limits" aria-selected="false" data-settings-icon="warning">Limits</button>',
+      '      <button type="button" class="settings-category-button" data-settings-category="actions" aria-controls="settings-panel-actions" aria-selected="false" data-settings-icon="edit">Actions</button>',
       '      <button type="button" class="settings-category-button" data-settings-category="vault-profile" aria-controls="settings-panel-vault-profile" aria-selected="false" data-settings-icon="folder">Vault Profile</button>',
       '      <button type="button" class="settings-category-button" data-settings-category="templates" aria-controls="settings-panel-templates" aria-selected="false" data-settings-icon="markdownFile">Templates</button>',
       '      <button type="button" class="settings-category-button" data-settings-category="appearance" aria-controls="settings-panel-appearance" aria-selected="false" data-settings-icon="edit">Appearance</button>',
@@ -83,6 +84,16 @@
       '        <div class="settings-limit-grid" data-settings-limit-grid></div>',
       '        <div class="settings-section-actions">',
       '          <button type="button" class="settings-primary-button" data-settings-save-limits>Save limits</button>',
+      '        </div>',
+      '      </section>',
+      '      <section id="settings-panel-actions" class="settings-section settings-category-panel" data-settings-category-panel="actions" hidden>',
+      '        <div class="settings-section-head">',
+      '          <h3>Action Defaults</h3>',
+      '          <p>Initialize folder Context and Summary forms. Every run remains editable.</p>',
+      '        </div>',
+      '        <div class="settings-limit-grid" data-settings-action-defaults-grid></div>',
+      '        <div class="settings-section-actions">',
+      '          <button type="button" class="settings-primary-button" data-settings-save-action-defaults>Save action defaults</button>',
       '        </div>',
       '      </section>',
       '      <section id="settings-panel-vault-profile" class="settings-section settings-category-panel" data-settings-category-panel="vault-profile" hidden>',
@@ -133,7 +144,7 @@
       '      <section id="settings-panel-about" class="settings-section settings-category-panel" data-settings-category-panel="about" hidden>',
       '        <div class="settings-section-head">',
       '          <h3>About</h3>',
-      '          <p>Vitruvios V1 local-first Markdown vault assistant.</p>',
+      '          <p>vitruvios V1 local-first Markdown vault assistant.</p>',
       '        </div>',
       '        <div class="settings-future-note">Version and license details can be expanded here later.</div>',
       '      </section>',
@@ -157,6 +168,8 @@
       vaultRoleList: backdrop.querySelector('[data-settings-vault-role-list]'),
       embeddingsGrid: backdrop.querySelector('[data-settings-embeddings-grid]'),
       saveEmbeddingsButton: backdrop.querySelector('[data-settings-save-embeddings]'),
+      actionDefaultsGrid: backdrop.querySelector('[data-settings-action-defaults-grid]'),
+      saveActionDefaultsButton: backdrop.querySelector('[data-settings-save-action-defaults]'),
       saveLimitsButton: backdrop.querySelector('[data-settings-save-limits]'),
       categoryButtons: Array.from(backdrop.querySelectorAll('[data-settings-category]')),
       categoryPanels: Array.from(backdrop.querySelectorAll('[data-settings-category-panel]')),
@@ -241,6 +254,7 @@
 
     renderProviderSettings(panel, api, statusBar, settings, providerStatus);
     renderLimitSettings(panel, api, statusBar, settings);
+    renderActionDefaultSettings(panel, api, statusBar, settings);
     await renderVaultProfileSettings(panel, api, statusBar, vaultProfileState);
     renderEmbeddingSettings(panel, api, statusBar, settings);
     setText(panel.status, 'Ready');
@@ -341,6 +355,99 @@
     return number;
   }
 
+  function renderActionDefaultSettings(panel, api, statusBar, settings) {
+    if (!panel.actionDefaultsGrid) return;
+    const defaults = settings && settings.actionDefaults ? settings.actionDefaults : {};
+    panel.actionDefaultsGrid.innerHTML = '';
+    appendFolderActionDefaultFields(panel.actionDefaultsGrid, 'Folder Context', 'folderContext', defaults.folderContext || {});
+    appendFolderActionDefaultFields(panel.actionDefaultsGrid, 'Folder Summary', 'folderSummary', defaults.folderSummary || {});
+    appendFileSummaryDefaultField(panel.actionDefaultsGrid, defaults.fileSummaryMaxChars || 12000);
+
+    if (panel.saveActionDefaultsButton && !panel.saveActionDefaultsButton.dataset.bound) {
+      panel.saveActionDefaultsButton.dataset.bound = 'true';
+      panel.saveActionDefaultsButton.addEventListener('click', async () => {
+        const payload = {
+          folderContext: readFolderActionDefaultFields(panel.actionDefaultsGrid, 'folderContext'),
+          folderSummary: readFolderActionDefaultFields(panel.actionDefaultsGrid, 'folderSummary'),
+          fileSummaryMaxChars: readActionDefaultValue(panel.actionDefaultsGrid, 'fileSummaryMaxChars', 12000)
+        };
+        setText(panel.status, 'Saving action defaults...');
+        const result = await api.settings.setActionDefaults(payload);
+        if (!result || result.ok === false) {
+          setText(panel.status, result && result.message ? result.message : 'Could not save action defaults.');
+          return;
+        }
+        setText(panel.status, 'Action defaults saved.');
+        setText(statusBar, 'Action defaults saved.');
+        await renderSettings(panel, api, statusBar, result.settings || settings);
+      });
+    }
+  }
+
+  function appendFolderActionDefaultFields(root, title, groupKey, value) {
+    const group = document.createElement('fieldset');
+    group.className = 'settings-action-default-group';
+    group.innerHTML = '<legend></legend>';
+    group.querySelector('legend').textContent = title;
+    group.appendChild(createActionDefaultSelectField('Include', groupKey, 'scope', [
+      ['current', 'Current folder only'],
+      ['subfolders', 'Subfolders']
+    ], value.scope || 'current'));
+    group.appendChild(createActionDefaultNumberField('Maximum depth', groupKey, 'maxDepth', value.maxDepth || 3, 1, 10));
+    group.appendChild(createActionDefaultNumberField('Maximum Markdown notes', groupKey, 'maxFiles', value.maxFiles || 30, 1, 200));
+    root.appendChild(group);
+  }
+
+  function appendFileSummaryDefaultField(root, value) {
+    const group = document.createElement('fieldset');
+    group.className = 'settings-action-default-group';
+    group.innerHTML = '<legend>File Summary</legend>';
+    group.appendChild(createActionDefaultNumberField('Source chars', 'fileSummary', 'fileSummaryMaxChars', value, 1000, 60000));
+    root.appendChild(group);
+  }
+  function createActionDefaultSelectField(labelText, groupKey, key, options, value) {
+    const label = document.createElement('label');
+    label.className = 'settings-limit-field';
+    label.innerHTML = '<span></span><select class="settings-provider-url"></select>';
+    label.querySelector('span').textContent = labelText;
+    const select = label.querySelector('select');
+    select.setAttribute('data-settings-action-default-group', groupKey);
+    select.setAttribute('data-settings-action-default-key', key);
+    options.forEach((option) => {
+      const item = document.createElement('option');
+      item.value = option[0];
+      item.textContent = option[1];
+      item.selected = option[0] === value;
+      select.appendChild(item);
+    });
+    return label;
+  }
+
+  function createActionDefaultNumberField(labelText, groupKey, key, value, min, max) {
+    const label = document.createElement('label');
+    label.className = 'settings-limit-field';
+    label.innerHTML = '<span></span><input type="number" step="1">';
+    label.querySelector('span').textContent = labelText;
+    const input = label.querySelector('input');
+    input.setAttribute('data-settings-action-default-group', groupKey);
+    input.setAttribute('data-settings-action-default-key', key);
+    input.min = String(min);
+    input.max = String(max);
+    input.value = String(value);
+    return label;
+  }
+
+  function readActionDefaultValue(root, key, fallback) {
+    const input = root.querySelector('[data-settings-action-default-key="' + key + '"]');
+    return input ? input.value : fallback;
+  }
+  function readFolderActionDefaultFields(root, groupKey) {
+    const field = (key, fallback) => {
+      const input = root.querySelector('[data-settings-action-default-group="' + groupKey + '"][data-settings-action-default-key="' + key + '"]');
+      return input ? input.value : fallback;
+    };
+    return { scope: field('scope', 'current'), maxDepth: field('maxDepth', 3), maxFiles: field('maxFiles', 30), fileType: 'markdown' };
+  }
   function renderEmbeddingSettings(panel, api, statusBar, settings) {
     const embeddings = settings && settings.embeddings ? settings.embeddings : {};
     const similarNotes = embeddings.similarNotes || {};

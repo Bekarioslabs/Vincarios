@@ -170,20 +170,15 @@
         return;
       }
       if (action.id === 'folder.useAsContext') {
-        contextState.addContextItem({ kind: 'folder', path: snapshot.path });
-        setText(status, 'Added folder to Context Basket: ' + snapshot.path);
+        renderFolderContextForm(snapshot, host);
         return;
       }
-      if (action.id === 'folder.listCurrent') {
-        listFolder(snapshot);
-        return;
-      }
-      if (action.id === 'folder.analyze') {
-        analyzeFolder(snapshot);
+      if (action.id === 'folder.inspect') {
+        renderFolderInspectForm(snapshot, host);
         return;
       }
       if (action.id === 'folder.summarizeMarkdown') {
-        summarizeFolderMarkdown(snapshot);
+        renderFolderSummaryForm(snapshot, host);
       }
     }
 
@@ -240,7 +235,9 @@
         return;
       }
 
-      const request = summary.buildFileSummaryMessages(snapshot);
+      const request = summary.buildFileSummaryMessages(snapshot, {
+        maxChars: await getFileSummaryMaxChars()
+      });
       if (!request.ok) {
         appendActionMessage('File summary unavailable: ' + (request.message || 'Unsupported selection.'));
         setText(status, 'File summary unavailable.');
@@ -253,7 +250,11 @@
         const result = await api.chat.send({ messages: request.messages });
         if (result && result.ok && result.message && result.message.content) {
           removeNode(pending);
-          appendActionMessage(result.message.content, [], { allowSave: true, suggestedTitle: buildSummaryTitle('md', request.path), responseSubfolder: 'Summaries', originAction: 'summarize_file' });
+          appendActionMessage(getSummaryResponsePresentation().formatFileSummaryResponse({
+            path: request.path,
+            truncated: request.truncated,
+            content: result.message.content
+          }), [], { allowSave: true, suggestedTitle: buildSummaryTitle('md', request.path), responseSubfolder: 'Summaries', originAction: 'summarize_file', presentation: 'summary' });
           setText(status, 'File summarized: ' + request.path);
           return;
         }
@@ -267,6 +268,14 @@
       }
     }
 
+    async function getFileSummaryMaxChars() {
+      const fallback = getActionDefaults().DEFAULT_FOLDER_ACTION_DEFAULTS.fileSummaryMaxChars;
+      if (!api.settings || typeof api.settings.get !== 'function') return fallback;
+      const settings = await api.settings.get();
+      const value = settings && settings.actionDefaults ? settings.actionDefaults.fileSummaryMaxChars : fallback;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) && parsed >= 1000 ? Math.min(60000, Math.floor(parsed)) : fallback;
+    }
     function suggestTags(snapshot) {
       const builder = getTagCandidateAction();
       if (!builder || typeof builder.buildTagCandidates !== 'function') {
@@ -530,10 +539,21 @@
         setText(status, 'Update proposal failed: provider.');
       }
     }
-    async function summarizeFolderMarkdown(snapshot) {
+    function renderFolderSummaryForm(snapshot, host) {
+      renderFolderScopeForm(snapshot, host, {
+        defaultKey: 'folderSummary',
+        actionId: 'folder.summarizeMarkdown',
+        title: 'Summary scope',
+        submitLabel: 'Summarize',
+        onSubmit: (scopeOptions) => summarizeFolderMarkdown(snapshot, scopeOptions)
+      });
+    }
+
+    async function summarizeFolderMarkdown(snapshot, scopeOptions) {
       const summary = getFolderSummaryAction();
-      if (!summary || typeof summary.buildFolderMarkdownSummaryMessages !== 'function') {
-        appendActionMessage('Folder Markdown summary failed: summary action module unavailable.');
+      const scopeReader = getFolderMarkdownScopeReader();
+      if (!summary || typeof summary.buildFolderMarkdownSummaryMessages !== 'function' || !scopeReader || typeof scopeReader.listScopedMarkdownFiles !== 'function') {
+        appendActionMessage('Folder Markdown summary failed: summary module unavailable.');
         setText(status, 'Folder Markdown summary failed.');
         return;
       }
@@ -548,30 +568,40 @@
         return;
       }
 
+      const scope = getFolderScopeOptions().normalizeFolderScopeOptions(scopeOptions);
       setText(status, 'Preparing folder Markdown summary: ' + snapshot.path);
-      const pending = appendActionMessage('Summarizing Markdown files in: ' + snapshot.path, [], { pending: true });
+      const pending = appendActionMessage('Summarizing Markdown files in selected scope: ' + snapshot.path, [], { pending: true });
       try {
-        const folderResult = await api.vault.listFolder(snapshot.path);
-        if (!folderResult || !folderResult.ok) {
+        const limits = await getCurrentLimits();
+        const listed = await scopeReader.listScopedMarkdownFiles({
+          vaultApi: api.vault,
+          folderController: getFolderController(),
+          path: snapshot.path,
+          scopeOptions: scope,
+          limits
+        });
+        if (!listed || listed.ok !== true) {
           removeNode(pending);
-          appendActionMessage('Folder Markdown summary failed: ' + ((folderResult && (folderResult.message || folderResult.code)) || 'Could not list folder.'));
+          appendActionMessage((listed && listed.message) || 'Folder Markdown summary failed.');
           setText(status, 'Folder Markdown summary failed.');
           return;
         }
 
-        const limits = await getCurrentLimits();
-        const entries = Array.isArray(folderResult.entries) ? folderResult.entries : [];
-        const markdownEntries = entries.filter(isMarkdownEntry).slice(0, positiveIntegerOrDefault(limits.maxAnalysisFiles, 30));
         const files = [];
-        for (const entry of markdownEntries) {
-          const read = await api.vault.readMarkdown(entry.path);
+        for (const filePath of listed.files) {
+          const read = await api.vault.readMarkdown(filePath);
           if (read && read.ok) files.push({ path: read.path, content: read.content });
         }
 
-        const request = summary.buildFolderMarkdownSummaryMessages({ folderPath: snapshot.path, files, limits });
+        const request = summary.buildFolderMarkdownSummaryMessages({
+          folderPath: snapshot.path,
+          scope,
+          files,
+          limits: Object.assign({}, limits, { maxAnalysisFiles: scope.maxFiles })
+        });
         if (!request.ok) {
           removeNode(pending);
-          appendActionMessage('Folder Markdown summary unavailable: ' + (request.message || 'No direct Markdown files.'));
+          appendActionMessage('Folder Markdown summary unavailable: ' + (request.message || 'No Markdown files in the selected scope.'));
           setText(status, 'Folder Markdown summary unavailable.');
           return;
         }
@@ -579,7 +609,13 @@
         const result = await api.chat.send({ messages: request.messages });
         removeNode(pending);
         if (result && result.ok && result.message && result.message.content) {
-          appendActionMessage(result.message.content, [], { allowSave: true, suggestedTitle: buildSummaryTitle('dir', snapshot.path), responseSubfolder: 'Summaries', originAction: 'summarize_folder' });
+          appendActionMessage(getSummaryResponsePresentation().formatFolderSummaryResponse({
+            folderPath: snapshot.path,
+            scope: request.scope,
+            includedFileCount: request.files.length,
+            limitedByFileCount: request.limitedByFileCount,
+            content: result.message.content
+          }), [], { allowSave: true, suggestedTitle: buildSummaryTitle('dir', snapshot.path), responseSubfolder: 'Summaries', originAction: 'summarize_folder', presentation: 'summary' });
           setText(status, 'Folder Markdown summarized: ' + snapshot.path);
           return;
         }
@@ -591,66 +627,144 @@
         setText(status, 'Folder Markdown summary failed.');
       }
     }
-
     async function getCurrentLimits() {
       if (!api.settings || typeof api.settings.get !== 'function') return {};
       const result = await api.settings.get();
       return result && result.limits ? result.limits : {};
     }
 
-    async function listFolder(snapshot) {
-      if (!api.vault || typeof api.vault.listFolder !== 'function') {
-        appendActionMessage('Folder listing failed: vault API unavailable.');
-        setText(status, 'Folder listing failed.');
+    function renderFolderContextForm(snapshot, host) {
+      renderFolderScopeForm(snapshot, host, {
+        defaultKey: 'folderContext',
+        actionId: 'folder.useAsContext',
+        title: 'Context scope',
+        submitLabel: 'Add to context',
+        onSubmit: (scopeOptions) => addFolderContextSnapshot(snapshot, scopeOptions)
+      });
+    }
+
+    function renderFolderInspectForm(snapshot, host) {
+      renderFolderScopeForm(snapshot, host, {
+        actionId: 'folder.inspect',
+        title: 'Inspection scope',
+        submitLabel: 'Inspect',
+        onSubmit: (scopeOptions) => inspectFolder(snapshot, scopeOptions)
+      });
+    }
+
+    async function renderFolderScopeForm(snapshot, host, config) {
+      onRequestPanelExpand();
+      removeOpenActionForms();
+      try {
+        const form = getFolderScopeForm().mountFolderScopeForm({
+          host: host || root,
+          actionId: config.actionId,
+          title: config.title,
+          submitLabel: config.submitLabel,
+          initialOptions: await getFolderActionInitialOptions(config.defaultKey),
+          onSubmit: config.onSubmit
+        });
+        if (form) setText(status, 'Choose ' + String(config.title || 'folder').toLowerCase() + ': ' + snapshot.path);
+      } catch (error) {
+        setText(status, 'Could not load action defaults.');
+      }
+    }
+
+    async function getFolderActionInitialOptions(defaultKey) {
+      const fallback = getFolderScopeOptions().normalizeFolderScopeOptions({});
+      if (!defaultKey || !api.settings || typeof api.settings.get !== 'function') return fallback;
+      const settings = await api.settings.get();
+      return getActionDefaults().getFolderActionDefault(settings && settings.actionDefaults, defaultKey);
+    }
+
+    async function addFolderContextSnapshot(snapshot, scopeOptions) {
+      const action = getFolderContextSnapshotAction();
+      if (!action || typeof action.buildFolderContextSnapshot !== 'function') {
+        appendActionMessage('Folder context failed: snapshot action unavailable.');
+        setText(status, 'Folder context failed.');
         return;
       }
-      setText(status, 'Listing folder: ' + snapshot.path);
+      setText(status, 'Building folder context: ' + snapshot.path);
+      const result = await action.buildFolderContextSnapshot({
+        vaultApi: api.vault,
+        folderController: getFolderController(),
+        path: snapshot.path,
+        scopeOptions,
+        limits: await getCurrentLimits()
+      });
+      if (!result || result.ok !== true) {
+        appendActionMessage((result && result.message) || 'Folder context failed.');
+        setText(status, 'Folder context failed.');
+        return;
+      }
+      contextState.addContextItem(result.item);
+      setText(status, 'Added folder snapshot to Context Basket: ' + snapshot.path + ' (' + String(result.item.files.length) + ' Markdown notes).');
+    }
+    async function inspectFolder(snapshot, scopeOptions) {
+      if (!api.vault || typeof api.vault.listFolder !== 'function') {
+        appendActionMessage('Folder inspection failed: vault API unavailable.');
+        setText(status, 'Folder inspection failed.');
+        return;
+      }
+
+      const options = getFolderScopeOptions().normalizeFolderScopeOptions(scopeOptions);
+      if (options.scope === 'subfolders') {
+        await inspectFolderTree(snapshot, options);
+        return;
+      }
+
+      setText(status, 'Inspecting folder: ' + snapshot.path);
       const result = await api.vault.listFolder(snapshot.path);
-      appendActionMessage(formatFolderListing(snapshot.path, result), [{
+      if (!result || !result.ok) {
+        appendActionMessage('Folder inspection failed: ' + ((result && (result.message || result.code)) || 'Could not list folder.'));
+        setText(status, 'Folder inspection failed.');
+        return;
+      }
+      appendActionMessage(getFolderInspectAction().buildFolderInspectionReport({
+        path: snapshot.path,
+        entries: result.entries
+      }), [{
         label: 'Check whole tree',
-        onClick: () => listFolderTree(snapshot)
+        onClick: () => inspectFolderTree(snapshot, options)
       }]);
-      setText(status, result && result.ok ? 'Folder listed: ' + snapshot.path : 'Folder listing failed.');
+      setText(status, 'Folder inspected: ' + snapshot.path);
     }
 
-    async function analyzeFolder(snapshot) {
-      if (!api.vault || typeof api.vault.listFolder !== 'function') {
-        appendActionMessage('Folder analysis failed: vault API unavailable.');
-        setText(status, 'Folder analysis failed.');
-        return;
-      }
-      setText(status, 'Analyzing folder structure: ' + snapshot.path);
-      const result = await api.vault.listFolder(snapshot.path);
-      appendActionMessage(formatFolderAnalysis(snapshot.path, result));
-      setText(status, result && result.ok ? 'Folder analyzed: ' + snapshot.path : 'Folder analysis failed.');
-    }
-
-    async function listFolderTree(snapshot) {
+    async function inspectFolderTree(snapshot, scopeOptions) {
       const controller = getFolderController();
-      if (!api.vault || !controller || typeof controller.listFolderTree !== 'function' || typeof controller.formatRecursiveFolderListing !== 'function') {
-        appendActionMessage('Recursive folder listing failed: folder controller unavailable.');
-        setText(status, 'Recursive folder listing failed.');
+      if (!api.vault || !controller || typeof controller.listFolderTree !== 'function') {
+        appendActionMessage('Folder tree inspection failed: folder controller unavailable.');
+        setText(status, 'Folder tree inspection failed.');
         return;
       }
-      setText(status, 'Listing whole tree: ' + snapshot.path);
+
+      const options = getFolderScopeOptions().normalizeFolderScopeOptions(scopeOptions);
+      setText(status, 'Inspecting folder tree: ' + snapshot.path);
       const target = {
         kind: 'folder',
         path: snapshot.path,
         readAllowed: true,
         selectionId: snapshot.selectionId || 0,
-        recursive: true
+        recursive: true,
+        maxDepth: options.maxDepth,
+        limits: { maxListedFiles: options.maxFiles }
       };
       const result = await controller.listFolderTree(api.vault, target);
-      appendActionMessage(controller.formatRecursiveFolderListing(target, result));
-      setText(status, 'Whole tree listed: ' + snapshot.path);
+      appendActionMessage(getFolderInspectAction().buildFolderTreeInspectionReport({
+        rootPath: snapshot.path,
+        folders: result && result.folders,
+        depthLimitReached: result && result.depthLimitReached,
+        fileLimitReached: result && result.fileLimitReached,
+        folderLimitReached: result && result.truncated
+      }));
+      setText(status, result && result.ok ? 'Folder tree inspected: ' + snapshot.path : 'Folder tree inspection failed.');
     }
-
     function appendActionMessage(content, actions, options) {
       options = options || {};
       const chatLog = app.querySelector('#chat-log');
       if (!chatLog) return;
       if (typeof window !== 'undefined' && window.VitruviosChat && typeof window.VitruviosChat.appendMessage === 'function') {
-        const message = window.VitruviosChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction });
+        const message = window.VitruviosChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction, presentation: options.presentation });
         if (options.pending && message) {
           message.classList.add('chat-message-pending');
           message.setAttribute('aria-busy', 'true');
@@ -665,7 +779,7 @@
       }
       const label = document.createElement('div');
       label.className = 'chat-message-label';
-      label.textContent = 'Vitruvios';
+      label.textContent = 'vitruvios';
       const body = document.createElement('div');
       body.className = 'chat-message-body';
       body.textContent = content;
@@ -882,19 +996,24 @@
   function getRegistry() {
     if (typeof window !== 'undefined' && window.VitruviosSelectionActionRegistry) return window.VitruviosSelectionActionRegistry;
     if (typeof module !== 'undefined' && module.exports) return require('./actionRegistry');
-    throw new Error('Vitruvios selection action registry is not available.');
+    throw new Error('vitruvios selection action registry is not available.');
   }
 
   function getCategories() {
     if (typeof window !== 'undefined' && window.VitruviosSelectionActionCategories) return window.VitruviosSelectionActionCategories;
     if (typeof module !== 'undefined' && module.exports) return require('./actionCategories');
-    throw new Error('Vitruvios selection action categories are not available.');
+    throw new Error('vitruvios selection action categories are not available.');
   }
 
   function getIconRenderer() {
     return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
 
+  function getSummaryResponsePresentation() {
+    if (typeof window !== 'undefined' && window.VitruviosSummaryResponsePresentation) return window.VitruviosSummaryResponsePresentation;
+    if (typeof module !== 'undefined' && module.exports) return require('./summaryResponsePresentation');
+    throw new Error('vitruvios summary response presentation is not available.');
+  }
   function getFileSummaryAction() {
     if (typeof window !== 'undefined' && window.VitruviosFileSummaryAction) return window.VitruviosFileSummaryAction;
     if (typeof module !== 'undefined' && module.exports) return require('./fileSummaryAction');
@@ -913,6 +1032,41 @@
     return null;
   }
 
+  function getFolderInspectAction() {
+    if (typeof window !== 'undefined' && window.VitruviosFolderInspectAction) return window.VitruviosFolderInspectAction;
+    if (typeof module !== 'undefined' && module.exports) return require('./folderInspectAction');
+    throw new Error('vitruvios folder inspection API is not available.');
+  }
+
+  function getActionDefaults() {
+    if (typeof window !== 'undefined' && window.VitruviosActionDefaults) return window.VitruviosActionDefaults;
+    if (typeof module !== 'undefined' && module.exports) return require('../../shared/settings/actionDefaults');
+    throw new Error('vitruvios action defaults API is not available.');
+  }
+
+  function getFolderScopeOptions() {
+    if (typeof window !== 'undefined' && window.VitruviosFolderScopeOptions) return window.VitruviosFolderScopeOptions;
+    if (typeof module !== 'undefined' && module.exports) return require('./folderScopeOptions');
+    throw new Error('vitruvios folder scope options API is not available.');
+  }
+
+  function getFolderScopeForm() {
+    if (typeof window !== 'undefined' && window.VitruviosFolderScopeForm) return window.VitruviosFolderScopeForm;
+    if (typeof module !== 'undefined' && module.exports) return require('./folderScopeForm');
+    throw new Error('vitruvios folder scope form API is not available.');
+  }
+
+  function getFolderContextSnapshotAction() {
+    if (typeof window !== 'undefined' && window.VitruviosFolderContextSnapshotAction) return window.VitruviosFolderContextSnapshotAction;
+    if (typeof module !== 'undefined' && module.exports) return require('./folderContextSnapshotAction');
+    return null;
+  }
+
+  function getFolderMarkdownScopeReader() {
+    if (typeof window !== 'undefined' && window.VitruviosFolderMarkdownScopeReader) return window.VitruviosFolderMarkdownScopeReader;
+    if (typeof module !== 'undefined' && module.exports) return require('./folderMarkdownScopeReader');
+    return null;
+  }
   function positiveIntegerOrDefault(value, fallback) {
     const number = Number(value);
     if (Number.isFinite(number) && number > 0) return Math.floor(number);

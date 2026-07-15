@@ -2,6 +2,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { normalizeActionDefaults } = require('../../shared/settings/actionDefaults');
 
 const SETTINGS_VERSION = 1;
 const DEFAULT_SIMILAR_NOTES = Object.freeze({
@@ -115,6 +116,24 @@ function createSettingsStore(options) {
     return { ok: true, settings, embeddings: settings.embeddings };
   }
 
+  function setActionDefaults(actionDefaults) {
+    const nextDefaults = normalizeActionDefaults(Object.assign({}, settings.actionDefaults, actionDefaults || {}));
+    updateSettings((draft) => {
+      draft.actionDefaults = nextDefaults;
+      return draft;
+    });
+    return { ok: true, settings, actionDefaults: settings.actionDefaults };
+  }
+
+  function setRecentVaults(startup) {
+    const nextStartup = normalizeStartupSettings(Object.assign({}, settings.startup, startup || {}));
+    updateSettings((draft) => {
+      draft.startup = nextStartup;
+      return draft;
+    });
+    return { ok: true, settings, startup: settings.startup };
+  }
+
   function setLayoutPreferences(layout) {
     const input = layout || {};
     const nextLayout = normalizeLayoutSettings({
@@ -136,6 +155,8 @@ function createSettingsStore(options) {
     resetProviderUrlOverride,
     setLimits,
     setEmbeddingSettings,
+    setActionDefaults,
+    setRecentVaults,
     setLayoutPreferences
   });
 }
@@ -152,6 +173,8 @@ function normalizeAppSettings(value) {
     }),
     limits: Object.freeze(normalizeLimits(value.limits || {})),
     embeddings: Object.freeze(normalizeEmbeddings(value.embeddings || {})),
+    actionDefaults: normalizeActionDefaults(value.actionDefaults || {}),
+    startup: Object.freeze(normalizeStartupSettings(value.startup || {})),
     theme: Object.freeze({
       mode: normalizeChoice(value.theme && value.theme.mode, ['dark', 'light', 'system'], 'dark'),
       accent: normalizeId(value.theme && value.theme.accent) || 'vitruvios-amber'
@@ -164,6 +187,26 @@ function normalizeAppSettings(value) {
   });
 }
 
+function normalizeStartupSettings(value) {
+  const input = value || {};
+  const seen = new Set();
+  const recentVaults = Array.isArray(input.recentVaults) ? input.recentVaults : [];
+  return {
+    recentVaults: recentVaults.map((entry) => ({
+      path: normalizeRecentVaultPath(entry && entry.path),
+      name: normalizeId(entry && entry.name),
+      lastOpenedAt: normalizeId(entry && entry.lastOpenedAt)
+    })).filter((entry) => {
+      if (!entry.path || seen.has(entry.path)) return false;
+      seen.add(entry.path);
+      return true;
+    }).slice(0, 2)
+  };
+}
+
+function normalizeRecentVaultPath(value) {
+  return String(value || '').trim().replace(/\\/g, '/').replace(/\/+$/g, '');
+}
 function normalizeLayoutSettings(value) {
   const panels = value && value.panels ? value.panels : {};
   return {
@@ -349,6 +392,7 @@ module.exports = {
   normalizeLimits,
   normalizeEmbeddings,
   normalizeSimilarNotes,
+  normalizeActionDefaults,
   toProviderRegistryOptions,
   validateProviderBaseUrl
 };

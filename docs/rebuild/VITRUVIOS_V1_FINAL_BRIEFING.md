@@ -1,16 +1,16 @@
-# Vitruvios V1 Final Briefing
+# vitruvios V1 Final Briefing
 
 Audit triage reference: [VITRUVIOS_V1_AUDIT_TRIAGE.md](./VITRUVIOS_V1_AUDIT_TRIAGE.md).
 
 ## Product Sentence
 
-Vitruvios is a local Obsidian-vault assistant that helps users safely analyze, organize, connect, and update Markdown notes through visible, reviewable, reversible actions.
+vitruvios is a local-first Markdown and project workspace that helps users safely analyze, organize, connect, and update notes through visible, reviewable, reversible actions. Obsidian-style vault compatibility is a supported workflow, not the product's entire identity.
 
-This is the current internal wording. Phase 8 decides the final public name and whether external communication leads with an independent local-first Markdown/project workspace while presenting Obsidian-vault compatibility as a supported workflow.
+This is the final V1 public positioning. The product name is styled as lowercase `vitruvios` in user-facing text; PascalCase `vitruvios...` remains valid for internal JavaScript identifiers.
 
 ## Product Boundary
 
-Vitruvios V1 is:
+vitruvios V1 is:
 
 - local-first
 - Markdown-first
@@ -18,7 +18,7 @@ Vitruvios V1 is:
 - review-first
 - safety-first
 
-Vitruvios V1 is not:
+vitruvios V1 is not:
 
 - a second Obsidian
 - a general-purpose agent harness
@@ -105,12 +105,12 @@ V1 uses automatic safe execution ordering. Manual drag-and-drop ordering is futu
 
 ## Reviewed Update Flow
 
-Reliable file updating is V1-critical. Vitruvios must be able to turn chat or local Edit Mode changes into reviewed `update_note` proposals for the selected Markdown file when `R` and `W` allow it. The V1 scope is reliable whole-note replacement through reviewed diff, not a complex partial-edit engine. The app should produce clear permission guidance when access is missing, instead of letting the model fall back to generic filesystem disclaimers. All applied updates still go through diff preview, backup, stale-content validation, and audit logging. Focused insert/replace by section is V1.1 work.
+Reliable file updating is V1-critical. vitruvios must be able to turn chat or local Edit Mode changes into reviewed `update_note` proposals for the selected Markdown file when `R` and `W` allow it. The V1 scope is reliable whole-note replacement through reviewed diff, not a complex partial-edit engine. The app should produce clear permission guidance when access is missing, instead of letting the model fall back to generic filesystem disclaimers. All applied updates still go through diff preview, backup, stale-content validation, and audit logging. Focused insert/replace by section is V1.1 work.
 
 ## Permissions
 
-- Read means Vitruvios may use the path as context.
-- Write means Vitruvios may propose write actions.
+- Read means vitruvios may use the path as context.
+- Write means vitruvios may propose write actions.
 - Write never means silent execution.
 - Three states: direct, inherited, blocked/off. Explicit child off overrides inherited parent access.
 - Dot/runtime folders are blocked regardless of UI state.
@@ -126,11 +126,11 @@ The Context Basket is the explicit selected-file/folder context source. Items ar
 
 File context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time. Folder context items attach path context only. Natural-language folder questions may show inline help, but they must not list folder contents. Folder contents are listed through deterministic app actions such as `List folder`, with `R` checked first. Attached context is request-scoped and is not stored in chat history.
 
-If Read is not active for the selected file/folder or one of its parent folders, Vitruvios must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
+If Read is not active for the selected file/folder or one of its parent folders, vitruvios must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 
-Missing Read/Write blocks show a clear permission message in chat or the relevant panel. V1 does not show permission retry buttons, because they look too similar to real follow-up actions. After enabling the missing permission, the user repeats the original Selection Action or request explicitly. If the selected file has permission but no loaded content, Vitruvios should instruct the user to reselect/click the file or refresh the preview inside Vitruvios, not switch to external upload instructions.
+Missing Read/Write blocks show a clear permission message in chat or the relevant panel. V1 does not show permission retry buttons, because they look too similar to real follow-up actions. After enabling the missing permission, the user repeats the original Selection Action or request explicitly. If the selected file has permission but no loaded content, vitruvios should instruct the user to reselect/click the file or refresh the preview inside vitruvios, not switch to external upload instructions.
 
-Selected folders expose the folder path only. They are not blindly fully loaded. Folder intent handles pending-action replies, existing blocked-action retries, help-only Selection Action guidance, and model-action fallback checks. Typo/fuzzy matching, deictic "here/it" guesses, and broad prompt workarounds are not part of the intent layer. Natural-language folder-content prompts show the inline help `Use "List folder" in Selection Actions to inspect the selected folder.` They do not list, read, or create blocked actions by themselves. Current-level folder listing is owned by the `List folder` Selection Action. Folder scope is controlled by `PendingActionState` plus `FolderContextController` only for open app flows; short replies such as `all` or `alle` only resolve an existing pending folder action. Supported folder-list model-action envelopes remain a fallback, are checked against the active selection, and are returned as a Vitruvios message instead of raw tool-call text. `list_directory` is normalized to `list_folder` as a structured action alias. Visible app-generated folder listings are not stored in provider history with file names; only a short app-result marker is stored to prevent stale folder-list reuse.
+Selected folders expose the folder path only. They are not blindly fully loaded. Folder intent handles pending-action replies, existing blocked-action retries, help-only Selection Action guidance, and model-action fallback checks. Typo/fuzzy matching, deictic "here/it" guesses, and broad prompt workarounds are not part of the intent layer. Natural-language folder-content prompts show the inline help `Use "List folder" in Selection Actions to inspect the selected folder.` They do not list, read, or create blocked actions by themselves. Current-level folder listing is owned by the `List folder` Selection Action. Folder scope is controlled by `PendingActionState` plus `FolderContextController` only for open app flows; short replies such as `all` or `alle` only resolve an existing pending folder action. Supported folder-list model-action envelopes remain a fallback, are checked against the active selection, and are returned as a vitruvios message instead of raw tool-call text. `list_directory` is normalized to `list_folder` as a structured action alias. Visible app-generated folder listings are not stored in provider history with file names; only a short app-result marker is stored to prevent stale folder-list reuse.
 
 Future Folder Context Index: selected folders can be counted first, then listed and remembered only after user approval. Persistent folder indexes belong in `.vitruvios/` or a configured cache location, not blindly in normal vault notes. They should later combine with embeddings for folder candidates, similar-note lookup, and stale-index detection.
 

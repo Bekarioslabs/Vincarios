@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: file:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>Vitruvios</title>
+  <title>vitruvios</title>
   <link rel="stylesheet" href="./src/renderer/styles/tokens.css">
   <link rel="stylesheet" href="./src/renderer/styles/components.css">
   <link rel="stylesheet" href="./src/renderer/styles/layout.css">
@@ -29,6 +29,7 @@
   <script src="./src/shared/actions/modelActionParser.js"></script>
   <script src="./src/shared/actions/proposalPlan.js"></script>
   <script src="./src/shared/actions/diffPreview.js"></script>
+  <script src="./src/shared/settings/actionDefaults.js"></script>
   <script src="./src/renderer/diff/diffLineRenderer.js"></script>
   <script src="./src/renderer/layout/paneResize.js"></script>
   <script src="./src/renderer/layout/panelLayoutState.js"></script>
@@ -58,6 +59,12 @@
   <script src="./src/renderer/selectionActions/actionCategories.js"></script>
   <script src="./src/renderer/selectionActions/permissionText.js"></script>
   <script src="./src/renderer/selectionActions/actionRegistry.js"></script>
+  <script src="./src/renderer/selectionActions/folderScopeOptions.js"></script>
+  <script src="./src/renderer/selectionActions/folderScopeForm.js"></script>
+  <script src="./src/renderer/selectionActions/folderMarkdownScopeReader.js"></script>
+  <script src="./src/renderer/selectionActions/folderInspectAction.js"></script>
+  <script src="./src/renderer/selectionActions/folderContextSnapshotAction.js"></script>
+  <script src="./src/renderer/selectionActions/summaryResponsePresentation.js"></script>
   <script src="./src/renderer/selectionActions/fileSummaryAction.js"></script>
   <script src="./src/renderer/selectionActions/folderSummaryAction.js"></script>
   <script src="./src/renderer/selectionActions/tagCandidateAction.js"></script>
@@ -86,6 +93,7 @@
   <script src="./src/renderer/chat/markdownDropController.js"></script>
   <script src="./src/renderer/chat/mountChat.js"></script>
   <script src="./src/renderer/cleanup/mountInboxCleanup.js"></script>
+  <script src="./src/renderer/startup/mountStartupScreen.js"></script>
   <script src="./src/renderer/shell/mountShell.js"></script>
   <script src="./src/renderer/bootstrap.js"></script>
 </body>

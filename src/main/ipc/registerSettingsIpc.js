@@ -32,6 +32,14 @@ function registerSettingsIpc(ipcMain, settingsService) {
     ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS, (event, payload) => settingsService.setEmbeddingSettings(payload || {}));
   }
 
+  if (typeof settingsService.setActionDefaults === 'function') {
+    ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_ACTION_DEFAULTS, (event, payload) => settingsService.setActionDefaults(payload || {}));
+  }
+
+  if (typeof settingsService.setRecentVaults === 'function') {
+    ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_RECENT_VAULTS, (event, payload) => settingsService.setRecentVaults(payload || {}));
+  }
+
 }
 
 module.exports = {

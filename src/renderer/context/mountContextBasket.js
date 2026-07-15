@@ -132,6 +132,10 @@
     return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
   }
   function formatItemLabel(item) {
+    if (item && item.kind === 'folder_snapshot') {
+      const count = Array.isArray(item.files) ? item.files.length : 0;
+      return (baseName(item.path) || formatItemTitle(item)) + ' · ' + String(count) + ' MD';
+    }
     return baseName((item && item.path) || '') || formatItemTitle(item);
   }
 
@@ -156,7 +160,7 @@
   }
 
   function targetIconFor(item) {
-    if (item && item.kind === 'folder') return 'folder';
+    if (item && (item.kind === 'folder' || item.kind === 'folder_snapshot')) return 'folder';
     const path = String((item && item.path) || '').toLowerCase();
     if (/\.md$/.test(path)) return 'markdownFile';
     if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(path)) return 'image';
@@ -164,7 +168,7 @@
   }
 
   function targetIconFallbackLabel(item) {
-    if (item && item.kind === 'folder') return 'DIR';
+    if (item && (item.kind === 'folder' || item.kind === 'folder_snapshot')) return 'DIR';
     const path = String((item && item.path) || '').toLowerCase();
     if (/\.md$/.test(path)) return 'MD';
     if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(path)) return 'IMG';
@@ -172,12 +176,23 @@
   }
 
   function formatItemPathContext(item) {
+    if (item && item.kind === 'folder_snapshot') {
+      const scope = item.scope && item.scope.scope === 'subfolders' ? 'subfolders · depth ' + String(item.scope.maxDepth || 1) : 'current folder';
+      const limits = item.effectiveLimits || {};
+      return scope + ' · max ' + String(limits.maxFiles || (item.scope && item.scope.maxFiles) || 0) + ' notes · ' + formatCharacterLimit(limits.maxTotalChars);
+    }
     const path = formatItemTitle(item).replace(/\\/g, '/').replace(/\/+$/g, '');
     const index = path.lastIndexOf('/');
     if (index <= 0) return '';
     return baseName(path.slice(0, index));
   }
 
+  function formatCharacterLimit(value) {
+    const chars = Number(value);
+    if (!Number.isFinite(chars) || chars <= 0) return 'no character limit';
+    if (chars >= 1000) return String(Math.round(chars / 1000)) + 'k chars';
+    return String(Math.floor(chars)) + ' chars';
+  }
   function fileTypeLabel(path) {
     const value = String(path || '').toLowerCase();
     if (/\.md$/.test(value)) return 'Markdown';

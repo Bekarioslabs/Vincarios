@@ -43,6 +43,14 @@ function createSettingsService(options) {
     return settingsStore.setEmbeddingSettings(payload || {});
   }
 
+  function setActionDefaults(payload) {
+    return settingsStore.setActionDefaults(payload || {});
+  }
+
+  function setRecentVaults(payload) {
+    return settingsStore.setRecentVaults(payload || {});
+  }
+
   function setVaultProfileRole(role, folderPath) {
     return settingsStore.setVaultProfileRole(role, folderPath);
   }
@@ -58,6 +66,8 @@ function createSettingsService(options) {
     setLayoutPreferences,
     setLimits,
     setEmbeddingSettings,
+    setActionDefaults,
+    setRecentVaults,
     setVaultProfileRole,
     resetVaultProfileRole
   });

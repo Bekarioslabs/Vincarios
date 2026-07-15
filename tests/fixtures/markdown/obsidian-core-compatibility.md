@@ -35,7 +35,7 @@ line break.
 
 | Name | Status |
 | --- | --- |
-| Vitruvios | Active |
+| vitruvios | Active |
 
 [[Referenced Note|Wikilink alias]]
 [[Referenced Note#Heading]]

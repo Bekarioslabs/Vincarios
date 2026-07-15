@@ -77,7 +77,7 @@
     return {
       handled: true,
       kind: 'message',
-      message: 'Use "List folder" in Selection Actions to inspect the selected folder.',
+      message: 'Use "Inspect Folder" in Selection Actions to inspect the selected folder.',
       historyContent: 'Selection action guidance shown for folder listing request.'
     };
   }

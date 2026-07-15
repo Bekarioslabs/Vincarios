@@ -22,6 +22,7 @@ test('folder markdown summary accepts direct Markdown file contents only', () =>
   assert.equal(result.ok, true);
   assert.equal(result.files.length, 2);
   assert.match(result.messages[0].content, /summarizing Markdown files in one selected folder/);
+  assert.match(result.messages[0].content, /### Included notes/);
   assert.match(result.messages[1].content, /Folder: 03_Knowledge/);
   assert.match(result.messages[1].content, /Files included: 2/);
   assert.match(result.messages[1].content, /Path: 03_Knowledge\/A\.md/);
@@ -51,4 +52,15 @@ test('folder markdown summary rejects empty readable Markdown sets', () => {
 
   assert.equal(result.ok, false);
   assert.equal(result.code, 'no_markdown_files');
+});
+test('folder markdown summary records an explicit subfolder scope in the provider request', () => {
+  const result = buildFolderMarkdownSummaryMessages({
+    folderPath: '02_Projects',
+    scope: { scope: 'subfolders', maxDepth: 2, maxFiles: 3 },
+    files: [{ path: '02_Projects/Project/Overview.md', content: '# Overview' }]
+  });
+
+  assert.equal(result.ok, true);
+  assert.match(result.messages[1].content, /Scope: subfolders \(maximum depth: 2\)/);
+  assert.match(result.messages[1].content, /Files included: 1/);
 });

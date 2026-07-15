@@ -49,7 +49,7 @@
   function getActionSchemaApi() {
     if (typeof require === 'function') return require('./actionSchema');
     if (typeof window !== 'undefined' && window.VitruviosActionSchema) return window.VitruviosActionSchema;
-    throw new Error('Vitruvios action schema API is not available.');
+    throw new Error('vitruvios action schema API is not available.');
   }
   
   const api = { parseProposalPlan };

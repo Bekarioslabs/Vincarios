@@ -1,4 +1,4 @@
-# Vitruvios V1 Rebuild Process
+# vitruvios V1 Rebuild Process
 
 ## Current Assumption
 

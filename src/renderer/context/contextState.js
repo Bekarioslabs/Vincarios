@@ -56,7 +56,7 @@
 
     function snapshot() {
       return Object.assign({}, state, {
-        contextItems: state.contextItems.map((item) => Object.assign({}, item))
+        contextItems: cloneContextItems(state.contextItems)
       });
     }
 
@@ -120,7 +120,7 @@
 
   function normalizeContextItem(item) {
     if (!item) return null;
-    const kind = item.kind === 'folder' ? 'folder' : 'file';
+    const kind = item.kind === 'folder_snapshot' ? 'folder_snapshot' : item.kind === 'folder' ? 'folder' : 'file';
     const path = normalizeContextPath(item.path || '');
     if (!path) return null;
     const normalized = {
@@ -129,13 +129,74 @@
       path,
       content: typeof item.content === 'string' ? item.content : ''
     };
+    if (kind === 'folder_snapshot') {
+      normalized.scope = normalizeSnapshotScope(item.scope);
+      normalized.effectiveLimits = normalizeSnapshotLimits(item.effectiveLimits);
+      normalized.files = normalizeSnapshotFiles(item.files);
+      normalized.totalChars = positiveIntegerOrZero(item.totalChars);
+      normalized.truncated = item.truncated === true;
+      normalized.truncation = normalizeSnapshotTruncation(item.truncation);
+    }
     if (item.source) normalized.source = String(item.source);
     if (item.externalPath) normalized.externalPath = String(item.externalPath);
     return normalized;
   }
 
+  function normalizeSnapshotScope(scope) {
+    scope = scope || {};
+    return {
+      scope: scope.scope === 'subfolders' ? 'subfolders' : 'current',
+      maxDepth: positiveIntegerOrZero(scope.maxDepth),
+      maxFiles: positiveIntegerOrZero(scope.maxFiles),
+      fileType: scope.fileType === 'markdown' ? 'markdown' : 'markdown'
+    };
+  }
+
+  function normalizeSnapshotLimits(limits) {
+    limits = limits || {};
+    return {
+      maxDepth: positiveIntegerOrZero(limits.maxDepth),
+      maxFiles: positiveIntegerOrZero(limits.maxFiles),
+      maxTotalChars: positiveIntegerOrZero(limits.maxTotalChars)
+    };
+  }
+
+  function normalizeSnapshotFiles(files) {
+    return (Array.isArray(files) ? files : []).map((file) => {
+      const path = normalizeContextPath(file && file.path);
+      if (!path) return null;
+      return {
+        path,
+        content: file && typeof file.content === 'string' ? file.content : '',
+        truncated: file && file.truncated === true
+      };
+    }).filter(Boolean);
+  }
+
+  function normalizeSnapshotTruncation(value) {
+    value = value || {};
+    return {
+      fileLimitReached: value.fileLimitReached === true,
+      depthLimitReached: value.depthLimitReached === true,
+      folderLimitReached: value.folderLimitReached === true,
+      totalLimitReached: value.totalLimitReached === true
+    };
+  }
+
+  function positiveIntegerOrZero(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? Math.floor(number) : 0;
+  }
+
   function cloneContextItems(items) {
-    return Array.isArray(items) ? items.map((item) => Object.assign({}, item)) : [];
+    return Array.isArray(items) ? items.map((item) => {
+      const copy = Object.assign({}, item);
+      if (item && item.scope) copy.scope = Object.assign({}, item.scope);
+      if (item && item.effectiveLimits) copy.effectiveLimits = Object.assign({}, item.effectiveLimits);
+      if (item && item.truncation) copy.truncation = Object.assign({}, item.truncation);
+      if (item && Array.isArray(item.files)) copy.files = item.files.map((file) => Object.assign({}, file));
+      return copy;
+    }) : [];
   }
 
   function labelForState(kind, path) {
@@ -158,13 +219,13 @@
 function getIntentApi() {
     if (typeof window !== 'undefined' && window.VitruviosContextIntent) return window.VitruviosContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');
-    throw new Error('Vitruvios context intent API is not available.');
+    throw new Error('vitruvios context intent API is not available.');
   }
 
   function getPackageBuilderApi() {
     if (typeof window !== 'undefined' && window.VitruviosContextPackageBuilder) return window.VitruviosContextPackageBuilder;
     if (typeof module !== 'undefined' && module.exports) return require('./contextPackageBuilder');
-    throw new Error('Vitruvios context package builder API is not available.');
+    throw new Error('vitruvios context package builder API is not available.');
   }
 
   const api = {

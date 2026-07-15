@@ -130,7 +130,7 @@
 
   function createMissingScopeMessage(selection, scopeChoice) {
     const path = selection && selection.path ? normalizePath(selection.path) : '';
-    const message = 'No open folder scope choice. Ask Vitruvios to check or list a folder first, then choose current level or all subfolders.' + (path ? ' Current selection: ' + path : '');
+    const message = 'No open folder scope choice. Ask vitruvios to check or list a folder first, then choose current level or all subfolders.' + (path ? ' Current selection: ' + path : '');
     return {
       handled: true,
       kind: 'message',
@@ -143,7 +143,7 @@
     const message = [
       'Choose folder scope for current selection ' + pendingAction.selectionId + ': ' + pendingAction.targetPath,
       '',
-      'Vitruvios can list the current level or include all subfolders. Markdown file contents will not be read.'
+      'vitruvios can list the current level or include all subfolders. Markdown file contents will not be read.'
     ].join('\n');
 
     return {
@@ -174,14 +174,17 @@
 
   async function listFolderTree(vaultApi, target) {
     const limits = getLimitsApi().normalizeContextLimits(target.limits || target);
-    const queue = [target.path];
+    const maxDepth = positiveIntegerOrDefault(target.maxDepth, Number.POSITIVE_INFINITY);
+    const queue = [{ path: target.path, depth: 0 }];
     const visited = new Set();
     const folders = [];
     let listedFiles = 0;
     let fileLimitReached = false;
+    let depthLimitReached = false;
 
     while (queue.length > 0 && visited.size < limits.maxListedFolders) {
-      const folderPath = queue.shift();
+      const current = queue.shift();
+      const folderPath = current.path;
       if (visited.has(folderPath)) continue;
       visited.add(folderPath);
 
@@ -196,18 +199,23 @@
       fileLimitReached = fileLimitReached || limited.fileLimitReached;
       folders.push({ path: folderPath, ok: true, entries: limited.entries });
       limited.entries.forEach((entry) => {
-        if (entry && entry.kind === 'folder' && entry.path) queue.push(normalizePath(entry.path));
+        if (!entry || entry.kind !== 'folder' || !entry.path) return;
+        if (current.depth >= maxDepth) {
+          depthLimitReached = true;
+          return;
+        }
+        queue.push({ path: normalizePath(entry.path), depth: current.depth + 1 });
       });
     }
 
     return {
       ok: true,
       truncated: queue.length > 0,
+      depthLimitReached,
       fileLimitReached,
       folders
     };
   }
-
   function limitFolderListingResult(result, limits) {
     if (!result || !result.ok) return result;
     const normalizedLimits = getLimitsApi().normalizeContextLimits(limits);
@@ -347,6 +355,11 @@
       .replace(/\/+/g, '/');
   }
 
+  function positiveIntegerOrDefault(value, fallback) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return fallback;
+    return number > 0 ? Math.floor(number) : fallback;
+  }
   function normalizeText(value) {
     return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
@@ -368,7 +381,7 @@
   function getLimitsApi() {
     if (typeof window !== 'undefined' && window.VitruviosContextLimits) return window.VitruviosContextLimits;
     if (typeof module !== 'undefined' && module.exports) return require('./contextLimits');
-    throw new Error('Vitruvios context limits API is not available.');
+    throw new Error('vitruvios context limits API is not available.');
   }
 
 

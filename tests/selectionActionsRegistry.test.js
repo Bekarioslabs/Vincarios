@@ -53,14 +53,12 @@ test('registry returns V1 read actions for selected folders', () => {
 
   assert.deepEqual(actions.map((action) => action.id), [
     'folder.useAsContext',
-    'folder.listCurrent',
-    'folder.analyze',
+    'folder.inspect',
     'folder.summarizeMarkdown'
   ]);
-  assert.deepEqual(actions.map((action) => action.category), ['context', 'read', 'read', 'read']);
+  assert.deepEqual(actions.map((action) => action.category), ['context', 'read', 'read']);
   assert.equal(actions.find((action) => action.id === 'folder.useAsContext').enabled, true);
-  assert.equal(actions.find((action) => action.id === 'folder.listCurrent').enabled, true);
-  assert.equal(actions.find((action) => action.id === 'folder.analyze').enabled, true);
+  assert.equal(actions.find((action) => action.id === 'folder.inspect').enabled, true);
   assert.equal(actions.find((action) => action.id === 'folder.summarizeMarkdown').enabled, true);
 });
 test('folder read actions stay clickable and soft-disabled without read permission', () => {
@@ -118,10 +116,9 @@ test('registry exposes compact semantic presentation for file and folder actions
   ]);
   assert.deepEqual(folderActions.map((action) => [action.id, action.shortLabel, action.icon, action.executionKind]), [
     ['folder.useAsContext', 'Context', 'actionContextFile', 'app'],
-    ['folder.listCurrent', 'List', 'actionListFolder', 'app'],
-    ['folder.analyze', 'Analyze', 'actionAnalyzeFolder', 'app'],
+    ['folder.inspect', 'Inspect', 'actionAnalyzeFolder', 'app'],
     ['folder.summarizeMarkdown', 'Summary', 'actionSummaryFolder', 'provider']
   ]);
   assert.match(fileActions.find((action) => action.id === 'file.summarize').description, /local provider/i);
-  assert.match(folderActions.find((action) => action.id === 'folder.analyze').description, /without model/i);
+  assert.match(folderActions.find((action) => action.id === 'folder.inspect').description, /without reading note contents/i);
 });

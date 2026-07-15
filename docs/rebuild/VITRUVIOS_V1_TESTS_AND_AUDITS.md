@@ -1,4 +1,4 @@
-# Vitruvios V1 Tests And Audits
+# vitruvios V1 Tests And Audits
 
 ## Test Principle
 
@@ -17,7 +17,7 @@ Tests start on day one. Safety-critical behavior must be tested before feature p
 - archive/trash instead of normal delete
 - audit log without note contents
 - provider boundary: providers never read/write files
-- renderer runtime parity: renderer modules prefer `window.Vitruvios...` browser APIs before Node/CommonJS test fallbacks
+- renderer runtime parity: renderer modules prefer `window.vitruvios...` browser APIs before Node/CommonJS test fallbacks
 - embedding index/model/runtime basics: Markdown-only index schema, vault `.vitruvios/index` storage, project `.vitruvios/models` artifact metadata, hash/mtime updates, local runtime with remote model loading disabled
 
 ## Focused Audit Rhythm
@@ -122,7 +122,7 @@ Deferred decisions:
 
 ### Release trust baseline
 
-Before external beta or public V1 release, Vitruvios must treat supply-chain trust as a release gate, not a feature nice-to-have.
+Before external beta or public V1 release, vitruvios must treat supply-chain trust as a release gate, not a feature nice-to-have.
 
 Required release checks:
 

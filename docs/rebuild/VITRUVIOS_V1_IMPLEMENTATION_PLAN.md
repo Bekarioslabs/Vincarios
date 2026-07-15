@@ -1,4 +1,4 @@
-# Vitruvios V1 Implementation Plan
+# vitruvios V1 Implementation Plan
 
 Audit triage reference: [VITRUVIOS_V1_AUDIT_TRIAGE.md](./VITRUVIOS_V1_AUDIT_TRIAGE.md).
 
@@ -179,13 +179,13 @@ Phase 6.5 happens before Phase 7 feature work. Its purpose is to make the curren
 
 - [x] Refine the left navigation into grouped app actions: `WORKSPACE`, `CREATE`, `VAULT`, and bottom `SETTINGS`.
 - [x] Keep `Open Vault` prominent under `VAULT`; keep `Settings` as the stable bottom modal entry.
-- [x] Add collapsed `CREATE` preset structure: `New Note` presets and `New Project` presets without wiring fake creation. Presets must stay user-extensible later, including optional curated Vitruvios preset packs.
+- [x] Add collapsed `CREATE` preset structure: `New Note` presets and `New Project` presets without wiring fake creation. Presets must stay user-extensible later, including optional curated vitruvios preset packs.
 - [x] Keep future left-nav entries as explicit future slots only; placeholders must not look like working features.
 - [x] Rework Settings into a two-pane modal: category menu on the left, active category content on the right.
 - [x] Keep Providers and Limits app-local; make Vault Profile selected-vault metadata with its own validated service.
 - [x] Add V1-ready Settings categories for Templates, Appearance, Embeddings, Safety, and About without fake functionality.
 - [x] Add dedicated Markdown Properties/YAML style tokens so metadata can be visually distinct from prose and later controlled by Appearance settings.
-- [x] Document project style presets as V1.1 direction: detected through explicit project metadata such as `vitruvios_style_preset`, Vitruvios-only in V1, optional Obsidian CSS snippet export later with explicit user confirmation.
+- [x] Document project style presets as V1.1 direction: detected through explicit project metadata such as `vitruvios_style_preset`, vitruvios-only in V1, optional Obsidian CSS snippet export later with explicit user confirmation.
 - [x] Keep Settings and UI tokens extensible for later hotkeys, plugin compatibility, custom actions, theme presets, and theme managers that may change shapes such as button radius.
 - [x] Ensure UI-only changes preserve keyboard access, ARIA labels/states, and local scrolling rules.
 - [x] Update UI docs and focused source/style tests for the changed shell/settings structure.
@@ -207,7 +207,7 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 - [x] New Note workflow from deterministic presets adds reviewed `create_note` proposals to the Review Basket.
 - [x] New Project workflow from deterministic presets enters the Review Basket as one `create_from_template` action. The reviewed execution path creates planned folders first through `createFolder`, then planned Markdown files through `createNote`.
 - [x] Template/preset data shape targets vault folder roles instead of hard-coded folder names.
-- [x] Presets remain extensible for custom user presets and later curated Vitruvios preset packs through the shared registry shape; user-pack loading is later work.
+- [x] Presets remain extensible for custom user presets and later curated vitruvios preset packs through the shared registry shape; user-pack loading is later work.
 - [x] No AI improvisation in template creation: the preset registry materializes deterministic create plans.
 - [x] Preset UI binds left navigation preset buttons to Review Basket proposals; no direct writes.
 - [x] Create proposals are edited in the Review Basket before execution; execution no longer repeats the initial title dialog.
@@ -217,7 +217,7 @@ Phase 7 is deliberately smaller than the early product wish list. V1 should be u
 
 - [x] External `.md` and `.markdown` files dropped onto the chat become temporary Context Basket items.
 - [x] Dropped Markdown is not copied into the vault automatically.
-- [x] Dropped Markdown shows a Vitruvios chat message with an `Import to Inbox` action.
+- [x] Dropped Markdown shows a vitruvios chat message with an `Import to Inbox` action.
 - [x] `Import to Inbox` adds a reviewed `create_note` proposal; Review Basket edit/execute performs the actual vault write.
 - [x] Images, PDFs, vision analysis, automatic sorting, and manual file-tree move drag/drop remain out of this block.
 
@@ -229,7 +229,7 @@ Status: complete for V1-light.
 - [x] Rename Light stays manual and same-folder only; it does not move files.
 - [x] Rename Light reports clearly that links are not updated in V1.
 - [x] Rename Light writes through main-process vault validation and audit logging, not renderer filesystem access.
-- [x] Move drag-and-drop is explicitly V1.1: it must include deterministic Markdown link-update planning and review before it becomes useful enough for Vitruvios.
+- [x] Move drag-and-drop is explicitly V1.1: it must include deterministic Markdown link-update planning and review before it becomes useful enough for vitruvios.
 - [x] AI rename/move/archive actions are explicitly V1.1: they need safe services, backlink warnings, undo/repair, and batch review before execution.
 
 ### Phase 7.2.5 - Session Activity And Status Messages
@@ -252,7 +252,7 @@ Status: complete for V1-light.
 
 - [x] Cleanup starts as a grouped report, not hundreds of Basket items.
 - [x] Report groups include summaries, loose Markdown notes, subfolders, AI response notes, and other files.
-- [x] `Inbox Review` in the left navigation scans the Inbox plus one direct subfolder level, generates a saveable report-only Vitruvios chat response, and creates no Review Basket actions.
+- [x] `Inbox Review` in the left navigation scans the Inbox plus one direct subfolder level, generates a saveable report-only vitruvios chat response, and creates no Review Basket actions.
 - [x] The report offers an explicit `Scan nested folders` follow-up for deeper Inbox structure scans without reading file contents.
 - [x] Large batch execution stays out of V1 unless it later fits the existing review/update safety path.
 
@@ -291,7 +291,7 @@ Status: complete for V1-light. Metadata index remains a documented V1.1 architec
 
 - [x] Add a workspace tab foundation for `Chat`, `Suggestions`, and later `Session Log` without moving provider or vault logic into the workspace UI.
 - [x] Add a Suggestions renderer module that can show grouped suggestion items, selected-item detail, compact status/score labels, checkboxes, and dismiss controls.
-- [x] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat gets only a short status line, Vitruvios does not auto-switch workspaces, and the Suggestions tab shows an item-count indicator.
+- [x] Move Similar Notes result details from the Selection Actions panel into the Suggestions workspace. Chat gets only a short status line, vitruvios does not auto-switch workspaces, and the Suggestions tab shows an item-count indicator.
 - [x] Keep Similar Notes report-only until a future suggestion converter creates concrete Review Basket actions.
 - [x] Define the conversion boundary: `Add selected to Review Basket` is disabled until selected suggestions map to supported concrete action types. Current supported conversion is `metadata_candidate` with complete `currentContent` and `proposedContent` into reviewed `update_note`; similar notes remain report-only.
 - [x] Preserve the right-side Files/Preview area; Suggestions is a main workspace, not a modal that hides the vault context.
@@ -338,7 +338,7 @@ Status: complete.
 
 Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work in small testable slices. The external UI/UX proposal files were reviewed as design input and then archived outside the active docs. The accepted goal is to bring their useful fixes and polish into V1 iteratively instead of deferring them wholesale to V1.1.
 
-- [x] Review the external UI/UX proposal files together with Beka. Treat them as design input, map every item through Vitruvios ownership boundaries, archive them out of active docs, and implement only through focused app modules/styles.
+- [x] Review the external UI/UX proposal files together with Beka. Treat them as design input, map every item through vitruvios ownership boundaries, archive them out of active docs, and implement only through focused app modules/styles.
 - [x] 7.7.1 Token/CSS foundation: `tokens.css` now owns primitive/semantic palette comments, status `-rgb` tokens, `--status-warning`, action color tokens, diff/score tokens, radius tokens, `--transition-fast`, and selection/scrollbar theming. Status/diff/suggestion score colors now use tokens without layout behavior changes.
 - [x] 7.7.2 CSS hardcode cleanup: raw status/action colors, score colors, diff colors, common radii, icon filters, modal backdrops, and shared shadows are centralized through `tokens.css`. Intentional exceptions remain for geometric values such as `border-radius: 0` on flat file rows and `50%` for circular dots/spinners.
 - [x] 7.7.3 Local scrolling and containment: Review Basket and Context Basket now have bounded local scroll areas so long lists do not push the chat input out of view.
@@ -348,7 +348,7 @@ Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work i
 - [x] 7.7.7 Visual polish pass: Settings/category icons, provider-mode privacy badge, subtle active-state glow, centralized file-row update flash, and consistent hover/micro-transition behavior now use the token system. File-row flash is handled through renderer update flash state, applies only to visible rows without tree rebuilds, and stays visually distinct from selected rows. The provider badge is not hard-coded as Local Only; it is provider privacy based so future cloud/external providers can change the label.
   - [x] Settings/category icons: the Providers settings category uses the semantic plug icon, the main-screen Settings button uses the gear icon, and both paths render through existing Lucide icon helpers and tokenized icon filters.
 - [x] 7.7.8 Loading and score presentation: provider-backed and embedding-backed waits continue to use the existing lightweight pending chat message with spinner; no extra skeleton layer was added because it would duplicate feedback. Similar Notes/Suggestions should use a real compact score-ring component inspired by `docs/Design_index.html`, not oval score pills or list meter bars. The ring shows the percentage inside the circle; explanatory text can sit beside it for clarity. Score colors use the shared score tokens, not ad-hoc green/amber/orange/red values. Medium/yellow must remain visibly brighter than weak/orange.
-- [x] 7.7.9 Final visual reference alignment: compare the app against `docs/Design_index.html`, keep Vitruvios compact and utilitarian, and avoid copying demo-only structures that do not fit the real app. Manual visual review is green.
+- [x] 7.7.9 Final visual reference alignment: compare the app against `docs/Design_index.html`, keep vitruvios compact and utilitarian, and avoid copying demo-only structures that do not fit the real app. Manual visual review is green.
 - [x] Before V1 freeze, clarify Suggestions type separation: Similar Notes and Metadata/Tags are visually separated by suggestion group headers. Group headers can select only visible, non-dismissed items in that group. `Clear selected` hides selected suggestions from the current session, while `Add selected to Review Basket` remains limited to convertible suggestion types such as metadata candidates.
 - [x] Create a concise V1 request/write flow overview in `VITRUVIOS_V1_ARCHITECTURE.md`, showing UI actions, provider boundaries, Review Basket, Main safety, Vault Services, backup, and audit.
 - [x] Classify Recent Files, Homepage light, broken-link/orphan scans, and project-note maintenance as V1.1. They do not block safe, presentable V1 workflows.
@@ -359,9 +359,9 @@ Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work i
 Status: complete for V1. This replaces the earlier "Folder-Role color dots" idea with a fuller but still small navigation aid.
 
 - [x] Support visual identity only for top-level folders in V1: icon plus color. Active top-level Vault Role mappings render with semantic local Lucide icons and token-driven colors; unknown and nested folders retain the neutral folder icon in V1.
-- [x] Store Vitruvios-owned standard-role mappings and visual settings under selected-vault `.vitruvios/profile.json`, not `.obsidian`.
+- [x] Store vitruvios-owned standard-role mappings and visual settings under selected-vault `.vitruvios/profile.json`, not `.obsidian`.
 - [x] Treat folder visuals as manual low-risk UI configuration writes, not Markdown/content writes. They intentionally bypass Review Basket, content diff, note-backup, and content-audit pipelines through a dedicated main-process service.
-- [x] Keep `.obsidian` read-only for future compatibility/import layers such as Iconize; do not write Vitruvios UI state there.
+- [x] Keep `.obsidian` read-only for future compatibility/import layers such as Iconize; do not write vitruvios UI state there.
 - [x] Configure each role through Settings with a built-in Lucide icon picker or safe local SVG list from `Vault/.vitruvios/icons/`, plus a fixed token-color palette. The File Tree remains display-only.
 - [x] Make File Tree visual identity display-only; configure role assignments, icons, and colors only through `Settings -> Vault Profile`. `profile.json` preserves unrelated future fields and migrates legacy path-keyed `folderVisuals` to role-keyed visuals when possible.
 - [x] Allow a local static SVG per role by listing only validated files already placed in portable `Vault/.vitruvios/icons/`; the profile stores only the relative path. V1 has no file-import dialog and no arbitrary custom colors.
@@ -443,19 +443,23 @@ Phase 8 finishes the product before release hardening starts. It may add only sm
 
 ### 8.1 Product Identity And First-Run Experience
 
-- [ ] Decide the final product name and public one-sentence description before changing visible branding.
-- [ ] Decide and document whether public positioning leads with an independent local-first Markdown/project workspace, while stating Obsidian-vault compatibility as a supported workflow with explicit limits.
-- [ ] Apply the chosen name and description consistently to splash, app chrome, README, package/build metadata, and release material in one controlled branding change.
-- [ ] Upgrade the splash/start screen into a useful first-run surface: primary Open Vault action, last-opened vault when available, local-provider/privacy status, and no fake controls.
+- [x] Final product name: lowercase `vitruvios`. Public description: `Local-first Markdown assistant.`
+- [x] Public positioning leads with an independent local-first Markdown/project workspace; Obsidian-style vault compatibility is a supported workflow with explicit limits.
+- [x] Apply the chosen name and description consistently to splash, app chrome, README, package/build metadata, and active release documentation in one controlled branding change.
+- [x] Upgrade the splash/start screen into a useful first-run surface: primary Open Vault, two portable recent-vault entries, local-provider availability, and no fake controls. Profile-based New Vault creation stays post-V1.
 
 ### 8.2 Folder Actions And AI Response Consistency
 
-- [ ] Replace separate `List folder` and `Analyze folder` actions with deterministic `Inspect Folder`: direct-level counts plus grouped Folder/Markdown entries, no note-content reads, and a `Check whole tree` follow-up using the same structured renderer.
-- [ ] Add one reusable Folder Scope form for provider-backed folder operations. V1 options: current folder or subfolders, bounded depth, Markdown-only file type, max files, and existing hard total-context cap.
-- [ ] Make Folder Context add a visible snapshot package of the selected Markdown files to Context Basket. The packet must show scope and effective limits; it must never silently include an unbounded tree.
-- [ ] Make Folder Summary use the same Folder Scope form. It may summarize selected Markdown files only; images/PDFs remain excluded in V1 while the configuration model remains extensible for future file types.
-- [ ] Add Settings -> Action Defaults for Folder Context and Folder Summary. Defaults initialize action forms but per-run choices remain visible and session-local.
-- [ ] Standardize deterministic action output and provider-generated AI response surfaces: stable Markdown structure, readable headings/lists, consistent Save-as-Note behavior, and deterministic generated-note metadata where the creating flow already owns metadata.
+- [x] Replace separate List/analyze folder actions with deterministic Inspect Folder: direct-level counts plus grouped Folder/Markdown entries, no note-content reads, and a Check whole tree follow-up using the same structured renderer.
+- [x] Add the reusable Folder Scope form foundation. Inspect Folder exposes current folder or subfolders, bounded depth, Markdown-only file type, and max files. Folder Context and Folder Summary adopt the same scope model in their dedicated follow-up steps; the hard total-context cap remains enforced when content is later loaded.
+- [x] Make Folder Context add a visible Markdown snapshot package to Context Basket. Each user-chosen packet shows scope, note and total-character limits, reads Markdown only, and stops at the configured bounds; ordinary legacy folder references remain content-free.
+- [x] Make Folder Summary use the shared Folder Scope form and shared Markdown scope reader. It sends only explicitly listed Markdown files with the visible scope to the provider; images/PDFs remain excluded in V1 while the configuration model remains extensible for future file types.
+- [x] Add Settings -> Action Defaults for Folder Context and Folder Summary. Defaults initialize action forms but per-run choices remain visible and session-local.
+- [x] Standardize Inspect Folder and provider-backed file/folder summaries: app-owned Markdown title and scope metadata, readable headings/lists, and concise body-format contracts. Free chat replies remain intentionally flexible; generated-note metadata stays owned by the creating flow.
+
+### V1.1 UI Polish Follow-up
+
+- [ ] Standardize Settings visual rhythm across categories: field groups, labels, helper text, save rows, spacing, and empty states. Reuse shared Settings component rules; do not alter action behavior as part of this polish.
 
 ### 8.3 Final V1 Scope Gate
 
@@ -506,12 +510,12 @@ V1 is done when all current V1 phases are complete and the release gates below a
 - [ ] Detachable/undocked Markdown preview window for multi-monitor workflows.
 - [ ] Vision analysis and image tagging gated by model capability.
 - [ ] Obsidian plugin compatibility audit for common workflows: Templater, Dataview, Tasks, Advanced Tables, Calendar, Kanban, Iconize, Style Settings, Omnisearch, Smart Connections, Tag Wrangler, Linter, Mindmap, Homepage, Recent Files, and Make.md.
-- [ ] Optional Iconize compatibility: detect Iconize metadata when safe and mirror icons in Vitruvios UI without requiring Iconize.
+- [ ] Optional Iconize compatibility: detect Iconize metadata when safe and mirror icons in vitruvios UI without requiring Iconize.
 - [ ] Style Settings compatibility research: read/import visual settings only through explicit user choice; do not write `.obsidian` automatically.
 - [ ] Kanban and Mindmap support should start as rendering/fallback research, not full plugin reimplementation.
 - [ ] Export actions: Markdown and HTML first, designed so more formats can be added later.
 - [ ] Editing toolbar light for Markdown edit mode: basic bold, italic, heading/size-like Markdown, and later color/style helpers only if they stay Markdown-safe.
-- [ ] Vitruvios plugin/extension architecture research: define how future community modules register actions, settings, target types, and review flows without bypassing safety laws.
+- [ ] vitruvios plugin/extension architecture research: define how future community modules register actions, settings, target types, and review flows without bypassing safety laws.
 - [ ] Natural Action Control (V2.1 candidate): optional toggle that lets the model map natural language to existing registered Selection Actions. It must only execute predefined app actions through the same permission, review, backup, and audit boundaries. The recognition layer may use prompts or trigger rules, but it must live in its own module and never create new hidden capabilities.
 - [ ] Chat Sessions / conversation history as a later V2 feature: session list, resume, delete, privacy rules, and per-vault/global storage decisions.
 

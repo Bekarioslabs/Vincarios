@@ -119,3 +119,21 @@ test('context state preserves dropped Markdown metadata for UI display', () => {
   assert.equal(item.source, 'dropped_markdown');
   assert.equal(item.externalPath, 'D:/Downloads/Note.md');
 });
+
+test('context state preserves folder snapshot scope and included Markdown files', () => {
+  const context = createContextState();
+  context.addContextItem({
+    kind: 'folder_snapshot',
+    path: '00_Inbox',
+    scope: { scope: 'subfolders', maxDepth: 2, maxFiles: 10, fileType: 'markdown' },
+    effectiveLimits: { maxTotalChars: 100 },
+    files: [{ path: '00_Inbox/Note.md', content: '# Note', truncated: false }],
+    totalChars: 6,
+    truncated: false
+  });
+
+  const item = context.snapshot().contextItems[0];
+  assert.equal(item.kind, 'folder_snapshot');
+  assert.equal(item.scope.maxDepth, 2);
+  assert.deepEqual(item.files, [{ path: '00_Inbox/Note.md', content: '# Note', truncated: false }]);
+});
