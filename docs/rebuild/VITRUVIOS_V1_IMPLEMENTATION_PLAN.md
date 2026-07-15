@@ -320,7 +320,7 @@ Status: complete for V1 rendering scope. Further plugin rendering, callouts, mat
 - [x] Add standalone image-file preview: selecting a supported image in Files shows it in Preview through the same validated asset read path as Markdown embeds. No vision analysis or write actions are included.
 - [x] Keep this as renderer support only. No image editing, import automation, tagging, or vision analysis in this block.
 - [x] Compare against Obsidian's default Markdown behavior and document intentional V1 differences instead of chasing plugin behavior.
-- [x] Editor Light decision: keep formatting buttons, color styling, live preview editing, and detachable editor out of V1. Current V1 editor remains local source editing plus reviewed full-note update proposals.
+- [x] Phase 7.6 initially kept formatting controls out of V1 while the renderer foundation was stabilized. Phase 8.3 deliberately reopens only a bounded Editor Light baseline as a V1 completion candidate; richer colors, tables, customization, live editing, and detached workflows remain post-V1.
 
 ### Phase 7.6.5 - Safe Copied HTML Styling Compatibility
 
@@ -464,6 +464,12 @@ Phase 8 finishes the product before release hardening starts. It may add only sm
 ### 8.3 Final V1 Scope Gate
 
 - [ ] Re-evaluate V1.1/V1.2 candidates once against safety, core usefulness, implementation completeness, and regression risk. Reclassify only small, self-contained candidates with a defined owner and test plan.
+- [ ] Add a subtle splash/version label sourced from application metadata, never duplicated as a renderer constant.
+- [ ] Define and implement the V1 Light/Dark foundation through shared semantic tokens, persisted preference, and one explicit theme owner. Theme presets and broad customization remain later work.
+- [ ] Add one dedicated Embeddings index surface that shows index state and exposes an explicit Rebuild/Refresh action. Keep automatic indexing and manual rebuilding under the same index owner.
+- [ ] Define the V1 Vault Home, Recent Files, and Search scope before implementation. The decision must state which filename/path, YAML/tag, note-text, and semantic signals are searchable and how Read permissions affect discovery and result use.
+- [ ] Add a structured metadata-index foundation under `.vitruvios/index/metadata/`, separate from vector embeddings. V1 integration should support Search and index health without becoming authority for unreviewed writes.
+- [ ] Define the Editor Light V1 baseline on top of the existing source editor and reviewed Update flow. Decide the small formatting-control set for V1 and explicitly defer richer colors, tables, toolbar customization, live editing, and detached workflows to V1.1.
 - [ ] Move every rejected candidate back to the explicit V1.1/V1.2 Backlog with a short reason.
 - [ ] Freeze V1 scope. After this point, only security, data-loss, core workflow, or external-test blockers may enter V1.
 
@@ -491,15 +497,12 @@ V1 is done when all current V1 phases are complete and the release gates below a
 - [ ] AI move/rename/archive note services with link update, backlink warnings, undo/repair, and batch review.
 - [ ] Folder Context Index maps if they did not pass the V1 necessity review.
 - [ ] Slim Brain OS integration with explicit load order, validation, and no ability to override code-side safety laws.
-- [ ] Search within vault.
-- [ ] Recent Files and Homepage light, including their app-local placement and persistence rules.
 - [ ] Broken-link/orphan scans and project-note maintenance reports as report-only cleanup foundations.
 - [ ] Audit log / backup history UI with restore-oriented controls.
 - [ ] End-to-end Electron tests.
 - [ ] Async or worker-based deep folder crawling for very large vaults.
 - [ ] Backup retention policy and optional cleanup UI.
 - [ ] Batch AI actions over multiple notes with grouped diffs.
-- [ ] Plugin-style extension points for community contributions.
 - [ ] More complete settings UI, including hotkeys and theme presets.
 - [ ] Template V1.1 planning input: Beka's private Book project notes are local-only and intentionally ignored by Git. Revisit them when designing richer template/preset workflows.
 - [ ] Vault Profile V1.1: named profile library, custom folder roles, and multiple project destinations (for example work/private) that Template creation can select explicitly.
@@ -514,8 +517,6 @@ V1 is done when all current V1 phases are complete and the release gates below a
 - [ ] Style Settings compatibility research: read/import visual settings only through explicit user choice; do not write `.obsidian` automatically.
 - [ ] Kanban and Mindmap support should start as rendering/fallback research, not full plugin reimplementation.
 - [ ] Export actions: Markdown and HTML first, designed so more formats can be added later.
-- [ ] Editing toolbar light for Markdown edit mode: basic bold, italic, heading/size-like Markdown, and later color/style helpers only if they stay Markdown-safe.
-- [ ] vitruvios plugin/extension architecture research: define how future community modules register actions, settings, target types, and review flows without bypassing safety laws.
 - [ ] Natural Action Control (V2.1 candidate): optional toggle that lets the model map natural language to existing registered Selection Actions. It must only execute predefined app actions through the same permission, review, backup, and audit boundaries. The recognition layer may use prompts or trigger rules, but it must live in its own module and never create new hidden capabilities.
 - [ ] Chat Sessions / conversation history as a later V2 feature: session list, resume, delete, privacy rules, and per-vault/global storage decisions.
 
@@ -523,13 +524,12 @@ V1 is done when all current V1 phases are complete and the release gates below a
 - [ ] Merge Workspace for similar/complementary notes: compare two source notes, show A/B diff, create a reviewed third merged file, and optionally archive the sources only after explicit confirmation. This must become a dedicated `merge_notes` action, not an overloaded `update_note`.
 - [ ] Link candidates from embeddings/metadata: suggest exact Markdown link insertions with a visible line diff before converting to reviewed `update_note` proposals.
 - [ ] Folder/destination candidates: suggest target folders using embeddings plus metadata index signals, but execute only through future reviewed move/link-update services.
-- [ ] Structured metadata index under selected-vault `.vitruvios/index/metadata/`: store schema-versioned note facts, tags, parsed links/unresolved links, template roles, project/file-role hints, source hashes, stale markers, and optional reviewed summaries separate from vector embeddings. Rebuild from the vault; never use it as authority for unreviewed writes.
 - [ ] Plugin block fallback registry: detect common unsupported Obsidian plugin blocks, preserve source, and render a clear unsupported-plugin notice without executing plugin code.
-- [ ] Editor Light expansion if needed: formatting buttons, Markdown-safe insertions, optional detached editor/preview workflows, and later style helpers.
+- [ ] Editor Light expansion after the V1 baseline: richer colors, tables, toolbar customization, optional live preview, detached editor/preview workflows, and additional Markdown-safe helpers.
 ## Parking Lot
 
 - [ ] Voice input.
 - [ ] Peer-to-peer sync.
 - [ ] External HTTP/CLI automation API.
 - [ ] Encrypted backups with user-managed passphrases.
-- [ ] Full plugin marketplace or broad agent-harness behavior.
+- [ ] Vitruvios plugin/extension architecture and any plugin marketplace. Revisit only with a dedicated security model that cannot bypass permissions, review, backup, audit, or provider boundaries.
