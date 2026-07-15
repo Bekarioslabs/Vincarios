@@ -7,6 +7,7 @@
     const suggestionState = options.suggestionState;
     const reviewBasket = options.reviewBasket || null;
     const status = options.status || null;
+    const onOpenSuggestion = typeof options.onOpenSuggestion === 'function' ? options.onOpenSuggestion : null;
     const converters = getSuggestionConverters();
     if (!root || !suggestionState || typeof suggestionState.snapshot !== 'function') return null;
 
@@ -156,8 +157,12 @@
       const parent = document.createElement('span');
       parent.className = 'suggestions-item-parent';
       parent.textContent = formatSuggestionParent(item);
+      const relationship = document.createElement('span');
+      relationship.className = 'suggestions-item-relationship';
+      relationship.textContent = String(item.relationshipLabel || '');
       text.appendChild(name);
       if (parent.textContent) text.appendChild(parent);
+      if (relationship.textContent) text.appendChild(relationship);
       row.appendChild(text);
       row.appendChild(renderSuggestionSignal(item, 'list'));
       row.appendChild(renderDismissButton(group, item));
@@ -376,6 +381,10 @@
     }
 
     function renderSuggestionPreview(preview, item) {
+      if (String(item && item.kind || '') === 'similar_note') {
+        renderSimilarNotePreview(preview, item);
+        return;
+      }
       const diff = converters.buildSuggestionDiffPreview(item);
       if (!diff || !diff.ok) {
         preview.appendChild(createEmptyState('warning', 'No change preview yet.', 'Only actionable suggestions can show a diff.', 'suggestions-preview-empty')); 
@@ -391,6 +400,31 @@
       preview.appendChild(body);
     }
 
+    function renderSimilarNotePreview(preview, item) {
+      const detail = document.createElement('div');
+      detail.className = 'suggestions-preview-empty suggestions-similar-preview';
+      const title = document.createElement('span');
+      title.className = 'suggestions-empty-title';
+      title.textContent = 'Open this note in the main Preview.';
+      detail.appendChild(title);
+
+      const open = document.createElement('button');
+      open.type = 'button';
+      open.className = 'chat-message-action-button';
+      open.textContent = 'Open';
+      open.disabled = !onOpenSuggestion || !item.path;
+      open.title = open.disabled ? 'This suggestion cannot be opened.' : 'Open this Markdown note in Files and Preview.';
+      open.addEventListener('click', async () => {
+        if (!onOpenSuggestion || !item.path) return;
+        open.disabled = true;
+        const result = await onOpenSuggestion(item.path);
+        if (!result || !result.ok) setText(status, (result && result.message) || 'Could not open suggestion in Preview.');
+        else setText(status, 'Opened in preview: ' + item.path);
+        open.disabled = false;
+      });
+      detail.appendChild(open);
+      preview.appendChild(detail);
+    }
     return Object.freeze({
       destroy() {
         if (typeof unsubscribe === 'function') unsubscribe();

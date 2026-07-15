@@ -21,7 +21,12 @@
       ? contextState.subscribe(render)
       : null;
     const onFilesCollapseChanged = () => render(contextState.snapshot());
+    const onSimilarDefaultsChanged = () => {
+      similarNotesSessionOptions = null;
+      removeOpenActionForms();
+    };
     app.addEventListener('vitruvios:files-collapse-change', onFilesCollapseChanged);
+    app.addEventListener('vitruvios:embedding-similar-defaults-change', onSimilarDefaultsChanged);
 
     render(contextState.snapshot());
 
@@ -309,9 +314,9 @@
       form.innerHTML = [
         '<label class="selection-action-form-label">Find similar notes</label>',
         '<div class="selection-action-grid">',
-        '  <label><span>Mode</span><select data-similar-mode><option value="mixed">Mixed</option><option value="content">Content</option><option value="metadata">Metadata</option></select></label>',
+        '  <fieldset class="selection-action-source" data-similar-source><legend>Search source</legend><label><input type="radio" name="similar-source" value="content">Content</label><label><input type="radio" name="similar-source" value="metadata">Metadata</label><label><input type="radio" name="similar-source" value="mixed">Both</label></fieldset>',
+        '  <fieldset class="selection-action-source" data-similar-scope><legend>Search scope</legend><label title="Search within the active Vault Role, or the current top-level area when no role is assigned."><input type="radio" name="similar-scope" value="same_role">Relevant area</label><label><input type="radio" name="similar-scope" value="whole_vault">Whole vault</label></fieldset>',
         '  <label><span>Minimum match %</span><input type="number" min="0" max="100" step="1" data-similar-min></label>',
-        '  <label class="selection-action-range"><span>Content / metadata weight <strong data-similar-weight-display></strong></span><input type="range" min="0" max="100" step="5" data-similar-content-weight></label>',
         '  <label><span>Max results</span><input type="number" min="1" step="1" data-similar-limit></label>',
         '  <label class="selection-action-check"><input type="checkbox" data-similar-refresh-index><span>Refresh index first</span></label>',
         '</div>',
@@ -323,20 +328,24 @@
       const values = similarNotesSessionOptions || defaults;
       form.querySelector('[data-similar-min]').value = String(values.minimumScorePercent);
       form.querySelector('[data-similar-limit]').value = String(values.maxResults);
-      form.querySelector('[data-similar-mode]').value = values.mode;
-      form.querySelector('[data-similar-content-weight]').value = String(values.contentWeight);
-      wireSimilarWeightSlider(form, values.contentWeight);
+      const sourceOption = form.querySelector('[data-similar-source] input[value="' + getSimilaritySourceOptions().normalize(values.mode) + '"]');
+      if (sourceOption) sourceOption.checked = true;
+      const scopeOption = form.querySelector('[data-similar-scope] input[value="' + (values.scope === 'whole_vault' ? 'whole_vault' : 'same_role') + '"]');
+      if (scopeOption) scopeOption.checked = true;
       form.querySelector('[data-similar-refresh-index]').checked = values.refreshIndex === true;
       form.querySelector('[data-similar-cancel]').addEventListener('click', () => form.remove());
       form.addEventListener('submit', (event) => {
         event.preventDefault();
-        const contentWeight = normalizePercent(form.querySelector('[data-similar-content-weight]').value, 80);
+        const selectedSource = form.querySelector('[data-similar-source] input:checked');
+        const similarity = getSimilaritySourceOptions().weightsFor(selectedSource && selectedSource.value);
+        const selectedScope = form.querySelector('[data-similar-scope] input:checked');
         const options = {
-          mode: form.querySelector('[data-similar-mode]').value,
+          mode: similarity.mode,
           minimumScorePercent: form.querySelector('[data-similar-min]').value,
-          contentWeight,
-          metadataWeight: 100 - contentWeight,
+          contentWeight: similarity.contentWeight,
+          metadataWeight: similarity.metadataWeight,
           limit: form.querySelector('[data-similar-limit]').value,
+          scope: selectedScope && selectedScope.value,
           refreshIndex: form.querySelector('[data-similar-refresh-index]').checked
         };
         similarNotesSessionOptions = Object.assign({}, options, { maxResults: options.limit });
@@ -356,25 +365,12 @@
     function removeOpenActionForms() {
       Array.from(root.querySelectorAll('.selection-action-form')).forEach(removeNode);
     }
-    function normalizePercent(value, fallback) {
-      const number = Number(value);
-      if (!Number.isFinite(number)) return fallback;
-      return Math.max(0, Math.min(100, Math.floor(number)));
-    }
-
-    function wireSimilarWeightSlider(form, value) {
-      const slider = form.querySelector('[data-similar-content-weight]');
-      const display = form.querySelector('[data-similar-weight-display]');
-      function update() {
-        const content = normalizePercent(slider && slider.value, value);
-        if (display) display.textContent = content + '% content / ' + (100 - content) + '% metadata';
-      }
-      if (slider) slider.addEventListener('input', update);
-      update();
+    function getSimilaritySourceOptions() {
+      return window.VitruviosSimilaritySourceOptions;
     }
 
     async function loadSimilarNotesDefaults() {
-      const fallback = { minimumScorePercent: 65, maxResults: 8, mode: 'mixed', contentWeight: 80, metadataWeight: 20 };
+      const fallback = { minimumScorePercent: 65, maxResults: 8, mode: 'mixed', scope: 'same_role' };
       if (!api.settings || typeof api.settings.get !== 'function') return fallback;
       try {
         const settings = await api.settings.get();
@@ -382,9 +378,8 @@
         return {
           minimumScorePercent: similarNotes.minimumScorePercent || fallback.minimumScorePercent,
           maxResults: similarNotes.maxResults || fallback.maxResults,
-          mode: similarNotes.mode || fallback.mode,
-          contentWeight: similarNotes.contentWeight || fallback.contentWeight,
-          metadataWeight: similarNotes.metadataWeight || fallback.metadataWeight
+          mode: getSimilaritySourceOptions().normalize(similarNotes.mode || fallback.mode),
+          scope: fallback.scope
         };
       } catch (error) {
         return fallback;
@@ -879,10 +874,13 @@
         scoreLabel: candidate.scoreText + ' ' + candidate.scoreLabel,
         scorePercent: candidate.scorePercent,
         scoreTone: scoreToneForPercent(candidate.scorePercent),
+        relationshipLabel: candidate.relationshipLabel,
         detail: [
           candidate.path,
           '',
+          candidate.relationshipLabel,
           candidate.scoreText + ' ' + candidate.scoreLabel,
+          candidate.reasonText,
           candidate.contentScoreText + ' | ' + candidate.metadataScoreText
         ].join('\n'),
         data: candidate
@@ -921,6 +919,7 @@
       destroy() {
         if (typeof unsubscribe === 'function') unsubscribe();
         app.removeEventListener('vitruvios:files-collapse-change', onFilesCollapseChanged);
+        app.removeEventListener('vitruvios:embedding-similar-defaults-change', onSimilarDefaultsChanged);
       }
     });
   }

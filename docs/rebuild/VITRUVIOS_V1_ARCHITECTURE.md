@@ -161,11 +161,14 @@ Use for:
 
 Index behavior:
 
-- Similar Notes searches the selected vault's local index only.
-- `Refresh index first` is an explicit per-search option for newly added or externally changed Markdown files; V1 has no global Settings rebuild control.
+- Similar Notes searches the selected vault's local index only. Its default internal scope is `same_role`: active Vault Profile role paths define the candidate boundary, and an unassigned target falls back deterministically to its current top-level area. `whole_vault` is explicit per run.
+- `embeddingCandidateEligibility.js` owns candidate boundaries. `embeddingCandidateScorer.js` owns calibrated relevance: 70% selected embedding score, 18% meaningful filename-token overlap, and 12% shared project-path affinity. `embeddingCandidateRelationship.js` owns the report-only relationship label: equal indexed hashes are `Exact duplicate`; high relevance with a substantially matching title is `Possible duplicate`; remaining accepted results are `Related note`. The user-facing percentage is calibrated relevance, not raw cosine similarity. Whole-vault cross-role candidates require title or structural evidence; a raw vector score alone is not enough.
+- Current relevance facts are path/title/profile only. YAML tags and richer deterministic metadata remain owned by the later structured Metadata Index; Similar Notes must not create a parallel hidden metadata store.
+- `Refresh index first` remains an explicit per-search option. Settings > Embeddings also exposes the selected vault index state and an explicit Build, Refresh, or Rebuild control; opening a vault never starts indexing.
 - runs as a local background job, not as a blocking UI operation.
 - uses limits and batching for large vaults.
-- uses hashes/modified timestamps so unchanged files are not re-indexed unnecessarily.
+- uses hashes/modified timestamps so unchanged files are not re-indexed unnecessarily. A model/schema fingerprint guards compatible search; a mismatch requires an explicit rebuild.
+- builds the next manifest/documents pair in memory and replaces the stored pair only after embeddings succeed, preserving the previous usable index on a failed refresh.
 - stores index data outside normal vault notes in the selected vault's `.vitruvios/index` folder by default. `.vitruvios` remains blocked from normal AI/file-tree context and is used only by internal main-process services.
 
 Model behavior:
@@ -179,8 +182,9 @@ Model behavior:
 - Current expected artifact set is `config.json`, tokenizer files, `unigram.json`, and `onnx/model_quantized.onnx`; the quantized ONNX SHA256 is recorded in the model store before download wiring.
 - `src/main/embeddings/embeddingRuntimeService.js` owns local inference. It loads the local model path through Transformers.js/ONNX, sets `allowRemoteModels=false`, caches the extractor, and returns vectors only. It must not read vault files, write vault files, or call chat providers.
 - `src/main/embeddings/embeddingMarkdownSource.js` owns Markdown discovery for indexing. It scans recursively, reads Markdown files only, and skips protected dot folders such as `.vitruvios` and `.obsidian`.
-- `src/main/embeddings/embeddingIndexer.js` coordinates Markdown source, runtime, and index store. It splits YAML frontmatter from body text, chunks Markdown, embeds changed documents, reindexes legacy records that lack split vectors, skips unchanged hash/mtime records, and stores vectors under the selected vault `.vitruvios/index`.
-- `src/main/embeddings/embeddingSimilaritySearch.js` owns local similar-note lookup. It reads stored vectors, supports `content`, `metadata`, and `mixed` scoring modes, applies Settings/default thresholds and result limits, can explicitly rebuild the selected vault index before a search when requested, computes ranked `similar_note` candidates, and never creates review actions by itself.
+- `src/main/embeddings/embeddingIndexer.js` coordinates Markdown source, runtime, and index store. It splits YAML frontmatter from body text, chunks Markdown, embeds changed documents, reindexes legacy records that lack split vectors, skips unchanged hash/mtime records, and stores vectors under the selected vault `.vitruvios/index`. Its explicit refresh is atomic from the app perspective: a failed embedding run retains the prior manifest/documents pair.
+- `src/main/embeddings/embeddingIndexStatusService.js` owns read-only stored-index inspection (`no_vault`, `no_index`, `ready`, `rebuild_required`, `unavailable`, and `invalid`). It returns no vault paths or note titles and never builds an index. `embeddingIndexHealthService.js` owns one filesystem watcher per active vault, derives the additional transient `stale` and `indexing` states, and broadcasts normalized health to the renderer. It marks changed Markdown stale but never indexes automatically. Future metadata and other internal indexes extend this aggregate health boundary rather than adding competing status indicators.
+- `src/main/embeddings/embeddingSimilaritySearch.js` owns local similar-note lookup. It reads stored vectors, supports deterministic `content`, `metadata`, and `mixed` scoring modes, applies Settings/default thresholds and result limits, can explicitly rebuild the selected vault index before a search when requested, computes ranked `similar_note` candidates, and never creates review actions by itself.
 - Packaging direction: keep model artifacts out of Git. Prefer bundling the embedding model with official release builds/installer if size remains acceptable. Developer/source users can use a controlled download script or app download flow.
 - Settings may allow a custom local embedding model path.
 - `intfloat/multilingual-e5-small` remains a later optional custom-model candidate, not the bundled default, because its license is MIT rather than Apache-2.0.

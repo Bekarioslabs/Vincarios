@@ -528,3 +528,94 @@
 .settings-vault-role-path option:disabled {
   color: var(--text-faint);
 }
+
+.settings-embedding-index {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-control);
+  background: var(--background-secondary);
+}
+
+.settings-embedding-index-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-embedding-index h4,
+.settings-embedding-index p {
+  margin: 0;
+}
+
+.settings-embedding-index h4 {
+  color: var(--text-normal);
+  font-size: 12px;
+}
+
+.settings-embedding-index-status,
+.settings-embedding-index-counts {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.settings-embedding-index-counts:empty {
+  display: none;
+}
+
+.settings-embedding-source {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.settings-embedding-source legend {
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.settings-embedding-source label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-normal);
+}
+
+.settings-embedding-source input { accent-color: var(--interactive-accent); }
+
+.settings-embedding-index [data-settings-embedding-index-status] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-embedding-index [data-settings-embedding-index-status]::before {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  content: '';
+}
+
+.settings-embedding-index-status[data-index-state="ready"]::before {
+  background: var(--status-success);
+}
+
+.settings-embedding-index-status[data-index-state="stale"]::before,
+.settings-embedding-index-status[data-index-state="rebuild_required"]::before,
+.settings-embedding-index-status[data-index-state="indexing"]::before {
+  background: var(--text-accent);
+}
+
+.settings-embedding-index-status[data-index-state="no_index"]::before,
+.settings-embedding-index-status[data-index-state="unavailable"]::before,
+.settings-embedding-index-status[data-index-state="invalid"]::before {
+  background: var(--status-danger);
+}

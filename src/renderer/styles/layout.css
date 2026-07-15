@@ -1767,3 +1767,29 @@ body.is-resizing .vault-panel {
 .workspace-panel.is-active {
   display: block;
 }
+
+.selection-action-grid .selection-action-source {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.selection-action-source legend {
+  width: 100%;
+  margin-bottom: 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.selection-action-grid .selection-action-source label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-normal);
+}
+
+.selection-action-source input { accent-color: var(--interactive-accent); }

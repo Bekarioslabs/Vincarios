@@ -12,8 +12,33 @@ function createEmptyEmbeddingIndex(options) {
       id: normalizeString(options.modelId),
       dimensions: normalizePositiveInteger(options.dimensions, 0)
     },
+    fingerprint: createEmbeddingFingerprint(options.fingerprint || {
+      modelId: options.modelId,
+      dimensions: options.dimensions,
+      revision: options.revision,
+      indexVersion: INDEX_VERSION
+    }),
     documents: {}
   };
+}
+
+function createEmbeddingFingerprint(input) {
+  input = input || {};
+  return {
+    modelId: normalizeString(input.modelId),
+    dimensions: normalizePositiveInteger(input.dimensions, 0),
+    revision: normalizeString(input.revision),
+    indexVersion: normalizePositiveInteger(input.indexVersion, INDEX_VERSION)
+  };
+}
+
+function embeddingFingerprintsMatch(left, right) {
+  const first = createEmbeddingFingerprint(left);
+  const second = createEmbeddingFingerprint(right);
+  return first.modelId === second.modelId
+    && first.dimensions === second.dimensions
+    && first.revision === second.revision
+    && first.indexVersion === second.indexVersion;
 }
 
 function createIndexedDocumentRecord(input) {
@@ -83,6 +108,8 @@ module.exports = {
   INDEX_VERSION,
   INDEX_STORAGE,
   createEmptyEmbeddingIndex,
+  createEmbeddingFingerprint,
+  embeddingFingerprintsMatch,
   createIndexedDocumentRecord,
   shouldReindexDocument
 };

@@ -26,7 +26,7 @@
       'Similar notes for: ' + targetPath,
       '',
       candidates.length + ' ' + summary + ' matches found.',
-      'Mode: ' + (result.mode || 'mixed') + ' | Minimum match: ' + normalizePercent(result.minimumScorePercent, 0) + '%'
+      'Mode: ' + (result.mode || 'mixed') + ' | Scope: ' + formatScope(result.scope) + ' | Minimum match: ' + normalizePercent(result.minimumScorePercent, 0) + '%'
     ];
 
     if (isLowContent(targetContent)) {
@@ -49,12 +49,23 @@
         scoreText: formatPercent(score),
         scoreLabel: classification.label,
         scoreClassName: classification.className,
+        relationship: String(candidate && candidate.relationship || 'related_note'),
+        relationshipLabel: String(candidate && candidate.relationshipLabel || 'Related note'),
         contentScoreText: 'content ' + formatPercent(contentScore),
-        metadataScoreText: 'metadata ' + formatPercent(metadataScore)
+        metadataScoreText: 'metadata ' + formatPercent(metadataScore),
+        reasonText: formatReasons(candidate && candidate.reasons)
       };
     });
   }
 
+  function formatScope(value) {
+    return value === 'whole_vault' ? 'Whole vault' : 'Relevant area';
+  }
+
+  function formatReasons(reasons) {
+    const values = Array.isArray(reasons) ? reasons.map((reason) => String(reason || '').trim()).filter(Boolean) : [];
+    return values.length ? values.join(' · ') : 'Semantic match';
+  }
   function summarizeCandidateStrength(candidates) {
     const normalized = normalizeSimilarNotesCandidates(candidates);
     if (normalized.some((candidate) => candidate.scoreLabel === 'strong')) return 'strong';
@@ -83,6 +94,8 @@
     classifySimilarScore,
     formatSimilarNotesSummary,
     normalizeSimilarNotesCandidates,
+    formatScope,
+    formatReasons,
     isLowContent
   };
 

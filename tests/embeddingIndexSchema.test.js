@@ -5,7 +5,8 @@ const assert = require('node:assert/strict');
 const {
   createEmptyEmbeddingIndex,
   createIndexedDocumentRecord,
-  shouldReindexDocument
+  shouldReindexDocument,
+  createEmbeddingFingerprint
 } = require('../src/shared/embeddings/embeddingIndexSchema');
 
 test('embedding index schema creates a local vault index manifest', () => {
@@ -58,4 +59,21 @@ test('embedding document records keep split body and frontmatter vectors', () =>
   assert.deepEqual(record.bodyVectors[0], [0.1, 0.2]);
   assert.equal(record.frontmatterChunks[0].id, 'yaml');
   assert.deepEqual(record.frontmatterVectors[0], [0.9, 0.8]);
+});
+
+
+test('embedding fingerprint captures the model and index compatibility contract', () => {
+  const fingerprint = createEmbeddingFingerprint({
+    modelId: 'model-a',
+    dimensions: 384,
+    revision: 'rev-1',
+    indexVersion: 1
+  });
+
+  assert.deepEqual(fingerprint, {
+    modelId: 'model-a',
+    dimensions: 384,
+    revision: 'rev-1',
+    indexVersion: 1
+  });
 });

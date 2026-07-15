@@ -1,6 +1,9 @@
 'use strict';
 
 const { createEmbeddingIndexStore } = require('./embeddingIndexStore');
+const { createEmbeddingCandidateEligibility, normalizeScope } = require('./embeddingCandidateEligibility');
+const { scoreCandidate } = require('./embeddingCandidateScorer');
+const { classifyCandidateRelationship } = require('./embeddingCandidateRelationship');
 
 const DEFAULT_SIMILAR_LIMIT = 8;
 const DEFAULT_MINIMUM_SCORE_PERCENT = 65;
@@ -13,6 +16,8 @@ function createEmbeddingSimilaritySearch(options) {
   const indexStore = options.indexStore || createEmbeddingIndexStore(options);
   const settingsStore = options.settingsStore || null;
   const indexer = options.indexer || null;
+  const getVaultProfile = typeof options.getVaultProfile === 'function' ? options.getVaultProfile : null;
+  const candidateEligibility = options.candidateEligibility || createEmbeddingCandidateEligibility();
 
   function setRoot(vaultRoot) {
     const storeResult = typeof indexStore.setRoot === 'function'
@@ -53,10 +58,21 @@ function createEmbeddingSimilaritySearch(options) {
       return fail('embedding_target_has_no_vectors', 'Target note has no embedding vectors.');
     }
 
+    const profile = resolveVaultProfile(getVaultProfile);
     const candidates = Object.values(documents)
       .filter((record) => record && normalizePath(record.path) && normalizePath(record.path) !== target)
-      .map((record) => toCandidate(record, targetVectors, searchOptions))
-      .filter((candidate) => Number.isFinite(candidate.score) && candidate.score >= searchOptions.minimumScore)
+      .map((record) => ({
+        record,
+        eligibility: candidateEligibility.isEligible({
+          targetPath: target,
+          candidatePath: record.path,
+          profile,
+          scope: searchOptions.scope
+        })
+      }))
+      .filter((item) => item.eligibility.eligible)
+      .map((item) => toCandidate(item.record, targetRecord, targetVectors, searchOptions, item.eligibility))
+      .filter((candidate) => Number.isFinite(candidate.scorePercent) && candidate.scorePercent >= searchOptions.minimumScorePercent)
       .sort((a, b) => b.score - a.score || a.path.localeCompare(b.path, 'en', { sensitivity: 'base', numeric: true }))
       .slice(0, limit);
 
@@ -64,6 +80,7 @@ function createEmbeddingSimilaritySearch(options) {
       targetPath: target,
       totalCandidates: candidates.length,
       mode: searchOptions.mode,
+      scope: searchOptions.scope,
       minimumScorePercent: searchOptions.minimumScorePercent,
       limit,
       candidates
@@ -76,22 +93,44 @@ function createEmbeddingSimilaritySearch(options) {
   });
 }
 
-function toCandidate(record, targetVectors, searchOptions) {
+function toCandidate(record, targetRecord, targetVectors, searchOptions, eligibility) {
   const vectors = getDocumentVectors(record);
   const contentScore = cosineSimilarity(targetVectors.content, vectors.content);
   const metadataScore = cosineSimilarity(targetVectors.metadata, vectors.metadata);
-  const score = combineScores(contentScore, metadataScore, searchOptions);
+  const rawScore = combineScores(contentScore, metadataScore, searchOptions);
+  const relevance = scoreCandidate({
+    targetRecord,
+    candidateRecord: record,
+    embeddingScore: rawScore,
+    targetRole: eligibility && eligibility.targetRole,
+    candidateRole: eligibility && eligibility.candidateRole
+  });
+  const relationship = classifyCandidateRelationship({
+    targetRecord,
+    candidateRecord: record,
+    relevance
+  });
+  const score = relationship.scorePercent / 100;
+  const reasons = [relationship.reason].concat(relevance.reasons || []).filter(Boolean);
   return {
     kind: 'similar_note',
     path: normalizePath(record.path),
+    accepted: relevance.accepted,
     score,
-    scorePercent: toPercent(score),
+    scorePercent: relationship.scorePercent,
+    relationship: relationship.relationship,
+    relationshipLabel: relationship.label,
     contentScore,
     contentScorePercent: toPercent(contentScore),
     metadataScore,
     metadataScorePercent: toPercent(metadataScore),
     mode: searchOptions.mode,
-    reason: 'Embedding similarity based on indexed Markdown chunks.'
+    scope: searchOptions.scope,
+    targetRole: eligibility && eligibility.targetRole || '',
+    candidateRole: eligibility && eligibility.candidateRole || '',
+    reasons,
+    diagnostics: Object.assign({ rawScore, rawScorePercent: toPercent(rawScore) }, relevance.diagnostics),
+    reason: 'Calibrated relevance from indexed Markdown vectors and deterministic structure.'
   };
 }
 
@@ -124,6 +163,7 @@ function normalizeSearchOptions(options, settingsStore) {
     mode: normalizeChoice(input.mode, ['content', 'metadata', 'mixed'], defaults.mode),
     contentWeight: normalizePercent(input.contentWeight, defaults.contentWeight),
     metadataWeight: normalizePercent(input.metadataWeight, defaults.metadataWeight),
+    scope: normalizeScope(input.scope),
     refreshIndex: input.refreshIndex === true || input.refreshIndex === 'true' || input.refreshIndex === 'on'
   };
 }
@@ -140,6 +180,15 @@ function getSettingsDefaults(settingsStore) {
   };
 }
 
+function resolveVaultProfile(getVaultProfile) {
+  if (!getVaultProfile) return { roles: {} };
+  try {
+    const result = getVaultProfile();
+    if (result && result.ok && result.profile) return result.profile;
+    if (result && result.profile) return result.profile;
+  } catch (error) {}
+  return { roles: {} };
+}
 function toPercent(score) {
   return Number.isFinite(score) ? Math.round(score * 100) : null;
 }

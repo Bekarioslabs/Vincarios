@@ -58,3 +58,16 @@ test('embedding index store saves and loads indexed document records', () => {
 function createTempVault() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-embedding-index-'));
 }
+
+
+test('embedding index inspection is read-only when no index exists', () => {
+  const root = createTempVault();
+  const store = createEmbeddingIndexStore();
+  store.setRoot(root);
+
+  const inspected = store.inspect();
+
+  assert.equal(inspected.ok, true);
+  assert.equal(inspected.exists, false);
+  assert.equal(fs.existsSync(path.join(root, '.vitruvios', 'index')), false);
+});

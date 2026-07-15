@@ -28,6 +28,9 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'CHAT_CANCEL',
     'CHAT_SEND',
     'EMBEDDINGS_FIND_SIMILAR_NOTES',
+    'EMBEDDINGS_GET_INDEX_STATUS',
+    'EMBEDDINGS_INDEX_HEALTH_CHANGED',
+    'EMBEDDINGS_REFRESH_INDEX',
     'PROVIDER_MODELS',
     'PROVIDER_SET_ACTIVE',
     'PROVIDER_SET_MODEL',
@@ -62,6 +65,9 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.CHAT_SEND, 'chat:send');
   assert.equal(IPC_CHANNELS.CHAT_CANCEL, 'chat:cancel');
   assert.equal(IPC_CHANNELS.EMBEDDINGS_FIND_SIMILAR_NOTES, 'embeddings:find-similar-notes');
+  assert.equal(IPC_CHANNELS.EMBEDDINGS_GET_INDEX_STATUS, 'embeddings:get-index-status');
+  assert.equal(IPC_CHANNELS.EMBEDDINGS_REFRESH_INDEX, 'embeddings:refresh-index');
+  assert.equal(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, 'embeddings:index-health-changed');
   assert.equal(IPC_CHANNELS.PROVIDER_STATUS, 'provider:status');
   assert.equal(IPC_CHANNELS.PROVIDER_MODELS, 'provider:models');
   assert.equal(IPC_CHANNELS.PROVIDER_SET_ACTIVE, 'provider:set-active');
@@ -144,6 +150,12 @@ test('preload exposes embedding search without filesystem access', () => {
   assert.match(preloadSource, /embeddings: Object\.freeze/);
   assert.match(preloadSource, /findSimilarNotes\(payload\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.EMBEDDINGS_FIND_SIMILAR_NOTES, payload\)/);
+  assert.match(preloadSource, /getIndexStatus\(\)/);
+  assert.match(preloadSource, /refreshIndex\(\)/);
+  assert.match(preloadSource, /IPC_CHANNELS\.EMBEDDINGS_GET_INDEX_STATUS/);
+  assert.match(preloadSource, /IPC_CHANNELS\.EMBEDDINGS_REFRESH_INDEX/);
+  assert.match(preloadSource, /onIndexHealthChanged\(listener\)/);
+  assert.match(preloadSource, /IPC_CHANNELS\.EMBEDDINGS_INDEX_HEALTH_CHANGED/);
 });
 
 
@@ -179,4 +191,16 @@ test('preload exposes vault appearance updates without filesystem access', () =>
 
   assert.match(preloadSource, /setProfileAppearance\(payload\)/);
   assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.VAULT_SET_PROFILE_APPEARANCE, payload\)/);
+});
+
+test('Electron bootstrap creates and wires the read-only embedding index status service', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'app', 'bootstrapElectron.js'), 'utf8');
+
+  assert.match(source, /createEmbeddingIndexStatusService/);
+  assert.match(source, /const embeddingIndexStatusService = options\.embeddingIndexStatusService/);
+  assert.match(source, /createEmbeddingIndexHealthService/);
+  assert.match(source, /const embeddingIndexHealthService = options\.embeddingIndexHealthService/);
+  assert.match(source, /registerVaultIpc\([\s\S]*embeddingIndexHealthService\)/);
+  assert.match(source, /registerEmbeddingIpc\([\s\S]*embeddingIndexHealthService\)/);
+  assert.match(source, /EMBEDDINGS_INDEX_HEALTH_CHANGED/);
 });

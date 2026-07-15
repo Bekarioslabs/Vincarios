@@ -131,6 +131,7 @@
       scoreText: String(item && item.scoreText || ''),
       scorePercent: normalizeScorePercent(item && item.scorePercent),
       scoreTone: String(item && item.scoreTone || ''),
+      relationshipLabel: String(item && item.relationshipLabel || ''),
       kind: String(item && item.kind || ''),
       checked: item && item.checked === true,
       dismissed: item && item.dismissed === true,

@@ -177,6 +177,18 @@ test('suggestions workspace empty states use compact icon feedback', () => {
   assert.match(source, /empty-state-icon/);
 });
 
+test('similar-note details route opening through the shell-owned file panel', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+  const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const files = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+
+  assert.match(source, /const onOpenSuggestion = typeof options\.onOpenSuggestion === 'function'/);
+  assert.match(source, /renderSimilarNotePreview\(preview, item\)/);
+  assert.match(source, /onOpenSuggestion\(item\.path\)/);
+  assert.match(shell, /onOpenSuggestion: \(path\) => vaultUi\.filePanel && vaultUi\.filePanel\.openMarkdownPath/);
+  assert.match(files, /async function openMarkdownPath\(path\)/);
+  assert.match(files, /openMarkdownPath,/);
+});
 test('suggestions score presentation uses real SVG rings instead of pills or meters', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');

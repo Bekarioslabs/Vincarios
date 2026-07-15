@@ -23,6 +23,9 @@ const IPC_CHANNELS = Object.freeze({
   SETTINGS_SET_ACTION_DEFAULTS: 'settings:set-action-defaults',
   SETTINGS_SET_RECENT_VAULTS: 'settings:set-recent-vaults',
   EMBEDDINGS_FIND_SIMILAR_NOTES: 'embeddings:find-similar-notes',
+  EMBEDDINGS_GET_INDEX_STATUS: 'embeddings:get-index-status',
+  EMBEDDINGS_REFRESH_INDEX: 'embeddings:refresh-index',
+  EMBEDDINGS_INDEX_HEALTH_CHANGED: 'embeddings:index-health-changed',
   VAULT_STATE: 'vault:state',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',
@@ -101,6 +104,18 @@ const vitruvios = Object.freeze({
   embeddings: Object.freeze({
     findSimilarNotes(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.EMBEDDINGS_FIND_SIMILAR_NOTES, payload);
+    },
+    getIndexStatus() {
+      return ipcRenderer.invoke(IPC_CHANNELS.EMBEDDINGS_GET_INDEX_STATUS);
+    },
+    refreshIndex() {
+      return ipcRenderer.invoke(IPC_CHANNELS.EMBEDDINGS_REFRESH_INDEX);
+    },
+    onIndexHealthChanged(listener) {
+      if (typeof listener !== 'function') return () => {};
+      const handler = (_event, health) => listener(health);
+      ipcRenderer.on(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, handler);
     }
   }),
   vault: Object.freeze({

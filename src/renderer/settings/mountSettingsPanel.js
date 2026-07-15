@@ -36,6 +36,7 @@
     const openButtons = app.querySelectorAll('[data-open-settings]');
     openButtons.forEach((button) => button.addEventListener('click', () => openPanel(panel, api, status, vaultProfileState)));
     panel.closeButtons.forEach((button) => button.addEventListener('click', () => closePanel(panel)));
+    subscribeToEmbeddingIndexHealth(panel, api);
 
     return Object.freeze({
       open() { return openPanel(panel, api, status, vaultProfileState); },
@@ -125,6 +126,13 @@
       '          <h3>Embeddings</h3>',
       '          <p>Local semantic search support. Embeddings stay separate from chat providers.</p>',
       '        </div>',
+      '        <section class="settings-embedding-index" aria-labelledby="settings-embedding-index-title">',
+      '          <div class="settings-embedding-index-head">',
+      '            <div><h4 id="settings-embedding-index-title">Embedding index</h4><p class="settings-embedding-index-status" data-settings-embedding-index-status aria-live="polite">Checking index...</p></div>',
+      '            <button type="button" class="settings-primary-button" data-settings-refresh-embedding-index>Build index</button>',
+      '          </div>',
+      '          <p class="settings-embedding-index-counts" data-settings-embedding-index-counts></p>',
+      '        </section>',
       '        <dl class="settings-detail-list" data-settings-embeddings-summary>',
       '          <div><dt>Base model</dt><dd>sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2</dd></div>',
       '          <div><dt>Artifact repo</dt><dd>Xenova/paraphrase-multilingual-MiniLM-L12-v2</dd></div>',
@@ -172,6 +180,9 @@
       vaultThemeHelp: backdrop.querySelector('[data-settings-vault-theme-help]'),
       vaultRoleList: backdrop.querySelector('[data-settings-vault-role-list]'),
       embeddingsGrid: backdrop.querySelector('[data-settings-embeddings-grid]'),
+      embeddingIndexStatus: backdrop.querySelector('[data-settings-embedding-index-status]'),
+      embeddingIndexCounts: backdrop.querySelector('[data-settings-embedding-index-counts]'),
+      refreshEmbeddingIndexButton: backdrop.querySelector('[data-settings-refresh-embedding-index]'),
       saveEmbeddingsButton: backdrop.querySelector('[data-settings-save-embeddings]'),
       actionDefaultsGrid: backdrop.querySelector('[data-settings-action-defaults-grid]'),
       saveActionDefaultsButton: backdrop.querySelector('[data-settings-save-action-defaults]'),
@@ -263,6 +274,7 @@
     await renderVaultProfileSettings(panel, api, statusBar, vaultProfileState);
     await renderAppearanceSettings(panel, api, statusBar, settings, vaultProfileState);
     renderEmbeddingSettings(panel, api, statusBar, settings);
+    await renderEmbeddingIndexStatus(panel, api);
     setText(panel.status, 'Ready');
   }
 
@@ -576,26 +588,19 @@
     if (!panel.embeddingsGrid) return;
     panel.embeddingsGrid.innerHTML = '';
 
-    const modeField = createSelectField('Mode', 'mode', [
-      ['mixed', 'Mixed'],
-      ['content', 'Content'],
-      ['metadata', 'Metadata']
-    ], similarNotes.mode || 'mixed');
-    panel.embeddingsGrid.appendChild(modeField);
-
+    panel.embeddingsGrid.appendChild(createEmbeddingModeField(similarNotes.mode || 'mixed'));
     panel.embeddingsGrid.appendChild(createEmbeddingNumberField('Minimum match %', 'minimumScorePercent', similarNotes.minimumScorePercent || 65, { min: 0, max: 100 }));
-    panel.embeddingsGrid.appendChild(createEmbeddingWeightField(similarNotes.contentWeight || 80));
     panel.embeddingsGrid.appendChild(createEmbeddingNumberField('Max results', 'maxResults', similarNotes.maxResults || 8, { min: 1 }));
 
     if (panel.saveEmbeddingsButton && !panel.saveEmbeddingsButton.dataset.bound) {
       panel.saveEmbeddingsButton.dataset.bound = 'true';
       panel.saveEmbeddingsButton.addEventListener('click', async () => {
-        const contentWeight = normalizePercent(panel.embeddingsGrid.querySelector('[data-settings-embedding-weight]').value, 80);
+        const similarity = getSimilaritySourceOptions().weightsFor(readEmbeddingMode(panel.embeddingsGrid, 'mixed'));
         const payload = { similarNotes: {
-          mode: readEmbeddingValue(panel.embeddingsGrid, 'mode', 'mixed'),
+          mode: similarity.mode,
           minimumScorePercent: readEmbeddingValue(panel.embeddingsGrid, 'minimumScorePercent', '65'),
-          contentWeight,
-          metadataWeight: 100 - contentWeight,
+          contentWeight: similarity.contentWeight,
+          metadataWeight: similarity.metadataWeight,
           maxResults: readEmbeddingValue(panel.embeddingsGrid, 'maxResults', '8')
         } };
         setText(panel.status, 'Saving embedding defaults...');
@@ -605,9 +610,71 @@
           return;
         }
         setText(panel.status, 'Embedding defaults saved.');
+        app.dispatchEvent(new CustomEvent('vitruvios:embedding-similar-defaults-change'));
         renderSettings(panel, api, statusBar, result.settings || settings);
       });
     }
+  }
+
+  function subscribeToEmbeddingIndexHealth(panel, api) {
+    if (!api || !api.embeddings || typeof api.embeddings.onIndexHealthChanged !== 'function') return;
+    api.embeddings.onIndexHealthChanged((health) => applyEmbeddingIndexStatus(panel, health));
+  }
+
+  async function renderEmbeddingIndexStatus(panel, api) {
+    const statusResult = api && api.embeddings && typeof api.embeddings.getIndexStatus === 'function'
+      ? await safeCall(() => api.embeddings.getIndexStatus())
+      : null;
+    applyEmbeddingIndexStatus(panel, statusResult);
+
+    if (panel.refreshEmbeddingIndexButton && !panel.refreshEmbeddingIndexButton.dataset.bound) {
+      panel.refreshEmbeddingIndexButton.dataset.bound = 'true';
+      panel.refreshEmbeddingIndexButton.addEventListener('click', async () => {
+        if (!api || !api.embeddings || typeof api.embeddings.refreshIndex !== 'function') return;
+        panel.refreshEmbeddingIndexButton.disabled = true;
+        setText(panel.embeddingIndexStatus, 'Indexing Markdown notes...');
+        const result = await safeCall(() => api.embeddings.refreshIndex());
+        if (!result || result.ok === false) {
+          setText(panel.embeddingIndexStatus, result && result.message ? result.message : 'Could not build the embedding index.');
+          panel.refreshEmbeddingIndexButton.disabled = false;
+          return;
+        }
+        const refreshedStatus = await safeCall(() => api.embeddings.getIndexStatus());
+        applyEmbeddingIndexStatus(panel, refreshedStatus);
+      });
+    }
+  }
+
+  function applyEmbeddingIndexStatus(panel, result) {
+    const status = result && result.ok !== false ? result : null;
+    const state = status && status.state ? status.state : 'unavailable';
+    const messages = {
+      no_vault: 'Open a vault to inspect its index.',
+      no_index: 'No index yet.',
+      ready: 'Embedding index is ready.',
+      stale: 'Index needs refresh after vault changes.',
+      indexing: 'Embedding index is updating.',
+      rebuild_required: 'Rebuild required for the active model.',
+      unavailable: 'Local embedding model is unavailable.',
+      invalid: 'Index could not be read.'
+    };
+    const labels = {
+      no_index: 'Build index',
+      ready: 'Refresh index',
+      stale: 'Refresh index',
+      rebuild_required: 'Rebuild index',
+      invalid: 'Rebuild index'
+    };
+    if (panel.embeddingIndexStatus) panel.embeddingIndexStatus.dataset.indexState = state;
+    setText(panel.embeddingIndexStatus, messages[state] || 'Embedding index status unavailable.');
+    const documentCount = Number(status && status.documentCount) || 0;
+    const chunkCount = Number(status && status.chunkCount) || 0;
+    setText(panel.embeddingIndexCounts, state === 'ready' || state === 'stale' || state === 'rebuild_required'
+      ? documentCount + ' Markdown notes, ' + chunkCount + ' chunks.'
+      : '');
+    if (!panel.refreshEmbeddingIndexButton) return;
+    panel.refreshEmbeddingIndexButton.textContent = labels[state] || 'Index unavailable';
+    panel.refreshEmbeddingIndexButton.disabled = !status || status.canRefresh !== true;
   }
 
   function createEmbeddingNumberField(labelText, key, value, options) {
@@ -624,48 +691,40 @@
     return label;
   }
 
-  function createEmbeddingWeightField(value) {
-    const label = document.createElement('label');
-    label.className = 'settings-limit-field settings-range-field';
-    label.innerHTML = '<span>Content / metadata weight <strong data-settings-embedding-weight-display></strong></span><input type="range" min="0" max="100" step="5" data-settings-embedding-weight>';
-    const input = label.querySelector('[data-settings-embedding-weight]');
-    const display = label.querySelector('[data-settings-embedding-weight-display]');
-    input.value = String(normalizePercent(value, 80));
-    function update() {
-      const content = normalizePercent(input.value, 80);
-      display.textContent = content + '% content / ' + (100 - content) + '% metadata';
-    }
-    input.addEventListener('input', update);
-    update();
-    return label;
+  function createEmbeddingModeField(value) {
+    const fieldset = document.createElement('fieldset');
+    fieldset.className = 'settings-limit-field settings-embedding-source';
+    fieldset.dataset.settingsEmbeddingSource = '';
+    const legend = document.createElement('legend');
+    legend.textContent = 'Search source';
+    fieldset.appendChild(legend);
+    const selected = getSimilaritySourceOptions().normalize(value);
+    getSimilaritySourceOptions().options().forEach((source) => {
+      const label = document.createElement('label');
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'settings-embedding-source';
+      input.value = source.value;
+      input.checked = source.value === selected;
+      label.appendChild(input);
+      label.appendChild(document.createTextNode(source.label));
+      fieldset.appendChild(label);
+    });
+    return fieldset;
+  }
+
+  function readEmbeddingMode(root, fallback) {
+    const selected = root.querySelector('[data-settings-embedding-source] input:checked');
+    return getSimilaritySourceOptions().normalize(selected && selected.value ? selected.value : fallback);
+  }
+
+  function getSimilaritySourceOptions() {
+    return window.VitruviosSimilaritySourceOptions;
   }
 
   function readEmbeddingValue(root, key, fallback) {
     const input = root.querySelector('[data-embedding-key="' + key + '"]');
     return input ? input.value : fallback;
-  }
-
-  function normalizePercent(value, fallback) {
-    const number = Number(value);
-    if (!Number.isFinite(number)) return fallback;
-    return Math.max(0, Math.min(100, Math.floor(number)));
-  }
-
-  function createSelectField(labelText, key, options, value) {
-    const label = document.createElement('label');
-    label.className = 'settings-limit-field';
-    label.innerHTML = '<span></span><select class="settings-provider-url" data-settings-embedding-mode></select>';
-    label.querySelector('span').textContent = labelText;
-    const select = label.querySelector('select');
-    select.setAttribute('data-embedding-key', key);
-    options.forEach((option) => {
-      const item = document.createElement('option');
-      item.value = option[0];
-      item.textContent = option[1];
-      item.selected = option[0] === value;
-      select.appendChild(item);
-    });
-    return label;
   }
 
   async function renderVaultProfileSettings(panel, api, statusBar, vaultProfileState) {

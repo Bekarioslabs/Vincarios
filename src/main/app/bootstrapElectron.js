@@ -19,6 +19,9 @@ const { createVaultWriteService } = require('../vault/vaultWriteService');
 const { createVaultProfileService } = require('../vault/vaultProfileService');
 const { createEmbeddingSimilaritySearch } = require('../embeddings/embeddingSimilaritySearch');
 const { createEmbeddingIndexer } = require('../embeddings/embeddingIndexer');
+const { createEmbeddingIndexStatusService } = require('../embeddings/embeddingIndexStatusService');
+const { createEmbeddingIndexHealthService } = require('../embeddings/embeddingIndexHealthService');
+const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 const { getPortableSettingsPath, migrateLegacySettingsToPortable } = require('./portableDataPath');
 
 function bootstrapElectron(electron, options) {
@@ -56,7 +59,16 @@ function bootstrapElectron(electron, options) {
   }));
   const chatService = options.chatService || createProviderChatService(providerOptions);
   const embeddingIndexer = options.embeddingIndexer || createEmbeddingIndexer({ settingsStore });
-  const embeddingSearchService = options.embeddingSearchService || createEmbeddingSimilaritySearch({ settingsStore, indexer: embeddingIndexer });
+  const embeddingSearchService = options.embeddingSearchService || createEmbeddingSimilaritySearch({
+    settingsStore,
+    indexer: embeddingIndexer,
+    getVaultProfile: () => vaultProfileService.getProfile()
+  });
+  const embeddingIndexStatusService = options.embeddingIndexStatusService || createEmbeddingIndexStatusService({ projectRoot });
+  const embeddingIndexHealthService = options.embeddingIndexHealthService || createEmbeddingIndexHealthService({
+    statusService: embeddingIndexStatusService,
+    indexer: embeddingIndexer
+  });
 
   registerChatIpc(ipcMain, chatService);
   registerAppIpc(ipcMain, {
@@ -64,10 +76,15 @@ function bootstrapElectron(electron, options) {
     version: app.getVersion ? app.getVersion() : '0.1.0',
     shell: electron.shell
   });
-  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService);
+  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, embeddingIndexHealthService);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);
   registerSettingsIpc(ipcMain, settingsService);
-  registerEmbeddingIpc(ipcMain, embeddingSearchService);
+  registerEmbeddingIpc(ipcMain, embeddingSearchService, embeddingIndexHealthService);
+  embeddingIndexHealthService.subscribe((health) => {
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (window && window.webContents) window.webContents.send(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, health);
+    });
+  });
 
   app.whenReady().then(() => {
     createMainWindow(electron, { projectRoot });

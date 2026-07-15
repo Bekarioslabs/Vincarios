@@ -7,6 +7,9 @@ const { createEmbeddingRuntimeService } = require('./embeddingRuntimeService');
 const { DEFAULT_EMBEDDING_MODEL } = require('./embeddingModelStore');
 const {
   createIndexedDocumentRecord,
+  createEmbeddingFingerprint,
+  embeddingFingerprintsMatch,
+  INDEX_VERSION,
   shouldReindexDocument
 } = require('../../shared/embeddings/embeddingIndexSchema');
 
@@ -21,6 +24,8 @@ function createEmbeddingIndexer(options) {
   const modelId = normalizeString(options.modelId) || DEFAULT_EMBEDDING_MODEL.id;
   const dimensions = normalizePositiveInteger(options.dimensions, DEFAULT_EMBEDDING_MODEL.dimensions);
   const chunkSizeChars = normalizePositiveInteger(options.chunkSizeChars, DEFAULT_CHUNK_SIZE_CHARS);
+  const modelRevision = normalizeString(options.modelRevision) || DEFAULT_EMBEDDING_MODEL.sourceRevision;
+  const fingerprint = createEmbeddingFingerprint({ modelId, dimensions, revision: modelRevision, indexVersion: INDEX_VERSION });
   const chunkOverlapChars = Math.min(
     normalizePositiveInteger(options.chunkOverlapChars, DEFAULT_CHUNK_OVERLAP_CHARS),
     Math.max(0, chunkSizeChars - 1)
@@ -40,11 +45,11 @@ function createEmbeddingIndexer(options) {
 
     const loaded = indexStore.loadDocuments();
     if (!loaded.ok) return loaded;
-
-    const manifest = indexStore.saveManifest({ modelId, dimensions });
-    if (!manifest.ok) return manifest;
+    const loadedManifest = indexStore.loadManifest();
+    if (!loadedManifest.ok) return loadedManifest;
 
     const previousDocuments = loaded.documents || {};
+    const indexFingerprintChanged = !embeddingFingerprintsMatch(loadedManifest.index && loadedManifest.index.fingerprint, fingerprint);
     const nextDocuments = {};
     let indexedDocuments = 0;
     let skippedDocuments = 0;
@@ -54,7 +59,7 @@ function createEmbeddingIndexer(options) {
       const state = getDocumentState(document);
       const existing = previousDocuments[state.path];
       const splitIndexMissing = existing && !Array.isArray(existing.bodyVectors);
-      if (!shouldReindexDocument(existing, { hash: state.hash, mtimeMs: state.mtimeMs, modelChanged: splitIndexMissing })) {
+      if (!shouldReindexDocument(existing, { hash: state.hash, mtimeMs: state.mtimeMs, modelChanged: splitIndexMissing || indexFingerprintChanged })) {
         nextDocuments[state.path] = existing;
         skippedDocuments += 1;
         chunkCount += existing.chunks.length;
@@ -85,7 +90,7 @@ function createEmbeddingIndexer(options) {
       chunkCount += bodyChunks.length + frontmatterChunks.length;
     }
 
-    const saved = indexStore.saveDocuments(nextDocuments);
+    const saved = indexStore.saveIndex({ modelId, dimensions, fingerprint }, nextDocuments);
     if (!saved.ok) return saved;
 
     return ok({

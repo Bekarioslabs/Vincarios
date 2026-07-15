@@ -33,6 +33,29 @@ test('embedding indexer embeds markdown documents into chunk vectors and saves t
   assert.deepEqual(store.savedDocuments['Notes/One.md'].vectors[0], [1, 2, 3]);
 });
 
+test('embedding indexer preserves the prior index when embedding fails before refresh completes', async () => {
+  const existingManifest = { model: { id: 'old-model', dimensions: 3 }, fingerprint: { modelId: 'old-model', dimensions: 3, revision: 'old', indexVersion: 1 } };
+  const existingDocuments = {
+    'Notes/Old.md': { path: 'Notes/Old.md', hash: 'old-hash', mtimeMs: 1, chunks: [{ id: 'old', start: 0, end: 3, text: 'old' }], vectors: [[9]], bodyChunks: [{ id: 'old', start: 0, end: 3, text: 'old' }], bodyVectors: [[9]], frontmatterChunks: [], frontmatterVectors: [] }
+  };
+  const store = createMemoryStore(existingDocuments, existingManifest);
+  const indexer = createEmbeddingIndexer({
+    source: createSource([{ path: 'Notes/New.md', content: 'New source needs embedding.', mtimeMs: 2 }]),
+    indexStore: store,
+    runtime: { async embedText() { return { ok: false, code: 'embedding_runtime_failed', message: 'Synthetic failure.' }; } },
+    modelId: 'test-model',
+    dimensions: 3,
+    chunkSizeChars: 1200,
+    chunkOverlapChars: 0
+  });
+
+  const result = await indexer.rebuildIndex();
+
+  assert.equal(result.ok, false);
+  assert.deepEqual(store.persistedManifest, existingManifest);
+  assert.deepEqual(store.persistedDocuments, existingDocuments);
+});
+
 test('embedding indexer skips unchanged documents already in the index', async () => {
   const runtimeCalls = [];
   const store = createMemoryStore({
@@ -47,7 +70,7 @@ test('embedding indexer skips unchanged documents already in the index', async (
       frontmatterChunks: [],
       frontmatterVectors: []
     }
-  });
+  }, matchingManifest('test-model'));
   const indexer = createEmbeddingIndexer({
     source: createSource([
       { path: 'Notes/One.md', content: 'same', hash: 'fixed-hash', mtimeMs: 10 }
@@ -67,6 +90,10 @@ test('embedding indexer skips unchanged documents already in the index', async (
   assert.equal(store.savedDocuments['Notes/One.md'].chunks[0].id, 'old');
 });
 
+function matchingManifest(modelId) {
+  return { model: { id: modelId, dimensions: 3 }, fingerprint: { modelId, dimensions: 3, revision: '2c4055b', indexVersion: 1 } };
+}
+
 function createSource(documents) {
   return {
     listMarkdownDocuments() {
@@ -84,20 +111,34 @@ function createRuntime(calls) {
   };
 }
 
-function createMemoryStore(existingDocuments) {
+function createMemoryStore(existingDocuments, existingManifest) {
   const store = {
     savedManifest: null,
     savedDocuments: null,
+    persistedManifest: existingManifest || { model: { id: '', dimensions: 0 }, fingerprint: {} },
+    persistedDocuments: Object.assign({}, existingDocuments || {}),
+    loadManifest() {
+      return { ok: true, index: store.persistedManifest };
+    },
     loadDocuments() {
-      return { ok: true, documents: Object.assign({}, existingDocuments || {}) };
+      return { ok: true, documents: Object.assign({}, store.persistedDocuments) };
     },
     saveManifest(options) {
       store.savedManifest = { model: { id: options.modelId, dimensions: options.dimensions } };
+      store.persistedManifest = store.savedManifest;
       return { ok: true, index: store.savedManifest };
     },
     saveDocuments(documents) {
       store.savedDocuments = documents;
+      store.persistedDocuments = documents;
       return { ok: true, documents };
+    },
+    saveIndex(options, documents) {
+      store.savedManifest = { model: { id: options.modelId, dimensions: options.dimensions }, fingerprint: options.fingerprint };
+      store.savedDocuments = documents;
+      store.persistedManifest = store.savedManifest;
+      store.persistedDocuments = documents;
+      return { ok: true, index: store.savedManifest, documents };
     }
   };
   return store;

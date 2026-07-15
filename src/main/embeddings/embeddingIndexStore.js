@@ -44,6 +44,24 @@ function createEmbeddingIndexStore(options) {
     };
   }
 
+  function inspect() {
+    const location = getIndexLocation();
+    if (!location.ok) return location;
+    const manifestExists = fileSystem.existsSync(location.manifestPath);
+    const documentsExists = fileSystem.existsSync(location.documentsPath);
+    if (!manifestExists && !documentsExists) return ok({ exists: false, manifest: null, documents: {} });
+    if (!manifestExists || !documentsExists) {
+      return fail('invalid_embedding_index', 'Embedding index files are incomplete.');
+    }
+    try {
+      const manifest = JSON.parse(fileSystem.readFileSync(location.manifestPath, 'utf8'));
+      const documentPayload = JSON.parse(fileSystem.readFileSync(location.documentsPath, 'utf8'));
+      return ok({ exists: true, manifest, documents: normalizeDocuments(documentPayload.documents) });
+    } catch (error) {
+      return fail('invalid_embedding_index', 'Embedding index could not be read.');
+    }
+  }
+
   function loadManifest() {
     const location = getIndexLocation();
     if (!location.ok) return location;
@@ -54,6 +72,42 @@ function createEmbeddingIndexStore(options) {
       return ok({ index: JSON.parse(fileSystem.readFileSync(location.manifestPath, 'utf8')) });
     } catch (error) {
       return fail('invalid_embedding_manifest', 'Embedding index manifest could not be read.');
+    }
+  }
+
+  function saveIndex(options, documents) {
+    const location = getIndexLocation();
+    if (!location.ok) return location;
+    const index = createEmptyEmbeddingIndex(options || {});
+    const normalized = normalizeDocuments(documents);
+    const previousManifest = captureFile(location.manifestPath);
+    const previousDocuments = captureFile(location.documentsPath);
+    try {
+      fileSystem.mkdirSync(location.folderPath, { recursive: true });
+      fileSystem.writeFileSync(location.manifestPath, JSON.stringify(index, null, 2) + '\n', 'utf8');
+      fileSystem.writeFileSync(location.documentsPath, JSON.stringify({ documents: normalized }, null, 2) + '\n', 'utf8');
+      return ok({ index, documents: normalized, manifestPath: location.manifestPath, documentsPath: location.documentsPath });
+    } catch (error) {
+      restoreFile(location.manifestPath, previousManifest);
+      restoreFile(location.documentsPath, previousDocuments);
+      return fail('embedding_index_write_failed', 'Embedding index could not be saved.');
+    }
+  }
+
+  function captureFile(filePath) {
+    if (!fileSystem.existsSync(filePath)) return { exists: false, content: '' };
+    return { exists: true, content: fileSystem.readFileSync(filePath, 'utf8') };
+  }
+
+  function restoreFile(filePath, snapshot) {
+    try {
+      if (snapshot && snapshot.exists) {
+        fileSystem.writeFileSync(filePath, snapshot.content, 'utf8');
+      } else if (fileSystem.existsSync(filePath)) {
+        fileSystem.unlinkSync(filePath);
+      }
+    } catch (error) {
+      // A restore failure leaves the original write error as the actionable result.
     }
   }
 
@@ -108,7 +162,9 @@ function createEmbeddingIndexStore(options) {
   return Object.freeze({
     setRoot,
     getIndexLocation,
+    inspect,
     loadManifest,
+    saveIndex,
     saveManifest,
     loadDocuments,
     saveDocuments

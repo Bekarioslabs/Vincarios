@@ -248,3 +248,48 @@
     transition: none;
   }
 }
+
+.file-index-health {
+  width: var(--control-size-tool);
+  height: var(--control-size-tool);
+  flex: 0 0 var(--control-size-tool);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+}
+
+.file-index-health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.file-index-health[data-index-state="ready"] .file-index-health-dot {
+  background: var(--status-success);
+}
+
+.file-index-health[data-index-state="stale"] .file-index-health-dot,
+.file-index-health[data-index-state="rebuild_required"] .file-index-health-dot,
+.file-index-health[data-index-state="indexing"] .file-index-health-dot {
+  background: var(--text-accent);
+}
+
+.file-index-health[data-index-state="no_index"] .file-index-health-dot,
+.file-index-health[data-index-state="unavailable"] .file-index-health-dot,
+.file-index-health[data-index-state="invalid"] .file-index-health-dot {
+  background: var(--status-danger);
+}
+
+.file-index-health[data-index-state="indexing"] .file-index-health-dot {
+  animation: file-index-health-pulse 1s ease-in-out infinite;
+}
+
+@keyframes file-index-health-pulse {
+  50% { opacity: .35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-index-health[data-index-state="indexing"] .file-index-health-dot { animation: none; }
+}

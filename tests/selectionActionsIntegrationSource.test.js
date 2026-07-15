@@ -256,14 +256,16 @@ test('find similar notes opens a settings-backed mini form', () => {
 
   assert.match(source, /renderSimilarNotesForm\(snapshot, host\)/);
   assert.match(source, /let similarNotesSessionOptions = null/);
-  assert.equal(source.includes('function normalizePercent(value, fallback)'), true);
-  assert.equal(source.indexOf('function normalizePercent(value, fallback)') < source.indexOf('function wireSimilarWeightSlider'), true);
+  assert.match(source, /getSimilaritySourceOptions/);
   assert.match(source, /loadSimilarNotesDefaults/);
   assert.match(source, /api.settings.get/);
-  assert.match(source, /data-similar-mode/);
+  assert.match(source, /data-similar-source/);
   assert.match(source, /data-similar-min/);
-  assert.match(source, /data-similar-content-weight/);
+  assert.doesNotMatch(source, /data-similar-content-weight/);
   assert.match(source, /data-similar-refresh-index/);
+  assert.match(source, /data-similar-scope/);
+  assert.match(source, /Relevant area/);
+  assert.match(source, /scope: selectedScope && selectedScope.value/);
   assert.match(source, /createActionRow/);
   assert.match(source, /selection-action-row/);
   assert.match(source, /appendActionForm\(host, form\)/);
@@ -312,4 +314,22 @@ test('folder context uses the shared scope form and bounded snapshot action', ()
   assert.match(source, /buildFolderContextSnapshot/);
   assert.match(source, /renderFolderScopeForm\(snapshot, host, config\)/);
   assert.doesNotMatch(source, /addContextItem\(\{ kind: 'folder', path: snapshot\.path \}\)/);
+});
+
+test('Similar Notes uses one explicit source mode instead of a content metadata weight slider', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+
+  assert.match(source, /data-similar-source/);
+  assert.match(source, /Content/);
+  assert.match(source, /Metadata/);
+  assert.match(source, /Both/);
+  assert.doesNotMatch(source, /data-similar-content-weight/);
+  assert.doesNotMatch(source, /wireSimilarWeightSlider/);
+});
+
+
+test('Similar Notes resets session-only choices when Embedding defaults are saved', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  assert.match(source, /vitruvios:embedding-similar-defaults-change/);
+  assert.match(source, /similarNotesSessionOptions = null/);
 });

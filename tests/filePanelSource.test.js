@@ -169,3 +169,16 @@ test('file panel renders folder appearance from shared Vault Profile state witho
   assert.doesNotMatch(source, /contextmenu/);
   assert.doesNotMatch(source, /FolderAppearance/);
 });
+
+
+test('file toolbar renders accessible embedding index health from the narrow preload API', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
+
+  assert.match(source, /data-file-index-health/);
+  assert.match(source, /api.embeddings.getIndexStatus/);
+  assert.match(source, /api.embeddings.onIndexHealthChanged/);
+  assert.match(source, /function renderIndexHealth/);
+  assert.match(css, /.file-index-health/);
+  assert.match(css, /data-index-state="ready"/);
+});
