@@ -24,6 +24,10 @@ function registerSettingsIpc(ipcMain, settingsService) {
     ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_LAYOUT, (event, payload) => settingsService.setLayoutPreferences(payload || {}));
   }
 
+  if (typeof settingsService.setTheme === 'function') {
+    ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_THEME, (event, payload) => settingsService.setTheme(payload || {}));
+  }
+
   if (typeof settingsService.setLimits === 'function') {
     ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_LIMITS, (event, payload) => settingsService.setLimits(payload || {}));
   }
@@ -39,7 +43,6 @@ function registerSettingsIpc(ipcMain, settingsService) {
   if (typeof settingsService.setRecentVaults === 'function') {
     ipcMain.handle(IPC_CHANNELS.SETTINGS_SET_RECENT_VAULTS, (event, payload) => settingsService.setRecentVaults(payload || {}));
   }
-
 }
 
 module.exports = {

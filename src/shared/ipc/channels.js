@@ -13,6 +13,7 @@ const IPC_CHANNELS = Object.freeze({
   SETTINGS_SET_PROVIDER_URL: 'settings:set-provider-url',
   SETTINGS_RESET_PROVIDER_URL: 'settings:reset-provider-url',
   SETTINGS_SET_LAYOUT: 'settings:set-layout',
+  SETTINGS_SET_THEME: 'settings:set-theme',
   SETTINGS_SET_LIMITS: 'settings:set-limits',
   SETTINGS_SET_EMBEDDINGS: 'settings:set-embeddings',
   SETTINGS_SET_ACTION_DEFAULTS: 'settings:set-action-defaults',

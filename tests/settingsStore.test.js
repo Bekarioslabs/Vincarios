@@ -183,3 +183,17 @@ test('settings store keeps a portable two-entry recent vault history', () => {
     'D:/Vaults/Two'
   ]);
 });
+
+test('settings store persists only normalized app theme modes', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const filePath = path.join(dir, 'settings.json');
+  const store = createSettingsStore({ filePath });
+
+  const result = store.setTheme({ mode: 'light' });
+  assert.equal(result.ok, true);
+  assert.equal(store.getSettings().theme.mode, 'light');
+
+  const reloaded = createSettingsStore({ filePath });
+  assert.equal(reloaded.getSettings().theme.mode, 'light');
+  assert.equal(store.setTheme({ mode: 'unsupported' }).settings.theme.mode, 'dark');
+});

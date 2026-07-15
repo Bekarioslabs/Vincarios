@@ -35,6 +35,10 @@ function createSettingsService(options) {
     return settingsStore.setLayoutPreferences(payload || {});
   }
 
+  function setTheme(payload) {
+    return settingsStore.setTheme(payload || {});
+  }
+
   function setLimits(payload) {
     return settingsStore.setLimits(payload || {});
   }
@@ -64,6 +68,7 @@ function createSettingsService(options) {
     setProviderUrlOverride,
     resetProviderUrlOverride,
     setLayoutPreferences,
+    setTheme,
     setLimits,
     setEmbeddingSettings,
     setActionDefaults,

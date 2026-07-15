@@ -34,3 +34,17 @@ test('settings service exposes app-local layout preference updates', () => {
   assert.deepEqual(calls, [{ panels: { selectionActionsCollapsed: true } }]);
   assert.deepEqual(result, { ok: true, layout: { panels: { selectionActionsCollapsed: true } } });
 });
+test('settings service delegates app theme updates', () => {
+  const calls = [];
+  const service = createSettingsService({
+    settingsStore: {
+      getSettings() { return { version: 1 }; },
+      setTheme(payload) { calls.push(payload); return { ok: true, theme: payload }; }
+    }
+  });
+
+  const result = service.setTheme({ mode: 'light' });
+
+  assert.deepEqual(calls, [{ mode: 'light' }]);
+  assert.deepEqual(result, { ok: true, theme: { mode: 'light' } });
+});

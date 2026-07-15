@@ -40,6 +40,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'SETTINGS_SET_LIMITS',
     'SETTINGS_SET_PROVIDER_URL',
     'SETTINGS_SET_RECENT_VAULTS',
+    'SETTINGS_SET_THEME',
     'VAULT_CREATE_FOLDER',
     'VAULT_CREATE_NOTE',
     'VAULT_GET_PROFILE',
@@ -71,6 +72,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.SETTINGS_SET_LIMITS, 'settings:set-limits');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS, 'settings:set-embeddings');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_ACTION_DEFAULTS, 'settings:set-action-defaults');
+  assert.equal(IPC_CHANNELS.SETTINGS_SET_THEME, 'settings:set-theme');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
   assert.equal(IPC_CHANNELS.VAULT_READ_IMAGE_ASSET, 'vault:read-image-asset');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_NOTE, 'vault:create-note');

@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { normalizeActionDefaults } = require('../../shared/settings/actionDefaults');
+const { normalizeAppTheme } = require('../../shared/settings/theme');
 
 const SETTINGS_VERSION = 1;
 const DEFAULT_SIMILAR_NOTES = Object.freeze({
@@ -146,6 +147,14 @@ function createSettingsStore(options) {
     return { ok: true, settings, layout: settings.layout };
   }
 
+  function setTheme(theme) {
+    updateSettings((draft) => {
+      draft.theme = Object.assign({}, draft.theme, { mode: normalizeAppTheme(theme && theme.mode) });
+      return draft;
+    });
+    return { ok: true, settings, theme: settings.theme };
+  }
+
   return Object.freeze({
     getSettings,
     updateSettings,
@@ -157,7 +166,8 @@ function createSettingsStore(options) {
     setEmbeddingSettings,
     setActionDefaults,
     setRecentVaults,
-    setLayoutPreferences
+    setLayoutPreferences,
+    setTheme
   });
 }
 
@@ -176,7 +186,7 @@ function normalizeAppSettings(value) {
     actionDefaults: normalizeActionDefaults(value.actionDefaults || {}),
     startup: Object.freeze(normalizeStartupSettings(value.startup || {})),
     theme: Object.freeze({
-      mode: normalizeChoice(value.theme && value.theme.mode, ['dark', 'light', 'system'], 'dark'),
+      mode: normalizeAppTheme(value.theme && value.theme.mode),
       accent: normalizeId(value.theme && value.theme.accent) || 'vitruvios-amber'
     }),
     layout: Object.freeze(normalizeLayoutSettings(value.layout || {})),

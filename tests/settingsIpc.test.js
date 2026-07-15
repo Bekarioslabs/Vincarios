@@ -19,7 +19,8 @@ test('settings IPC exposes get and provider URL override actions', async () => {
     setLimits(payload) { return { ok: true, limits: payload }; },
     setEmbeddingSettings(payload) { return { ok: true, embeddings: payload }; },
     setActionDefaults(payload) { return { ok: true, actionDefaults: payload }; },
-    setLayoutPreferences(payload) { return { ok: true, layout: payload }; }
+    setLayoutPreferences(payload) { return { ok: true, layout: payload }; },
+    setTheme(payload) { return { ok: true, theme: payload }; }
   };
 
   registerSettingsIpc(ipcMain, service);
@@ -31,6 +32,7 @@ test('settings IPC exposes get and provider URL override actions', async () => {
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_ACTION_DEFAULTS), true);
   assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_LAYOUT), true);
+  assert.equal(handlers.has(IPC_CHANNELS.SETTINGS_SET_THEME), true);
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_GET)(), { version: 1 });
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_PROVIDER_URL)(null, { providerId: 'ollama', baseUrl: 'http://localhost:11435' }), {
     ok: true,
@@ -56,6 +58,10 @@ test('settings IPC exposes get and provider URL override actions', async () => {
   assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_LAYOUT)(null, { panels: { selectionActionsCollapsed: true } }), {
     ok: true,
     layout: { panels: { selectionActionsCollapsed: true } }
+  });
+  assert.deepEqual(await handlers.get(IPC_CHANNELS.SETTINGS_SET_THEME)(null, { mode: 'light' }), {
+    ok: true,
+    theme: { mode: 'light' }
   });
 });
 
