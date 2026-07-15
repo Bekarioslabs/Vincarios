@@ -45,5 +45,7 @@ test('file panel opens linked notes without auto-revealing the file tree', () =>
   assert.match(source, /createMarkdownLinkCandidates/);
   assert.match(source, /setPreviewSource\(read\.content, read\.path\)/);
   assert.match(source, /async function revealPath/);
-  assert.match(source, /openLinkedMarkdown,\r?\n\s+revealPath,/);
+  assert.match(source, /openLinkedMarkdown,/);
+  assert.match(source, /openMarkdownPath,/);
+  assert.match(source, /revealPath,/);
 });

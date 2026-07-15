@@ -15,10 +15,13 @@
 
 ## Permission Model
 
-- Read permission allows context access.
+- Local File Tree navigation, Markdown Preview, deterministic local Search, and local index building do not require Read permission. They remain inside the selected vault and never send note content to a provider by themselves.
+- Read permission allows a selected file or folder snapshot to become provider-bound AI context.
 - Write permission allows proposals to be considered.
 - Write permission does not mean silent execution.
 - V1 has no Trusted/Yolo mode.
+
+The permission boundary is intentional: `R` means **AI/context permission**, not a general local-viewing permission. Any future remote provider remains opt-in and must receive no private vault context without a separate explicit approval flow.
 
 ## Backup Model
 

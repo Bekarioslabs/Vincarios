@@ -198,14 +198,14 @@ Do not use for:
 - hidden whole-vault ingestion
 - irreversible decisions
 
-## Structured Metadata Index Direction V1.1
+## V1 Search And Structured Metadata Direction
 
-The metadata index is a future structured companion to the embedding index. It is not implemented in V1.
+The structured metadata index is a planned V1 companion to the embedding index. It is separate from vectors, does not become a second vault authority, and is implemented only after the shared Frontmatter Contract below is in place.
 
 Purpose:
 
 - store deterministic vault facts that should not be inferred repeatedly from embeddings or chat history.
-- support future suggestions for tags, links, project context, folder destinations, duplicate/merge workflows, and cleanup reports.
+- support deterministic Vault Search, Recent Files, Vault Home, and later suggestions for tags, links, project context, folder destinations, duplicate/merge workflows, and cleanup reports.
 - keep semantic vector search and structured metadata separate so each can evolve independently.
 
 Storage target:
@@ -213,10 +213,7 @@ Storage target:
 ```text
 <selected-vault>/.vitruvios/index/metadata/
   manifest.json
-  notes.jsonl
-  links.jsonl
-  tags.jsonl
-  roles.jsonl
+  records.jsonl
 ```
 
 `.vitruvios` remains blocked from normal AI context, File Tree context, and user note workflows. Only internal main-process services may read or write this folder.
@@ -227,10 +224,10 @@ Planned record fields:
 - vault-relative `path`
 - `pathHash`
 - source `mtimeMs` and content hash
-- parsed frontmatter keys and normalized tags
-- outgoing Markdown links and unresolved links
-- detected template role, project role, and folder role hints
-- short deterministic note summary when available from a reviewed/indexing flow
+- filename and filename stem
+- display title from the first H1 when available, otherwise the filename stem
+- parsed frontmatter as a generic property map plus normalized `tags`, `type`, `status`, and `aliases` search fields
+- detected template role and folder-role hints when already available from existing app metadata
 - stale marker when the source file changed after indexing
 
 Design rules:
@@ -241,8 +238,25 @@ Design rules:
 - Embeddings may rank semantic similarity; metadata may explain structure. Merging both should happen in suggestion builders, not inside provider modules.
 - The index must be rebuildable from the selected vault. It must not contain private data that is not derivable from the opened vault.
 - The index must be schema-versioned so V1.1/V1.2 can rebuild or migrate safely.
+- Missing or malformed YAML must fail soft: path, filename, title, and later text search remain available while metadata for that record is marked unavailable.
+- The metadata index reads unknown frontmatter fields generically and preserves them. It does not invent, normalize, or rewrite them.
 
-First planned V1.1 consumers:
+### Frontmatter Contract
+
+Before the metadata index or Editor Light write behavior is expanded, one shared frontmatter boundary must be designed and implemented. It owns parse, validation, property preservation, normalized search extraction, and serialization. Existing generated-note metadata continues to use its current policy, but future editor controls such as Add Tag must delegate to this boundary rather than use string replacement.
+
+The V1 search surface starts with `tags`, `type`, `status`, and `aliases`. The record format must retain unknown fields so Book/Template properties such as `characters`, `manuscript_status`, or user-defined values can later be indexed without a parser replacement.
+
+### Search And Index Lifecycle
+
+- Basic deterministic Search uses metadata facts for filename, path, title, and supported frontmatter fields.
+- Full-text Search is a separate explicit per-vault opt-in. Its local cache lives under `<selected-vault>/.vitruvios/index/search/`, is ignored by Git, and stores token/heading references rather than full Markdown copies.
+- V1 does not encrypt the local search cache. Encryption with a key stored on the same device would add portability and recovery risk without meaningfully protecting the vault from a local attacker. The opt-in disclosure must explain what is stored and expose Delete/Rebuild controls.
+- Semantic Search remains a later explicit embedding mode. It must never silently replace exact deterministic results.
+- Index health becomes one future `Vault Index Status` boundary. Files shows one compact state; Settings shows the enabled components. Green means all enabled components are current, amber means an enabled component is stale/building, red means a required core component is unavailable, and gray means an optional component is deliberately disabled.
+- The existing embedding health service remains the current implementation owner until metadata/search components exist. Do not add competing dots before then.
+
+Later consumers after V1 Search:
 
 - link candidates from known unresolved/outgoing links plus embedding similarity.
 - folder/destination candidates from role hints, existing paths, tags, and semantic similarity.

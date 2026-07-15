@@ -23,14 +23,15 @@ vitruvios helps users clean up and maintain their vault without hidden file acce
 
 1. Open a vault and configure a vault profile.
 2. Use local chat providers: LM Studio and Ollama.
-3. Read Markdown notes and folders through explicit permissions.
+3. Browse Markdown notes locally through the File Tree, Preview, and deterministic Search without granting AI context permission.
 4. Collect AI suggestions in a review module instead of one-action-at-a-time chat cards.
 5. Preview every write with a diff before applying.
 6. Create Markdown notes and update existing Markdown notes through reviewed whole-note proposals.
 7. Create new notes and projects through deterministic template/preset logic.
 8. Provide inbox cleanup reports and grouped suggestions before adding selected concrete actions to the Review Basket.
-9. Use local embeddings V1-light with a bundled multilingual-capable model for similar-note discovery. V1 tag/YAML candidates use conservative local metadata heuristics; link and folder/destination candidates are V1.1.
-10. Keep backups and audit logs for risky actions.
+9. Use local embeddings V1-light with a bundled multilingual-capable model for similar-note discovery, plus deterministic Vault Search over paths, titles, structured metadata, and explicitly enabled full-text data.
+10. Keep AI/context access explicit: Read permission controls provider-bound context, while local navigation and Search stay local.
+11. Keep backups and audit logs for risky actions.
 
 ## V1 Manual File Operations
 

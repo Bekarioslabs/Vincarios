@@ -561,7 +561,7 @@ Current V1 foundation actions for selected Markdown files:
 - Find similar notes
 - Propose update
 
-Find similar notes uses the local embedding index and keeps the chat output compact. Clicking it opens a compact options form directly below the related Selection Action, with Settings-backed defaults for Search source (`Content`, `Metadata`, or `Both`), minimum match, and max results. `Both` is a fixed balanced combination; percentage weights are intentionally not exposed. Each run also exposes an explicit scope: `Relevant area` is the default and searches the configured Vault Role, or the current top-level area when no role is assigned; `Whole vault` is intentional and only permits cross-role candidates with deterministic title or path evidence. Selection Action option forms are owned by their action row; only one inline action form should be open at a time. The form remembers the last used values for the current app session; saving Similar Notes defaults in Settings clears that temporary session override immediately, so the next form uses the new saved defaults. `Refresh index first` is explicit and should be used after copying, moving, or editing Markdown files outside the index; it refreshes through the same health service as Settings so the shared index indicator returns to Ready when the rebuild succeeds. Results are shown in the Suggestions workspace as grouped candidates with calibrated relevance percentages, strong/medium/weak/noisy labels, concise reasons such as `Same vault role` or `Nearby project path`, content/metadata diagnostics, and a report-only relationship label: `Exact duplicate`, `Possible duplicate`, or `Related note`. An exact duplicate means the current indexed hashes are equal, not merely that the model considered the notes similar. A selected Similar Note has `Open in Preview`; it delegates to Files, reveals and activates the target, and opens it in the global Markdown Preview through the normal R-checked read path. It does not create a diff. The displayed percentage is not raw cosine similarity. Chat receives only a short status line. vitruvios does not automatically switch workspaces; the Suggestions workspace button shows an item-count indicator while open suggestion items exist. If no candidates are returned, vitruvios keeps the result in chat/status and does not open an empty Suggestions group. This action does not create Review Basket actions by itself.
+Find similar notes uses the local embedding index and keeps the chat output compact. Clicking it opens a compact options form directly below the related Selection Action, with Settings-backed defaults for Search source (`Content`, `Metadata`, or `Both`), minimum match, and max results. `Both` is a fixed balanced combination; percentage weights are intentionally not exposed. Each run also exposes an explicit scope: `Relevant area` is the default and searches the configured Vault Role, or the current top-level area when no role is assigned; `Whole vault` is intentional and only permits cross-role candidates with deterministic title or path evidence. Selection Action option forms are owned by their action row; only one inline action form should be open at a time. The form remembers the last used values for the current app session; saving Similar Notes defaults in Settings clears that temporary session override immediately, so the next form uses the new saved defaults. `Refresh index first` is explicit and should be used after copying, moving, or editing Markdown files outside the index; it refreshes through the same health service as Settings so the shared index indicator returns to Ready when the rebuild succeeds. Results are shown in the Suggestions workspace as grouped candidates with calibrated relevance percentages, strong/medium/weak/noisy labels, concise reasons such as `Same vault role` or `Nearby project path`, content/metadata diagnostics, and a report-only relationship label: `Exact duplicate`, `Possible duplicate`, or `Related note`. An exact duplicate means the current indexed hashes are equal, not merely that the model considered the notes similar. A selected Similar Note has `Open in Preview`; it delegates to Files, reveals and activates the target, and opens it in the normal local Markdown Preview path. Local Preview does not require R; R is required only if the user later sends the file to an AI/context flow. It does not create a diff. The displayed percentage is not raw cosine similarity. Chat receives only a short status line. vitruvios does not automatically switch workspaces; the Suggestions workspace button shows an item-count indicator while open suggestion items exist. If no candidates are returned, vitruvios keeps the result in chat/status and does not open an empty Suggestions group. This action does not create Review Basket actions by itself.
 
 Future actions can be added through the same registry and handler structure, for example `Find related notes`, `Inbox Review`, move/rename, image actions, or later custom actions. Adding a future action or target type such as image, PDF, or unknown file should mean adding it to a registry with clear selection requirements, not adding new prompt phrases to chat or context intent.
 
@@ -574,18 +574,23 @@ Current Folder Context is only a path marker; it does not include folder content
 Settings -> Action Defaults will hold restart defaults for Folder Context and Folder Summary. Per-run forms remain explicit and may use session-local last values, just like Similar Notes. Similar Notes stays under Embeddings because its settings belong to index/search behavior rather than folder scope.
 
 
-## Metadata Index Planning
+## V1 Search, Metadata, Home, And Recent Files
 
-The future metadata index is a V1.1 support layer for Suggestions, not a visible editing surface by itself.
+V1 Search is a local deterministic workspace feature, not an AI action. It never sends vault data to a provider and does not require R merely to discover or locally preview a result.
 
 User-facing rule:
 
-- embeddings answer "what is semantically similar?"
-- metadata answers "what does the vault structure already know?"
-- Suggestions combine both into explainable candidates.
-- Review Basket remains the only path from candidate to write.
+- filename/path, title, and supported YAML fields answer exact navigation and filter questions.
+- full-text is an explicit per-vault opt-in for exact text and heading matches.
+- embeddings answer "what is semantically similar?" only in an explicitly labeled semantic mode after V1.
+- Search results open locally in Preview; Use as Context remains a separate explicit R-gated action.
+- Review Basket remains the only path from a search-derived candidate to a write.
 
-Planned V1.1 examples:
+Home is a separate Workspace view, opened explicitly from the left navigation. Opening a vault continues to enter Chat. Home shows a bounded per-vault Recent Files list, compact Vault/Index status, and only real supported shortcuts. Recent Files are stored under `<vault>/.vitruvios/recent-files.json`, are bounded, removable, and ignored by Git.
+
+Full-text opt-in must show a short disclosure before its first build, identify `<vault>/.vitruvios/index/search/` as the storage location, and provide Delete/Rebuild controls in Settings. No V1 encryption option is shown.
+
+Later examples:
 
 - `Find related notes` can explain matches with tags, links, role hints, and semantic similarity.
 - link candidates can use known unresolved/outgoing links plus similarity, then show an exact insertion diff before review.
@@ -663,8 +668,7 @@ Left navigation target:
 ```text
 WORKSPACE
   Chat
-  Home          future slot
-  Recent Files  future slot
+  Home          planned V1 workspace; includes Recent Files
 
 CREATE
   New Note
