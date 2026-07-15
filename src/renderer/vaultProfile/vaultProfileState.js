@@ -6,6 +6,7 @@
     const api = options.api || null;
     const helpers = options.helpers || getFolderVisualHelpers();
     const theme = options.theme || getThemeHelpers();
+    const themePacks = options.themePacks || getThemePackHelpers();
     const listeners = new Set();
     let profile = { roles: {}, appearance: { themeOverride: 'inherit' }, roleVisuals: {} };
 
@@ -37,6 +38,10 @@
 
     function getThemeOverride() {
       return profile.appearance.themeOverride;
+    }
+
+    function getThemeAppearance() {
+      return Object.freeze(Object.assign({}, profile.appearance));
     }
 
     function snapshot() {
@@ -84,7 +89,10 @@
       return {
         themeOverride: theme && typeof theme.normalizeVaultThemeOverride === 'function'
           ? theme.normalizeVaultThemeOverride(value && value.themeOverride)
-          : fallback
+          : fallback,
+        themePackId: themePacks && typeof themePacks.normalizeThemePackId === 'function'
+          ? themePacks.normalizeThemePackId(value && value.themePackId)
+          : 'default'
       };
     }
     function preserveCustomIconSources(normalizedVisuals, sourceVisuals) {
@@ -102,7 +110,7 @@
       return result;
     }
 
-    return Object.freeze({ load, replace, getFolderVisual, getProfile, getThemeOverride, snapshot, subscribe });
+    return Object.freeze({ load, replace, getFolderVisual, getProfile, getThemeOverride, getThemeAppearance, snapshot, subscribe });
   }
 
   function normalizeTopLevelPath(value) {
@@ -110,6 +118,11 @@
     return path && !path.includes('/') ? path : '';
   }
 
+  function getThemePackHelpers() {
+    if (typeof window !== 'undefined' && window.VitruviosThemePacks) return window.VitruviosThemePacks;
+    if (typeof module !== 'undefined' && module.exports) return require('../../shared/themes/themePacks');
+    return null;
+  }
   function getThemeHelpers() {
     if (typeof window !== 'undefined' && window.VitruviosTheme) return window.VitruviosTheme;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/settings/theme');

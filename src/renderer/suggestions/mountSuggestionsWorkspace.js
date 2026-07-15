@@ -371,6 +371,7 @@
         const result = converters.convertSuggestionToReviewProposal(item);
         if (result.ok) added.push(reviewBasket.addProposal(result.proposal));
       });
+      if (added.length && suggestionState && typeof suggestionState.dismissChecked === 'function') suggestionState.dismissChecked();
       setText(status, added.length ? 'Suggestion proposals added to Review Basket: ' + added.length : 'No convertible suggestions selected.');
     }
 

@@ -31,6 +31,7 @@
     { name: 'VitruviosFolderSummaryAction', globalName: 'VitruviosFolderSummaryAction', methods: ['buildFolderMarkdownSummaryMessages'] },
     { name: 'VitruviosActionDefaults', globalName: 'VitruviosActionDefaults', methods: ['getFolderActionDefault'] },
     { name: 'VitruviosTheme', globalName: 'VitruviosTheme', methods: ['resolveEffectiveTheme'] },
+    { name: 'VitruviosThemePacks', globalName: 'VitruviosThemePacks', methods: ['getBuiltInThemePack', 'listBuiltInThemePacks'] },
     { name: 'VitruviosThemeController', globalName: 'VitruviosThemeController', methods: ['createThemeController'] },
     { name: 'VitruviosFolderScopeOptions', globalName: 'VitruviosFolderScopeOptions', methods: ['normalizeFolderScopeOptions'] },
     { name: 'VitruviosFolderScopeForm', globalName: 'VitruviosFolderScopeForm', methods: ['mountFolderScopeForm'] },

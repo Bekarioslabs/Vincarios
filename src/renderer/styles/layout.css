@@ -1545,7 +1545,7 @@ body.is-resizing .vault-panel {
 .send-button-icon {
   width: 15px;
   height: 15px;
-  filter: var(--icon-inverse-filter);
+  filter: var(--icon-on-primary-filter);
 }
 
 .send-button-shell[data-chat-state="running"] .send-button-icon {

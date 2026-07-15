@@ -168,11 +168,21 @@
 .settings-provider-meta span,
 .settings-empty,
 .settings-status,
+.settings-appearance-help {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
 .settings-future-note {
   color: var(--text-muted);
   font-size: 11px;
 }
 
+.settings-appearance-help {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
 .settings-future-note {
   padding: 12px;
   border: 1px solid var(--background-modifier-border);
@@ -267,7 +277,7 @@
 .settings-primary-button {
   border-color: rgba(var(--interactive-accent-rgb), .8);
   background: var(--interactive-accent);
-  color: var(--text-on-accent);
+  color: var(--text-on-primary);
   font-weight: var(--font-weight-ui-strong);
 }
 

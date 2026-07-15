@@ -191,7 +191,7 @@
       wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout);
 
       mountOptional('provider status', globalStatus, () => window.VitruviosProviderStatus && window.VitruviosProviderStatus.mountProviderStatus({ api, app }));
-      mountOptional('settings panel', globalStatus, () => window.VitruviosSettingsPanel && window.VitruviosSettingsPanel.mountSettingsPanel({ api, app, status: globalStatus, vaultProfileState }));
+      mountOptional('settings panel', globalStatus, () => window.VitruviosSettingsPanel && window.VitruviosSettingsPanel.mountSettingsPanel({ api, app, status: globalStatus, vaultProfileState, themeController }));
       mountOptional('inbox cleanup', globalStatus, () => window.VitruviosInboxCleanup && window.VitruviosInboxCleanup.mountInboxCleanup({ api, app, status: globalStatus }));
       mountOptional('chat', globalStatus, () => window.VitruviosChat && window.VitruviosChat.mountChat({ api, app, status: globalStatus, reviewBasket, contextState }));
       mountOptional('context basket', globalStatus, () => window.VitruviosContextBasket && window.VitruviosContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
@@ -870,11 +870,11 @@
   function refreshVaultThemeOverride(vaultUi) {
     const controller = vaultUi && vaultUi.themeController;
     const profileState = vaultUi && vaultUi.vaultProfileState;
-    if (!controller || typeof controller.setVaultOverride !== 'function') return;
-    const override = profileState && typeof profileState.getThemeOverride === 'function'
-      ? profileState.getThemeOverride()
-      : 'inherit';
-    controller.setVaultOverride(override);
+    if (!controller || typeof controller.setVaultAppearance !== 'function') return;
+    const appearance = profileState && typeof profileState.getThemeAppearance === 'function'
+      ? profileState.getThemeAppearance()
+      : { themeOverride: 'inherit', themePackId: 'default' };
+    controller.setVaultAppearance(appearance);
   }
 
   function baseName(value) {

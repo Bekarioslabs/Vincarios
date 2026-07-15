@@ -101,11 +101,13 @@ test('vault profile persists a normalized appearance theme override', () => {
   const service = createVaultProfileService();
   service.setRoot(root);
 
-  const result = service.setAppearance({ themeOverride: 'light' });
+  const result = service.setAppearance({ themeOverride: 'light', themePackId: 'paper' });
 
   assert.equal(result.ok, true);
   assert.equal(result.profile.appearance.themeOverride, 'light');
+  assert.equal(result.profile.appearance.themePackId, 'paper');
   const saved = JSON.parse(fs.readFileSync(path.join(root, PROFILE_RELATIVE_PATH), 'utf8'));
   assert.equal(saved.appearance.themeOverride, 'light');
+  assert.equal(saved.appearance.themePackId, 'paper');
   assert.equal(service.setAppearance({ themeOverride: 'system' }).profile.appearance.themeOverride, 'inherit');
 });

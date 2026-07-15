@@ -120,10 +120,12 @@ V1 Settings categories:
 - `providers`: active provider, selected models, local URL overrides.
 - `limits`: provider timeout, model-list timeout, selected-file context cap, folder/file listing caps, analysis file cap, and review suggestion cap.
 - `vaultProfile`: folder role overrides for Inbox, Daily, Projects, Knowledge, Brain, and Archive.
-- `theme`: basic mode/accent readiness through CSS variables.
+- `theme`: app base mode plus validated Vault theme-pack selection.
 - `safety`: review-required and future trusted-mode flags. Trusted mode is not V1 behavior.
 
 The settings store persists normalized JSON under the portable app data folder `Vitruvios_AGENT/.vitruvios/settings.json`, not under Windows `AppData`. If a legacy `userData/settings.json` exists, startup migrates it to the portable path and removes the old file. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules. Vault Profile is intentionally not app-local settings: it is selected-vault metadata consumed by folder-role helpers and Templates.
+
+Theme ownership is deliberately split: `src/shared/themes/themePacks.js` owns the fixed built-in pack registry and its allow-listed token values, Vault Profile persists only the normalized `themeOverride` and `themePackId`, and `src/renderer/theme/themeController.js` is the sole owner that writes validated pack tokens to the document root. V1 ships `High Contrast` (dark base, turquoise/blue accents) and `Paper` (light base, warm surfaces and compact radii). No theme pack reads arbitrary CSS, JavaScript, or `.obsidian` data. A future Theme Editor or JSON package import must validate a narrow token schema before it can reuse this controller.
 
 ## Provider Plan
 

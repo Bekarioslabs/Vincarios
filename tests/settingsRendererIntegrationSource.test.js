@@ -147,3 +147,21 @@ test('Vault Profile settings use a renderer-owned draft state for dirty rows and
   assert.match(source, /panel\.vaultProfileDraft\.invalidate\(\)/);
   assert.doesNotMatch(source, /panel\.vaultProfileDraft\.reset\(\)/);
 });
+test('settings panel exposes app and vault theme selectors through their owning APIs', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+
+  assert.match(source, /data-settings-app-theme/);
+  assert.match(source, /data-settings-vault-theme/);
+  assert.match(source, /api\.settings\.setTheme/);
+  assert.match(source, /api\.vault\.setProfileAppearance/);
+  assert.match(source, /themeController\.setAppTheme/);
+  assert.match(source, /themeController\.setVaultAppearance/);
+  assert.match(source, /themePackId/);
+  assert.match(source, /listBuiltInThemePacks/);
+});
+
+test('shell shares the one theme controller with appearance settings', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /mountSettingsPanel\(\{ api, app, status: globalStatus, vaultProfileState, themeController \}\)/);
+});

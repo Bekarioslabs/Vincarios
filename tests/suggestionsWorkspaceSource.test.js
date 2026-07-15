@@ -212,3 +212,10 @@ test('suggestions metadata candidates use type badges and icon dismiss controls'
   assert.match(css, /\.suggestions-type-badge\s*{/);
   assert.match(css, /\.suggestions-item-dismiss\.review-basket-remove\s*{/);
 });
+
+
+test('successful metadata conversion dismisses source candidates to avoid duplicate proposals', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'suggestions', 'mountSuggestionsWorkspace.js'), 'utf8');
+
+  assert.match(source, /if \(added\.length && suggestionState && typeof suggestionState\.dismissChecked === 'function'\) suggestionState\.dismissChecked\(\);/);
+});

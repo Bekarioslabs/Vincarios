@@ -7,9 +7,12 @@
     const documentRef = options.document || (typeof document !== 'undefined' ? document : null);
     const matchMediaFn = options.matchMedia || (typeof window !== 'undefined' ? window.matchMedia.bind(window) : null);
     const theme = options.theme || getThemeContract();
+    const themePacks = options.themePacks || getThemePackRegistry();
     const mediaQuery = typeof matchMediaFn === 'function' ? matchMediaFn('(prefers-color-scheme: dark)') : null;
     let appTheme = 'dark';
     let vaultOverride = 'inherit';
+    let vaultThemePackId = normalizeThemePackId();
+    let appliedTokenNames = [];
     let systemListenerAttached = false;
 
     async function load() {
@@ -32,25 +35,60 @@
     }
 
     function setVaultOverride(value) {
-      vaultOverride = normalizeVaultThemeOverride(value);
+      return setVaultAppearance({ themeOverride: value, themePackId: vaultThemePackId });
+    }
+
+    function setVaultAppearance(value) {
+      const appearance = value && typeof value === 'object' ? value : {};
+      vaultOverride = normalizeVaultThemeOverride(appearance.themeOverride);
+      vaultThemePackId = normalizeThemePackId(appearance.themePackId);
       return apply();
     }
 
     function snapshot() {
-      return Object.freeze({ appTheme, vaultOverride, effectiveTheme: resolveEffectiveTheme() });
+      return Object.freeze({
+        appTheme,
+        vaultOverride,
+        vaultThemePackId,
+        effectiveTheme: resolveEffectiveTheme()
+      });
     }
 
     function apply() {
       const root = documentRef && documentRef.documentElement;
-      if (root && root.dataset) root.dataset.theme = resolveEffectiveTheme();
+      const pack = getActivePack();
+      if (root && root.dataset) {
+        root.dataset.theme = resolveEffectiveTheme();
+        root.dataset.themePack = pack ? pack.id : normalizeThemePackId();
+      }
+      applyPackOverrides(root, pack);
       return snapshot();
     }
 
     function resolveEffectiveTheme() {
+      const pack = getActivePack();
+      if (pack) return pack.baseTheme;
       const systemIsDark = mediaQuery ? mediaQuery.matches === true : false;
       return theme && typeof theme.resolveEffectiveTheme === 'function'
         ? theme.resolveEffectiveTheme(appTheme, vaultOverride, systemIsDark)
         : (vaultOverride !== 'inherit' ? vaultOverride : appTheme === 'light' ? 'light' : 'dark');
+    }
+
+    function getActivePack() {
+      return themePacks && typeof themePacks.getBuiltInThemePack === 'function'
+        ? themePacks.getBuiltInThemePack(vaultThemePackId)
+        : null;
+    }
+
+    function applyPackOverrides(root, pack) {
+      if (!root || !root.style || typeof root.style.setProperty !== 'function') return;
+      appliedTokenNames.forEach((name) => root.style.removeProperty(name));
+      appliedTokenNames = [];
+      if (!pack || !pack.tokens) return;
+      Object.keys(pack.tokens).forEach((name) => {
+        root.style.setProperty(name, pack.tokens[name]);
+        appliedTokenNames.push(name);
+      });
     }
 
     function normalizeAppTheme(value) {
@@ -61,18 +99,30 @@
       return theme && typeof theme.normalizeVaultThemeOverride === 'function' ? theme.normalizeVaultThemeOverride(value) : 'inherit';
     }
 
+    function normalizeThemePackId(value) {
+      return themePacks && typeof themePacks.normalizeThemePackId === 'function'
+        ? themePacks.normalizeThemePackId(value)
+        : 'default';
+    }
+
     function subscribeToSystemChanges() {
       if (!mediaQuery || systemListenerAttached || typeof mediaQuery.addEventListener !== 'function') return;
       mediaQuery.addEventListener('change', () => apply());
       systemListenerAttached = true;
     }
 
-    return Object.freeze({ load, setAppTheme, setVaultOverride, snapshot });
+    return Object.freeze({ load, setAppTheme, setVaultOverride, setVaultAppearance, snapshot });
   }
 
   function getThemeContract() {
     if (typeof window !== 'undefined' && window.VitruviosTheme) return window.VitruviosTheme;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/settings/theme');
+    return null;
+  }
+
+  function getThemePackRegistry() {
+    if (typeof window !== 'undefined' && window.VitruviosThemePacks) return window.VitruviosThemePacks;
+    if (typeof module !== 'undefined' && module.exports) return require('../../shared/themes/themePacks');
     return null;
   }
 

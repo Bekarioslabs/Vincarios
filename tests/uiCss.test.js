@@ -374,10 +374,12 @@ test('suggestions score rings use shared score tokens', () => {
   const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
 
-  assert.match(tokensCss, /--color-amber-200:\s*#fde68a;/);
-  assert.match(tokensCss, /--color-orange-500:\s*#f97316;/);
-  assert.match(tokensCss, /--score-medium:\s*var\(--color-amber-200\);/);
-  assert.match(tokensCss, /--score-weak:\s*var\(--color-orange-500\);/);
+  assert.match(tokensCss, /--color-green-400:\s*#4ade80;/);
+  assert.match(tokensCss, /--color-amber-500:\s*#f59e0b;/);
+  assert.match(tokensCss, /--color-orange-400:\s*#fb923c;/);
+  assert.match(tokensCss, /--score-strong:\s*var\(--color-green-400\);/);
+  assert.match(tokensCss, /--score-medium:\s*var\(--color-amber-500\);/);
+  assert.match(tokensCss, /--score-weak:\s*var\(--color-orange-400\);/);
   assert.match(css, /\.suggestions-score-ring-wrap\.is-score-yellow\s*{[\s\S]*color:\s*var\(--score-medium\);/);
   assert.match(css, /\.suggestions-score-ring-wrap\.is-score-orange\s*{[\s\S]*color:\s*var\(--score-weak\);/);
 });
@@ -494,4 +496,14 @@ test('Vault Profile folder visuals use CSP-safe SVG images and fixed token palet
 
   assert.match(css, /\.settings-vault-role-row \.settings-primary-button\[disabled\]\s*\{[\s\S]*background:\s*var\(--background-modifier-form-field\);/);
   assert.match(css, /\.settings-vault-role-path option:disabled/);
+});
+
+
+test('primary controls use shared contrast tokens for text and send icons', () => {
+  const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
+  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+  assert.match(tokensCss, /--icon-on-primary-filter:\s*var\(--icon-inverse-filter\);/);
+  assert.match(tokensCss, /:root\[data-theme="light"\][\s\S]*--interactive-accent:\s*var\(--color-amber-500\);/);
+  assert.match(layoutCss, /\.send-button-icon\s*\{[\s\S]*filter:\s*var\(--icon-on-primary-filter\);/);
 });

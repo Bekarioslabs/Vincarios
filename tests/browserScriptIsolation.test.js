@@ -8,6 +8,7 @@ const path = require('node:path');
 const BROWSER_SHARED_SCRIPTS = [
   'src/shared/vaultProfile/defaults.js',
   'src/shared/vaultProfile/folderVisuals.js',
+  'src/shared/themes/themePacks.js',
   'src/shared/security/payloadLimits.js',
   'src/shared/actions/actionSchema.js',
   'src/shared/actions/modelActionParser.js',

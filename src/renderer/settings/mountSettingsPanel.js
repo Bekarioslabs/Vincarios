@@ -20,10 +20,12 @@
     const app = options.app;
     const status = options.status;
     const vaultProfileState = options.vaultProfileState || null;
+    const themeController = options.themeController || null;
     if (!app) return null;
 
     const panel = createPanel();
     panel.vaultProfileState = vaultProfileState;
+    panel.themeController = themeController;
     panel.vaultProfileDraft = createVaultProfileDraftState();
     app.appendChild(panel.backdrop);
     panel.modalBehavior = getModalBehavior().mountModalBehavior({
@@ -113,9 +115,10 @@
       '      <section id="settings-panel-appearance" class="settings-section settings-category-panel" data-settings-category-panel="appearance" hidden>',
       '        <div class="settings-section-head">',
       '          <h3>Appearance</h3>',
-      '          <p>Future home for UI theme and Markdown preview style controls.</p>',
+      '          <p>Choose an app default or an optional portable vault override.</p>',
       '        </div>',
-      '        <div class="settings-future-note">Appearance settings will extend the existing token system later.</div>',
+      '        <div class="settings-limit-grid" data-settings-appearance-grid></div>',
+      '        <p class="settings-appearance-help" data-settings-vault-theme-help></p>',
       '      </section>',
       '      <section id="settings-panel-embeddings" class="settings-section settings-category-panel" data-settings-category-panel="embeddings" hidden>',
       '        <div class="settings-section-head">',
@@ -165,6 +168,8 @@
       dialog: backdrop.querySelector('.settings-panel'),
       providerList: backdrop.querySelector('[data-settings-provider-list]'),
       limitsGrid: backdrop.querySelector('[data-settings-limit-grid]'),
+      appearanceGrid: backdrop.querySelector('[data-settings-appearance-grid]'),
+      vaultThemeHelp: backdrop.querySelector('[data-settings-vault-theme-help]'),
       vaultRoleList: backdrop.querySelector('[data-settings-vault-role-list]'),
       embeddingsGrid: backdrop.querySelector('[data-settings-embeddings-grid]'),
       saveEmbeddingsButton: backdrop.querySelector('[data-settings-save-embeddings]'),
@@ -256,10 +261,127 @@
     renderLimitSettings(panel, api, statusBar, settings);
     renderActionDefaultSettings(panel, api, statusBar, settings);
     await renderVaultProfileSettings(panel, api, statusBar, vaultProfileState);
+    await renderAppearanceSettings(panel, api, statusBar, settings, vaultProfileState);
     renderEmbeddingSettings(panel, api, statusBar, settings);
     setText(panel.status, 'Ready');
   }
 
+  async function renderAppearanceSettings(panel, api, statusBar, settings, vaultProfileState) {
+    if (!panel.appearanceGrid) return;
+    panel.appearanceGrid.innerHTML = '';
+    const theme = settings && settings.theme ? settings.theme : {};
+    const appThemeField = createAppearanceSelectField('App theme', 'data-settings-app-theme', [
+      ['dark', 'Dark'],
+      ['light', 'Light'],
+      ['system', 'System']
+    ], theme.mode || 'dark');
+    panel.appearanceGrid.appendChild(appThemeField);
+
+    const profileResult = api && api.vault && typeof api.vault.getProfile === 'function'
+      ? await safeCall(() => api.vault.getProfile())
+      : null;
+    const profile = profileResult && profileResult.ok !== false ? profileResult.profile : null;
+    const appearance = profile && profile.appearance ? profile.appearance : {};
+    const vaultThemeOptions = getVaultThemeOptions();
+    const vaultThemeField = createAppearanceSelectField(
+      'Vault theme',
+      'data-settings-vault-theme',
+      vaultThemeOptions.map((option) => [option.value, option.label]),
+      getSelectedVaultThemeValue(appearance, vaultThemeOptions)
+    );
+    const vaultThemeSelect = vaultThemeField.querySelector('select');
+    const vaultAvailable = Boolean(profile);
+    vaultThemeSelect.disabled = !vaultAvailable;
+    panel.appearanceGrid.appendChild(vaultThemeField);
+    if (panel.vaultThemeHelp) {
+      panel.vaultThemeHelp.textContent = vaultAvailable
+        ? 'The vault choice is saved in .vitruvios/profile.json.'
+        : 'Open a vault to set a portable vault theme.';
+    }
+
+    appThemeField.querySelector('select').addEventListener('change', async (event) => {
+      setText(panel.status, 'Saving app theme...');
+      const result = await api.settings.setTheme({ mode: event.target.value });
+      if (!result || result.ok === false) {
+        setText(panel.status, result && result.message ? result.message : 'Could not save app theme.');
+        return;
+      }
+      if (panel.themeController && typeof panel.themeController.setAppTheme === 'function') {
+        panel.themeController.setAppTheme(result.settings && result.settings.theme ? result.settings.theme.mode : event.target.value);
+      }
+      setText(panel.status, 'App theme saved.');
+      setText(statusBar, 'App theme saved.');
+    });
+
+    vaultThemeSelect.addEventListener('change', async (event) => {
+      if (!vaultAvailable) return;
+      const selected = vaultThemeOptions.find((option) => option.value === event.target.value) || vaultThemeOptions[0];
+      setText(panel.status, 'Saving vault theme...');
+      const result = await api.vault.setProfileAppearance({
+        themeOverride: selected.themeOverride,
+        themePackId: selected.themePackId
+      });
+      if (!result || result.ok === false) {
+        setText(panel.status, result && result.message ? result.message : 'Could not save vault theme.');
+        return;
+      }
+      if (vaultProfileState && typeof vaultProfileState.replace === 'function') vaultProfileState.replace(result.profile);
+      if (panel.themeController && typeof panel.themeController.setVaultAppearance === 'function') {
+        panel.themeController.setVaultAppearance(result.profile && result.profile.appearance ? result.profile.appearance : selected);
+      }
+      setText(panel.status, 'Vault theme saved.');
+      setText(statusBar, 'Vault theme saved.');
+    });
+  }
+
+  function getVaultThemeOptions() {
+    const options = [
+      { value: 'inherit', label: 'Inherit app theme', themeOverride: 'inherit', themePackId: 'default' },
+      { value: 'dark', label: 'Dark', themeOverride: 'dark', themePackId: 'default' },
+      { value: 'light', label: 'Light', themeOverride: 'light', themePackId: 'default' }
+    ];
+    const registry = getThemePackRegistry();
+    const packs = registry && typeof registry.listBuiltInThemePacks === 'function'
+      ? registry.listBuiltInThemePacks()
+      : [];
+    packs.forEach((pack) => options.push({
+      value: pack.id,
+      label: pack.label,
+      themeOverride: pack.baseTheme,
+      themePackId: pack.id
+    }));
+    return options;
+  }
+
+  function getSelectedVaultThemeValue(appearance, options) {
+    const packId = String(appearance && appearance.themePackId || 'default');
+    if (packId !== 'default' && options.some((option) => option.value === packId)) return packId;
+    const override = String(appearance && appearance.themeOverride || 'inherit');
+    return options.some((option) => option.value === override) ? override : 'inherit';
+  }
+
+  function getThemePackRegistry() {
+    if (typeof window !== 'undefined' && window.VitruviosThemePacks) return window.VitruviosThemePacks;
+    if (typeof module !== 'undefined' && module.exports) return require('../../shared/themes/themePacks');
+    return null;
+  }
+
+  function createAppearanceSelectField(labelText, dataAttribute, options, value) {
+    const label = document.createElement('label');
+    label.className = 'settings-limit-field';
+    label.innerHTML = '<span></span><select class="settings-provider-url"></select>';
+    label.querySelector('span').textContent = labelText;
+    const select = label.querySelector('select');
+    select.setAttribute(dataAttribute, '');
+    options.forEach((option) => {
+      const item = document.createElement('option');
+      item.value = option[0];
+      item.textContent = option[1];
+      item.selected = option[0] === value;
+      select.appendChild(item);
+    });
+    return label;
+  }
   function renderProviderSettings(panel, api, statusBar, settings, providerStatus) {
     const providers = normalizeProviders(providerStatus, settings);
     if (providers.length === 0) {

@@ -465,7 +465,7 @@ Phase 8 finishes the product before release hardening starts. It may add only sm
 
 - [ ] Re-evaluate V1.1/V1.2 candidates once against safety, core usefulness, implementation completeness, and regression risk. Reclassify only small, self-contained candidates with a defined owner and test plan.
 - [ ] Add a subtle splash/version label sourced from application metadata, never duplicated as a renderer constant.
-- [ ] Define and implement the V1 Light/Dark foundation through shared semantic tokens, persisted preference, and one explicit theme owner. Theme presets and broad customization remain later work.
+- [x] Define and implement the V1 Light/Dark foundation through shared semantic tokens, persisted preference, and one explicit theme owner. Add the fixed built-in Vault packs `High Contrast` and `Paper`; JSON package import and a Theme Editor remain validated V1.1 work.
 - [ ] Add one dedicated Embeddings index surface that shows index state and exposes an explicit Rebuild/Refresh action. Keep automatic indexing and manual rebuilding under the same index owner.
 - [ ] Define the V1 Vault Home, Recent Files, and Search scope before implementation. The decision must state which filename/path, YAML/tag, note-text, and semantic signals are searchable and how Read permissions affect discovery and result use.
 - [ ] Add a structured metadata-index foundation under `.vitruvios/index/metadata/`, separate from vector embeddings. V1 integration should support Search and index health without becoming authority for unreviewed writes.
@@ -503,7 +503,7 @@ V1 is done when all current V1 phases are complete and the release gates below a
 - [ ] Async or worker-based deep folder crawling for very large vaults.
 - [ ] Backup retention policy and optional cleanup UI.
 - [ ] Batch AI actions over multiple notes with grouped diffs.
-- [ ] More complete settings UI, including hotkeys and theme presets.
+- [ ] More complete settings UI, including hotkeys and a validated Theme Editor / shareable JSON theme packages.
 - [ ] Template V1.1 planning input: Beka's private Book project notes are local-only and intentionally ignored by Git. Revisit them when designing richer template/preset workflows.
 - [ ] Vault Profile V1.1: named profile library, custom folder roles, and multiple project destinations (for example work/private) that Template creation can select explicitly.
 - [ ] Chat action display setting: allow hover actions such as `Save as Note`, `Copy`, and future message actions to render as text, Lucide SVG icons, or icon+text without changing chat action logic.

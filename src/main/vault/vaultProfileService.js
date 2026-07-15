@@ -8,6 +8,7 @@ const { DEFAULT_FOLDERS } = require('../../shared/vaultProfile/defaults');
 const { normalizeRoleVisuals, normalizeTopLevelFolderVisuals } = require('../../shared/vaultProfile/folderVisuals');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 const { normalizeVaultThemeOverride } = require('../../shared/settings/theme');
+const { normalizeThemePackId } = require('../../shared/themes/themePacks');
 
 const PROFILE_RELATIVE_PATH = path.join(CURRENT_INTERNAL_NAMESPACE, 'profile.json');
 const PROFILE_VERSION = 2;
@@ -270,7 +271,10 @@ function normalizeProfile(value, options) {
 
 function normalizeAppearance(value) {
   const input = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
-  return { themeOverride: normalizeVaultThemeOverride(input.themeOverride) };
+  return {
+    themeOverride: normalizeVaultThemeOverride(input.themeOverride),
+    themePackId: normalizeThemePackId(input.themePackId)
+  };
 }
 function normalizeRoleAssignments(value) {
   const source = value && typeof value === 'object' ? value : {};

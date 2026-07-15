@@ -15,7 +15,12 @@ function createEnvironment(options) {
     removeEventListener() {}
   };
   return {
-    document: { documentElement: { dataset: {} } },
+    document: { documentElement: { dataset: {}, style: {
+      values: {},
+      setProperty(name, value) { this.values[name] = value; },
+      removeProperty(name) { delete this.values[name]; },
+      getPropertyValue(name) { return this.values[name] || ''; }
+    } } },
     matchMedia() { return media; },
     emitSystemChange(matches) { media.matches = matches; if (listener) listener({ matches }); }
   };
@@ -55,4 +60,24 @@ test('theme controller follows local system changes only when no vault override 
   controller.setVaultOverride('dark');
   environment.emitSystemChange(false);
   assert.equal(environment.document.documentElement.dataset.theme, 'dark');
+});
+test('theme controller applies one registered Vault pack after resolving its base theme', async () => {
+  const environment = createEnvironment({ systemIsDark: false });
+  const controller = createThemeController({
+    api: { settings: { async get() { return { theme: { mode: 'system' } }; } } },
+    document: environment.document,
+    matchMedia: environment.matchMedia,
+    themePacks: require('../src/shared/themes/themePacks')
+  });
+
+  await controller.load();
+  controller.setVaultAppearance({ themeOverride: 'inherit', themePackId: 'high-contrast' });
+
+  assert.equal(environment.document.documentElement.dataset.theme, 'dark');
+  assert.equal(environment.document.documentElement.dataset.themePack, 'high-contrast');
+  assert.equal(environment.document.documentElement.style.getPropertyValue('--interactive-accent'), '#06b6d4');
+
+  controller.setVaultAppearance({ themeOverride: 'inherit', themePackId: 'default' });
+  assert.equal(environment.document.documentElement.dataset.themePack, 'default');
+  assert.equal(environment.document.documentElement.style.getPropertyValue('--interactive-accent'), '');
 });
