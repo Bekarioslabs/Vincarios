@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  const WORKSPACES = Object.freeze(['chat', 'suggestions', 'sessionLog']);
+  const WORKSPACES = Object.freeze(['chat', 'search', 'suggestions', 'sessionLog']);
   const DEFAULT_WORKSPACE = 'chat';
 
   function createWorkspaceState(initialState) {

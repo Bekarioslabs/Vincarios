@@ -162,7 +162,7 @@ Decision: one combined `Vault Index Status` surface.
 - Red means a required core component is unavailable or invalid.
 - Gray means an optional component is deliberately disabled.
 
-The current embedding health service stays the sole implementation owner until metadata and full-text components exist. New components extend that aggregate boundary instead of adding competing dots.
+The implemented `vaultIndexHealthService` is the sole aggregate health boundary for metadata, embeddings, and optional full-text. New components extend that boundary instead of adding competing dots.
 
 ## Recent Files
 
@@ -193,16 +193,20 @@ Future V1.1/V1.2 directions:
 - startup note compatible with a selected Vault Profile;
 - richer task/project summaries through separate reviewed and index-backed features.
 
+## Implementation Status
+
+- [x] **8.3.2 Frontmatter Contract:** implemented as the shared contract used by generated-note metadata, tag proposals, and Preview properties. The contract retains unknown YAML fields, exposes normalized `tags`, `type`, `status`, and `aliases`, rejects oversized or deeply nested flow YAML before parsing, and catches every parser/conversion error fail-soft. Malformed frontmatter remains visible in Preview and is never silently rewritten.
+
 ## Proposed Implementation Order
 
-1. Design and implement the shared Frontmatter Contract: parse, validate, preserve, normalize, and serialize.
-2. Define metadata record schema, storage, freshness, malformed-YAML behavior, and tests.
-3. Implement metadata indexing and extend the shared index-health boundary.
-4. Implement deterministic Search over path, filename, title, and supported frontmatter.
-5. Add the explicit opt-in persistent full-text index.
-6. Add Search workspace/UI, Recent Files, and the minimal Home workspace.
-7. Keep semantic search out of the default V1 UI unless its own explicit mode has a complete test and UX plan.
-8. Build Editor Light only after the Frontmatter Contract is proven by search and metadata flows.
+1. [x] Define the versioned metadata record schema, per-record freshness, malformed-YAML behavior, and focused tests. Records contain no Markdown body content.
+2. [x] Implement portable selected-vault storage under `.vitruvios/index/metadata/`, including schema validation and rollback to the previous cache if a write fails.
+3. [x] Implement metadata indexing and the aggregate index-health boundary. The deterministic indexer scans local Markdown through the shared vault source, reuses unchanged records by hash/time, records malformed frontmatter as unavailable metadata, and follows the selected-vault lifecycle. `vaultIndexHealthService` exposes one combined status and a single explicit refresh: metadata first, then available embeddings.
+4. [ ] Implement deterministic Search over path, filename, title, and supported frontmatter.
+5. [x] Add the explicit opt-in persistent full-text index, separate Enable/Disable plus Build/Rebuild controls, cache-only deletion, and shared stale/refresh lifecycle.
+6. [ ] Add Search workspace/UI, Recent Files, and the minimal Home workspace.
+7. [ ] Keep semantic search out of the default V1 UI unless its own explicit mode has a complete test and UX plan.
+8. [ ] Build Editor Light only after the Frontmatter Contract is proven by search and metadata flows.
 
 ## Constraints And Non-Goals
 

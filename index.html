@@ -14,12 +14,15 @@
   <link rel="stylesheet" href="./src/renderer/styles/settings.css">
   <link rel="stylesheet" href="./src/renderer/styles/vaultProfile.css">
   <link rel="stylesheet" href="./src/renderer/styles/suggestions.css">
+  <link rel="stylesheet" href="./src/renderer/styles/search.css">
   <link rel="stylesheet" href="./src/renderer/styles/activity.css">
 </head>
 <body>
   <div id="app"></div>
   <script src="./src/shared/vaultProfile/defaults.js"></script>
   <script src="./src/shared/vaultProfile/folderVisuals.js"></script>
+  <script type="module" src="./src/shared/metadata/yamlBrowserRuntime.js"></script>
+  <script src="./src/shared/metadata/frontmatterContract.js"></script>
   <script src="./src/shared/metadata/generatedNoteMetadata.js"></script>
   <script src="./src/shared/templates/presetRegistry.js"></script>
   <script src="./src/shared/templates/presetProposals.js"></script>
@@ -53,6 +56,7 @@
   <script src="./src/renderer/suggestions/suggestionState.js"></script>
   <script src="./src/renderer/suggestions/suggestionConverters.js"></script>
   <script src="./src/renderer/suggestions/mountSuggestionsWorkspace.js"></script>
+  <script src="./src/renderer/search/mountSearchWorkspace.js"></script>
   <script src="./src/renderer/context/contextPackageBuilder.js"></script>
   <script src="./src/renderer/context/mountContextBasket.js"></script>
   <script src="./src/renderer/permissions/permissionState.js"></script>

@@ -2,7 +2,7 @@
 
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 
-function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, embeddingIndexHealthService) {
+function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService) {
   ipcMain.handle(IPC_CHANNELS.VAULT_STATE, () => vaultReadService.getState());
 
   ipcMain.handle(IPC_CHANNELS.VAULT_SELECT_FOLDER, async () => {
@@ -18,12 +18,12 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
       return { ok: false, code: 'cancelled', message: 'Vault selection cancelled.' };
     }
 
-    const readResult = setVaultRoot(result.filePaths[0], vaultReadService, vaultWriteService, embeddingService, vaultProfileService, embeddingIndexHealthService);
+    const readResult = setVaultRoot(result.filePaths[0], vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService);
     return readResult;
   });
 
   ipcMain.handle(IPC_CHANNELS.VAULT_SET_ROOT, (_event, vaultRoot) => {
-    const readResult = setVaultRoot(vaultRoot, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, embeddingIndexHealthService);
+    const readResult = setVaultRoot(vaultRoot, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService);
     return readResult;
   });
   ipcMain.handle(IPC_CHANNELS.VAULT_LIST_FOLDER, (_event, relativePath) => vaultReadService.listFolder(relativePath));
@@ -67,15 +67,15 @@ function callVaultProfileService(service, method, payload) {
   return service[method](payload);
 }
 
-function setVaultRoot(vaultRoot, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, embeddingIndexHealthService) {
+function setVaultRoot(vaultRoot, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService) {
   const readResult = vaultReadService.setRoot(vaultRoot);
   if (readResult.ok) {
-    syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vaultProfileService, embeddingIndexHealthService);
+    syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService);
   }
   return readResult;
 }
 
-function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vaultProfileService, embeddingIndexHealthService) {
+function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService) {
   if (vaultWriteService && typeof vaultWriteService.setRoot === 'function') {
     vaultWriteService.setRoot(vaultRoot);
   }
@@ -85,8 +85,14 @@ function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vault
   if (vaultProfileService && typeof vaultProfileService.setRoot === 'function') {
     vaultProfileService.setRoot(vaultRoot);
   }
-  if (embeddingIndexHealthService && typeof embeddingIndexHealthService.setRoot === 'function') {
-    embeddingIndexHealthService.setRoot(vaultRoot);
+  if (vaultIndexHealthService && typeof vaultIndexHealthService.setRoot === 'function') {
+    vaultIndexHealthService.setRoot(vaultRoot);
+  }
+  if (vaultChangeService && typeof vaultChangeService.setRoot === 'function') {
+    vaultChangeService.setRoot(vaultRoot);
+  }
+  if (vaultSearchService && typeof vaultSearchService.setRoot === 'function') {
+    vaultSearchService.setRoot(vaultRoot);
   }
 }
 

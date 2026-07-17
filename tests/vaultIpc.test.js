@@ -120,8 +120,10 @@ test('vault IPC also sets embedding root after folder selection and direct root 
   const writeService = { setRoot(root) { roots.push(['write', root]); return { ok: true, root }; } };
   const embeddingService = { setRoot(root) { roots.push(['embedding', root]); return { ok: true, root }; } };
   const embeddingIndexStatusService = { setRoot(root) { roots.push(['embedding-health', root]); return { ok: true, root }; } };
+  const vaultChangeService = { setRoot(root) { roots.push(['vault-change', root]); return { ok: true, root }; } };
+  const vaultSearchService = { setRoot(root) { roots.push(['vault-search', root]); return { ok: true, root }; } };
 
-  registerVaultIpc(ipcMain, dialog, null, readService, writeService, embeddingService, null, embeddingIndexStatusService);
+  registerVaultIpc(ipcMain, dialog, null, readService, writeService, embeddingService, null, embeddingIndexStatusService, vaultChangeService, vaultSearchService);
   await handlers.get(IPC_CHANNELS.VAULT_SELECT_FOLDER)();
   await handlers.get(IPC_CHANNELS.VAULT_SET_ROOT)(null, 'D:/Vault2');
 
@@ -130,10 +132,14 @@ test('vault IPC also sets embedding root after folder selection and direct root 
     ['write', 'D:/Vault'],
     ['embedding', 'D:/Vault'],
     ['embedding-health', 'D:/Vault'],
+    ['vault-change', 'D:/Vault'],
+    ['vault-search', 'D:/Vault'],
     ['read', 'D:/Vault2'],
     ['write', 'D:/Vault2'],
     ['embedding', 'D:/Vault2'],
-    ['embedding-health', 'D:/Vault2']
+    ['embedding-health', 'D:/Vault2'],
+    ['vault-change', 'D:/Vault2'],
+    ['vault-search', 'D:/Vault2']
   ]);
 });
 

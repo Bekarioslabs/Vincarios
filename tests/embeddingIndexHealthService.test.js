@@ -4,20 +4,18 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createEmbeddingIndexHealthService } = require('../src/main/embeddings/embeddingIndexHealthService');
 
-test('index health marks a ready embedding index stale after a watched Markdown change', () => {
-  let watchCallback = null;
+test('index health marks a ready embedding index stale after a vault change notification', () => {
   const statusService = {
     setRoot(root) { return { ok: true, root }; },
     getStatus() { return { ok: true, state: 'ready', canRefresh: true, documentCount: 4, chunkCount: 9 }; }
   };
   const service = createEmbeddingIndexHealthService({
     statusService,
-    indexer: { rebuildIndex() { return { ok: true }; } },
-    watch(_root, _options, callback) { watchCallback = callback; return { close() {} }; }
+    indexer: { rebuildIndex() { return { ok: true }; } }
   });
 
   service.setRoot('D:/Vault');
-  watchCallback('change', 'Notes/Example.md');
+  service.markStale();
 
   const health = service.getHealth();
   assert.equal(health.state, 'stale');
@@ -25,23 +23,18 @@ test('index health marks a ready embedding index stale after a watched Markdown 
   assert.equal(health.canRefresh, true);
 });
 
-test('index health ignores protected folders and clears stale state after explicit refresh', async () => {
-  let watchCallback = null;
+test('index health clears stale state after explicit refresh', async () => {
   let refreshCalls = 0;
   const service = createEmbeddingIndexHealthService({
     statusService: {
       setRoot() { return { ok: true }; },
       getStatus() { return { ok: true, state: 'ready', canRefresh: true }; }
     },
-    indexer: { async rebuildIndex() { refreshCalls += 1; return { ok: true, indexedDocuments: 2 }; } },
-    watch(_root, _options, callback) { watchCallback = callback; return { close() {} }; }
+    indexer: { async rebuildIndex() { refreshCalls += 1; return { ok: true, indexedDocuments: 2 }; } }
   });
 
   service.setRoot('D:/Vault');
-  watchCallback('change', '.vitruvios/index/documents.json');
-  assert.equal(service.getHealth().state, 'ready');
-
-  watchCallback('rename', 'Notes/Changed.md');
+  service.markStale();
   assert.equal(service.getHealth().state, 'stale');
   await service.refreshIndex();
 
@@ -57,8 +50,7 @@ test('index health reports indexing while an explicit refresh is active and noti
       setRoot() { return { ok: true }; },
       getStatus() { return { ok: true, state: 'ready', canRefresh: true }; }
     },
-    indexer: { rebuildIndex() { return new Promise((resolve) => { resolveRefresh = resolve; }); } },
-    watch() { return { close() {} }; }
+    indexer: { rebuildIndex() { return new Promise((resolve) => { resolveRefresh = resolve; }); } }
   });
   service.subscribe((health) => changes.push(health.state));
   service.setRoot('D:/Vault');

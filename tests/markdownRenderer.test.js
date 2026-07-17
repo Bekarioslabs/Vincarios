@@ -85,6 +85,14 @@ test('renders YAML block list frontmatter values as properties', () => {
   assert.match(html, /active/);
 });
 
+test('keeps malformed frontmatter visible instead of hiding or executing it', () => {
+  const html = renderMarkdown('---\ntags: [project,\n---\n# Safe note');
+
+  assert.doesNotMatch(html, /class="markdown-properties"/);
+  assert.match(html, /tags: \[project,/);
+  assert.match(html, /Safe note/);
+});
+
 test('renders Markdown task list checkboxes as disabled checkbox controls', () => {
   const html = renderMarkdown('- [ ] Draft outline\n- [x] Review done');
 

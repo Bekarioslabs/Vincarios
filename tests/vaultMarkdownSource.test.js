@@ -5,9 +5,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { createEmbeddingMarkdownSource } = require('../src/main/embeddings/embeddingMarkdownSource');
+const { createVaultMarkdownSource } = require('../src/main/vault/vaultMarkdownSource');
 
-test('embedding markdown source scans markdown files recursively and skips protected dot folders', () => {
+test('vault Markdown source scans markdown files recursively and skips protected dot folders', () => {
   const root = createTempVault();
   writeFile(root, 'Notes/One.md', '# One');
   writeFile(root, 'Notes/Two.txt', 'No');
@@ -15,7 +15,7 @@ test('embedding markdown source scans markdown files recursively and skips prote
   writeFile(root, '.vitruvios/index/documents.json', '{}');
   writeFile(root, '.obsidian/app.json', '{}');
 
-  const source = createEmbeddingMarkdownSource();
+  const source = createVaultMarkdownSource();
   const opened = source.setRoot(root);
   const listed = source.listMarkdownDocuments();
 
@@ -26,8 +26,8 @@ test('embedding markdown source scans markdown files recursively and skips prote
   assert.equal(Number.isFinite(listed.documents[0].mtimeMs), true);
 });
 
-test('embedding markdown source requires an opened vault', () => {
-  const source = createEmbeddingMarkdownSource();
+test('vault Markdown source requires an opened vault', () => {
+  const source = createVaultMarkdownSource();
   const result = source.listMarkdownDocuments();
 
   assert.equal(result.ok, false);
@@ -43,3 +43,34 @@ function writeFile(root, relativePath, content) {
 function createTempVault() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-embedding-source-'));
 }
+
+test('vault Markdown source exposes a lightweight inventory and skips files that disappear during scanning', () => {
+  let rootStat = true;
+  const source = createVaultMarkdownSource({
+    fs: {
+      statSync() {
+        if (rootStat) {
+          rootStat = false;
+          return { isDirectory: () => true };
+        }
+        throw new Error('File disappeared');
+      },
+      readdirSync() {
+        return [{ name: 'Gone.md', isDirectory: () => false, isFile: () => true }];
+      },
+      readFileSync() {
+        throw new Error('File disappeared');
+      }
+    }
+  });
+
+  source.setRoot('D:/Vault');
+  const inventory = source.listMarkdownInventory();
+  const documents = source.listMarkdownDocuments();
+
+  assert.equal(inventory.ok, true);
+  assert.equal(inventory.skippedCount, 1);
+  assert.deepEqual(inventory.documents, []);
+  assert.equal(documents.ok, true);
+  assert.equal(documents.skippedCount, 1);
+});

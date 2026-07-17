@@ -20,6 +20,8 @@
     const loadingFolders = new Set();
     const visibleRows = new Map();
     let activeRename = null;
+    let treeRefreshInFlight = false;
+    let treeRefreshPending = false;
 
     if (!root) return null;
 
@@ -29,7 +31,7 @@
       '    <div class="file-label ui-panel-header-label">Files</div>',
       '    <div id="file-vault-name" class="file-vault-name">No vault</div>',
       '  </div>',
-      '  <span id="file-index-health" class="file-index-health" data-file-index-health role="status" aria-live="polite" aria-label="Embedding index status" title="Embedding index status"><span class="file-index-health-dot" aria-hidden="true"></span></span>',
+      '  <span id="file-index-health" class="file-index-health" data-file-index-health role="status" aria-live="polite" aria-label="Vault index status" title="Vault index status"><span class="file-index-health-dot" aria-hidden="true"></span></span>',
       '  <button id="file-refresh" class="file-refresh-button ui-tool-button" type="button" disabled title="Refresh file tree" aria-label="Refresh file tree"></button>',
       '  <button id="file-collapse" class="file-collapse-button ui-tool-button" type="button" data-files-collapse-toggle aria-label="Collapse Files" title="Collapse Files" aria-expanded="true" aria-controls="file-tree"></button>',
       '</div>',
@@ -55,6 +57,7 @@
     subscribeToUpdateFlashState();
     subscribeToVaultProfileState();
     subscribeToIndexHealth();
+    subscribeToVaultChanges();
     loadIndexHealth();
 
     function renderIndexHealth(result) {
@@ -63,35 +66,40 @@
       const state = health && health.state ? health.state : 'unavailable';
       const messages = {
         no_vault: 'Open a vault to inspect its index.',
-        no_index: 'Embedding index not built.',
-        ready: 'Embedding index ready.',
-        stale: 'Embedding index needs refresh.',
-        rebuild_required: 'Embedding index rebuild required.',
-        indexing: 'Embedding index is updating.',
-        unavailable: 'Embedding model unavailable.',
-        invalid: 'Embedding index invalid. Rebuild required.'
+        no_index: 'Vault indexes not built.',
+        ready: 'Vault indexes ready.',
+        stale: 'Vault indexes need refresh.',
+        rebuild_required: 'Vault indexes require rebuild.',
+        indexing: 'Vault indexes are updating.',
+        unavailable: 'Vault index service unavailable.',
+        invalid: 'Vault indexes invalid. Rebuild required.'
       };
-      const message = messages[state] || 'Embedding index status unavailable.';
+      const message = messages[state] || 'Vault index status unavailable.';
       indexHealth.dataset.indexState = state;
       indexHealth.setAttribute('aria-label', message);
       indexHealth.title = message;
     }
 
     async function loadIndexHealth() {
-      if (!api || !api.embeddings || typeof api.embeddings.getIndexStatus !== 'function') {
+      if (!api || !api.indexes || typeof api.indexes.getHealth !== 'function') {
         renderIndexHealth(null);
         return;
       }
       try {
-        renderIndexHealth(await api.embeddings.getIndexStatus());
+        renderIndexHealth(await api.indexes.getHealth());
       } catch (error) {
         renderIndexHealth(null);
       }
     }
 
     function subscribeToIndexHealth() {
-      if (!api || !api.embeddings || typeof api.embeddings.onIndexHealthChanged !== 'function') return;
-      api.embeddings.onIndexHealthChanged(renderIndexHealth);
+      if (!api || !api.indexes || typeof api.indexes.onHealthChanged !== 'function') return;
+      api.indexes.onHealthChanged(renderIndexHealth);
+    }
+
+    function subscribeToVaultChanges() {
+      if (!api || !api.vault || typeof api.vault.onChanged !== 'function') return;
+      api.vault.onChanged(() => refreshTree());
     }
 
     function setVaultName(name) {
@@ -109,16 +117,28 @@
     }
 
     async function refreshTree() {
-      refreshButton.disabled = true;
-      entriesByFolder.clear();
-      const expandedFolders = Object.keys(navigator.snapshot().expandedFolders).filter((folderPath) => navigator.isExpanded(folderPath));
-      await ensureFolderLoaded('');
-      for (const folderPath of expandedFolders) {
-        await ensureFolderLoaded(folderPath);
+      if (treeRefreshInFlight) {
+        treeRefreshPending = true;
+        return;
       }
-      refreshButton.disabled = false;
-      await loadIndexHealth();
-      renderTree();
+      treeRefreshInFlight = true;
+      refreshButton.disabled = true;
+      try {
+        do {
+          treeRefreshPending = false;
+          entriesByFolder.clear();
+          const expandedFolders = Object.keys(navigator.snapshot().expandedFolders).filter((folderPath) => navigator.isExpanded(folderPath));
+          await ensureFolderLoaded('');
+          for (const folderPath of expandedFolders) {
+            await ensureFolderLoaded(folderPath);
+          }
+          await loadIndexHealth();
+          renderTree();
+        } while (treeRefreshPending);
+      } finally {
+        refreshButton.disabled = false;
+        treeRefreshInFlight = false;
+      }
     }
 
     async function ensureFolderLoaded(folderPath) {
@@ -550,8 +570,14 @@
     async function openMarkdownPath(path) {
       const revealed = await revealPath(path);
       if (!revealed.ok) return revealed;
+      return openMarkdownPreview(revealed.path, { updateSelection: true, statusPrefix: 'Opened in preview: ' });
+    }
 
-      const read = await api.vault.readMarkdown(revealed.path);
+    async function openMarkdownPreview(path, behavior) {
+      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
+      if (!normalizedPath) return { ok: false, message: 'No Markdown note selected.' };
+
+      const read = await api.vault.readMarkdown(normalizedPath);
       if (!read.ok) {
         setPreviewMessage(read.message || 'Could not read file.');
         setStatus('Read failed.');
@@ -559,9 +585,12 @@
       }
 
       setPreviewSource(read.content, read.path);
-      if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
-      else setText(context, 'Selection file: ' + read.path);
-      setStatus('Opened in preview: ' + read.path);
+      if (!behavior || behavior.updateSelection !== false) {
+        navigator.selectFile(read.path);
+        if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
+        else setText(context, 'Selection file: ' + read.path);
+      }
+      setStatus((behavior && behavior.statusPrefix || 'Opened in preview: ') + read.path);
       return Object.assign({ ok: true }, read);
     }
     async function revealFolder(path) {
@@ -872,6 +901,7 @@
       setVaultName,
       openLinkedMarkdown,
       openMarkdownPath,
+      openMarkdownPreview,
       revealPath,
       revealFolder,
       navigator

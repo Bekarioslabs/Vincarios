@@ -31,10 +31,18 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'EMBEDDINGS_GET_INDEX_STATUS',
     'EMBEDDINGS_INDEX_HEALTH_CHANGED',
     'EMBEDDINGS_REFRESH_INDEX',
+    'INDEXES_DELETE_FULL_TEXT',
+    'INDEXES_DISABLE_FULL_TEXT',
+    'INDEXES_ENABLE_FULL_TEXT',
+    'INDEXES_GET_HEALTH',
+    'INDEXES_HEALTH_CHANGED',
+    'INDEXES_REFRESH',
+    'INDEXES_REFRESH_FULL_TEXT',
     'PROVIDER_MODELS',
     'PROVIDER_SET_ACTIVE',
     'PROVIDER_SET_MODEL',
     'PROVIDER_STATUS',
+    'SEARCH_QUERY',
     'SETTINGS_GET',
     'SETTINGS_RESET_PROVIDER_URL',
     'SETTINGS_SET_ACTION_DEFAULTS',
@@ -44,6 +52,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'SETTINGS_SET_PROVIDER_URL',
     'SETTINGS_SET_RECENT_VAULTS',
     'SETTINGS_SET_THEME',
+    'VAULT_CONTENT_CHANGED',
     'VAULT_CREATE_FOLDER',
     'VAULT_CREATE_NOTE',
     'VAULT_GET_PROFILE',
@@ -68,7 +77,11 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.EMBEDDINGS_GET_INDEX_STATUS, 'embeddings:get-index-status');
   assert.equal(IPC_CHANNELS.EMBEDDINGS_REFRESH_INDEX, 'embeddings:refresh-index');
   assert.equal(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, 'embeddings:index-health-changed');
+  assert.equal(IPC_CHANNELS.INDEXES_GET_HEALTH, 'indexes:get-health');
+  assert.equal(IPC_CHANNELS.INDEXES_REFRESH, 'indexes:refresh');
+  assert.equal(IPC_CHANNELS.INDEXES_HEALTH_CHANGED, 'indexes:health-changed');
   assert.equal(IPC_CHANNELS.PROVIDER_STATUS, 'provider:status');
+  assert.equal(IPC_CHANNELS.SEARCH_QUERY, 'search:query');
   assert.equal(IPC_CHANNELS.PROVIDER_MODELS, 'provider:models');
   assert.equal(IPC_CHANNELS.PROVIDER_SET_ACTIVE, 'provider:set-active');
   assert.equal(IPC_CHANNELS.PROVIDER_SET_MODEL, 'provider:set-model');
@@ -80,6 +93,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.SETTINGS_SET_EMBEDDINGS, 'settings:set-embeddings');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_ACTION_DEFAULTS, 'settings:set-action-defaults');
   assert.equal(IPC_CHANNELS.SETTINGS_SET_THEME, 'settings:set-theme');
+  assert.equal(IPC_CHANNELS.VAULT_CONTENT_CHANGED, 'vault:content-changed');
   assert.equal(IPC_CHANNELS.VAULT_READ_MARKDOWN, 'vault:read-markdown');
   assert.equal(IPC_CHANNELS.VAULT_READ_IMAGE_ASSET, 'vault:read-image-asset');
   assert.equal(IPC_CHANNELS.VAULT_CREATE_NOTE, 'vault:create-note');
@@ -156,8 +170,22 @@ test('preload exposes embedding search without filesystem access', () => {
   assert.match(preloadSource, /IPC_CHANNELS\.EMBEDDINGS_REFRESH_INDEX/);
   assert.match(preloadSource, /onIndexHealthChanged\(listener\)/);
   assert.match(preloadSource, /IPC_CHANNELS\.EMBEDDINGS_INDEX_HEALTH_CHANGED/);
+  assert.match(preloadSource, /indexes: Object\.freeze/);
+  assert.match(preloadSource, /getHealth\(\)/);
+  assert.match(preloadSource, /refresh\(\)/);
+  assert.match(preloadSource, /IPC_CHANNELS\.INDEXES_GET_HEALTH/);
+  assert.match(preloadSource, /IPC_CHANNELS\.INDEXES_REFRESH/);
+  assert.match(preloadSource, /IPC_CHANNELS\.INDEXES_HEALTH_CHANGED/);
 });
 
+
+test('preload exposes local vault search without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /search: Object\.freeze/);
+  assert.match(preloadSource, /query\(payload\)/);
+  assert.match(preloadSource, /ipcRenderer\.invoke\(IPC_CHANNELS\.SEARCH_QUERY, payload\)/);
+});
 
 test('preload exposes embedding settings without filesystem access', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
@@ -203,4 +231,80 @@ test('Electron bootstrap creates and wires the read-only embedding index status 
   assert.match(source, /registerVaultIpc\([\s\S]*embeddingIndexHealthService\)/);
   assert.match(source, /registerEmbeddingIpc\([\s\S]*embeddingIndexHealthService\)/);
   assert.match(source, /EMBEDDINGS_INDEX_HEALTH_CHANGED/);
+});
+test('Electron bootstrap wires one vault index health boundary for metadata and embeddings', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'app', 'bootstrapElectron.js'), 'utf8');
+  const vaultIpcSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'ipc', 'registerVaultIpc.js'), 'utf8');
+
+  assert.match(source, /createVaultIndexHealthService/);
+  assert.match(source, /const vaultIndexHealthService = options\.vaultIndexHealthService/);
+  assert.match(source, /registerVaultIpc\([\s\S]*vaultIndexHealthService\)/);
+  assert.match(vaultIpcSource, /vaultIndexHealthService\.setRoot\(vaultRoot\)/);
+  assert.doesNotMatch(vaultIpcSource, /metadataIndexer\.setRoot\(vaultRoot\)/);
+});
+test('Electron bootstrap owns one vault change service for tree updates and index staleness', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'app', 'bootstrapElectron.js'), 'utf8');
+
+  assert.match(source, /createVaultChangeService/);
+  assert.match(source, /const vaultChangeService = options\.vaultChangeService/);
+  assert.match(source, /vaultChangeService\.subscribe/);
+  assert.match(source, /vaultIndexHealthService\.markStale/);
+  assert.match(source, /VAULT_CONTENT_CHANGED/);
+});
+test('preload exposes vault change notifications without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /onChanged\(listener\)/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_CONTENT_CHANGED/);
+});
+
+test('preload resolves every full-text index method to a concrete IPC channel', async () => {
+  const Module = require('node:module');
+  const preloadPath = path.join(__dirname, '..', 'src', 'preload', 'index.js');
+  const originalLoad = Module._load;
+  const calls = [];
+  let exposedApi = null;
+
+  Module._load = function load(request, parent, isMain) {
+    if (request === 'electron') {
+      return {
+        contextBridge: { exposeInMainWorld(_name, api) { exposedApi = api; } },
+        ipcRenderer: {
+          invoke(channel) { calls.push(channel); return Promise.resolve({ ok: true }); },
+          on() {},
+          removeListener() {}
+        }
+      };
+    }
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  try {
+    delete require.cache[require.resolve(preloadPath)];
+    require(preloadPath);
+    await exposedApi.indexes.setFullTextEnabled(true);
+    await exposedApi.indexes.setFullTextEnabled(false);
+    await exposedApi.indexes.refreshFullText();
+    await exposedApi.indexes.deleteFullText();
+  } finally {
+    delete require.cache[require.resolve(preloadPath)];
+    Module._load = originalLoad;
+  }
+
+  assert.deepEqual(calls, [
+    'indexes:enable-full-text',
+    'indexes:disable-full-text',
+    'indexes:refresh-full-text',
+    'indexes:delete-full-text'
+  ]);
+});
+
+test('Electron bootstrap wires optional full-text search into the shared index boundary', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'app', 'bootstrapElectron.js'), 'utf8');
+
+  assert.match(source, /createFullTextIndexer/);
+  assert.match(source, /createFullTextIndexStatusService/);
+  assert.match(source, /createFullTextIndexHealthService/);
+  assert.match(source, /fullTextHealthService: fullTextIndexHealthService/);
+  assert.match(source, /freshnessService: vaultIndexFreshnessService/);
 });

@@ -34,6 +34,7 @@
     actionProvider: 'sparkles.svg',
 actionEmbedding: 'cpu.svg',
     navigationChat: 'sparkles.svg',
+    navigationSearch: 'search.svg',
     navigationSuggestions: 'search.svg',
     navigationSessionLog: 'list-tree.svg',
     navigationNewNote: 'square-pen.svg',

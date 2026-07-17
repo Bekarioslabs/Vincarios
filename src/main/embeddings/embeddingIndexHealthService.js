@@ -1,28 +1,32 @@
 'use strict';
 
-const fs = require('node:fs');
-const path = require('node:path');
-
 function createEmbeddingIndexHealthService(options) {
   options = options || {};
   const statusService = options.statusService;
   const indexer = options.indexer;
-  const watch = options.watch || fs.watch;
+  const freshnessService = options.freshnessService || null;
   const listeners = new Set();
-  let watcher = null;
   let stale = false;
   let refreshing = false;
+  let changeRevision = 0;
 
   function setRoot(vaultRoot) {
-    closeWatcher();
     stale = false;
     refreshing = false;
+    changeRevision = 0;
     const result = statusService && typeof statusService.setRoot === 'function'
       ? statusService.setRoot(vaultRoot)
       : fail('embedding_index_unavailable', 'Embedding index status service unavailable.');
-    if (result.ok && vaultRoot) startWatcher(vaultRoot);
     notify();
     return result;
+  }
+
+  function markStale() {
+    changeRevision += 1;
+    const status = getBaseStatus();
+    if (!status.ok || status.state !== 'ready') return;
+    stale = true;
+    notify();
   }
 
   function getHealth() {
@@ -32,15 +36,20 @@ function createEmbeddingIndexHealthService(options) {
     return status;
   }
 
-  async function refreshIndex() {
+  async function refreshIndex(refreshOptions) {
     if (!indexer || typeof indexer.rebuildIndex !== 'function') {
       return fail('embeddings_unavailable', 'Embedding indexer unavailable.');
     }
+    const refreshRevision = changeRevision;
     refreshing = true;
     notify();
     try {
+      if ((!refreshOptions || refreshOptions.refreshInventory !== false) && freshnessService && typeof freshnessService.refreshSnapshot === 'function') {
+        const freshness = freshnessService.refreshSnapshot();
+        if (!freshness.ok) return freshness;
+      }
       const result = await indexer.rebuildIndex();
-      if (result && result.ok) stale = false;
+      if (result && result.ok && changeRevision === refreshRevision) stale = false;
       return result;
     } finally {
       refreshing = false;
@@ -52,23 +61,6 @@ function createEmbeddingIndexHealthService(options) {
     if (typeof listener !== 'function') return () => {};
     listeners.add(listener);
     return () => listeners.delete(listener);
-  }
-
-  function startWatcher(vaultRoot) {
-    try {
-      watcher = watch(vaultRoot, { recursive: true }, (_eventType, filename) => {
-        if (!isRelevantChange(filename)) return;
-        stale = true;
-        notify();
-      });
-    } catch (error) {
-      watcher = null;
-    }
-  }
-
-  function closeWatcher() {
-    if (watcher && typeof watcher.close === 'function') watcher.close();
-    watcher = null;
   }
 
   function notify() {
@@ -83,19 +75,11 @@ function createEmbeddingIndexHealthService(options) {
     return statusService.getStatus();
   }
 
-  return Object.freeze({ setRoot, getHealth, refreshIndex, subscribe, close: closeWatcher });
-}
-
-function isRelevantChange(filename) {
-  if (filename === undefined || filename === null || filename === '') return true;
-  const normalized = String(filename).replace(/\\/g, '/');
-  const segments = normalized.split('/');
-  if (segments.some((segment) => segment.startsWith('.'))) return false;
-  return path.extname(normalized).toLowerCase() === '.md';
+  return Object.freeze({ setRoot, markStale, getHealth, refreshIndex, subscribe });
 }
 
 function fail(code, message) {
   return { ok: false, code, message, state: 'unavailable', canRefresh: false };
 }
 
-module.exports = { createEmbeddingIndexHealthService, isRelevantChange };
+module.exports = { createEmbeddingIndexHealthService };

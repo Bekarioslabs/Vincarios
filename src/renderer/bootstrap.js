@@ -2,6 +2,8 @@
   'use strict';
 
   const REQUIRED_RENDERER_MODULES = Object.freeze([
+    { name: 'VitruviosYamlRuntime', globalName: 'VitruviosYamlRuntime', methods: ['Document', 'isMap', 'parseDocument'] },
+    { name: 'VitruviosFrontmatterContract', globalName: 'VitruviosFrontmatterContract', methods: ['applyTags', 'getSearchFields', 'mergeMetadata', 'readFrontmatter'] },
     { name: 'VitruviosVaultProfile', globalName: 'VitruviosVaultProfile' },
     { name: 'VitruviosVaultProfileDraftState', globalName: 'VitruviosVaultProfileDraftState', methods: ['createVaultProfileDraftState'] },
     { name: 'VitruviosVaultProfileVisualIconRenderer', globalName: 'VitruviosVaultProfileVisualIconRenderer', methods: ['createFolderVisualIcon'] },
@@ -19,6 +21,7 @@
     { name: 'VitruviosContextPackageBuilder', globalName: 'VitruviosContextPackageBuilder', methods: ['buildChatContextPackage'] },
     { name: 'VitruviosContextBasket', globalName: 'VitruviosContextBasket', methods: ['mountContextBasket'] },
     { name: 'VitruviosSuggestionConverters', globalName: 'VitruviosSuggestionConverters', methods: ['isConvertibleSuggestion', 'convertSuggestionToReviewProposal', 'getConvertibleCheckedSuggestions', 'buildSuggestionDiffPreview'] },
+    { name: 'VitruviosSearchWorkspace', globalName: 'VitruviosSearchWorkspace', methods: ['mountSearchWorkspace'] },
     { name: 'VitruviosInboxCleanupReport', globalName: 'VitruviosInboxCleanupReport', methods: ['buildInboxCleanupReport', 'formatInboxCleanupReportMarkdown'] },
     { name: 'VitruviosInboxCleanup', globalName: 'VitruviosInboxCleanup', methods: ['mountInboxCleanup', 'runInboxCleanupReport'] },
     { name: 'VitruviosFileTreeKeyboard', globalName: 'VitruviosFileTreeKeyboard', methods: ['getFileTreeNavigation', 'isFileTreeNavigationKey'] },

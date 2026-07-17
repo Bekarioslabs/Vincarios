@@ -171,14 +171,24 @@ test('file panel renders folder appearance from shared Vault Profile state witho
 });
 
 
-test('file toolbar renders accessible embedding index health from the narrow preload API', () => {
+test('file toolbar renders accessible combined vault index health from the narrow preload API', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
 
   assert.match(source, /data-file-index-health/);
-  assert.match(source, /api.embeddings.getIndexStatus/);
-  assert.match(source, /api.embeddings.onIndexHealthChanged/);
+  assert.match(source, /api.indexes.getHealth/);
+  assert.match(source, /api.indexes.onHealthChanged/);
   assert.match(source, /function renderIndexHealth/);
   assert.match(css, /.file-index-health/);
   assert.match(css, /data-index-state="ready"/);
+});
+test('file panel initializes one guarded refresh path for manual and vault-change refreshes', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+  const subscriptionIndex = source.indexOf('    subscribeToVaultChanges();');
+  const healthLoadIndex = source.indexOf('    loadIndexHealth();');
+
+  assert.match(source, /let treeRefreshInFlight = false/);
+  assert.equal(subscriptionIndex > -1, true);
+  assert.equal(subscriptionIndex < healthLoadIndex, true);
+  assert.match(source, /api\.vault\.onChanged\(\(\) => refreshTree\(\)\)/);
 });

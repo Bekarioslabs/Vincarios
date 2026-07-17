@@ -2,7 +2,7 @@
 
 const crypto = require('node:crypto');
 const { createEmbeddingIndexStore } = require('./embeddingIndexStore');
-const { createEmbeddingMarkdownSource } = require('./embeddingMarkdownSource');
+const { createVaultMarkdownSource } = require('../vault/vaultMarkdownSource');
 const { createEmbeddingRuntimeService } = require('./embeddingRuntimeService');
 const { DEFAULT_EMBEDDING_MODEL } = require('./embeddingModelStore');
 const {
@@ -18,7 +18,7 @@ const DEFAULT_CHUNK_OVERLAP_CHARS = 120;
 
 function createEmbeddingIndexer(options) {
   options = options || {};
-  const source = options.source || createEmbeddingMarkdownSource(options);
+  const source = options.source || createVaultMarkdownSource(options);
   const indexStore = options.indexStore || createEmbeddingIndexStore(options);
   const runtime = options.runtime || createEmbeddingRuntimeService(options);
   const modelId = normalizeString(options.modelId) || DEFAULT_EMBEDDING_MODEL.id;

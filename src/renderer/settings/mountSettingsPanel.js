@@ -36,7 +36,7 @@
     const openButtons = app.querySelectorAll('[data-open-settings]');
     openButtons.forEach((button) => button.addEventListener('click', () => openPanel(panel, api, status, vaultProfileState)));
     panel.closeButtons.forEach((button) => button.addEventListener('click', () => closePanel(panel)));
-    subscribeToEmbeddingIndexHealth(panel, api);
+    subscribeToVaultIndexHealth(panel, api);
 
     return Object.freeze({
       open() { return openPanel(panel, api, status, vaultProfileState); },
@@ -126,12 +126,26 @@
       '          <h3>Embeddings</h3>',
       '          <p>Local semantic search support. Embeddings stay separate from chat providers.</p>',
       '        </div>',
-      '        <section class="settings-embedding-index" aria-labelledby="settings-embedding-index-title">',
+      '        <section class="settings-embedding-index" aria-labelledby="settings-vault-index-title">',
       '          <div class="settings-embedding-index-head">',
-      '            <div><h4 id="settings-embedding-index-title">Embedding index</h4><p class="settings-embedding-index-status" data-settings-embedding-index-status aria-live="polite">Checking index...</p></div>',
-      '            <button type="button" class="settings-primary-button" data-settings-refresh-embedding-index>Build index</button>',
+      '            <div><h4 id="settings-vault-index-title">Vault indexing</h4><p class="settings-embedding-index-status" data-settings-vault-index-status aria-live="polite">Checking index...</p></div>',
       '          </div>',
-      '          <p class="settings-embedding-index-counts" data-settings-embedding-index-counts></p>',
+      '          <p class="settings-embedding-index-counts" data-settings-vault-index-counts></p>',
+      '          <p class="settings-index-explainer">Note metadata keeps paths, titles, tags, and YAML properties. Similar Notes uses local text segments to find meaning-based matches.</p>',
+      '          <section class="settings-full-text-index" aria-labelledby="settings-full-text-index-title">',
+      '            <div class="settings-full-text-index-head">',
+      '              <div><h4 id="settings-full-text-index-title">Full-text search</h4><p class="settings-embedding-index-status" data-settings-full-text-index-status aria-live="polite">Checking full-text search...</p></div>',
+      '              <label class="settings-index-toggle"><span>Enabled</span><input type="checkbox" data-settings-full-text-enabled aria-label="Enable full-text search"><span class="settings-index-toggle-track" aria-hidden="true"></span></label>',
+      '            </div>',
+      '            <p class="settings-full-text-index-disclosure" data-settings-full-text-index-disclosure></p>',
+      '            <p class="settings-full-text-index-refresh-help">Refresh enabled indexes also updates Full-text Search while it is enabled.</p>',
+      '            <div class="settings-section-actions settings-full-text-index-actions">',
+      '              <button type="button" class="settings-secondary-button" data-settings-delete-full-text>Delete local index</button>',
+      '            </div>',
+      '          </section>',
+      '          <div class="settings-index-refresh-actions">',
+      '            <button type="button" class="settings-primary-button" data-settings-refresh-vault-indexes>Refresh enabled indexes</button>',
+      '          </div>',
       '        </section>',
       '        <dl class="settings-detail-list" data-settings-embeddings-summary>',
       '          <div><dt>Base model</dt><dd>sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2</dd></div>',
@@ -180,9 +194,13 @@
       vaultThemeHelp: backdrop.querySelector('[data-settings-vault-theme-help]'),
       vaultRoleList: backdrop.querySelector('[data-settings-vault-role-list]'),
       embeddingsGrid: backdrop.querySelector('[data-settings-embeddings-grid]'),
-      embeddingIndexStatus: backdrop.querySelector('[data-settings-embedding-index-status]'),
-      embeddingIndexCounts: backdrop.querySelector('[data-settings-embedding-index-counts]'),
-      refreshEmbeddingIndexButton: backdrop.querySelector('[data-settings-refresh-embedding-index]'),
+      vaultIndexStatus: backdrop.querySelector('[data-settings-vault-index-status]'),
+      vaultIndexCounts: backdrop.querySelector('[data-settings-vault-index-counts]'),
+      fullTextIndexStatus: backdrop.querySelector('[data-settings-full-text-index-status]'),
+      fullTextIndexDisclosure: backdrop.querySelector('[data-settings-full-text-index-disclosure]'),
+      fullTextEnabledInput: backdrop.querySelector('[data-settings-full-text-enabled]'),
+      deleteFullTextButton: backdrop.querySelector('[data-settings-delete-full-text]'),
+      refreshVaultIndexesButton: backdrop.querySelector('[data-settings-refresh-vault-indexes]'),
       saveEmbeddingsButton: backdrop.querySelector('[data-settings-save-embeddings]'),
       actionDefaultsGrid: backdrop.querySelector('[data-settings-action-defaults-grid]'),
       saveActionDefaultsButton: backdrop.querySelector('[data-settings-save-action-defaults]'),
@@ -274,7 +292,7 @@
     await renderVaultProfileSettings(panel, api, statusBar, vaultProfileState);
     await renderAppearanceSettings(panel, api, statusBar, settings, vaultProfileState);
     renderEmbeddingSettings(panel, api, statusBar, settings);
-    await renderEmbeddingIndexStatus(panel, api);
+    await renderVaultIndexStatus(panel, api);
     setText(panel.status, 'Ready');
   }
 
@@ -616,67 +634,132 @@
     }
   }
 
-  function subscribeToEmbeddingIndexHealth(panel, api) {
-    if (!api || !api.embeddings || typeof api.embeddings.onIndexHealthChanged !== 'function') return;
-    api.embeddings.onIndexHealthChanged((health) => applyEmbeddingIndexStatus(panel, health));
+  function subscribeToVaultIndexHealth(panel, api) {
+    if (!api || !api.indexes || typeof api.indexes.onHealthChanged !== 'function') return;
+    api.indexes.onHealthChanged((health) => applyVaultIndexStatus(panel, health));
   }
 
-  async function renderEmbeddingIndexStatus(panel, api) {
-    const statusResult = api && api.embeddings && typeof api.embeddings.getIndexStatus === 'function'
-      ? await safeCall(() => api.embeddings.getIndexStatus())
+  async function renderVaultIndexStatus(panel, api) {
+    const statusResult = api && api.indexes && typeof api.indexes.getHealth === 'function'
+      ? await safeCall(() => api.indexes.getHealth())
       : null;
-    applyEmbeddingIndexStatus(panel, statusResult);
+    applyVaultIndexStatus(panel, statusResult);
 
-    if (panel.refreshEmbeddingIndexButton && !panel.refreshEmbeddingIndexButton.dataset.bound) {
-      panel.refreshEmbeddingIndexButton.dataset.bound = 'true';
-      panel.refreshEmbeddingIndexButton.addEventListener('click', async () => {
-        if (!api || !api.embeddings || typeof api.embeddings.refreshIndex !== 'function') return;
-        panel.refreshEmbeddingIndexButton.disabled = true;
-        setText(panel.embeddingIndexStatus, 'Indexing Markdown notes...');
-        const result = await safeCall(() => api.embeddings.refreshIndex());
+    bindFullTextIndexActions(panel, api);
+
+    if (panel.refreshVaultIndexesButton && !panel.refreshVaultIndexesButton.dataset.bound) {
+      panel.refreshVaultIndexesButton.dataset.bound = 'true';
+      panel.refreshVaultIndexesButton.addEventListener('click', async () => {
+        if (!api || !api.indexes || typeof api.indexes.refresh !== 'function') return;
+        panel.refreshVaultIndexesButton.disabled = true;
+        setText(panel.vaultIndexStatus, 'Refreshing vault indexes...');
+        const result = await safeCall(() => api.indexes.refresh());
         if (!result || result.ok === false) {
-          setText(panel.embeddingIndexStatus, result && result.message ? result.message : 'Could not build the embedding index.');
-          panel.refreshEmbeddingIndexButton.disabled = false;
+          setText(panel.vaultIndexStatus, result && result.message ? result.message : 'Could not refresh vault indexes.');
+          panel.refreshVaultIndexesButton.disabled = false;
           return;
         }
-        const refreshedStatus = await safeCall(() => api.embeddings.getIndexStatus());
-        applyEmbeddingIndexStatus(panel, refreshedStatus);
+        const refreshedStatus = await safeCall(() => api.indexes.getHealth());
+        applyVaultIndexStatus(panel, refreshedStatus);
       });
     }
   }
 
-  function applyEmbeddingIndexStatus(panel, result) {
+  function applyVaultIndexStatus(panel, result) {
     const status = result && result.ok !== false ? result : null;
     const state = status && status.state ? status.state : 'unavailable';
     const messages = {
       no_vault: 'Open a vault to inspect its index.',
       no_index: 'No index yet.',
-      ready: 'Embedding index is ready.',
+      ready: 'Vault indexes are ready.',
       stale: 'Index needs refresh after vault changes.',
-      indexing: 'Embedding index is updating.',
-      rebuild_required: 'Rebuild required for the active model.',
-      unavailable: 'Local embedding model is unavailable.',
-      invalid: 'Index could not be read.'
+      indexing: 'Vault indexes are updating.',
+      rebuild_required: 'Vault indexes require refresh.',
+      unavailable: 'Embedding model unavailable. Metadata index remains available.',
+      invalid: 'Vault indexes could not be read.'
     };
     const labels = {
-      no_index: 'Build index',
-      ready: 'Refresh index',
-      stale: 'Refresh index',
-      rebuild_required: 'Rebuild index',
-      invalid: 'Rebuild index'
+      no_index: 'Refresh indexes',
+      ready: 'Refresh indexes',
+      stale: 'Refresh indexes',
+      rebuild_required: 'Refresh indexes',
+      invalid: 'Refresh indexes'
     };
-    if (panel.embeddingIndexStatus) panel.embeddingIndexStatus.dataset.indexState = state;
-    setText(panel.embeddingIndexStatus, messages[state] || 'Embedding index status unavailable.');
-    const documentCount = Number(status && status.documentCount) || 0;
-    const chunkCount = Number(status && status.chunkCount) || 0;
-    setText(panel.embeddingIndexCounts, state === 'ready' || state === 'stale' || state === 'rebuild_required'
-      ? documentCount + ' Markdown notes, ' + chunkCount + ' chunks.'
-      : '');
-    if (!panel.refreshEmbeddingIndexButton) return;
-    panel.refreshEmbeddingIndexButton.textContent = labels[state] || 'Index unavailable';
-    panel.refreshEmbeddingIndexButton.disabled = !status || status.canRefresh !== true;
+    if (panel.vaultIndexStatus) panel.vaultIndexStatus.dataset.indexState = state;
+    setText(panel.vaultIndexStatus, messages[state] || 'Vault index status unavailable.');
+    const metadataCount = Number(status && status.metadata && status.metadata.documentCount) || 0;
+    const embeddingDocumentCount = Number(status && status.embeddings && status.embeddings.documentCount) || 0;
+    const chunkCount = Number(status && status.embeddings && status.embeddings.chunkCount) || 0;
+    const counts = [];
+    if (state === 'ready' || state === 'stale' || state === 'rebuild_required') {
+      const indexedNoteCount = Math.max(metadataCount, embeddingDocumentCount);
+      counts.push(indexedNoteCount + ' Markdown notes indexed.');
+      if (status && status.embeddings && status.embeddings.state !== 'unavailable') counts.push(chunkCount + ' Similar Notes text segments.');
+    }
+    setText(panel.vaultIndexCounts, counts.join(' '));
+    applyFullTextIndexStatus(panel, status && status.fullText ? status.fullText : null);
+    if (!panel.refreshVaultIndexesButton) return;
+    panel.refreshVaultIndexesButton.textContent = labels[state] || 'Index unavailable';
+    panel.refreshVaultIndexesButton.disabled = !status || status.canRefresh !== true;
   }
 
+  function bindFullTextIndexActions(panel, api) {
+    if (panel.fullTextEnabledInput && !panel.fullTextEnabledInput.dataset.bound) {
+      panel.fullTextEnabledInput.dataset.bound = 'true';
+      panel.fullTextEnabledInput.addEventListener('change', async () => {
+        if (!api || !api.indexes || typeof api.indexes.setFullTextEnabled !== 'function') return;
+        panel.fullTextEnabledInput.disabled = true;
+        const result = await safeIndexCall(() => api.indexes.setFullTextEnabled(panel.fullTextEnabledInput.checked));
+        const health = await safeIndexCall(() => api.indexes.getHealth());
+        applyVaultIndexStatus(panel, health);
+        if (!result || result.ok === false) setText(panel.fullTextIndexStatus, result && result.message ? result.message : 'Could not update full-text index setting.');
+      });
+    }
+
+    if (panel.deleteFullTextButton && !panel.deleteFullTextButton.dataset.bound) {
+      panel.deleteFullTextButton.dataset.bound = 'true';
+      panel.deleteFullTextButton.addEventListener('click', async () => {
+        if (!api || !api.indexes || typeof api.indexes.deleteFullText !== 'function') return;
+        panel.deleteFullTextButton.disabled = true;
+        setText(panel.fullTextIndexStatus, 'Removing local full-text index...');
+        const result = await safeIndexCall(() => api.indexes.deleteFullText());
+        const health = await safeIndexCall(() => api.indexes.getHealth());
+        applyVaultIndexStatus(panel, health);
+        if (!result || result.ok === false) setText(panel.fullTextIndexStatus, result && result.message ? result.message : 'Could not remove full-text index.');
+      });
+    }
+  }
+  function applyFullTextIndexStatus(panel, status) {
+    if (!panel.fullTextIndexStatus) return;
+    const state = status && status.state ? status.state : 'no_vault';
+    const messages = {
+      no_vault: 'Open a vault to configure full-text search.',
+      disabled: 'Disabled. Enable it to build an exact-match index.',
+      no_index: 'No local search index yet.',
+      ready: 'Full-text search index is ready.',
+      stale: 'Full-text search index needs refresh.',
+      indexing: 'Full-text search index is updating.',
+      invalid: 'Full-text search index could not be read.'
+    };
+    panel.fullTextIndexStatus.dataset.indexState = state;
+    setText(panel.fullTextIndexStatus, messages[state] || 'Full-text search status unavailable.');
+    setText(panel.fullTextIndexDisclosure, state === 'disabled'
+      ? status && status.cacheExists
+        ? 'Disabled. A retained local cache can be deleted below or reused after enabling.'
+        : 'Enable once to store normalized terms and heading references in .vitruvios/index/search/. Original Markdown content is not copied.'
+      : state === 'no_index'
+        ? 'Search is enabled. Build the local index to make it available.'
+        : 'Local cache: ' + (Number(status && status.documentCount) || 0) + ' notes, ' + (Number(status && status.termCount) || 0) + ' terms.');
+    if (panel.fullTextEnabledInput) {
+      panel.fullTextEnabledInput.checked = status && status.enabled === true;
+      panel.fullTextEnabledInput.disabled = state === 'no_vault' || state === 'indexing';
+    }
+
+    if (panel.deleteFullTextButton) {
+      panel.deleteFullTextButton.hidden = state === 'no_vault' || state === 'no_index' || (state === 'disabled' && !(status && status.cacheExists));
+      panel.deleteFullTextButton.disabled = state === 'indexing';
+    }
+  }
   function createEmbeddingNumberField(labelText, key, value, options) {
     options = options || {};
     const label = document.createElement('label');
@@ -1052,7 +1135,7 @@
     if (input.chat !== false) labels.push('Chat');
     if (input.vision === true) labels.push('Vision');
     if (input.embeddings === true) labels.push('Embeddings');
-    return labels.length > 0 ? labels.join(' ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ') : 'No declared capabilities';
+    return labels.length > 0 ? labels.join(', ') : 'No declared capabilities';
   }
 
   function getDefaultVaultRoles() {
@@ -1080,6 +1163,13 @@
     }
   }
 
+  async function safeIndexCall(callback) {
+    try {
+      return await callback();
+    } catch (error) {
+      return { ok: false, code: 'index_request_failed', message: error && error.message ? error.message : 'Index request failed.' };
+    }
+  }
   function setText(node, value) {
     if (node) node.textContent = value || '';
   }

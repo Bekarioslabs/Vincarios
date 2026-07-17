@@ -26,7 +26,16 @@ const IPC_CHANNELS = Object.freeze({
   EMBEDDINGS_GET_INDEX_STATUS: 'embeddings:get-index-status',
   EMBEDDINGS_REFRESH_INDEX: 'embeddings:refresh-index',
   EMBEDDINGS_INDEX_HEALTH_CHANGED: 'embeddings:index-health-changed',
+  INDEXES_GET_HEALTH: 'indexes:get-health',
+  INDEXES_REFRESH: 'indexes:refresh',
+  INDEXES_ENABLE_FULL_TEXT: 'indexes:enable-full-text',
+  INDEXES_DISABLE_FULL_TEXT: 'indexes:disable-full-text',
+  INDEXES_REFRESH_FULL_TEXT: 'indexes:refresh-full-text',
+  INDEXES_DELETE_FULL_TEXT: 'indexes:delete-full-text',
+  INDEXES_HEALTH_CHANGED: 'indexes:health-changed',
+  SEARCH_QUERY: 'search:query',
   VAULT_STATE: 'vault:state',
+  VAULT_CONTENT_CHANGED: 'vault:content-changed',
   VAULT_SELECT_FOLDER: 'vault:select-folder',
   VAULT_SET_ROOT: 'vault:set-root',
   VAULT_LIST_FOLDER: 'vault:list-folder',
@@ -118,9 +127,44 @@ const vitruvios = Object.freeze({
       return () => ipcRenderer.removeListener(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, handler);
     }
   }),
+  indexes: Object.freeze({
+    getHealth() {
+      return ipcRenderer.invoke(IPC_CHANNELS.INDEXES_GET_HEALTH);
+    },
+    refresh() {
+      return ipcRenderer.invoke(IPC_CHANNELS.INDEXES_REFRESH);
+    },
+    setFullTextEnabled(enabled) {
+      const channel = enabled === true ? IPC_CHANNELS.INDEXES_ENABLE_FULL_TEXT : IPC_CHANNELS.INDEXES_DISABLE_FULL_TEXT;
+      return ipcRenderer.invoke(channel);
+    },
+    refreshFullText() {
+      return ipcRenderer.invoke(IPC_CHANNELS.INDEXES_REFRESH_FULL_TEXT);
+    },
+    deleteFullText() {
+      return ipcRenderer.invoke(IPC_CHANNELS.INDEXES_DELETE_FULL_TEXT);
+    },
+    onHealthChanged(listener) {
+      if (typeof listener !== 'function') return () => {};
+      const handler = (_event, health) => listener(health);
+      ipcRenderer.on(IPC_CHANNELS.INDEXES_HEALTH_CHANGED, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.INDEXES_HEALTH_CHANGED, handler);
+    }
+  }),
+  search: Object.freeze({
+    query(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.SEARCH_QUERY, payload);
+    }
+  }),
   vault: Object.freeze({
     state() {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_STATE);
+    },
+    onChanged(listener) {
+      if (typeof listener !== 'function') return () => {};
+      const handler = (_event, change) => listener(change);
+      ipcRenderer.on(IPC_CHANNELS.VAULT_CONTENT_CHANGED, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.VAULT_CONTENT_CHANGED, handler);
     },
     selectFolder() {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_SELECT_FOLDER);

@@ -561,6 +561,23 @@
   font-size: 11px;
 }
 
+.settings-index-explainer,
+.settings-full-text-index-refresh-help {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.settings-index-refresh-actions {
+  display: grid;
+  gap: 5px;
+  padding-top: 4px;
+}
+
+.settings-full-text-index-refresh-help {
+  margin: 0;
+  max-width: 62ch;
+}
 .settings-embedding-index-counts:empty {
   display: none;
 }
@@ -618,4 +635,86 @@
 .settings-embedding-index-status[data-index-state="unavailable"]::before,
 .settings-embedding-index-status[data-index-state="invalid"]::before {
   background: var(--status-danger);
+}
+
+.settings-full-text-index {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.settings-full-text-index-disclosure {
+  max-width: 62ch;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.settings-full-text-index-actions {
+  justify-content: flex-start;
+}
+.settings-full-text-index-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-index-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.settings-index-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.settings-index-toggle-track {
+  position: relative;
+  width: 30px;
+  height: 16px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  background: var(--background-primary);
+  transition: background-color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.settings-index-toggle-track::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  content: '';
+  transition: transform var(--motion-fast), background-color var(--motion-fast);
+}
+
+.settings-index-toggle input:checked + .settings-index-toggle-track {
+  border-color: var(--interactive-accent);
+  background: color-mix(in srgb, var(--interactive-accent) 24%, var(--background-primary));
+}
+
+.settings-index-toggle input:checked + .settings-index-toggle-track::after {
+  transform: translateX(14px);
+  background: var(--text-on-accent);
+}
+
+.settings-index-toggle input:focus-visible + .settings-index-toggle-track {
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: 2px;
+}
+
+.settings-index-toggle input:disabled + .settings-index-toggle-track {
+  opacity: 0.5;
 }

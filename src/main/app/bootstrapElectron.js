@@ -8,6 +8,8 @@ const { registerVaultIpc } = require('../ipc/registerVaultIpc');
 const { registerProviderIpc } = require('../ipc/registerProviderIpc');
 const { registerSettingsIpc } = require('../ipc/registerSettingsIpc');
 const { registerEmbeddingIpc } = require('../ipc/registerEmbeddingIpc');
+const { registerVaultIndexIpc } = require('../ipc/registerVaultIndexIpc');
+const { registerVaultSearchIpc } = require('../ipc/registerVaultSearchIpc');
 const { createProviderChatService } = require('../providers/providerChatService');
 const { createProviderStatusService } = require('../providers/providerStatusService');
 const { createProviderModelService } = require('../providers/providerModelService');
@@ -17,10 +19,19 @@ const { createSettingsService } = require('../settings/settingsService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
 const { createVaultProfileService } = require('../vault/vaultProfileService');
+const { createVaultChangeService } = require('../vault/vaultChangeService');
+const { createVaultIndexFreshnessService } = require('../vault/vaultIndexFreshnessService');
 const { createEmbeddingSimilaritySearch } = require('../embeddings/embeddingSimilaritySearch');
 const { createEmbeddingIndexer } = require('../embeddings/embeddingIndexer');
 const { createEmbeddingIndexStatusService } = require('../embeddings/embeddingIndexStatusService');
 const { createEmbeddingIndexHealthService } = require('../embeddings/embeddingIndexHealthService');
+const { createMetadataIndexer } = require('../metadata/metadataIndexer');
+const { createMetadataIndexStatusService } = require('../metadata/metadataIndexStatusService');
+const { createVaultIndexHealthService } = require('../metadata/vaultIndexHealthService');
+const { createFullTextIndexer } = require('../search/fullTextIndexer');
+const { createFullTextIndexStatusService } = require('../search/fullTextIndexStatusService');
+const { createFullTextIndexHealthService } = require('../search/fullTextIndexHealthService');
+const { createVaultSearchService } = require('../search/vaultSearchService');
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 const { getPortableSettingsPath, migrateLegacySettingsToPortable } = require('./portableDataPath');
 
@@ -58,16 +69,18 @@ function bootstrapElectron(electron, options) {
     timeoutMs: providerOptions.modelListTimeoutMs
   }));
   const chatService = options.chatService || createProviderChatService(providerOptions);
+  const vaultIndexFreshnessService = options.vaultIndexFreshnessService || createVaultIndexFreshnessService();
   const embeddingIndexer = options.embeddingIndexer || createEmbeddingIndexer({ settingsStore });
   const embeddingSearchService = options.embeddingSearchService || createEmbeddingSimilaritySearch({
     settingsStore,
     indexer: embeddingIndexer,
     getVaultProfile: () => vaultProfileService.getProfile()
   });
-  const embeddingIndexStatusService = options.embeddingIndexStatusService || createEmbeddingIndexStatusService({ projectRoot });
+  const embeddingIndexStatusService = options.embeddingIndexStatusService || createEmbeddingIndexStatusService({ projectRoot, freshnessService: vaultIndexFreshnessService });
   const embeddingIndexHealthService = options.embeddingIndexHealthService || createEmbeddingIndexHealthService({
     statusService: embeddingIndexStatusService,
-    indexer: embeddingIndexer
+    indexer: embeddingIndexer,
+    freshnessService: vaultIndexFreshnessService
   });
 
   registerChatIpc(ipcMain, chatService);
@@ -76,13 +89,54 @@ function bootstrapElectron(electron, options) {
     version: app.getVersion ? app.getVersion() : '0.1.0',
     shell: electron.shell
   });
-  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, embeddingIndexHealthService);
+  const metadataIndexer = options.metadataIndexer || createMetadataIndexer();
+  const metadataIndexStatusService = options.metadataIndexStatusService || createMetadataIndexStatusService({ freshnessService: vaultIndexFreshnessService });
+  const fullTextIndexer = options.fullTextIndexer || createFullTextIndexer();
+  const fullTextIndexStatusService = options.fullTextIndexStatusService || createFullTextIndexStatusService({ freshnessService: vaultIndexFreshnessService });
+  const fullTextIndexHealthService = options.fullTextIndexHealthService || createFullTextIndexHealthService({
+    indexer: fullTextIndexer,
+    statusService: fullTextIndexStatusService,
+    freshnessService: vaultIndexFreshnessService
+  });
+  const vaultIndexHealthService = options.vaultIndexHealthService || createVaultIndexHealthService({
+    metadataIndexer,
+    metadataStatusService: metadataIndexStatusService,
+    embeddingHealthService: embeddingIndexHealthService,
+    fullTextHealthService: fullTextIndexHealthService,
+    freshnessService: vaultIndexFreshnessService
+  });
+  const vaultChangeService = options.vaultChangeService || createVaultChangeService();
+  const vaultSearchService = options.vaultSearchService || createVaultSearchService();
+  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);
   registerSettingsIpc(ipcMain, settingsService);
   registerEmbeddingIpc(ipcMain, embeddingSearchService, embeddingIndexHealthService);
+  registerVaultIndexIpc(ipcMain, vaultIndexHealthService);
+  registerVaultSearchIpc(ipcMain, vaultSearchService);
   embeddingIndexHealthService.subscribe((health) => {
     BrowserWindow.getAllWindows().forEach((window) => {
       if (window && window.webContents) window.webContents.send(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, health);
+    });
+  });
+  vaultIndexHealthService.subscribe((health) => {
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (window && window.webContents) window.webContents.send(IPC_CHANNELS.INDEXES_HEALTH_CHANGED, health);
+    });
+  });
+    vaultChangeService.subscribe((change) => {
+    const canApplyIncrementalMetadata = change && change.affectsMarkdownIndex === true
+      && change.requiresMetadataRebuild !== true
+      && Array.isArray(change.markdownPaths)
+      && change.markdownPaths.length > 0
+      && typeof vaultIndexHealthService.applyMetadataChanges === 'function';
+    const incremental = canApplyIncrementalMetadata
+      ? vaultIndexHealthService.applyMetadataChanges(change.markdownPaths)
+      : { ok: false, code: 'metadata_incremental_not_applicable' };
+    if (!incremental.ok && change && change.affectsMarkdownIndex && typeof vaultIndexHealthService.markStale === 'function') {
+      vaultIndexHealthService.markStale();
+    }
+    BrowserWindow.getAllWindows().forEach((window) => {
+      if (window && window.webContents) window.webContents.send(IPC_CHANNELS.VAULT_CONTENT_CHANGED, change);
     });
   });
 

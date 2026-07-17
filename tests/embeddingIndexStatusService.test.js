@@ -74,3 +74,18 @@ test('embedding index status reports no_vault before an index can be inspected',
   assert.equal(status.state, 'no_vault');
   assert.equal(status.canRefresh, false);
 });
+
+test('embedding index status reports stale when the shared vault inventory differs', () => {
+  const fingerprint = { modelId: 'model-a', dimensions: 384, revision: 'rev-1', indexVersion: 1 };
+  const service = createEmbeddingIndexStatusService({
+    indexStore: {
+      setRoot: () => ({ ok: true }),
+      inspect: () => ({ ok: true, exists: true, manifest: { fingerprint }, documents: { 'A.md': { mtimeMs: 1 } } })
+    },
+    modelStore: { checkBundledModelAvailability: () => ({ ok: true, available: true, missingArtifacts: [] }) },
+    activeFingerprint: fingerprint,
+    freshnessService: { compareDocuments: () => ({ ok: true, current: false }) }
+  });
+
+  assert.equal(service.getStatus().state, 'stale');
+});

@@ -40,4 +40,8 @@ test('selection action panel routes suggest tags into suggestions state', () => 
   assert.match(source, /suggestionState.addGroup/);
   assert.match(source, /Tag candidates added to Suggestions/);
   assert.doesNotMatch(source, /file.suggestTags[sS]{0,500}reviewBasket.addProposal/);
+  assert.match(source, /result\.code === 'frontmatter_invalid'/);
+  assert.match(source, /Fix the frontmatter in Source editor, then try again\./);
+  assert.match(source, /label: 'Open source'/);
+  assert.match(source, /openSourceEditor\(snapshot/);
 });

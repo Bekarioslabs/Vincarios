@@ -205,6 +205,13 @@
       clearPreviewStatus();
     }
 
+    function openSource(expectedPath) {
+      const targetPath = String(expectedPath || '').replace(/\\/g, '/');
+      if (!currentPath || (targetPath && currentPath !== targetPath)) return false;
+      showEditor();
+      return true;
+    }
+
     function showPreviewFromEditor() {
       const changed = String(editor.value || '') !== loadedSource;
       mode = 'preview';
@@ -398,6 +405,7 @@
       setSource,
       setMessage,
       setImageAsset,
+      openSource,
       getMode: () => mode,
       getCurrentPath: () => currentPath,
       getCurrentSource: () => currentSource

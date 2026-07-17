@@ -47,6 +47,7 @@
         '      <section class="left-nav-group left-nav-group-workspace" aria-label="Workspace">',
         '        <div class="left-section-title">Workspace</div>',
         '        <button type="button" class="left-button ui-flat-row left-button-current" data-workspace-tab="chat" data-left-icon="navigationChat" aria-current="page" aria-label="Chat"><span class="left-button-label">Chat</span></button>',
+        '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="search" data-left-icon="navigationSearch" aria-label="Search"><span class="left-button-label">Search</span></button>',
         '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="suggestions" data-left-icon="navigationSuggestions" aria-label="Suggestions"><span class="left-button-label">Suggestions</span><span class="left-button-count" data-suggestions-count hidden>0</span></button>',
         '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="sessionLog" data-left-icon="navigationSessionLog" aria-label="Session Log"><span class="left-button-label">Session Log</span></button>',
         '      </section>',
@@ -113,6 +114,7 @@
         '    </div>',
         '    </section>',
         '    <section id="suggestions-workspace" class="workspace-panel" data-workspace-panel="suggestions" hidden></section>',
+        '    <section id="search-workspace" class="workspace-panel" data-workspace-panel="search" hidden></section>',
         '    <section id="session-log-workspace" class="workspace-panel" data-workspace-panel="sessionLog" hidden></section>',
         '  </section>',
         '  <div class="pane-resizer" data-resize="vault" title="Resize chat and vault" role="separator" aria-label="Resize chat and vault" aria-orientation="vertical"></div>',
@@ -196,8 +198,9 @@
       mountOptional('chat', globalStatus, () => window.VitruviosChat && window.VitruviosChat.mountChat({ api, app, status: globalStatus, reviewBasket, contextState }));
       mountOptional('context basket', globalStatus, () => window.VitruviosContextBasket && window.VitruviosContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
       mountOptional('suggestions workspace', globalStatus, () => window.VitruviosSuggestionsWorkspace && window.VitruviosSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: globalStatus, onOpenSuggestion: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPath ? vaultUi.filePanel.openMarkdownPath(path) : { ok: false, message: 'File panel unavailable.' } }));
+      mountOptional('search workspace', globalStatus, () => window.VitruviosSearchWorkspace && window.VitruviosSearchWorkspace.mountSearchWorkspace({ root: app.querySelector('#search-workspace'), api, status: globalStatus, onOpenResult: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onRevealResult: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' } }));
       mountOptional('session log', globalStatus, () => window.VitruviosSessionLog && window.VitruviosSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
-      selectionActionsController = mountOptional('selection actions', globalStatus, () => window.VitruviosSelectionActions && window.VitruviosSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true }));
+      selectionActionsController = mountOptional('selection actions', globalStatus, () => window.VitruviosSelectionActions && window.VitruviosSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true, openSourceEditor: (targetPath) => vaultUi.previewController && typeof vaultUi.previewController.openSource === 'function' ? vaultUi.previewController.openSource(targetPath) : false }));
       mountOptional('pane resize', globalStatus, () => window.VitruviosPaneResize && window.VitruviosPaneResize.mountPaneResize(app));
       mountOptional('scoped selection', globalStatus, () => window.VitruviosScopedSelection && window.VitruviosScopedSelection.mountScopedSelection({ app }));
     });
@@ -782,6 +785,7 @@
         onProposeUpdate: (proposal) => addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState, permissionState)
       })
       : null;
+    if (vaultUi) vaultUi.previewController = previewController;
     const permissionState = createPermissionState(statusBar);
 
     if (!api || !api.vault) {

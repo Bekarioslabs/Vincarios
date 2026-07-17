@@ -1,0 +1,202 @@
+.search-workspace {
+  min-height: 0;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  gap: 10px;
+  padding: 16px;
+  background: var(--background-primary);
+}
+
+.workspace-panel.is-active.search-workspace {
+  display: grid;
+}
+
+.search-workspace-header {
+  color: var(--text-accent);
+  font-size: 12px;
+  font-weight: var(--font-weight-ui-strong);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.search-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
+.search-input {
+  min-width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-md);
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font: inherit;
+}
+
+.search-input:focus-visible {
+  outline: 1px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-clear {
+  align-self: center;
+  width: var(--ui-icon-button-size);
+  height: var(--ui-icon-button-size);
+  color: var(--text-muted);
+}
+
+.search-clear:hover,
+.search-clear:focus-visible {
+  color: var(--text-accent);
+}
+
+.search-clear-icon {
+  width: var(--ui-icon-size);
+  height: var(--ui-icon-size);
+}
+.search-submit,
+.search-filter {
+  min-height: 28px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.search-submit {
+  padding: 0 12px;
+  border-color: rgba(var(--interactive-accent-rgb), .52);
+  background: rgba(var(--interactive-accent-rgb), .12);
+  color: var(--text-accent);
+}
+
+.search-submit:hover,
+.search-filter:hover,
+.search-filter.is-active {
+  border-color: rgba(var(--interactive-accent-rgb), .45);
+  color: var(--text-normal);
+}
+
+.search-filter.is-active {
+  background: rgba(var(--interactive-accent-rgb), .1);
+  color: var(--text-accent);
+}
+
+.search-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.search-filter {
+  padding: 0 9px;
+}
+
+.search-index-notice {
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.search-results {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding-right: 2px;
+}
+
+.search-empty-state {
+  min-height: 130px;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-lg);
+  background: var(--background-secondary);
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.search-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: stretch;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-md);
+  background: var(--background-secondary);
+}
+
+.search-result-open {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 5px 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-result-open:hover .search-result-title,
+.search-result-open:focus-visible .search-result-title {
+  color: var(--text-accent);
+}
+
+.search-result-open:focus-visible,
+.search-result-reveal:focus-visible {
+  outline: 1px solid var(--interactive-accent);
+  outline-offset: 1px;
+}
+
+.search-result-title {
+  overflow: hidden;
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: var(--font-weight-ui-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-result-path,
+.search-result-reasons {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-result-reasons {
+  color: var(--text-faint);
+}
+
+.search-result-reveal {
+  align-self: center;
+  width: var(--ui-icon-button-size);
+  height: var(--ui-icon-button-size);
+}
+
+.search-result-reveal-icon {
+  width: var(--ui-icon-size);
+  height: var(--ui-icon-size);
+}

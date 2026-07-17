@@ -15,14 +15,14 @@ test('settings embeddings panel shows the selected V1 default model decision', (
 });
 
 
-test('settings embeddings panel owns visible index status and explicit refresh controls', () => {
-  assert.match(source, /data-settings-embedding-index-status/);
-  assert.match(source, /data-settings-embedding-index-counts/);
-  assert.match(source, /data-settings-refresh-embedding-index/);
-  assert.match(source, /api.embeddings.getIndexStatus/);
-  assert.match(source, /api.embeddings.refreshIndex/);
+test('settings index panel owns combined vault index status and explicit refresh controls', () => {
+  assert.match(source, /data-settings-vault-index-status/);
+  assert.match(source, /data-settings-vault-index-counts/);
+  assert.match(source, /data-settings-refresh-vault-indexes/);
+  assert.match(source, /api.indexes.getHealth/);
+  assert.match(source, /api.indexes.refresh/);
   assert.match(source, /No index yet./);
-  assert.match(source, /Rebuild required for the active model./);
+  assert.match(source, /Vault indexes require refresh./);
 });
 
 
@@ -36,8 +36,8 @@ test('Embedding settings use the same explicit source choices without percentage
 });
 
 
-test('settings subscribes to the shared embedding index health event', () => {
-  assert.match(source, /api.embeddings.onIndexHealthChanged/);
+test('settings subscribes to the shared vault index health event', () => {
+  assert.match(source, /api.indexes.onHealthChanged/);
   assert.match(source, /stale: 'Index needs refresh after vault changes\.'/);
   assert.match(source, /Index needs refresh/);
 });
@@ -45,12 +45,28 @@ test('settings subscribes to the shared embedding index health event', () => {
 
 test('settings index status uses the same stateful visual indicator as Files', () => {
   const css = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/settings.css'), 'utf8');
-  assert.match(source, /data-settings-embedding-index-status/);
+  assert.match(source, /data-settings-vault-index-status/);
   assert.match(source, /dataset.indexState/);
   assert.equal(css.includes('.settings-embedding-index-status[data-index-state="ready"]'), true);
 });
 
 
-test('settings index status markup carries the CSS class used by state colors', () => {
-  assert.match(source, /class="settings-embedding-index-status" data-settings-embedding-index-status/);
+test('settings vault index status markup carries the CSS class used by state colors', () => {
+  assert.match(source, /class="settings-embedding-index-status" data-settings-vault-index-status/);
+});
+
+test('settings expose explicit local full-text opt-in and cache-only removal controls', () => {
+  assert.match(source, /data-settings-full-text-index-status/);
+  assert.match(source, /data-settings-full-text-enabled/);
+  assert.match(source, /data-settings-delete-full-text/);
+  assert.match(source, /Refresh enabled indexes/);
+  assert.match(source, /Refresh enabled indexes also updates Full-text Search/);
+  assert.match(source, /Markdown notes indexed/);
+  assert.match(source, /Similar Notes text segments/);
+  assert.match(source, /Note metadata keeps paths, titles, tags, and YAML properties/);
+  assert.doesNotMatch(source, /metadata records/);
+  assert.doesNotMatch(source, /data-settings-refresh-full-text/);
+  assert.match(source, /api\.indexes\.setFullTextEnabled/);
+  assert.match(source, /api\.indexes\.deleteFullText/);
+  assert.match(source, /Original Markdown content is not copied/);
 });

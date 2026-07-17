@@ -71,103 +71,15 @@
 
   function applyGeneratedNoteMetadata(content, options) {
     const metadata = buildGeneratedNoteMetadata(options);
+    const contractResult = getFrontmatterContract().mergeMetadata(String(content || ''), metadata);
     return {
-      content: mergeFrontmatter(String(content || ''), metadata),
-      metadata
+      content: contractResult.content,
+      metadata: contractResult.ok ? contractResult.metadata : metadata,
+      frontmatterError: contractResult.ok ? null : {
+        code: contractResult.code,
+        message: contractResult.message
+      }
     };
-  }
-
-  function mergeFrontmatter(content, metadata) {
-    const frontmatter = extractFrontmatter(content);
-    if (!frontmatter) {
-      return serializeFrontmatter(metadata) + '\n\n' + content.replace(/^\s+/, '');
-    }
-
-    const existingKeys = collectTopLevelKeys(frontmatter.body);
-    let body = mergeTags(frontmatter.body, metadata.tags);
-    FIELD_ORDER.forEach((key) => {
-      if (key === 'tags' || existingKeys.has(key) || metadata[key] === undefined) return;
-      body += (body.endsWith('\n') || !body ? '' : '\n') + serializeField(key, metadata[key]);
-    });
-    Object.keys(metadata).forEach((key) => {
-      if (FIELD_ORDER.includes(key) || existingKeys.has(key) || metadata[key] === undefined) return;
-      body += (body.endsWith('\n') || !body ? '' : '\n') + serializeField(key, metadata[key]);
-    });
-    return '---\n' + body.replace(/\n+$/g, '') + '\n---' + frontmatter.rest;
-  }
-
-  function extractFrontmatter(content) {
-    const match = String(content || '').match(/^---\r?\n([\s\S]*?)\r?\n---(?=\r?\n|$)/);
-    if (!match) return null;
-    return {
-      body: match[1],
-      rest: content.slice(match[0].length)
-    };
-  }
-
-  function collectTopLevelKeys(body) {
-    const keys = new Set();
-    String(body || '').split(/\r?\n/).forEach((line) => {
-      const match = line.match(/^([A-Za-z_][A-Za-z0-9_-]*):(?:\s|$)/);
-      if (match) keys.add(match[1]);
-    });
-    return keys;
-  }
-
-  function mergeTags(body, tags) {
-    const additions = normalizeTags(tags);
-    if (!additions.length) return body;
-    const lines = String(body || '').split(/\r?\n/);
-    const tagIndex = lines.findIndex((line) => /^tags:(?:\s|$)/.test(line));
-    if (tagIndex === -1) {
-      return (body ? body.replace(/\n+$/g, '') + '\n' : '') + serializeField('tags', additions);
-    }
-
-    const inline = lines[tagIndex].match(/^tags:\s*\[(.*)\]\s*$/);
-    if (inline) {
-      const current = inline[1].split(',').map((tag) => cleanTag(tag)).filter(Boolean);
-      lines[tagIndex] = 'tags: [' + unique(current.concat(additions)).join(', ') + ']';
-      return lines.join('\n');
-    }
-
-    if (/^tags:\s*\S+/.test(lines[tagIndex])) {
-      const current = cleanTag(lines[tagIndex].replace(/^tags:\s*/, ''));
-      lines[tagIndex] = 'tags:\n' + unique([current].concat(additions)).filter(Boolean).map((tag) => '  - ' + tag).join('\n');
-      return lines.join('\n');
-    }
-
-    let endIndex = tagIndex + 1;
-    const current = [];
-    while (endIndex < lines.length && !/^[A-Za-z_][A-Za-z0-9_-]*:(?:\s|$)/.test(lines[endIndex])) {
-      const match = lines[endIndex].match(/^\s*-\s+(.+?)\s*$/);
-      if (match) current.push(cleanTag(match[1]));
-      endIndex += 1;
-    }
-    const merged = unique(current.concat(additions)).filter(Boolean);
-    lines.splice(tagIndex, endIndex - tagIndex, 'tags:', ...merged.map((tag) => '  - ' + tag));
-    return lines.join('\n');
-  }
-
-  function serializeFrontmatter(metadata) {
-    const lines = ['---'];
-    Object.keys(metadata).forEach((key) => {
-      lines.push(serializeField(key, metadata[key]));
-    });
-    lines.push('---');
-    return lines.join('\n');
-  }
-
-  function serializeField(key, value) {
-    if (Array.isArray(value)) {
-      return key + ':\n' + value.map((item) => '  - ' + serializeScalar(item)).join('\n');
-    }
-    return key + ': ' + serializeScalar(value);
-  }
-
-  function serializeScalar(value) {
-    const text = String(value === undefined || value === null ? '' : value).trim();
-    if (/^[A-Za-z0-9_.:/-]+$/.test(text) && !/^(true|false|null|~|\d+(?:\.\d+)?)$/i.test(text)) return text;
-    return JSON.stringify(text);
   }
 
   function normalizeMetadata(input) {
@@ -232,6 +144,12 @@
 
   function padDatePart(value) {
     return String(value).padStart(2, '0');
+  }
+
+  function getFrontmatterContract() {
+    if (typeof window !== 'undefined' && window.VitruviosFrontmatterContract) return window.VitruviosFrontmatterContract;
+    if (typeof module !== 'undefined' && module.exports) return require('./frontmatterContract');
+    throw new Error('Frontmatter contract unavailable.');
   }
 
   const api = {

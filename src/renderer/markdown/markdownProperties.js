@@ -2,43 +2,15 @@
   'use strict';
 
   function splitFrontmatter(source) {
-    const normalized = String(source || '').replace(/\r\n/g, '\n');
-    if (!normalized.startsWith('---\n')) return { properties: [], body: normalized };
-
-    const endIndex = normalized.indexOf('\n---', 4);
-    if (endIndex === -1) return { properties: [], body: normalized };
-
-    const afterMarker = normalized.slice(endIndex + 4);
+    const parsed = getFrontmatterContract().readFrontmatter(source);
     return {
-      properties: parseFrontmatter(normalized.slice(4, endIndex)),
-      body: afterMarker.startsWith('\n') ? afterMarker.slice(1) : afterMarker
-    };
-  }
-
-  function parseFrontmatter(frontmatter) {
-    const properties = [];
-    let current = null;
-
-    String(frontmatter || '').split('\n').forEach((line) => {
-      const keyValue = line.match(/^([^:#][^:]*):\s*(.*)$/);
-      if (keyValue) {
-        current = {
-          key: keyValue[1].trim(),
-          value: normalizePropertyValue(keyValue[2].trim()),
-          listValues: []
-        };
-        if (current.key) properties.push(current);
-        return;
+      properties: parsed.properties,
+      body: parsed.body,
+      frontmatterError: parsed.ok ? null : {
+        code: parsed.code,
+        message: parsed.message
       }
-
-      const listItem = line.match(/^\s*-\s+(.+)$/);
-      if (listItem && current) current.listValues.push(normalizePropertyValue(listItem[1].trim()));
-    });
-
-    return properties.map((entry) => ({
-      key: entry.key,
-      value: entry.listValues.length ? entry.listValues.join(', ') : entry.value
-    }));
+    };
   }
 
   function renderProperties(properties, renderInline) {
@@ -54,17 +26,6 @@
       '</dl></section>';
   }
 
-  function normalizePropertyValue(value) {
-    if (value.startsWith('[') && value.endsWith(']')) {
-      return value.slice(1, -1)
-        .split(',')
-        .map((item) => item.trim().replace(/^['"]|['"]$/g, ''))
-        .filter(Boolean)
-        .join(', ');
-    }
-    return value.replace(/^['"]|['"]$/g, '');
-  }
-
   function escapeHtml(value) {
     return String(value || '')
       .replace(/&/g, '&amp;')
@@ -72,6 +33,12 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  function getFrontmatterContract() {
+    if (typeof window !== 'undefined' && window.VitruviosFrontmatterContract) return window.VitruviosFrontmatterContract;
+    if (typeof module !== 'undefined' && module.exports) return require('../../shared/metadata/frontmatterContract');
+    throw new Error('Frontmatter contract unavailable.');
   }
 
   const api = { splitFrontmatter, renderProperties };

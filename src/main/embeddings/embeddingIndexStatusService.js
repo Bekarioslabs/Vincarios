@@ -7,6 +7,7 @@ const { INDEX_VERSION, createEmbeddingFingerprint, embeddingFingerprintsMatch } 
 function createEmbeddingIndexStatusService(options) {
   options = options || {};
   const indexStore = options.indexStore || createEmbeddingIndexStore(options);
+  const freshnessService = options.freshnessService || null;
   const modelStore = options.modelStore || createEmbeddingModelStore(options);
   const activeFingerprint = createEmbeddingFingerprint(options.activeFingerprint || {
     modelId: DEFAULT_EMBEDDING_MODEL.id,
@@ -52,6 +53,10 @@ function createEmbeddingIndexStatusService(options) {
         documentCount: countDocuments(inspected.documents),
         chunkCount: countChunks(inspected.documents)
       });
+    }
+    if (freshnessService && typeof freshnessService.compareDocuments === 'function') {
+      const freshness = freshnessService.compareDocuments(inspected.documents);
+      if (!freshness.ok || freshness.current !== true) return ok({ state: 'stale', canRefresh: true, modelId: activeFingerprint.modelId, documentCount: countDocuments(inspected.documents), chunkCount: countChunks(inspected.documents) });
     }
 
     return ok({

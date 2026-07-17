@@ -6,6 +6,7 @@
     const api = options.api || {};
     const onRequestPanelExpand = typeof options.onRequestPanelExpand === 'function' ? options.onRequestPanelExpand : function noop() {};
     const isTargetAvailable = typeof options.isTargetAvailable === 'function' ? options.isTargetAvailable : () => true;
+    const openSourceEditor = typeof options.openSourceEditor === 'function' ? options.openSourceEditor : () => false;
     const app = options.app;
     const contextState = options.contextState;
     const reviewBasket = options.reviewBasket || null;
@@ -295,6 +296,16 @@
       }
       const result = builder.buildTagCandidates({ path: snapshot && snapshot.path, content: snapshot && snapshot.content });
       if (!result.ok) {
+        if (result.code === 'frontmatter_invalid') {
+          appendActionMessage('YAML tags could not be updated safely. Fix the frontmatter in Source editor, then try again.', [{
+            label: 'Open source',
+            onClick: () => {
+              if (!openSourceEditor(snapshot && snapshot.path)) setText(status, 'Open this Markdown file in Preview before editing source.');
+            }
+          }]);
+          setText(status, 'YAML tags could not be updated safely.');
+          return;
+        }
         appendActionMessage('No tag candidates found: ' + (result.message || 'No useful missing tags.'));
         setText(status, 'No tag candidates found.');
         return;

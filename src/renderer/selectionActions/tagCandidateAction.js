@@ -29,7 +29,9 @@
     const suggestedTags = suggestTags(path, content, existingTags, input.maxTags || MAX_TAGS, input.vaultProfile);
     if (!suggestedTags.length) return fail('no_tag_candidates', 'No useful missing tag candidates found.');
 
-    const proposedContent = applyTagsToMarkdown(content, existingTags.concat(suggestedTags));
+    const update = getFrontmatterContract().applyTags(content, existingTags.concat(suggestedTags));
+    if (!update.ok) return fail('frontmatter_invalid', 'YAML tags could not be updated safely: ' + update.message);
+    const proposedContent = update.content;
     if (proposedContent === content) return fail('no_tag_candidates', 'No metadata changes needed.');
 
     const title = 'Suggested tags: ' + suggestedTags.join(', ');
@@ -190,8 +192,8 @@
   }
 
   function getFirstMeaningfulLine(content) {
-    const frontmatter = extractFrontmatter(content);
-    const body = frontmatter ? frontmatter.rest : String(content || '');
+    const parsed = getFrontmatterContract().readFrontmatter(content);
+    const body = parsed.ok ? parsed.body : String(content || '');
     const line = body.split(/\r?\n/).map((entry) => entry.trim()).find((entry) => entry && !/^[-*_`>#]/.test(entry));
     if (!line || line.length > 90) return '';
     return line;
@@ -243,66 +245,12 @@
   }
 
   function extractTags(content) {
-    const frontmatter = extractFrontmatter(content);
-    if (!frontmatter) return [];
-    const lines = frontmatter.body.split(/\r?\n/);
-    const tags = [];
-    for (let index = 0; index < lines.length; index += 1) {
-      const line = lines[index];
-      const inline = line.match(/^tags:\s*\[(.*)\]\s*$/i);
-      if (inline) {
-        inline[1].split(',').forEach((tag) => pushTag(tags, tag));
-        continue;
-      }
-      if (/^tags:\s*$/i.test(line)) {
-        for (let inner = index + 1; inner < lines.length; inner += 1) {
-          const match = lines[inner].match(/^\s*-\s+(.+)\s*$/);
-          if (!match) break;
-          pushTag(tags, match[1]);
-          index = inner;
-        }
-      }
-    }
-    return tags;
+    const parsed = getFrontmatterContract().readFrontmatter(content);
+    return parsed.ok ? getFrontmatterContract().getTags(parsed.metadata).map(normalizeTag).filter(Boolean) : [];
   }
 
   function applyTagsToMarkdown(content, tags) {
-    const normalizedTags = uniqueTags(tags);
-    if (!normalizedTags.length) return content;
-    const frontmatter = extractFrontmatter(content);
-    const tagBlock = formatTagBlock(normalizedTags);
-    if (!frontmatter) return '---\n' + tagBlock + '\n---\n' + content;
-
-    const lines = frontmatter.body.split(/\r?\n/);
-    const replaced = [];
-    let consumedTags = false;
-    for (let index = 0; index < lines.length; index += 1) {
-      const line = lines[index];
-      if (/^tags:\s*(\[.*\])?\s*$/i.test(line)) {
-        if (!consumedTags) {
-          replaced.push(tagBlock);
-          consumedTags = true;
-        }
-        if (/^tags:\s*$/i.test(line)) {
-          while (index + 1 < lines.length && /^\s*-\s+/.test(lines[index + 1])) index += 1;
-        }
-        continue;
-      }
-      replaced.push(line);
-    }
-    if (!consumedTags) replaced.unshift(tagBlock);
-    return '---\n' + replaced.join('\n') + '\n---' + frontmatter.rest;
-  }
-
-  function extractFrontmatter(content) {
-    const text = String(content || '').replace(/\r\n/g, '\n');
-    if (!text.startsWith('---\n')) return null;
-    const end = text.indexOf('\n---\n', 4);
-    if (end === -1) return null;
-    return {
-      body: text.slice(4, end),
-      rest: text.slice(end + 4)
-    };
+    return getFrontmatterContract().applyTags(content, tags).content;
   }
 
   function extractHeadingWords(content) {
@@ -360,7 +308,13 @@
     return { ok: false, code, message };
   }
 
-    function getVaultProfileApi() {
+    function getFrontmatterContract() {
+    if (typeof window !== 'undefined' && window.VitruviosFrontmatterContract) return window.VitruviosFrontmatterContract;
+    if (typeof module !== 'undefined' && module.exports) return require('../../shared/metadata/frontmatterContract');
+    throw new Error('Frontmatter contract unavailable.');
+  }
+
+  function getVaultProfileApi() {
     if (typeof window !== 'undefined' && window.VitruviosVaultProfile) return window.VitruviosVaultProfile;
     if (typeof module !== 'undefined' && module.exports) {
       try {

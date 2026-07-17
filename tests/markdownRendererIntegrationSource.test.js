@@ -35,6 +35,16 @@ test('preview controller owns rendered/source mode switching', () => {
   assert.match(source, /type: 'update_note'/);
   assert.match(source, /currentContent: loadedSource/);
   assert.match(source, /proposedContent/);
+  assert.match(source, /function openSource\(expectedPath\)/);
+  assert.match(source, /openSource,/);
+});
+
+test('shell shares the mounted preview controller with selection actions', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+
+  assert.match(source, /vaultUi\.previewController = previewController/);
+  assert.match(source, /vaultUi\.previewController && typeof vaultUi\.previewController\.openSource === 'function'/);
+  assert.doesNotMatch(source, /openSourceEditor: \(targetPath\) => previewController &&/);
 });
 
 test('index loads Markdown preview controller before the file panel and shell', () => {
@@ -72,6 +82,21 @@ test('index loads the bundled Markdown engine and focused extensions before the 
   assert.equal(engineIndex > extensionIndex, true);
   assert.equal(propertiesIndex > engineIndex, true);
   assert.equal(rendererIndex > propertiesIndex, true);
+});
+
+test('index loads YAML runtime and Frontmatter Contract before all consumers', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const runtimeIndex = source.indexOf('./src/shared/metadata/yamlBrowserRuntime.js');
+  const contractIndex = source.indexOf('./src/shared/metadata/frontmatterContract.js');
+  const generatedMetadataIndex = source.indexOf('./src/shared/metadata/generatedNoteMetadata.js');
+  const tagCandidatesIndex = source.indexOf('./src/renderer/selectionActions/tagCandidateAction.js');
+  const propertiesIndex = source.indexOf('./src/renderer/markdown/markdownProperties.js');
+
+  assert.equal(runtimeIndex > -1, true);
+  assert.equal(contractIndex > runtimeIndex, true);
+  assert.equal(generatedMetadataIndex > contractIndex, true);
+  assert.equal(tagCandidatesIndex > contractIndex, true);
+  assert.equal(propertiesIndex > contractIndex, true);
 });
 
 test('Obsidian Markdown extension wires the formatting compatibility module', () => {
