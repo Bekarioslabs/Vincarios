@@ -52,6 +52,9 @@
     { name: 'VitruviosMarkdownEngine', globalName: 'VitruviosMarkdownEngine', methods: ['renderBody', 'renderInline'] },
     { name: 'VitruviosMarkdownProperties', globalName: 'VitruviosMarkdownProperties', methods: ['splitFrontmatter', 'renderProperties'] },
     { name: 'VitruviosMarkdownRenderer', globalName: 'VitruviosMarkdownRenderer', methods: ['renderMarkdown'] },
+    { name: 'VitruviosEditorFormatting', globalName: 'VitruviosEditorFormatting', methods: ['applyEditorFormat', 'insertInternalWikilink'] },
+    { name: 'VitruviosMarkdownLinkPicker', globalName: 'VitruviosMarkdownLinkPicker', methods: ['mountMarkdownLinkPicker'] },
+
     { name: 'VitruviosMarkdownPreview', globalName: 'VitruviosMarkdownPreview' },
     { name: 'VitruviosUpdateFlashState', globalName: 'VitruviosUpdateFlashState', methods: ['createUpdateFlashState'] },
     { name: 'VitruviosPanelLayoutState', globalName: 'VitruviosPanelLayoutState', methods: ['createPanelLayoutState'] },

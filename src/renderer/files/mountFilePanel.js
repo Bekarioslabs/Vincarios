@@ -264,15 +264,15 @@
           row.setAttribute('aria-current', 'true');
         }
 
-        row.addEventListener('click', () => {
+        row.addEventListener('click', async () => {
           focusTreeRow(row);
-          activateEntry(entry);
+          await activateEntry(entry);
         });
-        row.addEventListener('keydown', (event) => {
+        row.addEventListener('keydown', async (event) => {
           if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             focusTreeRow(row);
-            activateEntry(entry);
+            await activateEntry(entry);
             return;
           }
           if (event.key === 'F2') {
@@ -412,17 +412,21 @@
         return;
       }
 
-      navigator.selectFile(entry.path);
-      updateNavigation(navigator.snapshot());
-      renderTree();
-      focusRenderedPath(entry.path);
       if (entry.kind === 'image') {
+        const navigation = await requestPreviewNavigation(entry.path);
+        if (!navigation.ok) return;
+        navigator.selectFile(entry.path);
+        updateNavigation(navigator.snapshot());
+        renderTree();
+        focusRenderedPath(entry.path);
         setPreviewImage(entry.path);
         if (contextState) contextState.setFile(entry.path, createFileSelectionDetails(entry.path));
         else setText(context, 'Selection image: ' + entry.path);
         setStatus('Image selected: ' + entry.path);
         return;
       }
+      const navigation = await requestPreviewNavigation(entry.path);
+      if (!navigation.ok) return;
       setStatus('Reading ' + entry.path + '...');
       const read = await api.vault.readMarkdown(entry.path);
       if (!read.ok) {
@@ -430,6 +434,10 @@
         setStatus('Read failed.');
         return;
       }
+      navigator.selectFile(read.path);
+      updateNavigation(navigator.snapshot());
+      renderTree();
+      focusRenderedPath(read.path);
       setPreviewSource(read.content, read.path);
       if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
       else setText(context, 'Selection file: ' + read.path);
@@ -540,6 +548,8 @@
       for (const candidate of candidates) {
         const read = await api.vault.readMarkdown(candidate);
         if (read.ok) {
+          const navigation = await requestPreviewNavigation(read.path);
+          if (!navigation.ok) return navigation;
           navigator.selectFile(read.path);
           setPreviewSource(read.content, read.path);
           if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
@@ -568,9 +578,11 @@
       return { ok: true, path: normalizedPath };
     }
     async function openMarkdownPath(path) {
+      const navigation = await requestPreviewNavigation(path);
+      if (!navigation.ok) return navigation;
       const revealed = await revealPath(path);
       if (!revealed.ok) return revealed;
-      return openMarkdownPreview(revealed.path, { updateSelection: true, statusPrefix: 'Opened in preview: ' });
+      return openMarkdownPreview(revealed.path, { updateSelection: true, skipNavigationGuard: true, statusPrefix: 'Opened in preview: ' });
     }
 
     async function openMarkdownPreview(path, behavior) {
@@ -584,6 +596,10 @@
         return read;
       }
 
+      if (!behavior || behavior.skipNavigationGuard !== true) {
+        const navigation = await requestPreviewNavigation(read.path);
+        if (!navigation.ok) return navigation;
+      }
       setPreviewSource(read.content, read.path);
       if (!behavior || behavior.updateSelection !== false) {
         navigator.selectFile(read.path);
@@ -870,6 +886,10 @@
       return window.VitruviosFileNavigator.normalizePath(value || '');
     }
 
+    async function requestPreviewNavigation(path) {
+      if (!previewController || typeof previewController.requestNavigation !== 'function') return { ok: true };
+      return previewController.requestNavigation(path);
+    }
     function setPreviewSource(content, path, behavior) {
       if (previewController && previewController.setSource) previewController.setSource(content, path, behavior);
     }

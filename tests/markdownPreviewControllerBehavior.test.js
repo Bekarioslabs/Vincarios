@@ -296,6 +296,93 @@ test('preview controller turns local source edits into update proposals', async 
   delete global.window;
 });
 
+
+test('preview controller blocks navigation away from unsaved local source when the user stays', async () => {
+  global.window = {
+    VitruviosMarkdownRenderer: {
+      renderMarkdown(source) { return '<p>' + source + '</p>'; }
+    }
+  };
+  delete require.cache[require.resolve('../src/renderer/markdown/markdownPreviewController')];
+  const { mountMarkdownPreview } = require('../src/renderer/markdown/markdownPreviewController');
+  const editor = createNode();
+  const editButton = createNode();
+  let request = null;
+  const controller = mountMarkdownPreview({
+    app: createApp({
+      '#markdown-preview': createNode(),
+      '#markdown-source-editor': editor,
+      '#markdown-edit-toggle': editButton,
+      '#markdown-propose-update': createNode(),
+      '#markdown-reveal-current': createNode(),
+      '#markdown-preview-title': createNode()
+    }),
+    onResolveUnsavedNavigation(nextRequest) {
+      request = nextRequest;
+      return 'stay';
+    }
+  });
+
+  controller.setSource('# Original', 'Folder/Note-A.md');
+  editButton.listeners.click();
+  editor.value = '# Draft';
+  editor.listeners.input();
+
+  const result = await controller.requestNavigation('Folder/Note-B.md');
+
+  assert.deepEqual(request, {
+    currentPath: 'Folder/Note-A.md',
+    targetPath: 'Folder/Note-B.md'
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.reason, 'stay');
+  assert.equal(controller.getCurrentPath(), 'Folder/Note-A.md');
+  assert.equal(editor.value, '# Draft');
+  delete global.window;
+});
+
+test('preview controller adds unsaved local source to review before allowing navigation', async () => {
+  global.window = {
+    VitruviosMarkdownRenderer: {
+      renderMarkdown(source) { return '<p>' + source + '</p>'; }
+    }
+  };
+  delete require.cache[require.resolve('../src/renderer/markdown/markdownPreviewController')];
+  const { mountMarkdownPreview } = require('../src/renderer/markdown/markdownPreviewController');
+  const editor = createNode();
+  const editButton = createNode();
+  let proposal = null;
+  const controller = mountMarkdownPreview({
+    app: createApp({
+      '#markdown-preview': createNode(),
+      '#markdown-source-editor': editor,
+      '#markdown-edit-toggle': editButton,
+      '#markdown-propose-update': createNode(),
+      '#markdown-reveal-current': createNode(),
+      '#markdown-preview-title': createNode()
+    }),
+    onResolveUnsavedNavigation() {
+      return 'review';
+    },
+    onProposeUpdate(nextProposal) {
+      proposal = nextProposal;
+      return { ok: true };
+    }
+  });
+
+  controller.setSource('# Original', 'Folder/Note-A.md');
+  editButton.listeners.click();
+  editor.value = '# Draft';
+  editor.listeners.input();
+
+  const result = await controller.requestNavigation('Folder/Note-B.md');
+
+  assert.equal(result.ok, true);
+  assert.equal(result.reason, 'review');
+  assert.equal(proposal.targetPath, 'Folder/Note-A.md');
+  assert.equal(proposal.proposedContent, '# Draft');
+  delete global.window;
+});
 test('preview controller shows update proposal failures in the preview status area', async () => {
   global.window = {
     VitruviosMarkdownRenderer: {

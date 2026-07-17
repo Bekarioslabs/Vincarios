@@ -83,7 +83,7 @@ test('file panel passes write permission into selected context details', () => {
 test('file panel focuses rows before activation so keyboard navigation can continue', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
-  assert.match(source, /focusTreeRow\(row\);\s*activateEntry\(entry\)/);
+  assert.match(source, /focusTreeRow\(row\);\s*await activateEntry\(entry\)/);
   assert.match(source, /focusRenderedPath\(entry\.path\)/);
 });
 test('file panel exposes a shell-owned collapse control and expands for explicit reveal actions', () => {
@@ -191,4 +191,22 @@ test('file panel initializes one guarded refresh path for manual and vault-chang
   assert.equal(subscriptionIndex > -1, true);
   assert.equal(subscriptionIndex < healthLoadIndex, true);
   assert.match(source, /api\.vault\.onChanged\(\(\) => refreshTree\(\)\)/);
+});
+test('file panel waits for preview navigation approval before changing selected Markdown or image entries', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+  const activationStart = source.indexOf('async function activateEntry(entry)');
+  const markdownGuard = source.indexOf('const navigation = await requestPreviewNavigation(entry.path);', activationStart);
+  const markdownSelection = source.indexOf('navigator.selectFile(read.path);', activationStart);
+  const imageGuard = source.indexOf('const navigation = await requestPreviewNavigation(entry.path);', source.indexOf("if (entry.kind === 'image')"));
+  const imageSelection = source.indexOf('navigator.selectFile(entry.path);', source.indexOf("if (entry.kind === 'image')"));
+  const openPathGuard = source.indexOf('const navigation = await requestPreviewNavigation(path);');
+  const reveal = source.indexOf('const revealed = await revealPath(path);');
+
+  assert.match(source, /async function requestPreviewNavigation/);
+  assert.equal(markdownGuard > activationStart, true);
+  assert.equal(markdownGuard < markdownSelection, true);
+  assert.equal(imageGuard > activationStart, true);
+  assert.equal(imageGuard < imageSelection, true);
+  assert.equal(openPathGuard > -1, true);
+  assert.equal(openPathGuard < reveal, true);
 });

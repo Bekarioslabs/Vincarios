@@ -25,6 +25,26 @@
       return item;
     }
 
+    function upsertOpenManualUpdateProposal(proposal) {
+      const item = normalizeProposal(proposal, nextId);
+      const existing = findOpenManualUpdate(item);
+      if (!existing) {
+        nextId += 1;
+        items.push(item);
+        emitChange();
+        return Object.assign({}, item, { replaced: false });
+      }
+
+      const preservedId = existing.id;
+      const preservedSelected = existing.selected;
+      Object.keys(existing).forEach((key) => delete existing[key]);
+      Object.assign(existing, item, {
+        id: preservedId,
+        selected: item.executable === false ? false : preservedSelected
+      });
+      emitChange();
+      return Object.assign({}, existing, { replaced: true });
+    }
     function addProposalPlan(planInput) {
       const parsed = proposalPlanApi.parseProposalPlan(planInput);
       if (!parsed.ok) return parsed;
@@ -44,6 +64,13 @@
     }
     function findOpenDuplicate(candidate) {
       return items.find((item) => item.status === 'open' && item.fingerprint === candidate.fingerprint) || null;
+    }
+
+    function findOpenManualUpdate(candidate) {
+      return items.find((item) => item.status === 'open'
+        && item.type === 'update_note'
+        && item.targetPath === candidate.targetPath
+        && item.reason === 'Manual Markdown source edit from preview editor.') || null;
     }
 
 
@@ -123,6 +150,7 @@
 
     return Object.freeze({
       addProposal,
+      upsertOpenManualUpdateProposal,
       addProposalPlan,
       setSelected,
       getSelectedOpenItems,

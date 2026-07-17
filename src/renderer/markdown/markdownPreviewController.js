@@ -10,6 +10,8 @@
 
     const preview = app.querySelector('#markdown-preview');
     const editor = app.querySelector('#markdown-source-editor');
+    const editorToolbar = app.querySelector('#markdown-editor-toolbar');
+    const linkPickerRoot = app.querySelector('#markdown-link-picker');
     const editButton = app.querySelector('#markdown-edit-toggle');
     const proposeButton = app.querySelector('#markdown-propose-update');
     const revealButton = app.querySelector('#markdown-reveal-current');
@@ -21,14 +23,31 @@
     const onRevealCurrentPath = typeof options.onRevealCurrentPath === 'function' ? options.onRevealCurrentPath : null;
     const onOpenHistoryPath = typeof options.onOpenHistoryPath === 'function' ? options.onOpenHistoryPath : null;
     const onProposeUpdate = typeof options.onProposeUpdate === 'function' ? options.onProposeUpdate : null;
+    const onResolveUnsavedNavigation = typeof options.onResolveUnsavedNavigation === 'function' ? options.onResolveUnsavedNavigation : null;
     let currentSource = '';
     let loadedSource = '';
     let currentPath = '';
     let mode = 'preview';
     let history = [];
     let historyIndex = -1;
+    let pendingUnsavedNavigation = null;
+    let activeLinkSelection = null;
+    let linkPicker = null;
 
     if (!preview || !editor || !editButton) return null;
+
+    const linkPickerApi = typeof window !== 'undefined' ? window.VitruviosMarkdownLinkPicker : null;
+    if (linkPickerApi && typeof linkPickerApi.mountMarkdownLinkPicker === 'function') {
+      linkPicker = linkPickerApi.mountMarkdownLinkPicker({
+        root: linkPickerRoot,
+        api,
+        onChoose: applyInternalLink,
+        onClose: () => {
+          activeLinkSelection = null;
+          focusEditorWithoutScroll();
+        }
+      });
+    }
 
     preview.addEventListener('click', handlePreviewClick);
     setButtonIcon(backButton, 'chevronLeft');
@@ -41,6 +60,8 @@
     if (forwardButton) forwardButton.addEventListener('click', () => moveHistory(1));
     if (proposeButton) proposeButton.addEventListener('click', handleProposeUpdate);
     if (editor) editor.addEventListener('input', handleEditorInput);
+    if (editorToolbar) editorToolbar.addEventListener('mousedown', preserveEditorSelection);
+    if (editorToolbar) editorToolbar.addEventListener('click', handleEditorToolbarClick);
 
     editButton.addEventListener('click', () => {
       if (!currentSource) return;
@@ -231,6 +252,82 @@
       else clearPreviewStatus();
     }
 
+    function handleEditorToolbarClick(event) {
+      const button = event.target && event.target.closest ? event.target.closest('[data-editor-format], [data-editor-link-picker]') : null;
+      if (!button || !editorToolbar || !editorToolbar.contains(button)) return;
+      if (button.hasAttribute('data-editor-link-picker')) {
+        openInternalLinkPicker();
+        return;
+      }
+      const formatter = typeof window !== 'undefined' ? window.VitruviosEditorFormatting : null;
+      if (!formatter || typeof formatter.applyEditorFormat !== 'function') return;
+      const viewport = captureEditorViewport();
+      const result = formatter.applyEditorFormat({
+        source: editor.value,
+        selectionStart: editor.selectionStart,
+        selectionEnd: editor.selectionEnd,
+        action: button.dataset.editorFormat
+      });
+      if (!result || typeof result.source !== 'string') return;
+      editor.value = result.source;
+      focusEditorWithoutScroll();
+      editor.setSelectionRange(result.selectionStart, result.selectionEnd);
+      restoreEditorViewport(viewport);
+      handleEditorInput();
+    }
+
+    function openInternalLinkPicker() {
+      if (mode !== 'source' || !linkPicker) return;
+      activeLinkSelection = {
+        start: editor.selectionStart,
+        end: editor.selectionEnd,
+        viewport: captureEditorViewport()
+      };
+      linkPicker.show();
+    }
+
+    function applyInternalLink(targetPath) {
+      const formatter = typeof window !== 'undefined' ? window.VitruviosEditorFormatting : null;
+      if (!formatter || typeof formatter.insertInternalWikilink !== 'function' || !activeLinkSelection) return;
+      const result = formatter.insertInternalWikilink({
+        source: editor.value,
+        selectionStart: activeLinkSelection.start,
+        selectionEnd: activeLinkSelection.end,
+        targetPath
+      });
+      if (!result || typeof result.source !== 'string') return;
+      const viewport = activeLinkSelection.viewport;
+      activeLinkSelection = null;
+      editor.value = result.source;
+      focusEditorWithoutScroll();
+      editor.setSelectionRange(result.selectionStart, result.selectionEnd);
+      restoreEditorViewport(viewport);
+      handleEditorInput();
+    }
+
+    function preserveEditorSelection(event) {
+      const button = event.target && event.target.closest ? event.target.closest('[data-editor-format], [data-editor-link-picker]') : null;
+      if (button && editorToolbar && editorToolbar.contains(button)) event.preventDefault();
+    }
+
+    function captureEditorViewport() {
+      return { top: editor.scrollTop, left: editor.scrollLeft };
+    }
+
+    function restoreEditorViewport(viewport) {
+      if (!viewport) return;
+      editor.scrollTop = viewport.top;
+      editor.scrollLeft = viewport.left;
+    }
+
+    function focusEditorWithoutScroll() {
+      try {
+        editor.focus({ preventScroll: true });
+      } catch (_error) {
+        editor.focus();
+      }
+    }
+
     function setSourceInternal(source, path) {
       currentSource = source;
       loadedSource = source;
@@ -246,29 +343,107 @@
     }
 
     function handleProposeUpdate() {
-      if (!currentPath || !hasLocalChanges()) return;
+      const result = addLocalUpdateProposal();
+      if (!result.ok) return;
+      const message = result.refreshed ? 'Manual edit proposal refreshed in Review Basket.' : 'Manual edit proposal added to Review Basket.';
+      showPreviewStatus(message);
+      setStatus(message);
+    }
+
+    function addLocalUpdateProposal() {
+      if (!currentPath || !hasLocalChanges()) return { ok: false, message: 'No local Markdown changes to review.' };
       if (!onProposeUpdate) {
-        showLinkFeedback('Review Basket unavailable.');
-        return;
+        showPreviewStatus('Review Basket unavailable.');
+        return { ok: false, message: 'Review Basket unavailable.' };
       }
       clearLinkFeedback();
-      const proposedContent = getEditorSource();
       const result = onProposeUpdate({
         type: 'update_note',
         title: 'Manual source edit',
         targetPath: currentPath,
         currentContent: loadedSource,
-        proposedContent,
+        proposedContent: getEditorSource(),
         reason: 'Manual Markdown source edit from preview editor.',
         risk: 'medium',
         updateMode: 'whole_note'
       });
       if (result && result.ok === false) {
         showPreviewStatus(result.message || 'Could not add update proposal.');
-        return;
+        return result;
       }
-      showPreviewStatus('Manual edit proposal added to Review Basket.');
-      setStatus('Manual edit proposal added to Review Basket.');
+      return { ok: true };
+    }
+
+    async function requestNavigation(nextPath) {
+      const targetPath = String(nextPath || '').replace(/\\/g, '/');
+      if (!currentPath || !hasLocalChanges() || !targetPath || targetPath === currentPath) return { ok: true };
+      const request = { currentPath, targetPath };
+      const decision = await resolveUnsavedNavigation(request);
+      if (decision === 'review') {
+        const proposal = addLocalUpdateProposal();
+        if (!proposal.ok) return { ok: false, reason: 'review_failed', message: proposal.message };
+        setStatus(proposal.refreshed ? 'Manual edit proposal refreshed in Review Basket.' : 'Manual edit proposal added to Review Basket.');
+        return { ok: true, reason: 'review' };
+      }
+      if (decision === 'discard') return { ok: true, reason: 'discard' };
+      return { ok: false, reason: 'stay' };
+    }
+
+    async function resolveUnsavedNavigation(request) {
+      if (onResolveUnsavedNavigation) return onResolveUnsavedNavigation(request);
+      if (!pendingUnsavedNavigation) {
+        pendingUnsavedNavigation = showUnsavedNavigationDialog(request)
+          .finally(() => { pendingUnsavedNavigation = null; });
+      }
+      return pendingUnsavedNavigation;
+    }
+
+    function showUnsavedNavigationDialog(request) {
+      if (typeof document === 'undefined' || !app || typeof app.appendChild !== 'function') return Promise.resolve('stay');
+      const existing = app.querySelector ? app.querySelector('.markdown-unsaved-navigation-overlay') : null;
+      if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+
+      return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.className = 'review-modal-overlay markdown-unsaved-navigation-overlay';
+        overlay.setAttribute('role', 'dialog');
+        overlay.setAttribute('aria-modal', 'true');
+        overlay.setAttribute('aria-labelledby', 'markdown-unsaved-navigation-title');
+
+        const dialog = document.createElement('section');
+        dialog.className = 'review-modal markdown-unsaved-navigation-dialog';
+        const heading = document.createElement('h2');
+        heading.id = 'markdown-unsaved-navigation-title';
+        heading.textContent = 'Unsaved local changes';
+        const message = document.createElement('p');
+        message.className = 'markdown-unsaved-navigation-message';
+        message.textContent = 'Your changes to the current note are not saved to the vault.';
+        const target = document.createElement('div');
+        target.className = 'markdown-unsaved-navigation-target';
+        target.textContent = request.targetPath;
+        const actions = document.createElement('div');
+        actions.className = 'review-modal-actions markdown-unsaved-navigation-actions';
+        const stay = createUnsavedNavigationButton('Stay', 'review-modal-cancel', 'stay', resolve, overlay);
+        const review = createUnsavedNavigationButton('Add to Review', 'review-modal-confirm', 'review', resolve, overlay);
+        const discard = createUnsavedNavigationButton('Discard changes', 'markdown-unsaved-navigation-discard', 'discard', resolve, overlay);
+        actions.append(stay, review, discard);
+        dialog.append(heading, message, target, actions);
+        overlay.appendChild(dialog);
+        app.appendChild(overlay);
+        if (stay && typeof stay.focus === 'function') stay.focus();
+      });
+    }
+
+    function createUnsavedNavigationButton(label, className, decision, resolve, overlay) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = className;
+      button.textContent = label;
+      button.addEventListener('click', () => {
+        if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        resolve(decision);
+      });
+      return button;
     }
 
     function hasLocalChanges() {
@@ -366,6 +541,11 @@
       const sourceMode = mode === 'source';
       preview.hidden = sourceMode;
       editor.hidden = !sourceMode;
+      if (editorToolbar) editorToolbar.hidden = !sourceMode;
+      if (!sourceMode && linkPicker) {
+        activeLinkSelection = null;
+        linkPicker.hide({ restoreFocus: false });
+      }
       setEditModeControl(sourceMode);
       updateProposeButton();
     }
@@ -408,7 +588,8 @@
       openSource,
       getMode: () => mode,
       getCurrentPath: () => currentPath,
-      getCurrentSource: () => currentSource
+      getCurrentSource: () => currentSource,
+      requestNavigation
     };
   }
 

@@ -143,6 +143,17 @@
         '          <button id="markdown-edit-toggle" class="markdown-edit-toggle ui-tool-button" type="button" aria-label="Edit Markdown source" title="Edit Markdown source" disabled>Edit</button>',
         '          <button id="markdown-propose-update" class="markdown-propose-update ui-tool-button" type="button" aria-label="Propose Markdown update" title="Propose Markdown update" disabled>Update</button>',
         '        </div>',
+        '        <div id="markdown-editor-toolbar" class="markdown-editor-toolbar" role="toolbar" aria-label="Markdown formatting" hidden>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="bold" aria-label="Bold" title="Bold">B</button>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="italic" aria-label="Italic" title="Italic">I</button>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="heading2" aria-label="Toggle heading level 2" title="Toggle heading level 2">H2</button>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="bulletList" aria-label="Toggle bullet list" title="Toggle bullet list">UL</button>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="orderedList" aria-label="Toggle numbered list" title="Toggle numbered list">OL</button>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="taskList" aria-label="Toggle task list" title="Toggle task list">Task</button>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-link-picker aria-label="Insert internal Markdown link" title="Insert internal Markdown link">Link</button>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="highlight" aria-label="Highlight" title="Highlight">Mark</button>',
+        '        </div>',
+        '        <div id="markdown-link-picker" hidden></div>',
         '        <article id="markdown-preview" class="markdown-preview" aria-label="Markdown preview">No file selected.</article>',
         '        <textarea id="markdown-source-editor" class="markdown-source-editor" spellcheck="false" aria-label="Markdown source editor" hidden></textarea>',
         '      </div>',
@@ -548,12 +559,13 @@
       setText(statusBar, permission.message);
       return permission;
     }
-    if (!reviewBasket || typeof reviewBasket.addProposal !== 'function') {
+    if (!reviewBasket || typeof reviewBasket.upsertOpenManualUpdateProposal !== 'function') {
       return { ok: false, message: 'Review Basket unavailable.' };
     }
-    reviewBasket.addProposal(proposal);
-    setText(statusBar, 'Update proposal added to Review Basket.');
-    return { ok: true };
+    const item = reviewBasket.upsertOpenManualUpdateProposal(proposal);
+    const refreshed = item && item.replaced === true;
+    setText(statusBar, refreshed ? 'Update proposal refreshed in Review Basket.' : 'Update proposal added to Review Basket.');
+    return { ok: true, refreshed };
   }
   function validatePreviewUpdatePermission(proposal, contextState, permissionState) {
     const targetPath = normalizePath(proposal && proposal.targetPath);

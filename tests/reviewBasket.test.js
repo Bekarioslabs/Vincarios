@@ -74,6 +74,34 @@ test('review basket reuses identical open proposals instead of adding duplicates
   assert.equal(basket.getSnapshot().items.length, 1);
 });
 
+test('review basket replaces one open manual source update with its latest local draft', () => {
+  const basket = createReviewBasketState();
+  const first = basket.upsertOpenManualUpdateProposal({
+    type: 'update_note',
+    title: 'Manual source edit',
+    targetPath: '03_Knowledge/Note.md',
+    currentContent: '# Original',
+    proposedContent: '# Original\n\nFirst local link.',
+    reason: 'Manual Markdown source edit from preview editor.',
+    risk: 'medium',
+    updateMode: 'whole_note'
+  });
+  const second = basket.upsertOpenManualUpdateProposal({
+    type: 'update_note',
+    title: 'Manual source edit',
+    targetPath: '03_Knowledge/Note.md',
+    currentContent: '# Original',
+    proposedContent: '# Original\n\nFirst local link.\n\nSecond local link.',
+    reason: 'Manual Markdown source edit from preview editor.',
+    risk: 'medium',
+    updateMode: 'whole_note'
+  });
+
+  assert.equal(second.id, first.id);
+  assert.equal(second.replaced, true);
+  assert.equal(basket.getSnapshot().items.length, 1);
+  assert.equal(basket.getSnapshot().items[0].proposedContent, '# Original\n\nFirst local link.\n\nSecond local link.');
+});
 test('review basket allows proposals with different content or target folders', () => {
   const basket = createReviewBasketState();
 

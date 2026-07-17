@@ -58,6 +58,7 @@ test('preview update validation uses permission state instead of requiring selec
   assert.match(source, /addPreviewUpdateProposal\(reviewBasket, statusBar, proposal, contextState, permissionState\)/);
   assert.match(source, /validatePreviewUpdatePermission\(proposal, contextState, permissionState\)/);
   assert.match(source, /permissionState\.resolve\(targetPath\)\.write === true/);
+  assert.match(source, /reviewBasket\.upsertOpenManualUpdateProposal\(proposal\)/);
 });
 
 test('renderer bootstrap requires the CSP-safe Vault Profile SVG renderer method', () => {
