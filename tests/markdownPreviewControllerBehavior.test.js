@@ -2,6 +2,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 function createNode() {
   const classes = new Set();
@@ -297,6 +299,12 @@ test('preview controller turns local source edits into update proposals', async 
 });
 
 
+test('unsaved navigation dialog identifies the local draft, not the next file', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'markdown', 'markdownPreviewController.js'), 'utf8');
+
+  assert.match(source, /target\.textContent = request\.currentPath;/);
+  assert.doesNotMatch(source, /target\.textContent = request\.targetPath;/);
+});
 test('preview controller blocks navigation away from unsaved local source when the user stays', async () => {
   global.window = {
     VitruviosMarkdownRenderer: {

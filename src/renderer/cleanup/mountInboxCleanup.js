@@ -6,6 +6,8 @@
     const app = options.app;
     const api = options.api;
     const status = options.status;
+    const reviewBasket = options.reviewBasket || null;
+    const onOpenChat = typeof options.onOpenChat === 'function' ? options.onOpenChat : null;
     if (!app) return null;
 
     const button = app.querySelector('[data-inbox-review]');
@@ -14,8 +16,11 @@
 
     button.disabled = false;
     button.classList.remove('left-button-placeholder');
-    button.addEventListener('click', () => runInboxCleanupReport({ api, chatLog, status }));
-    return Object.freeze({ runInboxCleanupReport: () => runInboxCleanupReport({ api, chatLog, status }) });
+    button.addEventListener('click', () => {
+      if (onOpenChat) onOpenChat();
+      return runInboxCleanupReport({ api, chatLog, status, reviewBasket });
+    });
+    return Object.freeze({ runInboxCleanupReport: () => runInboxCleanupReport({ api, chatLog, status, reviewBasket }) });
   }
 
   async function runInboxCleanupReport(options) {
@@ -23,6 +28,7 @@
     const api = options.api;
     const chatLog = options.chatLog;
     const status = options.status;
+    const reviewBasket = options.reviewBasket || null;
     const mode = options.mode === 'nested' ? 'nested' : 'direct';
     const inboxPath = getInboxPath();
 
@@ -55,9 +61,9 @@
     const markdown = reportApi.formatInboxCleanupReportMarkdown(report);
     const actions = mode === 'nested' ? [] : [{
       label: 'Scan nested folders',
-      onClick: () => runInboxCleanupReport({ api, chatLog, status, mode: 'nested' })
+      onClick: () => runInboxCleanupReport({ api, chatLog, status, reviewBasket, mode: 'nested' })
     }];
-    appendReportMessage(chatLog, markdown, { allowSave: true, presentation: 'inbox-cleanup', suggestedTitle: 'Inbox Cleanup Report', responseSubfolder: 'Cleanup Reports', actions });
+    appendReportMessage(chatLog, markdown, { reviewBasket, status, allowSave: true, presentation: 'inbox-cleanup', suggestedTitle: 'Inbox Cleanup Report', responseSubfolder: 'Cleanup Reports', actions });
     setText(status, mode === 'nested' ? 'Nested inbox cleanup report ready.' : 'Inbox cleanup report ready.');
     return { ok: true, report };
   }

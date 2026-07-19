@@ -109,6 +109,7 @@
       }
 
       if (!isSelectAllShortcut(event)) return;
+      if (shouldPreserveNativeInputShortcut(event)) return;
 
       const focusedRegion = findScopedSelectionRegion(event.target);
       const region = focusedRegion || hoveredRegion;
@@ -369,6 +370,10 @@
     return null;
   }
 
+  function shouldPreserveNativeInputShortcut(event) {
+    return isEditableInput(event && event.target);
+  }
+
   function isSelectAllShortcut(event) {
     if (!event) return false;
     return String(event.key || '').toLowerCase() === 'a' && !!(event.ctrlKey || event.metaKey);
@@ -387,7 +392,8 @@
     getPreviewLinkForPath,
     getScopedSelectionRegionForClassNames,
     isCopyShortcut,
-    isSelectAllShortcut
+    isSelectAllShortcut,
+    shouldPreserveNativeInputShortcut
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

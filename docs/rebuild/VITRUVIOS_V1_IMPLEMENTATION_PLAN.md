@@ -351,7 +351,7 @@ Status: accepted into V1 as a controlled UI/UX hardening and polish pass. Work i
 - [x] 7.7.9 Final visual reference alignment: compare the app against `docs/Design_index.html`, keep vitruvios compact and utilitarian, and avoid copying demo-only structures that do not fit the real app. Manual visual review is green.
 - [x] Before V1 freeze, clarify Suggestions type separation: Similar Notes and Metadata/Tags are visually separated by suggestion group headers. Group headers can select only visible, non-dismissed items in that group. `Clear selected` hides selected suggestions from the current session, while `Add selected to Review Basket` remains limited to convertible suggestion types such as metadata candidates.
 - [x] Create a concise V1 request/write flow overview in `VITRUVIOS_V1_ARCHITECTURE.md`, showing UI actions, provider boundaries, Review Basket, Main safety, Vault Services, backup, and audit.
-- [x] Classify Recent Files, Homepage light, broken-link/orphan scans, and project-note maintenance as V1.1. They do not block safe, presentable V1 workflows.
+- [x] Classify Homepage light, broken-link/orphan scans, and project-note maintenance as V1.1. Recent Files was promoted as a bounded V1 navigation feature.
 - [x] Move non-essential interaction-density and plugin-compatibility ideas to the V1.1/V1.2 Backlog before the Phase 8 scope-freeze review.
 
 ### Phase 7.8 - Folder Visual Identity
@@ -375,7 +375,7 @@ Implementation rule: work from large visible impact to fine polish. Each block g
 
 #### Existing Completed Foundation
 
-- [x] Full-height vault layout foundation: Files, Selection Actions, and Preview are independent local-scroll columns with accessible vertical resizers. The old `--vault-top-height` token and horizontal Preview resizer are removed. Review Basket, Context Basket, and input remain in the Chat workspace stack with their existing bounded local scrolling.
+- [x] Full-height vault layout foundation: Files, Selection Actions, and Preview are independent local-scroll columns with accessible vertical resizers. The old `--vault-top-height` token and horizontal Preview resizer are removed. Context Basket and input remain in the Chat workspace stack; Review Basket owns bounded local scrolling in its dedicated Workspace.
 - [x] Selection Action presentation foundation: the registry owns compact labels, semantic local Lucide icon keys, category, full description, and `app`/`embedding`/`provider` execution kind. Rows use semantic icons plus neutral-safe category dots; provider and embedding work use distinct small markers. The underlying action runners and permission behavior are unchanged.
 - [x] Selection Actions collapse: the panel can shrink to a persisted 48px icon strip. It keeps semantic icons, category dots, visible lock state, and execution markers; inline-form actions expand the panel before opening their form. Layout preferences remain app-local settings, not vault metadata.
 - [x] Left navigation and File Tree collapse: both panels use persisted 48px rails, accessible toggles, and explicit reveal/expand behavior. Preview-local messages render in their dedicated bottom-bar segment.
@@ -415,7 +415,7 @@ Implementation rule: work from large visible impact to fine polish. Each block g
 
 #### 7.9.5 Compact Review And Context Baskets
 
-- [x] Make Review Basket and Context Basket default-collapsed with compact headers, counts, and preserved keyboard/accessible state.
+- [x] Make Context Basket default-collapsed with compact headers, counts, and preserved keyboard/accessible state. Review Basket is promoted to a dedicated Workspace with its own navigation count.
 - [x] Reduce basket vertical footprint and local list density without hiding review safety state.
 - [x] Render Context items as compact framed packets with target icon, short label, and restrained path context.
 
@@ -434,7 +434,7 @@ Implementation rule: work from large visible impact to fine polish. Each block g
 #### Deferred To V1.1: Interaction Density Follow-Ups
 
 - [ ] Move File Tree permission controls (`R`/`W`) to row hover/focus while preserving direct/inherited/off state and keyboard reachability.
-- [ ] Decide whether Session Log becomes a compact bottom-bar activity drawer instead of a prominent Workspace entry.
+- [x] Session Log remains renderer-local and in-memory, opens from the compact global bottom-bar activity drawer instead of left navigation, and restores the prior workspace when closed.
 - [ ] Add Focus Mode only after individual collapses are visually stable; it coordinates icon rail, Files, and Context Basket and persists app-locally.
 
 ## Phase 8 - V1 Product Readiness And Scope Freeze
@@ -465,34 +465,36 @@ Phase 8 finishes the product before release hardening starts. It may add only sm
 
 - [x] **8.3.1 Similar Notes Relevance Quality:** replace raw whole-vault cosine ranking with a deterministic retrieval-quality layer before Vault Search is designed. The default search scope is `same_role`; `whole_vault` is an explicit per-run option. Candidate eligibility uses the active Vault Profile role mapping, never folder-name guesses. Ranking combines the chosen embedding source with bounded structural signals already present in records: same role, meaningful title-token overlap, and shared project/path ancestry. The displayed score is the calibrated relevance score, not raw cosine similarity. Each candidate exposes concise app-generated reasons plus one report-only relationship: `Exact duplicate` for matching indexed hashes, `Possible duplicate` for high-relevance substantially matching titles, or `Related note`. No provider call, no review action, no metadata-index dependency, and no automatic whole-vault search are added.
 - [x] Test relevance with fixture records: an unrelated high-cosine cross-role note must not appear in the default scope; an explicit whole-vault search may show it only with valid supporting signals; genuine same-role/project candidates must rank above weaker generic candidates; identical notes remain discoverable. Keep raw vector diagnostics available to tests, not as the primary user score.
-- [ ] Re-evaluate V1.1/V1.2 candidates once against safety, core usefulness, implementation completeness, and regression risk. Reclassify only small, self-contained candidates with a defined owner and test plan.
-- [ ] Add a subtle splash/version label sourced from application metadata, never duplicated as a renderer constant.
+- [x] Re-evaluate V1.1/V1.2 candidates once against safety, core usefulness, implementation completeness, and regression risk. No candidate was reclassified into V1: the remaining high-value items depend on broader safety/review workflows, while polish and convenience items do not justify V1 regression risk.
+- [x] Add a subtle splash/version label sourced from application metadata, never duplicated as a renderer constant.
 - [x] Define and implement the V1 Light/Dark foundation through shared semantic tokens, persisted preference, and one explicit theme owner. Add the fixed built-in Vault packs `High Contrast` and `Paper`; JSON package import and a Theme Editor remain validated V1.1 work.
 - [x] Add one dedicated Vault indexes surface that shows combined metadata/embedding health and exposes one explicit `Refresh indexes` action. Similar Notes keeps its narrower `Refresh index first` option because it only refreshes embeddings for that search.
 - [x] Define the V1 Vault Home, Recent Files, and Search architecture. Chat remains the post-open workspace; Home is opened explicitly and contains bounded vault-local Recent Files. Local navigation, Preview, deterministic Search, and index building do not require R; R controls provider-bound context only. V1 search layers are path/filename, title, supported frontmatter, and explicit opt-in full text. Semantic search remains post-V1.
 - [x] **8.3.2 Frontmatter Contract:** implement `src/shared/metadata/frontmatterContract.js` as the single parse/validate/preserve/serialize boundary for generated metadata, tag candidates, and Preview properties. It exposes normalized V1 search fields (`tags`, `type`, `status`, `aliases`) with the generic property map intact. The pinned, dependency-free `yaml@2.9.0` parser is guarded by 64 KiB and 32-level flow-nesting limits; every parser/conversion error fails soft and malformed frontmatter is never rewritten.
 - [x] **8.3.3 Metadata Index:** selected-vault `.vitruvios/index/metadata/` records now store deterministic file facts only: schema version, normalized path, content hash, modification time, title, frontmatter state, and normalized `tags`, `type`, `status`, and `aliases`. The indexer reuses unchanged records, marks malformed YAML as unavailable metadata, and never stores Markdown body content. For safe one-file Markdown watcher events, it incrementally updates or removes only the affected metadata records and matching path/mtime inventory; folder, unknown, or failed events fall back to stale plus manual refresh. `vaultIndexHealthService` owns the combined health boundary and the single visible `Refresh indexes` action: metadata rebuilds first; embeddings rebuild only when available and only after metadata succeeds. `vaultChangeService` is the one debounced selected-vault filesystem watcher: it ignores protected folders, automatically refreshes the File Tree with its expansion state preserved, coalesces overlapping refreshes into one follow-up reload, and lets the shared freshness comparison determine whether embedding/full-text indexes are stale after a Metadata-only incremental update. Manual refresh remains available as a fallback. The metadata index remains separate from vectors, rebuildable, schema-versioned, and non-authoritative for writes.
 - [x] **8.3.4 Full-Text Search Foundation:** local, explicit per-vault opt-in token/heading index under `.vitruvios/index/search/`. Valid frontmatter is excluded from tokens; original Markdown bodies are not copied. Settings shows disclosure before first build plus a persistent Enable/Disable switch and Delete local index control. Disabling preserves the cache but excludes Full-text from aggregate refresh/stale state; the retained cache remains visibly deletable while disabled, and Delete removes rebuildable cache only while preserving opt-in. The aggregate health service and one vault watcher mark enabled full-text stale but never rebuild automatically. One `Refresh enabled indexes` action rebuilds it when enabled.
-- [x] **8.3.5 Search UX:** deterministic Search is a dedicated workspace. It queries only the selected vault's Metadata index and, when explicitly enabled and built, its Full-text cache. Query scopes are All indexed fields, Names and paths, Metadata, and Full-text content. Results show local app-generated match reasons, open in Preview without a File Tree reveal, and offer a separate Reveal in Files control. Search never adds provider context, never requires R, never does cross-vault search, and never creates write actions. **Home and Recent Files remain the next bounded V1 substep.**
-- [ ] **8.3.6 Editor Light Baseline:** build only on the shared Frontmatter Contract and existing reviewed Update flow. The first delivered slice is a local source-toolbar for Bold, Italic, H2 headings, bullet/numbered/task lists, internal Wikilinks through the Metadata Names and paths index, and Highlight. It changes only local source and still reaches the vault exclusively through the existing reviewed `update_note` flow. The remaining V1 slice is a narrow YAML `Add Tag` action through the Frontmatter Contract. Defer richer colors, tables, toolbar customization, live editing, and detached workflows to V1.1.
-- [ ] Move every rejected candidate back to the explicit V1.1/V1.2 Backlog with a short reason.
-- [ ] Freeze V1 scope. After this point, only security, data-loss, core workflow, or external-test blockers may enter V1.
+- [x] **8.3.5 Search UX and Vault Home:** deterministic Search is a dedicated workspace. It queries only the selected vault's Metadata index and, when explicitly enabled and built, its Full-text cache. Query scopes are All indexed fields, Names and paths, Metadata, and Full-text content. Results show local app-generated match reasons, open in Preview without a File Tree reveal, and offer a separate Reveal in Files control. Search never adds provider context, never requires R, never does cross-vault search, and never creates write actions. Vault Home is a separate Workspace view with a deterministic, read-only Vault Health card (visible-folder and file-type counts plus current combined index state), compact shortcuts for Search, the configured Inbox role, and Chat, plus a bounded list of the 12 most recently opened Markdown notes in the selected vault. Its vault-local `.vitruvios/recent-files.json` cache stores only normalized paths and timestamps, prunes missing files, opens in Preview without a reveal, and exposes a separate Reveal control. Inventory scans only visible entry names and types; it never reads file content, images, provider context, or R permissions. Index refresh remains deliberately in Settings, not Home. Home includes `Open Review Basket` instead of Inbox reveal; it switches to the dedicated Review workspace. Review Basket working history persists per vault in `.vitruvios/review-basket.json`: non-dismissed entries restore locally, while execution remains gated by the existing review, permission, stale, backup, and audit flow. Clear pending uses the red destructive treatment; Clear executed uses orange warning treatment.
+- [x] **8.3.6 Editor Light Baseline:** build only on the shared Frontmatter Contract and existing reviewed Update flow. V1 delivers a local source-toolbar for Bold, Italic, standard Markdown Strikethrough, H2 headings, bullet/numbered/task lists, internal Wikilinks through the Metadata Names and paths index, and Highlight. It changes only local source and still reaches the vault exclusively through the existing reviewed `update_note` flow. A narrow YAML `Add Tag` control was deliberately not added as a special-case V1 action; V1.1 will provide one coherent Properties/YAML editor for `tags` and other frontmatter key/value fields. Richer colors, tables, toolbar customization, live editing, and detached workflows remain V1.1.
+- [x] Move every rejected candidate back to the explicit V1.1/V1.2 Backlog with a short reason. Partial edits, YAML editing, move/link repair, and batch linking need dedicated reviewed workflows; plugin, media, merge, and automation ideas are larger product areas; presentation refinements remain V1.1 polish.
+- [x] Freeze V1 scope. After this point, only security, data-loss, core workflow, or external-test blockers may enter V1.
 
 ## Phase 9 - V1 Freeze And Release Baseline
 
 V1 is done when all current V1 phases are complete and the release gates below are green. New findings after the Phase 8 scope freeze are V1-must only when they block safety, core usefulness, or external testing; otherwise they move to V1.1 or the Parking Lot.
 
-- [ ] README update, including clear beta trust boundaries and build-it-yourself guidance.
-- [ ] Architecture docs update.
-- [ ] Testing docs update.
-- [ ] Manual smoke tests.
+- [x] README update, including clear beta trust boundaries and build-it-yourself guidance.
+- [x] Architecture docs update.
+- [x] Testing docs update.
+- [x] Manual smoke tests: external/internal links, malformed YAML recovery, provider-offline behavior, watcher/index refresh, Review Basket persistence, and standard navigation passed in `dev-vault`. The Link picker intentionally remains Names and paths only; it does not use Full-text Search.
 - [ ] Focused external audit.
-- [ ] GitHub cleanup.
-- [ ] Dependency and supply-chain gate: `npm ci`, `npm audit --audit-level=high`, lockfile review, and dependency diff review before release.
+- [x] Add a privacy-safe GitHub bug-report template and manual backup restore guide. The template warns against uploading private vault content, unredacted logs, API keys, tokens, and local paths.
+- [ ] Complete GitHub cleanup: choose the public license, enable/recheck secret scanning when public, configure enforceable `main` protection (deletion and force-push blocks, then CI/PR policy when the workflow is ready), and add release-facing metadata after the Bekarios Labs presence is ready.
+- [ ] License gate: choose Vitruvios public license, run a complete direct/transitive dependency license sweep, and resolve any incompatible, non-commercial, AGPL, or SSPL dependency before publishing.
+- [x] Dependency and supply-chain gate: `npm ci`, `npm audit --audit-level=high`, lockfile review, and dependency diff review before release. The 2026-07-18 `adm-zip` finding was resolved through an explicit tested `0.6.0` override; see `VITRUVIOS_V1_TESTS_AND_AUDITS.md`.
 - [ ] Secret scan gate with gitleaks or an equivalent tool before public release.
 - [ ] Release artifact gate: build from clean checkout, generate SHA256 checksums, and publish checksums with the release notes.
 - [ ] Document unsigned-build status until code signing exists; do not imply OS-level trust before signing is implemented.
-- [ ] Package/build check.
+- [ ] Package/build check: Windows portable packaging foundation and first local candidate are complete; independent candidate smoke test, clean-checkout build, final icon, checksum, and post-final-commit scan remain.
 - [ ] V1 freeze decision and beta release candidate.
 
 ## V1.1 / V1.2 Backlog
@@ -528,9 +530,10 @@ V1 is done when all current V1 phases are complete and the release gates below a
 - [ ] Persistent Suggestion Sessions: optionally store open suggestion groups under selected-vault `.vitruvios/` with created time, source target, index/model version or file hashes, status, and stale validation. Current V1 Suggestions remain intentionally session-only and disappear on reload/restart.
 - [ ] Merge Workspace for similar/complementary notes: compare two source notes, show A/B diff, create a reviewed third merged file, and optionally archive the sources only after explicit confirmation. This must become a dedicated `merge_notes` action, not an overloaded `update_note`.
 - [ ] Link candidates from embeddings/metadata: suggest exact Markdown link insertions with a visible line diff before converting to reviewed `update_note` proposals.
+- [ ] Batch internal-link insertion: from one selected Markdown note, choose a target through the Metadata Names and paths index and turn selected repeated literal occurrences into Obsidian links in one reviewed update_note proposal. The workflow must show the exact candidate occurrences and one visible diff, let the user exclude individual matches, preserve visible text, and skip YAML frontmatter, fenced/inline code, and existing Markdown/Wikilinks. Matching stays deterministic (explicit text, whole-word/phrase mode, case behavior); no provider or embedding call is needed.
 - [ ] Folder/destination candidates: suggest target folders using embeddings plus metadata index signals, but execute only through future reviewed move/link-update services.
 - [ ] Plugin block fallback registry: detect common unsupported Obsidian plugin blocks, preserve source, and render a clear unsupported-plugin notice without executing plugin code.
-- [ ] Editor Light expansion after the V1 baseline: richer colors, tables, toolbar customization, optional live preview, detached editor/preview workflows, and additional Markdown-safe helpers.
+- [ ] Editor Light expansion after the V1 baseline: a coherent Properties/YAML editor for typed frontmatter fields (`tags`, `type`, `status`, `source`, dates, and preserved custom fields) through the shared Frontmatter Contract; richer colors, tables, toolbar customization, optional live preview, detached editor/preview workflows, and additional Markdown-safe helpers.
 ## Parking Lot
 
 - [ ] Voice input.
@@ -538,3 +541,9 @@ V1 is done when all current V1 phases are complete and the release gates below a
 - [ ] External HTTP/CLI automation API.
 - [ ] Encrypted backups with user-managed passphrases.
 - [ ] Vitruvios plugin/extension architecture and any plugin marketplace. Revisit only with a dedicated security model that cannot bypass permissions, review, backup, audit, or provider boundaries.
+
+### Phase 8.3.7 - Workspace Consolidation
+
+- [x] Promote Review Basket to a dedicated Workspace while preserving its existing review state, persistence, diff, execute, backup, audit, and safety boundaries. The Chat workspace retains Context Basket only.
+- [x] Move Session Log navigation to the clickable global bottom-bar activity drawer. It remains renderer-local, in-memory, and returns to the previously active workspace when closed.
+- [x] Inbox Review activates Chat before rendering its deterministic report. Suggestions use a distinct `list-todo` Lucide navigation icon.

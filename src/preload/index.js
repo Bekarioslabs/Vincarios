@@ -7,6 +7,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
   APP_OPEN_EXTERNAL: 'app:open-external',
+  APP_MENU_NAVIGATE: 'app:menu-navigate',
   CHAT_SEND: 'chat:send',
   CHAT_CANCEL: 'chat:cancel',
   PROVIDER_STATUS: 'provider:status',
@@ -49,7 +50,12 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_SET_PROFILE_ROLE: 'vault:set-profile-role',
   VAULT_RESET_PROFILE_ROLE: 'vault:reset-profile-role',
   VAULT_SET_PROFILE_APPEARANCE: 'vault:set-profile-appearance',
-  VAULT_LIST_PROFILE_ICONS: 'vault:list-profile-icons'
+  VAULT_LIST_PROFILE_ICONS: 'vault:list-profile-icons',
+  VAULT_GET_INVENTORY: 'vault:get-inventory',
+  VAULT_LIST_RECENT_FILES: 'vault:list-recent-files',
+  VAULT_RECORD_RECENT_FILE: 'vault:record-recent-file',
+  VAULT_LOAD_REVIEW_BASKET: 'vault:load-review-basket',
+  VAULT_SAVE_REVIEW_BASKET: 'vault:save-review-basket'
 });
 
 const vitruvios = Object.freeze({
@@ -59,6 +65,14 @@ const vitruvios = Object.freeze({
   openExternal(url) {
     return ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_EXTERNAL, url);
   },
+  appMenu: Object.freeze({
+    onNavigate(listener) {
+      if (typeof listener !== 'function') return () => {};
+      const handler = (_event, destination) => listener(destination);
+      ipcRenderer.on(IPC_CHANNELS.APP_MENU_NAVIGATE, handler);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.APP_MENU_NAVIGATE, handler);
+    }
+  }),
   chat: Object.freeze({
     send(payload) {
       return ipcRenderer.invoke(IPC_CHANNELS.CHAT_SEND, payload);
@@ -207,6 +221,21 @@ const vitruvios = Object.freeze({
     },
     listProfileIcons() {
       return ipcRenderer.invoke(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS);
+    },
+    getInventory() {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_GET_INVENTORY);
+    },
+    listRecentFiles() {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_LIST_RECENT_FILES);
+    },
+    recordRecentFile(payload) {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_RECORD_RECENT_FILE, payload);
+    },
+    loadReviewBasket() {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_LOAD_REVIEW_BASKET);
+    },
+    saveReviewBasket(snapshot) {
+      return ipcRenderer.invoke(IPC_CHANNELS.VAULT_SAVE_REVIEW_BASKET, snapshot);
     }
   })
 });

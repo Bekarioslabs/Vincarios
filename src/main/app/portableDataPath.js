@@ -13,8 +13,9 @@ function getPortableDataRoot(projectRoot) {
   return path.join(path.resolve(root), PORTABLE_DATA_FOLDER);
 }
 
-function getPortableSettingsPath(projectRoot) {
-  const dataRoot = getPortableDataRoot(projectRoot);
+function getPortableSettingsPath(projectRoot, options) {
+  const configuredDataRoot = options && String(options.dataRoot || '').trim();
+  const dataRoot = configuredDataRoot ? path.resolve(configuredDataRoot) : getPortableDataRoot(projectRoot);
   return dataRoot ? path.join(dataRoot, SETTINGS_FILE_NAME) : '';
 }
 

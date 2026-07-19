@@ -6,6 +6,7 @@
     const api = options.api;
     const app = options.app;
     const status = options.status;
+    const activityReporter = options.activityReporter || null;
     const reviewBasket = options.reviewBasket;
     const contextState = options.contextState || null;
     if (!app) return null;
@@ -78,6 +79,7 @@
           contextState,
           reviewBasket,
           status,
+          activityReporter,
           pending,
           requestId,
           isRequestActive: () => isRequestActive(activeRequest, requestId)
@@ -216,12 +218,21 @@
         options.messages.push({ role: 'assistant', content: result.message.content });
         appendMessage(options.chatLog, 'assistant', result.message.content, { reviewBasket: options.reviewBasket, status: options.status });
       }
-      setText(options.status, 'Response received.');
+      reportStatus(options, 'Response received.', { type: 'success', action: 'Provider response', targetPath: '', detail: '' });
     } else {
       appendMessage(options.chatLog, 'assistant', 'Provider error: ' + ((result && result.error) || 'No response.'), { allowSave: false });
-      setText(options.status, 'Provider error.');
+      reportStatus(options, 'Provider error.', { type: 'error', action: 'Provider error', targetPath: '', detail: (result && result.error) || 'No response.' });
     }
   }
+  function reportStatus(options, message, activity) {
+    const reporter = options && options.activityReporter;
+    if (reporter && typeof reporter.report === 'function') {
+      reporter.report({ message, activity });
+      return;
+    }
+    setText(options && options.status, message);
+  }
+
   function buildOutboundMessages(messages, userText, contextState) {
     const outboundMessages = messages.slice();
     if (!contextState || !window.VitruviosContextState || !window.VitruviosContextState.buildChatContextPackage) return outboundMessages;

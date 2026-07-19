@@ -75,3 +75,10 @@ test('renderer bootstrap requires the Vault Profile draft-state module', () => {
   assert.equal(result.ok, false);
   assert.match(result.message, /VitruviosVaultProfileDraftState/);
 });
+test('renderer bootstrap requires the workspace shortcuts module', () => {
+  const runtime = createRuntime({ VitruviosWorkspaceShortcuts: undefined });
+  const result = validateRendererModules(runtime);
+
+  assert.equal(result.ok, false);
+  assert.match(result.message, /VitruviosWorkspaceShortcuts/);
+});

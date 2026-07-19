@@ -38,7 +38,7 @@ vitruvios helps users clean up and maintain their vault without hidden file acce
 Manual UI actions are separate from AI actions.
 
 - F2 rename for a single selected file may be V1 if it stays small, visible, and reviewed enough for a manual user action.
-- Drag-and-drop move is optional and lower priority than F2 rename. If it enters V1, it must clearly state that link updates are not included yet.
+- Drag-and-drop move, batch internal linking, and link-update planning are V1.1. They need explicit occurrence/destination selection, visible diffs, and deterministic Markdown-aware exclusions before they can be safe workflows.
 - AI-driven rename/move/archive belongs to V1.1 because its real value is link-safety: rename and update links, move and update links, archive with backlink warnings, undo/repair, and batch review.
 
 ## Not V1
@@ -52,6 +52,7 @@ Manual UI actions are separate from AI actions.
 - Large autonomous vault cleanup.
 - AI-driven move/rename/archive with automatic link repair.
 - Complex automatic link repair after mass rename.
+- Manual drag-and-drop move, batch internal-link insertion, and link-update planning.
 - Monetization/Patreon features.
 - Complex external web research.
 - Mobile version.

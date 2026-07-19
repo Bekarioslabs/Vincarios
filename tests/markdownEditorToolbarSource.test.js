@@ -16,6 +16,7 @@ test('editor toolbar is mounted only for source mode and uses the shared formatt
   const index = read('index.html');
 
   assert.match(shell, /id="markdown-editor-toolbar"/);
+  assert.match(shell, /data-editor-format="strikethrough"/);
   assert.match(shell, /data-editor-format="highlight"/);
   assert.match(shell, /data-editor-link-picker/);
   assert.match(shell, /id="markdown-link-picker"/);

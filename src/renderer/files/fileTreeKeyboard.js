@@ -16,6 +16,11 @@
     return !!NAVIGATION_KEYS[key];
   }
 
+  function isFileTreeRenameShortcut(event) {
+    if (!event) return false;
+    return event.key === 'F2' && !event.ctrlKey && !event.metaKey && !event.altKey;
+  }
+
   function getFileTreeNavigation(options) {
     options = options || {};
     const rows = Array.isArray(options.rows) ? options.rows : [];
@@ -59,7 +64,8 @@
 
   const api = {
     getFileTreeNavigation,
-    isFileTreeNavigationKey
+    isFileTreeNavigationKey,
+    isFileTreeRenameShortcut
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

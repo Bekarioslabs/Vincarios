@@ -101,6 +101,9 @@ V1 defaults:
 
 These limits live in `src/shared/security/payloadLimits.js` and can be adjusted through Settings limits. Oversized create/update requests fail before writing, backing up, or auditing. Oversized provider requests fail before contacting LM Studio, Ollama, or future providers.
 
+## Electron Window Boundary
+
+Vitruvios loads its packaged local shell only. The main BrowserWindow blocks direct `will-navigate` events and denies `window.open` requests. Markdown external links require an explicit preview confirmation and then use the main-process IPC flow, which accepts only `http:` and `https:` URLs before opening the system browser.
 ## Renderer Content Security Policy
 
 The renderer declares a static Content Security Policy in `index.html`.

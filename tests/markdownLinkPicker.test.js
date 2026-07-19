@@ -16,3 +16,15 @@ test('link picker keeps Markdown results from the local names and paths search o
     { path: '02_Projects/Plan.md', title: 'Plan' }
   ]);
 });
+test('link picker uses the file name instead of an extracted Markdown title', () => {
+  const results = normalizeLinkResults([
+    { path: '03_Knowledge/ZEUS Markdown Tests/Obsidian Core Compatibility Test.md', title: 'Heading 1' }
+  ]);
+
+  assert.deepEqual(results, [
+    {
+      path: '03_Knowledge/ZEUS Markdown Tests/Obsidian Core Compatibility Test.md',
+      title: 'Obsidian Core Compatibility Test'
+    }
+  ]);
+});

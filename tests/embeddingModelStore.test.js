@@ -25,6 +25,21 @@ test('embedding model store resolves bundled model artifacts under portable proj
   assert.equal(location.folderPath.startsWith(vaultRoot), false);
 });
 
+test('embedding model store resolves packaged artifacts from read-only release resources', () => {
+  const projectRoot = createTempProject();
+  const modelRoot = path.join(projectRoot, 'resources', 'vitruvios-models');
+  const store = createEmbeddingModelStore({
+    projectRoot,
+    runtimePaths: { isPackaged: true, modelRoot }
+  });
+
+  const location = store.getBundledModelLocation();
+
+  assert.equal(location.folderPath, path.join(modelRoot, 'embeddings', 'paraphrase-multilingual-MiniLM-L12-v2'));
+  assert.equal(location.relativeFolder, 'resources/vitruvios-models/embeddings/paraphrase-multilingual-MiniLM-L12-v2');
+  assert.equal(store.writeBundledModelManifest().ok, false);
+});
+
 test('embedding model store writes a local manifest without downloading model files', () => {
   const projectRoot = createTempProject();
   const store = createEmbeddingModelStore({ projectRoot });

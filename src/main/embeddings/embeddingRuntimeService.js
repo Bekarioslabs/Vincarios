@@ -6,7 +6,10 @@ const DEFAULT_MAX_TEXT_CHARS = 12000;
 
 function createEmbeddingRuntimeService(options) {
   options = options || {};
-  const modelStore = options.modelStore || createEmbeddingModelStore({ projectRoot: options.projectRoot });
+  const modelStore = options.modelStore || createEmbeddingModelStore({
+    projectRoot: options.projectRoot,
+    runtimePaths: options.runtimePaths
+  });
   const loadTransformers = options.loadTransformers || defaultLoadTransformers;
   const maxTextChars = Number.isFinite(options.maxTextChars) ? options.maxTextChars : DEFAULT_MAX_TEXT_CHARS;
   let extractorPromise = null;

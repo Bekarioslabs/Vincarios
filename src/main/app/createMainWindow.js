@@ -2,6 +2,8 @@
 
 const path = require('node:path');
 const { DEFAULT_THEME_COLORS } = require('../../shared/ui/themeDefaults');
+const { installApplicationMenu } = require('./createApplicationMenu');
+const { wireWindowZoomShortcuts } = require('./windowZoom');
 
 function createWindowOptions(projectRoot) {
   return {
@@ -27,7 +29,13 @@ function createMainWindow(electron, options) {
   const { BrowserWindow } = electron;
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
 
+  installApplicationMenu(electron);
   const win = new BrowserWindow(createWindowOptions(projectRoot));
+  wireWindowZoomShortcuts(win);
+
+  // The only renderer is the packaged local shell; links use the explicit IPC browser flow.
+  win.webContents.on('will-navigate', (event) => event.preventDefault());
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
   win.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
     console.error('vitruvios window failed to load:', errorCode, errorDescription);

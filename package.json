@@ -10,6 +10,7 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
+    "build:win": "electron-builder --win portable",
     "check": "node scripts/check-js.js",
     "test": "npm run check && node --test tests/*.test.js"
   },
@@ -22,12 +23,66 @@
   ],
   "author": "Bekarios Labs",
   "license": "UNLICENSED",
+  "build": {
+    "appId": "com.bekarioslabs.vitruvios",
+    "productName": "vitruvios",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/onnxruntime-node/**"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "index.html",
+      "package.json",
+      "third_party/**/*",
+      "!**/.vitruvios/**",
+      "!dev-vault/**",
+      "!docs/**",
+      "!tests/**"
+    ],
+    "extraResources": [
+      {
+        "from": ".vitruvios/models/embeddings",
+        "to": "vitruvios-models/embeddings",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "THIRD_PARTY_NOTICES.md",
+        "to": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "from": "licenses",
+        "to": "licenses",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "artifactName": "vitruvios-${version}-portable.${ext}"
+    },
+    "portable": {
+      "requestExecutionLevel": "user"
+    }
+  },
   "devDependencies": {
-    "electron": "42.4.1"
+    "electron": "42.4.1",
+    "electron-builder": "26.15.3"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
     "markdown-it": "14.3.0",
     "yaml": "2.9.0"
+  },
+  "overrides": {
+    "adm-zip": "0.6.0"
   }
 }

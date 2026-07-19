@@ -9,7 +9,7 @@
       .slice(0, MAX_RESULTS)
       .map((result) => ({
         path: String(result.path),
-        title: String(result.title || basenameWithoutExtension(result.path))
+        title: basenameWithoutExtension(result.path)
       }));
   }
 

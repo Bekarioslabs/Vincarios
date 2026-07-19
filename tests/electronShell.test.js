@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const fs = require('node:fs');
-const { createWindowOptions } = require('../src/main/app/createMainWindow');
+const { createWindowOptions, createMainWindow } = require('../src/main/app/createMainWindow');
 const { IPC_CHANNELS } = require('../src/shared/ipc/channels');
 const { DEFAULT_THEME_COLORS } = require('../src/shared/ui/themeDefaults');
 
@@ -24,6 +24,7 @@ test('main window options keep the renderer sandboxed', () => {
 test('IPC channels expose app info, provider, chat, and reviewed vault actions', () => {
   assert.deepEqual(Object.keys(IPC_CHANNELS).sort(), [
     'APP_INFO',
+    'APP_MENU_NAVIGATE',
     'APP_OPEN_EXTERNAL',
     'CHAT_CANCEL',
     'CHAT_SEND',
@@ -55,13 +56,18 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'VAULT_CONTENT_CHANGED',
     'VAULT_CREATE_FOLDER',
     'VAULT_CREATE_NOTE',
+    'VAULT_GET_INVENTORY',
     'VAULT_GET_PROFILE',
     'VAULT_LIST_FOLDER',
     'VAULT_LIST_PROFILE_ICONS',
+    'VAULT_LIST_RECENT_FILES',
+    'VAULT_LOAD_REVIEW_BASKET',
     'VAULT_READ_IMAGE_ASSET',
     'VAULT_READ_MARKDOWN',
+    'VAULT_RECORD_RECENT_FILE',
     'VAULT_RENAME_FILE',
     'VAULT_RESET_PROFILE_ROLE',
+    'VAULT_SAVE_REVIEW_BASKET',
     'VAULT_SELECT_FOLDER',
     'VAULT_SET_PROFILE_APPEARANCE',
     'VAULT_SET_PROFILE_ROLE',
@@ -70,6 +76,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'VAULT_UPDATE_NOTE'
   ]);
   assert.equal(IPC_CHANNELS.APP_INFO, 'app:info');
+  assert.equal(IPC_CHANNELS.APP_MENU_NAVIGATE, 'app:menu-navigate');
   assert.equal(IPC_CHANNELS.APP_OPEN_EXTERNAL, 'app:open-external');
   assert.equal(IPC_CHANNELS.CHAT_SEND, 'chat:send');
   assert.equal(IPC_CHANNELS.CHAT_CANCEL, 'chat:cancel');
@@ -81,6 +88,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.INDEXES_REFRESH, 'indexes:refresh');
   assert.equal(IPC_CHANNELS.INDEXES_HEALTH_CHANGED, 'indexes:health-changed');
   assert.equal(IPC_CHANNELS.PROVIDER_STATUS, 'provider:status');
+  assert.equal(IPC_CHANNELS.VAULT_GET_INVENTORY, 'vault:get-inventory');
   assert.equal(IPC_CHANNELS.SEARCH_QUERY, 'search:query');
   assert.equal(IPC_CHANNELS.PROVIDER_MODELS, 'provider:models');
   assert.equal(IPC_CHANNELS.PROVIDER_SET_ACTIVE, 'provider:set-active');
@@ -102,6 +110,10 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
   assert.equal(IPC_CHANNELS.VAULT_RENAME_FILE, 'vault:rename-file');
   assert.equal(IPC_CHANNELS.VAULT_GET_PROFILE, 'vault:get-profile');
   assert.equal(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS, 'vault:list-profile-icons');
+  assert.equal(IPC_CHANNELS.VAULT_LIST_RECENT_FILES, 'vault:list-recent-files');
+  assert.equal(IPC_CHANNELS.VAULT_RECORD_RECENT_FILE, 'vault:record-recent-file');
+  assert.equal(IPC_CHANNELS.VAULT_LOAD_REVIEW_BASKET, 'vault:load-review-basket');
+  assert.equal(IPC_CHANNELS.VAULT_SAVE_REVIEW_BASKET, 'vault:save-review-basket');
   assert.equal(IPC_CHANNELS.VAULT_SET_PROFILE_ROLE, 'vault:set-profile-role');
   assert.equal(IPC_CHANNELS.VAULT_RESET_PROFILE_ROLE, 'vault:reset-profile-role');
   assert.equal(IPC_CHANNELS.VAULT_SET_PROFILE_APPEARANCE, 'vault:set-profile-appearance');
@@ -195,6 +207,13 @@ test('preload exposes embedding settings without filesystem access', () => {
   assert.doesNotMatch(source, /require('node:fs')/);
 });
 
+test('preload exposes native menu navigation without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+  assert.match(preloadSource, /appMenu: Object\.freeze/);
+  assert.match(preloadSource, /onNavigate\(listener\)/);
+  assert.match(preloadSource, /ipcRenderer\.on\(IPC_CHANNELS\.APP_MENU_NAVIGATE, handler\)/);
+  assert.match(preloadSource, /ipcRenderer\.removeListener\(IPC_CHANNELS\.APP_MENU_NAVIGATE, handler\)/);
+});
 test('preload exposes external link opening without filesystem access', () => {
   const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
 
@@ -214,6 +233,15 @@ test('preload exposes portable Vault Profile configuration without filesystem ac
   assert.match(preloadSource, /IPC_CHANNELS\.VAULT_LIST_PROFILE_ICONS/);
 });
 
+test('preload exposes recent-files metadata without filesystem access', () => {
+  const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
+
+  assert.match(preloadSource, /listRecentFiles\(\)/);
+  assert.match(preloadSource, /recordRecentFile\(payload\)/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_LIST_RECENT_FILES/);
+  assert.match(preloadSource, /IPC_CHANNELS\.VAULT_RECORD_RECENT_FILE/);
+  assert.doesNotMatch(preloadSource, /require\('node:fs'\)/);
+});
 test('preload exposes vault appearance updates without filesystem access', () => {
   const preloadSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'preload', 'index.js'), 'utf8');
 
@@ -307,4 +335,32 @@ test('Electron bootstrap wires optional full-text search into the shared index b
   assert.match(source, /createFullTextIndexHealthService/);
   assert.match(source, /fullTextHealthService: fullTextIndexHealthService/);
   assert.match(source, /freshnessService: vaultIndexFreshnessService/);
+});
+
+test('main window blocks direct navigation and popup creation', async () => {
+  const listeners = new Map();
+  let windowOpenHandler = null;
+  const fakeWindow = {
+    webContents: {
+      on(event, handler) {
+        listeners.set(event, handler);
+      },
+      setWindowOpenHandler(handler) {
+        windowOpenHandler = handler;
+      }
+    },
+    loadFile() {
+      return Promise.resolve();
+    }
+  };
+
+  createMainWindow({ BrowserWindow: function BrowserWindow() { return fakeWindow; } }, {
+    projectRoot: path.join('D:', 'Vitruvios_AGENT')
+  });
+
+  let prevented = false;
+  listeners.get('will-navigate')({ preventDefault() { prevented = true; } }, 'https://example.com');
+
+  assert.equal(prevented, true);
+  assert.deepEqual(windowOpenHandler({ url: 'https://example.com' }), { action: 'deny' });
 });

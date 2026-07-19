@@ -178,3 +178,59 @@ test('vault IPC lists local profile SVGs through the main-process service', () =
     icons: [{ kind: 'custom', path: '.vitruvios/icons/compass.svg' }]
   });
 });
+
+test('vault IPC routes vault-local recent files through the dedicated main service', async () => {
+  const handlers = new Map();
+  const calls = [];
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const readService = {
+    setRoot(root) { calls.push(['read-root', root]); return { ok: true, root }; },
+    getState() { return {}; },
+    listFolder() {},
+    readMarkdown() {}
+  };
+  const recentFilesService = {
+    setRoot(root) { calls.push(['recent-root', root]); return { ok: true, root }; },
+    list() { return { ok: true, files: [{ path: 'Notes/One.md', openedAt: '2026-07-17T12:00:00.000Z' }] }; },
+    record(payload) { return { ok: true, files: [{ path: payload.path, openedAt: '2026-07-17T12:00:00.000Z' }] }; }
+  };
+
+  registerVaultIpc(ipcMain, {}, null, readService, null, null, null, null, null, null, recentFilesService);
+  await handlers.get(IPC_CHANNELS.VAULT_SET_ROOT)(null, 'D:/Vault');
+
+  assert.deepEqual(calls, [['read-root', 'D:/Vault'], ['recent-root', 'D:/Vault']]);
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_LIST_RECENT_FILES)(), {
+    ok: true,
+    files: [{ path: 'Notes/One.md', openedAt: '2026-07-17T12:00:00.000Z' }]
+  });
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_RECORD_RECENT_FILE)(null, { path: 'Notes/Two.md' }), {
+    ok: true,
+    files: [{ path: 'Notes/Two.md', openedAt: '2026-07-17T12:00:00.000Z' }]
+  });
+});
+test('vault IPC routes persistent review basket snapshots through the dedicated main service', async () => {
+  const handlers = new Map();
+  const calls = [];
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const readService = {
+    setRoot(root) { calls.push(['read-root', root]); return { ok: true, root }; },
+    getState() { return {}; },
+    listFolder() {},
+    readMarkdown() {}
+  };
+  const reviewBasketService = {
+    setRoot(root) { calls.push(['review-root', root]); return { ok: true, root }; },
+    load() { return { ok: true, snapshot: { items: [] } }; },
+    save(payload) { return { ok: true, snapshot: payload }; }
+  };
+
+  registerVaultIpc(ipcMain, {}, null, readService, null, null, null, null, null, null, null, null, reviewBasketService);
+  await handlers.get(IPC_CHANNELS.VAULT_SET_ROOT)(null, 'D:/Vault');
+
+  assert.deepEqual(calls, [['read-root', 'D:/Vault'], ['review-root', 'D:/Vault']]);
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_LOAD_REVIEW_BASKET)(), { ok: true, snapshot: { items: [] } });
+  assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_SAVE_REVIEW_BASKET)(null, { items: [{ id: 'proposal-1' }] }), {
+    ok: true,
+    snapshot: { items: [{ id: 'proposal-1' }] }
+  });
+});

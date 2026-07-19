@@ -7,6 +7,50 @@ const {
   createSaveAssistantResponseProposal
 } = require('../src/renderer/review/reviewBasketState');
 
+
+test('review basket restores persisted pending and history entries without making completed items selectable', () => {
+  const basket = createReviewBasketState();
+  basket.restoreSnapshot({
+    items: [
+      {
+        id: 'proposal-7',
+        type: 'update_note',
+        status: 'open',
+        title: 'Restore update',
+        targetPath: '03_Knowledge/Topic.md',
+        currentContent: 'Before',
+        proposedContent: 'After',
+        selected: true
+      },
+      {
+        id: 'proposal-8',
+        type: 'create_note',
+        status: 'done',
+        title: 'Completed note',
+        targetFolder: '00_Inbox',
+        content: '# Done',
+        selected: true
+      },
+      {
+        id: 'proposal-9',
+        type: 'create_note',
+        status: 'failed',
+        title: 'Failed note',
+        targetFolder: '00_Inbox',
+        content: '# Failed',
+        error: 'Write permission changed.'
+      }
+    ]
+  });
+
+  assert.deepEqual(basket.getSnapshot().items.map((item) => [item.id, item.status]), [
+    ['proposal-7', 'open'],
+    ['proposal-8', 'done'],
+    ['proposal-9', 'failed']
+  ]);
+  assert.equal(basket.getSelectedOpenItems().length, 1);
+  assert.equal(basket.addProposal(createSaveAssistantResponseProposal('Next item.')).id, 'proposal-10');
+});
 test('review basket stores save-as-note proposals without executing vault writes', () => {
   const changes = [];
   const basket = createReviewBasketState({

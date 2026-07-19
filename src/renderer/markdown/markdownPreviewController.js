@@ -420,7 +420,7 @@
         message.textContent = 'Your changes to the current note are not saved to the vault.';
         const target = document.createElement('div');
         target.className = 'markdown-unsaved-navigation-target';
-        target.textContent = request.targetPath;
+        target.textContent = request.currentPath;
         const actions = document.createElement('div');
         actions.className = 'review-modal-actions markdown-unsaved-navigation-actions';
         const stay = createUnsavedNavigationButton('Stay', 'review-modal-cancel', 'stay', resolve, overlay);

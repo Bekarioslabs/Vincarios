@@ -292,15 +292,15 @@ test('similar notes detail panel uses compact score styling', () => {
   assert.match(css, /\.selection-action-score\.is-noisy/);
 });
 
-test('chat baskets scroll locally instead of expanding the workspace', () => {
+test('Chat Context Basket and Review workspace scroll locally instead of expanding the workspace', () => {
   const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
   const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
 
-  assert.match(layoutCss, /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(0, min-content\) minmax\(0, min-content\) auto;/);
-  assert.match(layoutCss, /\.review-slot\s*\{[\s\S]*max-height:\s*min\(20vh, 180px\);[\s\S]*overflow:\s*hidden;/);
+  assert.match(layoutCss, /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(0, min-content\) auto;/);
   assert.match(layoutCss, /\.context-slot\s*\{[\s\S]*max-height:\s*min\(16vh, 144px\);[\s\S]*overflow:\s*hidden;/);
   assert.match(layoutCss, /\.context-basket-items\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*auto;/);
   assert.match(reviewCss, /\.review-basket-items\s*\{[\s\S]*min-height:\s*0;[\s\S]*overflow:\s*auto;/);
+  assert.match(reviewCss, /\.review-workspace-slot\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*max-height:\s*none;/);
 });
 test('soft-disabled selection actions stay neutral while category dots preserve non-color semantics', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
@@ -425,7 +425,7 @@ test('bottom bar separates global and preview-local status surfaces', () => {
   assert.equal(shell.indexOf('id="markdown-preview-status"') > shell.indexOf('status.innerHTML = ['), true);
   assert.doesNotMatch(shell, /mountChat\(\{ api, app, status, reviewBasket, contextState \}\)/);
   assert.doesNotMatch(shell, /mountOptional\('[^']+', status,/);
-  assert.match(shell, /mountChat\(\{ api, app, status: globalStatus, reviewBasket, contextState \}\)/);
+  assert.match(shell, /mountChat\(\{ api, app, status: globalStatus, activityReporter, reviewBasket, contextState \}\)/);
   assert.match(layoutCss, /\.status-bar\s*\{[\s\S]*display:\s*grid;/);
   assert.match(layoutCss, /grid-template-columns:\s*var\(--left-nav-width\) minmax\(var\(--min-main-width\), 1fr\) minmax\(var\(--min-vault-width\), var\(--vault-panel-width\)\);/);
   assert.match(layoutCss, /\.status-bar-global\s*\{[\s\S]*grid-column:\s*1 \/ 3;/);
@@ -444,22 +444,21 @@ test('panel dividers separate visual boundaries from the full resize hit area', 
   assert.match(css, /\.pane-resizer::before\s*\{[\s\S]*?width:\s*var\(--panel-resize-hit-area\);/);
   assert.match(css, /\.pane-resizer::after\s*\{[^}]*width:\s*var\(--panel-divider-width\);/);
 });
-test('chat baskets start collapsed and render compact context packets', () => {
+test('Chat Context Basket starts collapsed while Review is its own workspace', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
   const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
   const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
   const contextSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'context', 'mountContextBasket.js'), 'utf8');
 
-  assert.match(shell, /id="review-basket" class="review-slot is-collapsed"/);
-  assert.match(shell, /data-panel-toggle="review-basket" aria-expanded="false"/);
+  assert.match(shell, /data-workspace-panel="review"/);
   assert.match(shell, /id="context-basket" class="context-slot is-collapsed"/);
   assert.match(shell, /data-panel-toggle="context-basket" aria-expanded="false"/);
   assert.match(
     layoutCss,
-    /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(0, min-content\) minmax\(0, min-content\) auto;/
+    /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(0, min-content\) auto;/
   );
   assert.match(layoutCss, /\.context-slot\.is-collapsed\s*\{[\s\S]*min-height:\s*var\(--basket-collapsed-height\);/);
-  assert.match(reviewCss, /\.review-slot\.is-collapsed\s*\{[\s\S]*min-height:\s*var\(--basket-collapsed-height\);/);
+  assert.match(reviewCss, /\.review-workspace-slot\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*max-height:\s*none;/);
   assert.match(contextSource, /context-basket-icon-svg/);
   assert.match(contextSource, /context-basket-path/);
 });

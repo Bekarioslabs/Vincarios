@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { getPortableDataRoot } = require('../app/portableDataPath');
+const { createRuntimePaths } = require('../app/runtimePaths');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 
 const DEFAULT_EMBEDDING_MODEL = Object.freeze({
@@ -32,15 +32,24 @@ function createEmbeddingModelStore(options) {
   options = options || {};
   const fileSystem = options.fs || fs;
   const projectRoot = path.resolve(String(options.projectRoot || process.cwd()));
+  const runtimePaths = options.runtimePaths || createRuntimePaths({
+    projectRoot,
+    isPackaged: options.isPackaged,
+    portableExecutableDir: options.portableExecutableDir,
+    executablePath: options.executablePath,
+    resourcesPath: options.resourcesPath
+  });
 
   function getBundledModelLocation() {
-    const folderPath = path.join(getPortableDataRoot(projectRoot), 'models', 'embeddings', DEFAULT_EMBEDDING_MODEL.folderName);
+    const folderPath = path.join(runtimePaths.modelRoot, 'embeddings', DEFAULT_EMBEDDING_MODEL.folderName);
     return {
       ok: true,
       modelId: DEFAULT_EMBEDDING_MODEL.id,
       baseModelId: DEFAULT_EMBEDDING_MODEL.baseModelId,
       artifactRepoId: DEFAULT_EMBEDDING_MODEL.artifactRepoId,
-      relativeFolder: CURRENT_INTERNAL_NAMESPACE + '/models/embeddings/' + DEFAULT_EMBEDDING_MODEL.folderName,
+      relativeFolder: runtimePaths.isPackaged
+        ? 'resources/vitruvios-models/embeddings/' + DEFAULT_EMBEDDING_MODEL.folderName
+        : CURRENT_INTERNAL_NAMESPACE + '/models/embeddings/' + DEFAULT_EMBEDDING_MODEL.folderName,
       folderPath,
       manifestPath: path.join(folderPath, 'model-manifest.json')
     };
@@ -48,6 +57,9 @@ function createEmbeddingModelStore(options) {
 
   function writeBundledModelManifest(options) {
     options = options || {};
+    if (runtimePaths.isPackaged) {
+      return fail('embedding_model_resources_read_only', 'Packaged embedding resources are read-only.');
+    }
     const location = getBundledModelLocation();
     const manifest = {
       version: 1,

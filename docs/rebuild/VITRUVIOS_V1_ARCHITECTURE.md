@@ -3,14 +3,11 @@
 ## Core Shape
 
 ```text
-UI
--> Review Store
--> Action Parser / Action Builder
--> Safety Gate
--> Vault Services
--> Backup + Audit
--> Provider Layer
--> Embedding Index
+Renderer UI
+├-> Local navigation, Preview, Search, and Index health
+├-> Explicit Context Package -> Provider Layer -> Text or structured proposal
+└-> Review Basket -> Shared Action Schema/Diff -> Preload IPC
+    -> Safety Gate -> Backup -> Vault Services -> Audit
 ```
 
 ## Main Principle
@@ -46,14 +43,17 @@ src/
     app/
     vault/
     safety/
-    actions/
     backup/
     audit/
     providers/
     embeddings/
+    metadata/
+    search/
     settings/
   renderer/
     shell/
+    workspace/
+    home/
     chat/
     review/
     files/
@@ -62,18 +62,17 @@ src/
     markdown/
     projects/
     settings/
-    prompts/
+    theme/
     selectionActions/
     suggestions/
     sessionLog/
     selection/
   shared/
     actions/
-    schemas/
+    metadata/
     vaultProfile/
-    pathRules/
-    config/
-    types/
+    themes/
+    security/
 tests/
 docs/
 ```
@@ -123,7 +122,7 @@ V1 Settings categories:
 - `theme`: app base mode plus validated Vault theme-pack selection.
 - `safety`: review-required and future trusted-mode flags. Trusted mode is not V1 behavior.
 
-The settings store persists normalized JSON under the portable app data folder `Vitruvios_AGENT/.vitruvios/settings.json`, not under Windows `AppData`. If a legacy `userData/settings.json` exists, startup migrates it to the portable path and removes the old file. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules. Vault Profile is intentionally not app-local settings: it is selected-vault metadata consumed by folder-role helpers and Templates.
+The settings store persists normalized JSON under the portable app-root `.vitruvios/settings.json`, not under Windows `AppData`. If a legacy `userData/settings.json` exists, startup migrates it to the portable path and removes the old file. Provider services consume the provider category through `providerSettingsState`, but providers do not own settings persistence, UI, vault access, backups, or safety rules. Vault Profile is intentionally not app-local settings: it is selected-vault metadata consumed by folder-role helpers and Templates.
 
 Theme ownership is deliberately split: `src/shared/themes/themePacks.js` owns the fixed built-in pack registry and its allow-listed token values, Vault Profile persists only the normalized `themeOverride` and `themePackId`, and `src/renderer/theme/themeController.js` is the sole owner that writes validated pack tokens to the document root. V1 ships `High Contrast` (dark base, turquoise/blue accents) and `Paper` (light base, warm surfaces and compact radii). No theme pack reads arbitrary CSS, JavaScript, or `.obsidian` data. A future Theme Editor or JSON package import must validate a narrow token schema before it can reuse this controller.
 
@@ -163,7 +162,7 @@ Index behavior:
 
 - Similar Notes searches the selected vault's local index only. Its default internal scope is `same_role`: active Vault Profile role paths define the candidate boundary, and an unassigned target falls back deterministically to its current top-level area. `whole_vault` is explicit per run.
 - `embeddingCandidateEligibility.js` owns candidate boundaries. `embeddingCandidateScorer.js` owns calibrated relevance: 70% selected embedding score, 18% meaningful filename-token overlap, and 12% shared project-path affinity. `embeddingCandidateRelationship.js` owns the report-only relationship label: equal indexed hashes are `Exact duplicate`; high relevance with a substantially matching title is `Possible duplicate`; remaining accepted results are `Related note`. The user-facing percentage is calibrated relevance, not raw cosine similarity. Whole-vault cross-role candidates require title or structural evidence; a raw vector score alone is not enough.
-- Current relevance facts are path/title/profile only. YAML tags and richer deterministic metadata remain owned by the later structured Metadata Index; Similar Notes must not create a parallel hidden metadata store.
+- Current Similar Notes relevance deliberately remains path/title/profile based. The separate structured Metadata Index owns normalized YAML facts and deterministic Search; Similar Notes must not create a parallel hidden metadata store.
 - `Refresh index first` remains an explicit per-search option. Settings > Embeddings also exposes the selected vault index state and an explicit Build, Refresh, or Rebuild control; opening a vault never starts indexing.
 - runs as a local background job, not as a blocking UI operation.
 - uses limits and batching for large vaults.
@@ -185,7 +184,7 @@ Model behavior:
 - `src/main/embeddings/embeddingIndexer.js` coordinates Markdown source, runtime, and index store. It splits YAML frontmatter from body text, chunks Markdown, embeds changed documents, reindexes legacy records that lack split vectors, skips unchanged hash/mtime records, and stores vectors under the selected vault `.vitruvios/index`. Its explicit refresh is atomic from the app perspective: a failed embedding run retains the prior manifest/documents pair.
 - `src/main/embeddings/embeddingIndexStatusService.js` owns read-only stored-index inspection (`no_vault`, `no_index`, `ready`, `rebuild_required`, `unavailable`, and `invalid`). It returns no vault paths or note titles and never builds an index. `embeddingIndexHealthService.js` owns embedding-specific transient `stale` and `indexing` state only. `src/main/vault/vaultChangeService.js` owns the one debounced filesystem watcher for the selected vault; it ignores protected dot folders, refreshes the File Tree through a narrow renderer event, and marks Markdown/folder changes stale without indexing automatically. Future internal indexes extend this shared change boundary rather than adding competing watchers or status indicators.
 - `src/main/embeddings/embeddingSimilaritySearch.js` owns local similar-note lookup. It reads stored vectors, supports deterministic `content`, `metadata`, and `mixed` scoring modes, applies Settings/default thresholds and result limits, can explicitly rebuild the selected vault index before a search when requested, computes ranked `similar_note` candidates, and never creates review actions by itself.
-- Packaging direction: keep model artifacts out of Git. Prefer bundling the embedding model with official release builds/installer if size remains acceptable. Developer/source users can use a controlled download script or app download flow.
+- Packaging direction: model artifacts stay out of Git but are bundled with Windows portable release builds as read-only `resources/vitruvios-models/` assets. `src/main/app/runtimePaths.js` owns the dev-versus-packaged path contract: development reads model artifacts from the portable app `.vitruvios/models/` folder, while packaged runtime reads resources and keeps writable app state beside the portable executable. Developer/source users retain the local artifact workflow; a later custom-model flow must keep the same explicit model/resource boundary.
 - Settings may allow a custom local embedding model path.
 - `intfloat/multilingual-e5-small` remains a later optional custom-model candidate, not the bundled default, because its license is MIT rather than Apache-2.0.
 - Switching embedding models requires a clear reindex notice.
@@ -218,7 +217,7 @@ Storage target:
 
 `.vitruvios` remains blocked from normal AI context, File Tree context, and user note workflows. Only internal main-process services may read or write this folder.
 
-Planned record fields:
+Stored V1 record fields:
 
 - `schemaVersion`
 - vault-relative `path`

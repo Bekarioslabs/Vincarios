@@ -34,14 +34,14 @@ test('shell mounts review basket view and passes it into chat', () => {
 
   assert.match(source, /VitruviosReviewBasket\.mountReviewBasket/);
   assert.match(source, /reviewBasket/);
-  assert.match(source, /mountChat\(\{ api, app, status: globalStatus, reviewBasket, contextState \}\)/);
+  assert.match(source, /mountChat\(\{ api, app, status: globalStatus, activityReporter, reviewBasket, contextState \}\)/);
 });
 
 test('shell passes review basket into Markdown preview update wiring', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /wireVaultShell\(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout\)/);
-  assert.match(source, /function wireVaultShell\(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout\)/);
+  assert.match(source, /wireVaultShell\(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout, activityReporter\)/);
+  assert.match(source, /function wireVaultShell\(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout, activityReporter\)/);
   assert.match(source, /onProposeUpdate: \(proposal\) => addPreviewUpdateProposal\(reviewBasket, statusBar, proposal, contextState, permissionState\)/);
 });
 test('assistant messages expose a save-as-note action through the review basket', () => {
@@ -150,7 +150,7 @@ test('shell exposes context basket and passes context state into chat', () => {
   assert.match(source, /id="context-basket-items"/);
   assert.match(source, /id="context-clear-all"/);
   assert.match(source, /VitruviosContextBasket\.mountContextBasket/);
-  assert.match(source, /mountChat\(\{ api, app, status: globalStatus, reviewBasket, contextState \}\)/);
+  assert.match(source, /mountChat\(\{ api, app, status: globalStatus, activityReporter, reviewBasket, contextState \}\)/);
   assert.doesNotMatch(source, /active-context-toggle/);
   assert.doesNotMatch(source, /setAutoContextEnabled/);
 });
@@ -344,4 +344,19 @@ test('shell flashes written file rows after successful reviewed writes', () => {
   assert.match(source, /proposal\.type === 'create_from_template'/);
   assert.doesNotMatch(source, /function flashFilePanelPath/);
   assert.doesNotMatch(source, /filePanel\.flashPath\(targetPath\)/);
+});
+
+test('review basket persistence loads before its view and restores only after a vault opens', () => {
+  const indexSource = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const shellSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const viewSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
+  const persistenceIndex = indexSource.indexOf('./src/renderer/review/reviewBasketPersistence.js');
+  const viewIndex = indexSource.indexOf('./src/renderer/review/mountReviewBasket.js');
+
+  assert.equal(persistenceIndex > -1, true);
+  assert.equal(persistenceIndex < viewIndex, true);
+  assert.match(viewSource, /createReviewBasketPersistence/);
+  assert.match(viewSource, /persistence\.restore\(state\)/);
+  assert.match(viewSource, /persistence\.persist\(snapshot\)/);
+  assert.match(shellSource, /await reviewBasket\.restore\(\)/);
 });

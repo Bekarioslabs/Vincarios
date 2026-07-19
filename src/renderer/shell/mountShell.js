@@ -13,15 +13,16 @@
         '<section class="start-screen" data-startup-screen aria-label="Welcome to vitruvios">',
         '  <div class="start-screen-content">',
         '    <div class="start-logo-slot" aria-hidden="true"><img src="./src/renderer/assets/brand/vitruvios-logo-placeholder_white.svg" alt=""></div>',
-        '    <h1 class="start-wordmark"><span>vitruv</span><span>ios</span></h1>',
+        '    <h1 class="start-wordmark"><span>vitru</span><span>vios</span></h1>',
         '    <p class="start-kicker">Local-first Markdown assistant</p>',
+        '    <p class="start-version" data-start-version></p>',
         '    <button type="button" class="start-open" data-open-vault>Open Vault</button>',
         '    <section class="startup-recent" data-startup-recent aria-live="polite"></section>',
         '    <section class="startup-providers" data-startup-providers aria-label="Local provider availability"></section>',
         '  </div>',
         '</section>',
         '<header class="titlebar">',
-        '  <div class="titlebar-brand" aria-label="vitruvios"><span>vitruv</span><span>ios</span></div>',
+        '  <div class="titlebar-brand" aria-label="vitruvios"><span>vitru</span><span>vios</span></div>',
         '  <div class="titlebar-spacer"></div>',
         '  <div class="topbar-actions" aria-label="Provider status" data-provider-status-widget>',
         '    <span id="provider-status" class="status-pill" data-provider-status="offline">',
@@ -46,10 +47,11 @@
         '    <div id="left-nav-actions" class="left-nav-actions">',
         '      <section class="left-nav-group left-nav-group-workspace" aria-label="Workspace">',
         '        <div class="left-section-title">Workspace</div>',
+        '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="home" data-left-icon="navigationHome" aria-label="Vault Home"><span class="left-button-label">Home</span></button>',
         '        <button type="button" class="left-button ui-flat-row left-button-current" data-workspace-tab="chat" data-left-icon="navigationChat" aria-current="page" aria-label="Chat"><span class="left-button-label">Chat</span></button>',
         '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="search" data-left-icon="navigationSearch" aria-label="Search"><span class="left-button-label">Search</span></button>',
         '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="suggestions" data-left-icon="navigationSuggestions" aria-label="Suggestions"><span class="left-button-label">Suggestions</span><span class="left-button-count" data-suggestions-count hidden>0</span></button>',
-        '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="sessionLog" data-left-icon="navigationSessionLog" aria-label="Session Log"><span class="left-button-label">Session Log</span></button>',
+        '        <button type="button" class="left-button ui-flat-row" data-workspace-tab="review" data-left-icon="navigationReviewBasket" aria-label="Review Basket" aria-controls="review-workspace"><span class="left-button-label">Review</span><span class="left-button-count" data-review-count hidden>0</span></button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-create" aria-label="Create">',
         '        <div class="left-section-title">Create</div>',
@@ -64,7 +66,6 @@
         '        <div class="left-section-title">Vault</div>',
         '        <button type="button" class="left-button ui-flat-row left-button-accent" data-open-vault data-left-icon="navigationOpenVault" aria-label="Open Vault"><span class="left-button-label">Open Vault</span></button>',
         '        <button type="button" class="left-button ui-flat-row" data-inbox-review data-left-icon="navigationInboxReview" aria-label="Inbox Review"><span class="left-button-label">Inbox Review</span></button>',
-        '        <button type="button" class="left-button ui-flat-row left-button-placeholder" data-future-slot="review-basket-nav" data-left-icon="navigationReviewBasket" aria-label="Review Basket" disabled><span class="left-button-label">Review Basket</span></button>',
         '      </section>',
         '      <section class="left-nav-group left-nav-group-settings" aria-label="Settings">',
         '        <button type="button" class="left-button ui-flat-row" data-open-settings data-left-icon="settings" aria-label="Settings"><span class="left-button-label">Settings</span></button>',
@@ -76,23 +77,6 @@
         '    <div class="workspace-stack">',
         '      <section id="chat-log" class="chat-log" aria-label="Chat messages" aria-live="polite" aria-relevant="additions">',
         '        <div class="chat-empty-state">Vault loaded. How can I help?</div>',
-        '      </section>',
-        '      <section id="review-basket" class="review-slot is-collapsed" aria-label="Review Basket" data-future-slot="review-basket">',
-        '        <div class="review-basket-header">',
-        '          <button type="button" class="mini-panel-toggle" data-panel-toggle="review-basket" aria-expanded="false" aria-controls="review-basket-items">',
-        '            <span class="mini-panel-toggle-icon" aria-hidden="true"></span>',
-        '            <span>Review Basket</span>',
-        '            <span id="review-basket-count" class="mini-panel-count" hidden>0</span>',
-        '          </button>',
-        '          <div class="review-basket-actions">',
-        '            <button id="review-clear" class="review-clear-button review-danger-button" type="button" title="Remove pending review items" aria-label="Clear pending review items" disabled>Clear pending</button>',
-        '            <button id="review-clear-done" class="review-clear-button review-danger-button" type="button" title="Remove executed review items" aria-label="Clear executed review items" disabled>Clear executed</button>',
-        '            <button id="review-execute" class="review-execute-button" type="button" disabled>Execute selected</button>',
-        '          </div>',
-        '        </div>',
-        '        <div id="review-basket-items" class="review-basket-items">',
-        '          <div class="mini-panel-empty">No suggestions yet.</div>',
-        '        </div>',
         '      </section>',
         '      <section id="context-basket" class="context-slot is-collapsed" aria-label="Context Basket">',
         '        <div class="context-basket-header">',
@@ -113,6 +97,22 @@
         '      </section>',
         '    </div>',
         '    </section>',
+        '    <section id="review-workspace" class="workspace-panel review-workspace" data-workspace-panel="review" hidden>',
+        '      <section id="review-basket" class="review-slot review-workspace-slot" aria-label="Review Basket">',
+        '        <div class="review-basket-header">',
+        '          <div class="review-workspace-title"><span>Review Basket</span><span id="review-basket-count" class="mini-panel-count" hidden>0</span></div>',
+        '          <div class="review-basket-actions">',
+        '            <button id="review-clear" class="review-clear-button review-danger-button" type="button" title="Remove pending review items" aria-label="Clear pending review items" disabled>Clear pending</button>',
+        '            <button id="review-clear-done" class="review-clear-button review-warning-button" type="button" title="Remove executed review items" aria-label="Clear executed review items" disabled>Clear executed</button>',
+        '            <button id="review-execute" class="review-execute-button" type="button" disabled>Execute selected</button>',
+        '          </div>',
+        '        </div>',
+        '        <div id="review-basket-items" class="review-basket-items">',
+        '          <div class="mini-panel-empty">No review items.</div>',
+        '        </div>',
+        '      </section>',
+        '    </section>',
+        '    <section id="vault-home-workspace" class="workspace-panel" data-workspace-panel="home" hidden></section>',
         '    <section id="suggestions-workspace" class="workspace-panel" data-workspace-panel="suggestions" hidden></section>',
         '    <section id="search-workspace" class="workspace-panel" data-workspace-panel="search" hidden></section>',
         '    <section id="session-log-workspace" class="workspace-panel" data-workspace-panel="sessionLog" hidden></section>',
@@ -146,6 +146,7 @@
         '        <div id="markdown-editor-toolbar" class="markdown-editor-toolbar" role="toolbar" aria-label="Markdown formatting" hidden>',
         '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="bold" aria-label="Bold" title="Bold">B</button>',
         '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="italic" aria-label="Italic" title="Italic">I</button>',
+        '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="strikethrough" aria-label="Strikethrough" title="Strikethrough">S</button>',
         '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="heading2" aria-label="Toggle heading level 2" title="Toggle heading level 2">H2</button>',
         '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="bulletList" aria-label="Toggle bullet list" title="Toggle bullet list">UL</button>',
         '          <button type="button" class="editor-format-button ui-tool-button" data-editor-format="orderedList" aria-label="Toggle numbered list" title="Toggle numbered list">OL</button>',
@@ -166,19 +167,24 @@
       status.id = 'status-bar';
       status.className = 'status-bar';
       status.innerHTML = [
-        '<div id="status-bar-global" class="status-bar-global" role="status" aria-live="polite"></div>',
+        '<button id="status-bar-global" class="status-bar-global status-bar-global-button" type="button" data-activity-drawer-toggle aria-label="Open session activity" aria-expanded="false" aria-controls="session-log-workspace" aria-live="polite" aria-atomic="true"></button>',
         '<div id="markdown-preview-status" class="markdown-preview-status is-empty" aria-live="polite" aria-atomic="true"></div>'
       ].join('');
       const globalStatus = status.querySelector('#status-bar-global');
       globalStatus.textContent = info.name + ' ' + info.version + ' - local first';
 
       app.appendChild(status);
+      const startVersion = app.querySelector('[data-start-version]');
+      if (startVersion) startVersion.textContent = 'v' + String(info.version || 'unavailable');
+
       root.appendChild(app);
       renderLeftNavigationIcons(app);
       wireShellInteractions(app);
       const workspaceState = createWorkspaceState();
       wireWorkspaceTabs(app, workspaceState);
+      wireActivityDrawer(app, workspaceState);
       const activityState = createActivityState();
+      const activityReporter = createActivityReporter({ status: globalStatus, activityState });
       app.__vitruviosActivityState = activityState;
       const contextState = createContextState();
       const suggestionState = createSuggestionState();
@@ -198,18 +204,21 @@
         : null;
       const vaultUi = { filePanel: null, vaultProfileState, updateFlashState, themeController };
       const reviewBasket = mountOptional('review basket', globalStatus, () => window.VitruviosReviewBasket
-        ? window.VitruviosReviewBasket.mountReviewBasket({ app, status: globalStatus, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) })
+        ? window.VitruviosReviewBasket.mountReviewBasket({ app, api, status: globalStatus, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState), onSnapshotChange: (snapshot) => renderReviewWorkspaceIndicator(app, snapshot) })
         : null);
+      if (reviewBasket && typeof reviewBasket.getSnapshot === 'function') renderReviewWorkspaceIndicator(app, reviewBasket.getSnapshot());
       mountOptional('creation presets', globalStatus, () => window.VitruviosCreationPresets && window.VitruviosCreationPresets.mountCreationPresets({ app, api, reviewBasket, status: globalStatus, vaultProfileState }));
-      wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout);
+      wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout, activityReporter);
 
       mountOptional('provider status', globalStatus, () => window.VitruviosProviderStatus && window.VitruviosProviderStatus.mountProviderStatus({ api, app }));
       mountOptional('settings panel', globalStatus, () => window.VitruviosSettingsPanel && window.VitruviosSettingsPanel.mountSettingsPanel({ api, app, status: globalStatus, vaultProfileState, themeController }));
-      mountOptional('inbox cleanup', globalStatus, () => window.VitruviosInboxCleanup && window.VitruviosInboxCleanup.mountInboxCleanup({ api, app, status: globalStatus }));
-      mountOptional('chat', globalStatus, () => window.VitruviosChat && window.VitruviosChat.mountChat({ api, app, status: globalStatus, reviewBasket, contextState }));
+      mountOptional('workspace shortcuts', globalStatus, () => window.VitruviosWorkspaceShortcuts && window.VitruviosWorkspaceShortcuts.mountWorkspaceShortcuts({ app, workspaceState, appMenu: api && api.appMenu }));
+      mountOptional('inbox cleanup', globalStatus, () => window.VitruviosInboxCleanup && window.VitruviosInboxCleanup.mountInboxCleanup({ api, app, status: globalStatus, reviewBasket, onOpenChat: () => workspaceState.setActiveWorkspace('chat') }));
+      mountOptional('chat', globalStatus, () => window.VitruviosChat && window.VitruviosChat.mountChat({ api, app, status: globalStatus, activityReporter, reviewBasket, contextState }));
       mountOptional('context basket', globalStatus, () => window.VitruviosContextBasket && window.VitruviosContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
       mountOptional('suggestions workspace', globalStatus, () => window.VitruviosSuggestionsWorkspace && window.VitruviosSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: globalStatus, onOpenSuggestion: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPath ? vaultUi.filePanel.openMarkdownPath(path) : { ok: false, message: 'File panel unavailable.' } }));
       mountOptional('search workspace', globalStatus, () => window.VitruviosSearchWorkspace && window.VitruviosSearchWorkspace.mountSearchWorkspace({ root: app.querySelector('#search-workspace'), api, status: globalStatus, onOpenResult: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onRevealResult: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' } }));
+      mountOptional('vault home', globalStatus, () => window.VitruviosVaultHome && window.VitruviosVaultHome.mountVaultHome({ root: app.querySelector('#vault-home-workspace'), api, workspaceState, onOpen: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onReveal: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' }, onRevealFolder: (path) => vaultUi.filePanel && vaultUi.filePanel.revealFolder ? vaultUi.filePanel.revealFolder(path) : { ok: false, message: 'File panel unavailable.' }, onOpenReviewBasket: () => { if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') workspaceState.setActiveWorkspace('review'); if (reviewBasket && typeof reviewBasket.reveal === 'function') reviewBasket.reveal(); } }));
       mountOptional('session log', globalStatus, () => window.VitruviosSessionLog && window.VitruviosSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
       selectionActionsController = mountOptional('selection actions', globalStatus, () => window.VitruviosSelectionActions && window.VitruviosSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true, openSourceEditor: (targetPath) => vaultUi.previewController && typeof vaultUi.previewController.openSource === 'function' ? vaultUi.previewController.openSource(targetPath) : false }));
       mountOptional('pane resize', globalStatus, () => window.VitruviosPaneResize && window.VitruviosPaneResize.mountPaneResize(app));
@@ -414,11 +423,50 @@
     return window.VitruviosActivityState.createActivityState();
   }
 
+  function createActivityReporter(options) {
+    if (!window.VitruviosActivityReporter || typeof window.VitruviosActivityReporter.createActivityReporter !== 'function') return null;
+    return window.VitruviosActivityReporter.createActivityReporter(options);
+  }
+
   function createUpdateFlashState() {
     if (!window.VitruviosUpdateFlashState || typeof window.VitruviosUpdateFlashState.createUpdateFlashState !== 'function') return null;
     return window.VitruviosUpdateFlashState.createUpdateFlashState({ normalizePath });
   }
 
+  function wireActivityDrawer(app, workspaceState) {
+    if (!app || !workspaceState || typeof workspaceState.snapshot !== 'function') return;
+    const toggle = app.querySelector('[data-activity-drawer-toggle]');
+    if (!toggle) return;
+    let previousWorkspace = 'chat';
+
+    function render(snapshot) {
+      const active = snapshot && snapshot.activeWorkspace ? snapshot.activeWorkspace : 'chat';
+      const isOpen = active === 'sessionLog';
+      if (!isOpen) previousWorkspace = active;
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      toggle.setAttribute('aria-label', isOpen ? 'Close session activity' : 'Open session activity');
+    }
+
+    toggle.addEventListener('click', () => {
+      const active = workspaceState.snapshot().activeWorkspace;
+      workspaceState.setActiveWorkspace(active === 'sessionLog' ? previousWorkspace : 'sessionLog');
+    });
+    workspaceState.subscribe(render);
+    render(workspaceState.snapshot());
+  }
+
+  function renderReviewWorkspaceIndicator(app, snapshot) {
+    if (!app) return;
+    const badge = app.querySelector('[data-review-count]');
+    const button = app.querySelector('[data-workspace-tab="review"]');
+    const items = snapshot && Array.isArray(snapshot.items) ? snapshot.items : [];
+    const openCount = items.filter((item) => item && item.status === 'open').length;
+    if (badge) {
+      badge.hidden = openCount === 0;
+      badge.textContent = String(openCount);
+    }
+    if (button) button.setAttribute('aria-label', 'Review Basket' + (openCount ? ', ' + openCount + ' open item' + (openCount === 1 ? '' : 's') : ''));
+  }
   function wireWorkspaceTabs(app, workspaceState) {
     if (!app || !workspaceState) return;
     const buttons = Array.from(app.querySelectorAll('[data-workspace-tab]'));
@@ -774,7 +822,7 @@
     return { name: 'vitruvios', version: '0.1.0' };
   }
 
-  function wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout) {
+  function wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout, activityReporter) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
     const statusBar = app.querySelector('#status-bar-global');
@@ -810,6 +858,7 @@
         root: filePanelRoot,
         previewController,
         status: statusBar,
+        activityReporter,
         contextState,
         permissionState,
         updateFlashState: vaultUi && vaultUi.updateFlashState,
@@ -832,6 +881,7 @@
       app.classList.remove('is-start');
       filePanel.setVaultName(vaultName || 'Vault');
       await filePanel.openRoot();
+      if (reviewBasket && typeof reviewBasket.restore === 'function') await reviewBasket.restore();
       refreshVaultThemeOverride(vaultUi);
       if (startupScreen && typeof startupScreen.recordRecentVault === 'function') {
         try {

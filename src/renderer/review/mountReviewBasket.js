@@ -4,14 +4,19 @@
   function mountReviewBasket(options) {
     options = options || {};
     const app = options.app;
+    const api = options.api || null;
     const status = options.status;
     const executeProposal = typeof options.executeProposal === 'function' ? options.executeProposal : null;
+    const onSnapshotChange = typeof options.onSnapshotChange === 'function' ? options.onSnapshotChange : null;
     const root = app ? app.querySelector('#review-basket-items') : null;
     const executeButton = app ? app.querySelector('#review-execute') : null;
     const clearButton = app ? app.querySelector('#review-clear') : null;
     const clearDoneButton = app ? app.querySelector('#review-clear-done') : null;
     const countBadge = app ? app.querySelector('#review-basket-count') : null;
     let isExecuting = false;
+    let persistenceReady = false;
+    const persistenceApi = getReviewBasketPersistenceApi();
+    const persistence = persistenceApi ? persistenceApi.createReviewBasketPersistence({ api }) : null;
 
     if (!window.VitruviosReviewBasketState || !root) return null;
 
@@ -22,6 +27,8 @@
         updateExecuteButton(executeButton, state, isExecuting);
         updateClearButton(clearButton, state, isExecuting);
         updateClearDoneButton(clearDoneButton, state, isExecuting);
+        if (onSnapshotChange) onSnapshotChange(snapshot);
+        if (persistenceReady && persistence) persistSnapshot(persistence, snapshot, status);
       }
     });
 
@@ -58,10 +65,43 @@
       updateClearButton(clearButton, state, isExecuting);
     }
 
-    return state;
+    async function restore() {
+      persistenceReady = false;
+      if (!persistence) return { ok: false, message: 'Review Basket persistence unavailable.' };
+      try {
+        const result = await persistence.restore(state);
+        persistenceReady = result && result.ok === true;
+        if (result && result.warning) setText(status, result.warning);
+        if (!persistenceReady) setText(status, result && result.message || 'Review Basket could not be restored.');
+        return result;
+      } catch (_error) {
+        setText(status, 'Review Basket could not be restored.');
+        return { ok: false, message: 'Review Basket could not be restored.' };
+      }
+    }
+
+    function reveal() {
+      const slot = app ? app.querySelector('#review-basket') : null;
+      if (slot && typeof slot.scrollIntoView === 'function') slot.scrollIntoView({ block: 'nearest' });
+    }
+
+    return Object.assign({}, state, { restore, reveal });
   }
 
 
+  function persistSnapshot(persistence, snapshot, status) {
+    persistence.persist(snapshot).then((result) => {
+      if (!result || result.ok === false) setText(status, result && result.message || 'Review Basket could not be saved.');
+    }).catch(() => setText(status, 'Review Basket could not be saved.'));
+  }
+
+  function getReviewBasketPersistenceApi() {
+    if (typeof window !== 'undefined' && window.VitruviosReviewBasketPersistence) return window.VitruviosReviewBasketPersistence;
+    if (typeof require === 'function') {
+      try { return require('./reviewBasketPersistence'); } catch (_error) {}
+    }
+    return null;
+  }
   function updateCountBadge(badge, items) {
     if (!badge) return;
     const count = Array.isArray(items) ? items.length : 0;

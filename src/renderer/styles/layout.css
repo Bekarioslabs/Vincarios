@@ -439,7 +439,7 @@ button { cursor: pointer; }
   height: 100%;
   min-height: 0;
   display: grid;
-  grid-template-rows: minmax(180px, 1fr) minmax(0, min-content) minmax(0, min-content) auto;
+  grid-template-rows: minmax(180px, 1fr) minmax(0, min-content) auto;
 }
 
 
@@ -1332,6 +1332,12 @@ body.is-resizing .vault-panel {
   font-weight: var(--font-weight-ui-strong);
 }
 
+.start-screen .start-version {
+  margin: calc(var(--space-2) * -1) 0 0;
+  color: var(--text-faint);
+  font-size: var(--font-size-ui-sm);
+}
+
 .start-screen h1 {
   margin: 10px 0 8px;
   font-size: 42px;
@@ -1793,3 +1799,18 @@ body.is-resizing .vault-panel {
 }
 
 .selection-action-source input { accent-color: var(--interactive-accent); }
+
+.status-bar-global-button {
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.status-bar-global-button:hover,
+.status-bar-global-button:focus-visible {
+  color: var(--text-normal);
+  outline: none;
+}

@@ -4,6 +4,7 @@
   const INLINE_FORMATS = Object.freeze({
     bold: Object.freeze({ open: '**', close: '**' }),
     italic: Object.freeze({ open: '*', close: '*' }),
+    strikethrough: Object.freeze({ open: '~~', close: '~~' }),
     highlight: Object.freeze({ open: '<mark style="background:#d3f8b6">', close: '</mark>' })
   });
 

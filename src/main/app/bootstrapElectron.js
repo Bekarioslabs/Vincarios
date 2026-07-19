@@ -19,6 +19,9 @@ const { createSettingsService } = require('../settings/settingsService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
 const { createVaultProfileService } = require('../vault/vaultProfileService');
+const { createVaultRecentFilesService } = require('../vault/vaultRecentFilesService');
+const { createVaultInventoryService } = require('../vault/vaultInventoryService');
+const { createVaultReviewBasketService } = require('../vault/vaultReviewBasketService');
 const { createVaultChangeService } = require('../vault/vaultChangeService');
 const { createVaultIndexFreshnessService } = require('../vault/vaultIndexFreshnessService');
 const { createEmbeddingSimilaritySearch } = require('../embeddings/embeddingSimilaritySearch');
@@ -34,14 +37,22 @@ const { createFullTextIndexHealthService } = require('../search/fullTextIndexHea
 const { createVaultSearchService } = require('../search/vaultSearchService');
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 const { getPortableSettingsPath, migrateLegacySettingsToPortable } = require('./portableDataPath');
+const { createRuntimePaths } = require('./runtimePaths');
 
 function bootstrapElectron(electron, options) {
   options = options || {};
   const { app, ipcMain, dialog, BrowserWindow } = electron;
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
+  const runtimePaths = options.runtimePaths || createRuntimePaths({
+    projectRoot,
+    isPackaged: app.isPackaged === true,
+    portableExecutableDir: process.env.PORTABLE_EXECUTABLE_DIR,
+    executablePath: process.execPath,
+    resourcesPath: process.resourcesPath
+  });
 
   const vaultReadService = options.vaultReadService || createVaultReadService();
-  const settingsFilePath = options.settingsFilePath || getDefaultSettingsPath(app, projectRoot);
+  const settingsFilePath = options.settingsFilePath || getDefaultSettingsPath(app, projectRoot, runtimePaths);
   if (!options.settingsFilePath) {
     migrateLegacySettingsToPortable({ app, projectRoot, portablePath: settingsFilePath });
   }
@@ -51,6 +62,9 @@ function bootstrapElectron(electron, options) {
   });
   const vaultWriteService = options.vaultWriteService || createVaultWriteService({ settingsStore });
   const vaultProfileService = options.vaultProfileService || createVaultProfileService();
+  const vaultRecentFilesService = options.vaultRecentFilesService || createVaultRecentFilesService();
+  const vaultInventoryService = options.vaultInventoryService || createVaultInventoryService();
+  const vaultReviewBasketService = options.vaultReviewBasketService || createVaultReviewBasketService();
   const providerSettingsOptions = Object.assign(
     {},
     options.providerOptions || {},
@@ -70,13 +84,13 @@ function bootstrapElectron(electron, options) {
   }));
   const chatService = options.chatService || createProviderChatService(providerOptions);
   const vaultIndexFreshnessService = options.vaultIndexFreshnessService || createVaultIndexFreshnessService();
-  const embeddingIndexer = options.embeddingIndexer || createEmbeddingIndexer({ settingsStore });
+  const embeddingIndexer = options.embeddingIndexer || createEmbeddingIndexer({ settingsStore, projectRoot, runtimePaths });
   const embeddingSearchService = options.embeddingSearchService || createEmbeddingSimilaritySearch({
     settingsStore,
     indexer: embeddingIndexer,
     getVaultProfile: () => vaultProfileService.getProfile()
   });
-  const embeddingIndexStatusService = options.embeddingIndexStatusService || createEmbeddingIndexStatusService({ projectRoot, freshnessService: vaultIndexFreshnessService });
+  const embeddingIndexStatusService = options.embeddingIndexStatusService || createEmbeddingIndexStatusService({ projectRoot, runtimePaths, freshnessService: vaultIndexFreshnessService });
   const embeddingIndexHealthService = options.embeddingIndexHealthService || createEmbeddingIndexHealthService({
     statusService: embeddingIndexStatusService,
     indexer: embeddingIndexer,
@@ -107,7 +121,7 @@ function bootstrapElectron(electron, options) {
   });
   const vaultChangeService = options.vaultChangeService || createVaultChangeService();
   const vaultSearchService = options.vaultSearchService || createVaultSearchService();
-  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService);
+  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);
   registerSettingsIpc(ipcMain, settingsService);
   registerEmbeddingIpc(ipcMain, embeddingSearchService, embeddingIndexHealthService);
@@ -155,8 +169,8 @@ function bootstrapElectron(electron, options) {
   });
 }
 
-function getDefaultSettingsPath(app, projectRoot) {
-  return getPortableSettingsPath(projectRoot);
+function getDefaultSettingsPath(app, projectRoot, runtimePaths) {
+  return getPortableSettingsPath(projectRoot, runtimePaths);
 }
 
 module.exports = {

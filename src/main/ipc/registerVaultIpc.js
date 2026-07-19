@@ -2,7 +2,7 @@
 
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 
-function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService) {
+function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService) {
   ipcMain.handle(IPC_CHANNELS.VAULT_STATE, () => vaultReadService.getState());
 
   ipcMain.handle(IPC_CHANNELS.VAULT_SELECT_FOLDER, async () => {
@@ -18,12 +18,12 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
       return { ok: false, code: 'cancelled', message: 'Vault selection cancelled.' };
     }
 
-    const readResult = setVaultRoot(result.filePaths[0], vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService);
+    const readResult = setVaultRoot(result.filePaths[0], vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService);
     return readResult;
   });
 
   ipcMain.handle(IPC_CHANNELS.VAULT_SET_ROOT, (_event, vaultRoot) => {
-    const readResult = setVaultRoot(vaultRoot, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService);
+    const readResult = setVaultRoot(vaultRoot, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService);
     return readResult;
   });
   ipcMain.handle(IPC_CHANNELS.VAULT_LIST_FOLDER, (_event, relativePath) => vaultReadService.listFolder(relativePath));
@@ -58,6 +58,32 @@ function registerVaultIpc(ipcMain, dialog, browserWindow, vaultReadService, vaul
   ipcMain.handle(IPC_CHANNELS.VAULT_RESET_PROFILE_ROLE, (_event, payload) => callVaultProfileService(vaultProfileService, 'resetRole', payload));
   ipcMain.handle(IPC_CHANNELS.VAULT_SET_PROFILE_APPEARANCE, (_event, payload) => callVaultProfileService(vaultProfileService, 'setAppearance', payload));
   ipcMain.handle(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS, () => callVaultProfileService(vaultProfileService, 'listLocalIcons'));
+  ipcMain.handle(IPC_CHANNELS.VAULT_GET_INVENTORY, () => callVaultInventoryService(vaultInventoryService));
+  ipcMain.handle(IPC_CHANNELS.VAULT_LIST_RECENT_FILES, () => callVaultRecentFilesService(vaultRecentFilesService, 'list'));
+  ipcMain.handle(IPC_CHANNELS.VAULT_RECORD_RECENT_FILE, (_event, payload) => callVaultRecentFilesService(vaultRecentFilesService, 'record', payload));
+  ipcMain.handle(IPC_CHANNELS.VAULT_LOAD_REVIEW_BASKET, () => callVaultReviewBasketService(vaultReviewBasketService, 'load'));
+  ipcMain.handle(IPC_CHANNELS.VAULT_SAVE_REVIEW_BASKET, (_event, payload) => callVaultReviewBasketService(vaultReviewBasketService, 'save', payload));
+}
+
+function callVaultInventoryService(service) {
+  if (!service || typeof service.getInventory !== 'function') {
+    return { ok: false, code: 'inventory_unavailable', message: 'Vault inventory service unavailable.' };
+  }
+  return service.getInventory();
+}
+
+function callVaultRecentFilesService(service, method, payload) {
+  if (!service || typeof service[method] !== 'function') {
+    return { ok: false, code: 'recent_files_unavailable', message: 'Recent files service unavailable.' };
+  }
+  return service[method](payload);
+}
+
+function callVaultReviewBasketService(service, method, payload) {
+  if (!service || typeof service[method] !== 'function') {
+    return { ok: false, code: 'review_basket_unavailable', message: 'Review Basket cache unavailable.' };
+  }
+  return service[method](payload);
 }
 
 function callVaultProfileService(service, method, payload) {
@@ -67,15 +93,15 @@ function callVaultProfileService(service, method, payload) {
   return service[method](payload);
 }
 
-function setVaultRoot(vaultRoot, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService) {
+function setVaultRoot(vaultRoot, vaultReadService, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService) {
   const readResult = vaultReadService.setRoot(vaultRoot);
   if (readResult.ok) {
-    syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService);
+    syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService);
   }
   return readResult;
 }
 
-function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService) {
+function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService) {
   if (vaultWriteService && typeof vaultWriteService.setRoot === 'function') {
     vaultWriteService.setRoot(vaultRoot);
   }
@@ -93,6 +119,15 @@ function syncDependentRoot(vaultRoot, vaultWriteService, embeddingService, vault
   }
   if (vaultSearchService && typeof vaultSearchService.setRoot === 'function') {
     vaultSearchService.setRoot(vaultRoot);
+  }
+  if (vaultRecentFilesService && typeof vaultRecentFilesService.setRoot === 'function') {
+    vaultRecentFilesService.setRoot(vaultRoot);
+  }
+  if (vaultInventoryService && typeof vaultInventoryService.setRoot === 'function') {
+    vaultInventoryService.setRoot(vaultRoot);
+  }
+  if (vaultReviewBasketService && typeof vaultReviewBasketService.setRoot === 'function') {
+    vaultReviewBasketService.setRoot(vaultRoot);
   }
 }
 

@@ -13,11 +13,13 @@ V1 should stay simple:
 
 ```text
 Left: app navigation and actions
-Middle: workspace tabs for Chat, Suggestions, and Session Log; Chat owns Review Basket, Context Basket, and input
+Middle: workspaces for Home, Chat, Search, Suggestions, and Review; Chat owns Context Basket and input, while Session Activity opens from the bottom status surface
 Right: Files, Selection Actions, and Markdown Preview
 ```
 
 Chat input auto-grows within bounded limits for longer prompts. Once it reaches the limit, the input scrolls internally. The send/cancel button must remain reachable and the main app layout must not shift unpredictably.
+
+The native Windows menu remains available in V1. Its View menu owns explicit app-local zoom shortcuts: Ctrl++ to zoom in, Ctrl+- to zoom out, and Ctrl+0 to reset. Navigate exposes Home (Ctrl+Shift+H), Search (Ctrl+F), Suggestions (Ctrl+Shift+S), Review Basket, and Settings (Ctrl+,); native menu events and renderer shortcuts use the same validated workspace command path. Help links to the public repository in the system browser. Reindexing deliberately has no shortcut: it remains a visible Settings action. Navigation does nothing while a modal dialog is open.
 
 ## Visual Direction
 
@@ -25,7 +27,7 @@ vitruvios V1 uses a compact, tool-first visual system: softly raised neutral app
 
 Collapse is deterministic space management. A panel contracts toward the left, retains a visible boundary, clips its own contents, and must not silently resize its neighbors. Resize remains an explicit user operation. Layout preferences remain app-local and persist across restarts.
 
-Review Basket and Context Basket start collapsed by default once their collapse work is implemented. Context items are compact framed packets with a target-type icon, short label, and restrained path context.
+Context Basket starts collapsed by default. Context items are compact framed packets with a target-type icon, short label, and restrained path context. Review Basket is a dedicated Workspace so reviewed changes have room without competing with Chat context.
 
 The exact layout can change, but these concepts must remain visible:
 
@@ -79,9 +81,9 @@ Inspect Folder uses app-owned Markdown reports: a clear heading, compact path me
 
 ## Session Activity Status
 
-V1 includes a lightweight `Session Log` workspace under `WORKSPACE`. The bottom status bar remains a compact latest-message surface; it is not a history view.
+V1 includes a lightweight `Session Log` workspace internally, opened and closed from the clickable global segment of the bottom status bar. The bottom status bar remains a compact latest-message surface; it is not a history view.
 
-Session Log is renderer-local and in-memory only. It clears when the app restarts and must not write to normal vault notes. V1-light records vault opening and reviewed create/update/template execution. File reads, folder listings, renames, provider errors, and warnings should join the same activity state when those owning modules are touched.
+Session Log is renderer-local and in-memory only. It clears when the app restarts and must not write to normal vault notes. A central Activity Reporter owns the shared Bottom Bar + Session Log contract. V1 records vault opening, reviewed create/update/template execution, completed File Tree reads/listings/renames, and provider success or error. Transient progress such as reading or waiting remains Bottom Bar only. Other modules join the same reporter only when their own structured action is added; the log must not become a duplicate of every UI hint.
 
 Each entry should carry structured fields:
 
@@ -137,7 +139,6 @@ Main workspace order:
 
 ```text
 Chat history
-Review Basket
 Context Basket
 Input field
 ```
@@ -172,11 +173,11 @@ The topbar also provides a manual provider status refresh button. It reuses the 
 The topbar also shows a provider privacy badge driven by the active provider definition. V1 local providers show `Local`; future cloud or external providers can show `Cloud` or `External` without changing the shell layout. The badge is an informational provider-mode indicator, not a blanket app-wide `Local Only` claim.
 ## Review Basket Decisions
 
-Review Basket is a standalone module, not part of chat rendering.
+Review Basket is a standalone module and dedicated Workspace, not part of chat rendering. The Workspace navigation shows the current open-item count; Context Basket remains in Chat because it describes that conversation's explicit provider context.
 
 The first implemented flow is `Save as Note` under assistant responses. It adds a selected `create_note` proposal targeting `00_Inbox/AI Responses` to the basket. The basket can execute selected `create_note` proposals after a Create Note preview modal. It must not write directly from chat or renderer filesystem access; execution goes through the preload vault API and main process vault write service.
 
-Review Basket clear actions are cleanup/destructive UI actions. Clear pending and Clear executed stay disabled when unavailable, use subtle danger styling only when active/hovered, and remove basket entries without executing vault writes. Update-instruction forms protect typed text on cancel instead of silently discarding it.
+Review Basket clear actions are cleanup/destructive UI actions. Clear pending stays red and Clear executed uses the warning/orange treatment; both remain neutral while unavailable and remove entries without executing vault writes. Open, executed, failed, rejected, and stale entries restore per vault as local working history; dismissed entries do not. Restore never executes an action and preserves all normal review gates. Update-instruction forms protect typed text on cancel instead of silently discarding it.
 
 Empty states should stay compact and functional. Review Basket, Context Basket, and Suggestions use existing Lucide icons plus short copy to explain the empty state without implying unavailable functionality.
 
@@ -264,11 +265,11 @@ HTML remains escaped by default. V1 includes a narrow safe copied-formatting com
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
 
-YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview, including simple inline arrays and block-list values such as `tags:\n  - item`. It is not directly editable in this renderer block. The source editor can stage manual full-note updates through the `Update` button; blocked update attempts show visible preview feedback instead of silently failing. Future Properties actions belong to the Selection Actions and review workflows, so metadata suggestions can be proposed and reviewed instead of silently changing frontmatter.
+YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview, including simple inline arrays and block-list values such as `tags:\n  - item`. It is not directly editable in this renderer block. The source editor can stage manual full-note updates through the `Update` button; blocked update attempts show visible preview feedback instead of silently failing. V1.1 will add a dedicated Properties/YAML editor for typed frontmatter fields and preserved custom properties through the shared Frontmatter Contract; it replaces the rejected idea of a one-off V1 `Add Tag` control. Persisted changes still remain reviewed proposals, never direct writes.
 
 Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`. The copied-formatting compatibility layer is limited to allowlisted inline text styling and stays owned by `src/renderer/markdown/markdownFormattingCompat.js`.
 
-The preview toolbar includes an `Edit` button that switches to local Markdown source mode. In V1 Editor Light, source mode exposes a compact local toolbar for Bold, Italic, H2 headings, bullet/numbered/task lists, internal note links, and Highlight; each operation changes only the textarea source and keeps the active selection. `Link` opens a compact local picker over the existing Metadata index Names and paths scope: it returns Markdown notes only, never uses embeddings, Full-text, provider calls, or R permission, and inserts an Obsidian wikilink. Selected source text becomes the alias; an empty cursor inserts the bare note link. Local source edits do not write directly to the vault. When the edited source differs from the loaded source, `Propose update` creates an `update_note` proposal in the Review Basket. Repeating it for the same open manual source edit replaces that proposal with the newest local draft while preserving its selection state; it never silently writes or merges changes. Before a File Tree, internal Markdown link, search result, or image selection replaces a dirty local source, Vitruvios shows an explicit decision: `Stay`, `Add to Review`, or `Discard changes`. The File Tree selection and preview remain unchanged until that decision permits navigation. Persisted writes still require the existing diff, backup, stale-content validation, and audit logging path.
+The preview toolbar includes an `Edit` button that switches to local Markdown source mode. In V1 Editor Light, source mode exposes a compact local toolbar for Bold, Italic, Strikethrough, H2 headings, bullet/numbered/task lists, internal note links, and Highlight; each operation changes only the textarea source and keeps the active selection. `Link` opens a compact local picker over the existing Metadata index Names and paths scope: it returns Markdown notes only, never uses embeddings, Full-text, provider calls, or R permission, and inserts an Obsidian wikilink. Link Picker results show the Markdown file name as the primary label and the vault-relative path below it; extracted H1 or metadata titles remain available to indexing/search but are intentionally not rendered in this picker. Selected source text becomes the alias; an empty cursor inserts the bare note link. Local source edits do not write directly to the vault. When the edited source differs from the loaded source, `Propose update` creates an `update_note` proposal in the Review Basket. Repeating it for the same open manual source edit replaces that proposal with the newest local draft while preserving its selection state; it never silently writes or merges changes. Before a File Tree, internal Markdown link, search result, or image selection replaces a dirty local source, Vitruvios shows an explicit decision: `Stay`, `Add to Review`, or `Discard changes`. The File Tree selection and preview remain unchanged until that decision permits navigation. Persisted writes still require the existing diff, backup, stale-content validation, and audit logging path.
 
 
 Markdown image embeds:
@@ -324,7 +325,7 @@ Selection and context are separate states.
 Selected context is explicit, visible, request-scoped, and deterministic:
 
 - selecting a file or folder in Files only changes the active UI target; it does not add provider context.
-- the Context Basket below the Review Basket is the only selected-file/folder source attached to provider requests.
+- the Context Basket in Chat is the only selected-file/folder source attached to provider requests.
 - future Selection Actions add files or folders to the Context Basket through app logic, not through broad prompt interpretation.
 - Context Basket items can be clicked to reveal/select their target in Files.
 - Context Basket items can be removed individually with `x`, or cleared together with `Clear all`.
@@ -388,7 +389,7 @@ Collapse candidates:
 - Left navigation rail: full label mode can collapse to icon-only mode around 48px. The toggle lives at the top of the rail. Labels remain available through tooltips or accessible names.
 - File Tree: snap-collapse can temporarily hide the tree in addition to drag-resize, especially while working in Chat or Suggestions.
 - Context Basket: default-collapsed is acceptable when empty or inactive. When context exists, show a compact header/count so active context is not hidden.
-- Review Basket: remains primary attention when proposals exist; it may stay collapsible, but it should not be hidden automatically while actionable items exist.
+- Review Basket: is a dedicated Workspace and remains primary attention when proposals exist; its navigation count must make open items visible from every workspace.
 - Selection Actions: the V1 panel can collapse to a persisted 48px icon strip. The strip retains semantic icons, category dots, and lock state; hover/focus keeps full action meaning available. Actions that open an inline configuration form expand the panel first. Existing direct actions remain direct and do not expand it unnecessarily.
 - Suggestions: groups should be collapsible by type, especially once Similar Notes, Metadata/Tags, and future cleanup/link candidates coexist.
 
@@ -399,7 +400,7 @@ Visual noise reduction:
 
 Bottom bar / activity direction:
 
-- The Session Log can remain a workspace internally, but the UI may expose it through a compact bottom-bar activity drawer instead of a large `WORKSPACE` button.
+- Session Log remains a workspace internally and is exposed through the compact, clickable global bottom-bar activity drawer instead of a large `WORKSPACE` button. Closing it restores the previously active workspace.
 - Preview-local messages use a dedicated preview segment in the bottom status bar instead of a separate preview-local block. Ownership stays preview-local even though the visual surface is shared.
 - Global status, preview status, and activity history must remain distinguishable in state/code even when presented in one bottom bar.
 
@@ -499,6 +500,7 @@ The app should not drop the user directly into an empty workspace.
 V1 starts with a compact, useful splash/start screen:
 
 - The wordmark is tokenized: `Vitruv` uses the active accent and `ios` uses strong interface text.
+- A subdued version label is sourced from application metadata after startup initialization; the renderer never owns a duplicate version constant.
 - `Open Vault` is the primary action and remains available inside the app.
 - The two most recently opened vault roots are stored in portable app-local settings. A recent entry reuses the validated vault-root IPC path. Removing it only clears history; it never touches vault files.
 - A quiet local-provider preview shows LM Studio and Ollama availability only. It does not expose model selectors or provider configuration.
@@ -531,7 +533,7 @@ Vault Panel:
 Files | Selection Actions | Markdown Preview
 ```
 
-Files, Selection Actions, and Markdown Preview use the full available vault-panel height and own local scrolling. Files stays compact and navigational; Selection Actions stays deterministic app UI for the currently selected file or folder; Preview remains the reading surface. Review Basket, Context Basket, and input remain inside the Chat workspace stack and keep their bounded local scrolling.
+Files, Selection Actions, and Markdown Preview use the full available vault-panel height and own local scrolling. Files stays compact and navigational; Selection Actions stays deterministic app UI for the currently selected file or folder; Preview remains the reading surface. Context Basket and input remain inside the Chat workspace stack; Review Basket owns bounded local scrolling in its dedicated Workspace.
 
 Responsive rules:
 
@@ -539,8 +541,8 @@ Responsive rules:
 - Markdown Preview is the flexible remainder. At narrow widths it may shrink to `0px`, but it must never push Files or Selection Actions outside the visible Vault panel.
 - The whole app shell does not gain a document-level vertical scrollbar during normal use.
 - Scroll remains local to file tree, Selection Actions, Markdown Preview, chat history, Review Basket, and Context Basket.
-- Collapsed Review Basket and Context Basket rows follow their compact content height and must not reserve empty spacer rows in Chat.
-- The current full-height layout supports persisted collapse for left navigation, Files, and Selection Actions. Review Basket and Context Basket are compact and default-collapsed; Focus Mode remains a V1.1 follow-up.
+- Collapsed Context Basket rows follow their compact content height and must not reserve empty spacer rows in Chat.
+- The current full-height layout supports persisted collapse for left navigation, Files, and Selection Actions. Context Basket is compact and default-collapsed; Review Basket uses its dedicated Workspace; Focus Mode remains a V1.1 follow-up.
 - Future detachable preview remains a valid follow-up but is not part of V1.
 
 ### Selection Actions Panel
@@ -586,7 +588,7 @@ User-facing rule:
 - Search results show compact source reasons and open locally in Preview without expanding Files. Each result has a separate Reveal in Files control; Use as Context remains a separate explicit R-gated action.
 - Review Basket remains the only path from a search-derived candidate to a write.
 
-Home is a separate Workspace view, opened explicitly from the left navigation. Opening a vault continues to enter Chat. Home shows a bounded per-vault Recent Files list, compact Vault/Index status, and only real supported shortcuts. Recent Files are stored under `<vault>/.vitruvios/recent-files.json`, are bounded, removable, and ignored by Git.
+Home is a separate Workspace view, opened explicitly from the left navigation. Opening a vault continues to enter Chat. Home starts with a read-only Vault Health card: visible-folder and file-type counts (Markdown, images, PDFs, and other files) plus the combined index state. The inventory scans names and extensions only, skips dot folders, and never reads file content or image data. Its index indicator has no refresh control and directs users to Settings. Compact Quick Actions open Search, reveal the configured Inbox role, or return to Chat. Home also shows the 12 most recently opened Markdown notes for the selected vault. Recent Files are stored only as normalized relative paths plus `openedAt` under `<vault>/.vitruvios/recent-files.json`; no note body, provider context, or R permission is involved. Missing notes are pruned when the list is read. Each row opens the note in Preview or reveals it separately in Files. The cache is ignored by Git and remains app metadata, not a user-note write.
 
 Full-text opt-in must show a short disclosure before its first build, identify `<vault>/.vitruvios/index/search/` as the storage location, and provide a persistent Enable/Disable switch plus a Delete local index control in Settings. One `Refresh enabled indexes` action below the index sections rebuilds Metadata, Similar Notes, and Full-text only when enabled. A retained cache remains deletable after Full-text is disabled. The Search workspace explains when a Full-text query cannot run because this opt-in cache is disabled or stale. No V1 encryption option is shown.
 
@@ -668,7 +670,7 @@ Left navigation target:
 ```text
 WORKSPACE
   Chat
-  Home          planned V1 workspace; includes Recent Files
+  Home          vault health, quick navigation, vault-local Recent Files, and Review Basket access
 
 CREATE
   New Note

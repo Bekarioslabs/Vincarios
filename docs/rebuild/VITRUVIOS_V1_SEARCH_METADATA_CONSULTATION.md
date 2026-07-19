@@ -204,9 +204,9 @@ Future V1.1/V1.2 directions:
 3. [x] Implement metadata indexing and the aggregate index-health boundary. The deterministic indexer scans local Markdown through the shared vault source, reuses unchanged records by hash/time, records malformed frontmatter as unavailable metadata, and follows the selected-vault lifecycle. `vaultIndexHealthService` exposes one combined status and a single explicit refresh: metadata first, then available embeddings.
 4. [ ] Implement deterministic Search over path, filename, title, and supported frontmatter.
 5. [x] Add the explicit opt-in persistent full-text index, separate Enable/Disable plus Build/Rebuild controls, cache-only deletion, and shared stale/refresh lifecycle.
-6. [ ] Add Search workspace/UI, Recent Files, and the minimal Home workspace.
+6. [x] Add Search workspace/UI, Recent Files, and the minimal Home workspace.
 7. [ ] Keep semantic search out of the default V1 UI unless its own explicit mode has a complete test and UX plan.
-8. [ ] Build Editor Light only after the Frontmatter Contract is proven by search and metadata flows.
+8. [x] Build the bounded V1 Editor Light toolbar only after the Frontmatter Contract is proven by search and metadata flows. A full Properties/YAML editor is V1.1.
 
 ## Constraints And Non-Goals
 

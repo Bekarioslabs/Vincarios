@@ -15,11 +15,12 @@ test('shell exposes live regions and accessible control relationships', () => {
   assert.match(source, /id="chat-log"[^>]*aria-live="polite"/);
   assert.match(source, /aria-controls="note-presets"/);
   assert.match(source, /aria-controls="project-presets"/);
-  assert.match(source, /aria-controls="review-basket-items"/);
+  assert.match(source, /data-workspace-tab="review"[^>]*aria-controls="review-workspace"/);
   assert.match(source, /aria-controls="context-basket-items"/);
   assert.match(source, /id="chat-input"[^>]*aria-label="Chat message"/);
   assert.match(source, /id="chat-send"[^>]*aria-label="Send message"/);
-  assert.match(source, /id="status-bar-global"[^>]*role="status"[^>]*aria-live="polite"/);
+  assert.match(source, /id="status-bar-global"[^>]*data-activity-drawer-toggle[^>]*aria-controls="session-log-workspace"/);
+  assert.match(source, /id="status-bar-global"[^>]*aria-live="polite"/);
   assert.match(source, /id="provider-refresh"[^>]*aria-label="Refresh provider status"/);
   assert.match(source, /data-selection-actions-toggle[^>]*aria-label="Collapse Selection Actions"[^>]*aria-expanded="true"/);
 });

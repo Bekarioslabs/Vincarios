@@ -8,7 +8,8 @@ const {
   getPreviewLinkForPath,
   getScopedSelectionRegionForClassNames,
   isCopyShortcut,
-  isSelectAllShortcut
+  isSelectAllShortcut,
+  shouldPreserveNativeInputShortcut
 } = require('../src/renderer/selection/scopedSelection');
 
 test('scoped selection recognizes concrete content regions only', () => {
@@ -32,6 +33,12 @@ test('scoped selection recognizes platform select and copy shortcuts', () => {
   assert.equal(isSelectAllShortcut({ key: 'a', ctrlKey: false, metaKey: false }), false);
   assert.equal(isCopyShortcut({ key: 'c', ctrlKey: true, metaKey: false }), true);
   assert.equal(isCopyShortcut({ key: 'x', ctrlKey: true, metaKey: false }), false);
+});
+
+test('scoped selection preserves Ctrl+A for every editable native input', () => {
+  assert.equal(shouldPreserveNativeInputShortcut({ target: { tagName: 'INPUT', disabled: false, readOnly: false } }), true);
+  assert.equal(shouldPreserveNativeInputShortcut({ target: { tagName: 'TEXTAREA', disabled: false, readOnly: true } }), false);
+  assert.equal(shouldPreserveNativeInputShortcut({ target: { tagName: 'DIV' } }), false);
 });
 
 test('scoped selection does not offer area menu actions for the file tree', () => {

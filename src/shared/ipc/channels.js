@@ -3,6 +3,7 @@
 const IPC_CHANNELS = Object.freeze({
   APP_INFO: 'app:info',
   APP_OPEN_EXTERNAL: 'app:open-external',
+  APP_MENU_NAVIGATE: 'app:menu-navigate',
   CHAT_SEND: 'chat:send',
   CHAT_CANCEL: 'chat:cancel',
   PROVIDER_STATUS: 'provider:status',
@@ -45,7 +46,12 @@ const IPC_CHANNELS = Object.freeze({
   VAULT_SET_PROFILE_ROLE: 'vault:set-profile-role',
   VAULT_RESET_PROFILE_ROLE: 'vault:reset-profile-role',
   VAULT_SET_PROFILE_APPEARANCE: 'vault:set-profile-appearance',
-  VAULT_LIST_PROFILE_ICONS: 'vault:list-profile-icons'
+  VAULT_LIST_PROFILE_ICONS: 'vault:list-profile-icons',
+  VAULT_GET_INVENTORY: 'vault:get-inventory',
+  VAULT_LIST_RECENT_FILES: 'vault:list-recent-files',
+  VAULT_RECORD_RECENT_FILE: 'vault:record-recent-file',
+  VAULT_LOAD_REVIEW_BASKET: 'vault:load-review-basket',
+  VAULT_SAVE_REVIEW_BASKET: 'vault:save-review-basket'
 });
 
 module.exports = {

@@ -34,7 +34,7 @@ test('startup module is loaded before the shell and registered during bootstrap'
   assert.match(index, /startup\/mountStartupScreen\.js/);
   assert.match(bootstrap, /VitruviosStartup/);
   assert.match(shell, /assets\/brand\/vitruvios-logo-placeholder_white\.svg/);
-  assert.match(shell, /<span>vitruv<\/span><span>ios<\/span>/);
+  assert.match(shell, /<span>vitru<\/span><span>vios<\/span>/);
   assert.match(shell, /mountStartupScreen\(\{ app, api, onOpenRecent: openRecentVault \}\)/);
   assert.match(shell, /api\.vault\.setRoot\(root\)/);
 });

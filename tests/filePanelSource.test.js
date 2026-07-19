@@ -133,7 +133,8 @@ test('file panel exposes a targeted refresh for the currently loaded Markdown pr
 test('file panel supports F2 Rename Light through the vault API only', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
-  assert.match(source, /event\.key === 'F2'/);
+  assert.match(source, /keyboard\.isFileTreeRenameShortcut\(event\)/);
+  assert.match(source, /tree\.addEventListener\('keydown', handleFileTreeRenameShortcut\)/);
   assert.match(source, /startInlineRename\(entry, row, label\)/);
   assert.match(source, /api\.vault\.renameFile\(\{ sourcePath: entry\.path, newName: nextName \}\)/);
   assert.match(source, /Links were not updated in V1/);

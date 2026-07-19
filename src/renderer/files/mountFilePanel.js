@@ -7,6 +7,7 @@
     const root = options.root;
     const previewController = options.previewController || null;
     const status = options.status;
+    const activityReporter = options.activityReporter || null;
     const context = options.context;
     const contextState = options.contextState || null;
     const permissionState = options.permissionState || null;
@@ -19,6 +20,7 @@
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
     const visibleRows = new Map();
+    const visibleEntries = new Map();
     let activeRename = null;
     let treeRefreshInFlight = false;
     let treeRefreshPending = false;
@@ -49,6 +51,7 @@
     attachRefreshIcon();
     setCollapsed(false);
     refreshButton.addEventListener('click', refreshTree);
+    tree.addEventListener('keydown', handleFileTreeRenameShortcut);
     if (collapseButton) {
       collapseButton.addEventListener('click', () => {
         if (onToggleCollapse) onToggleCollapse();
@@ -166,6 +169,7 @@
       updateNavigation(state);
       tree.innerHTML = '';
       visibleRows.clear();
+      visibleEntries.clear();
       tree.className = 'file-tree';
 
       const rootData = entriesByFolder.get('');
@@ -245,6 +249,7 @@
         row.dataset.path = entry.path;
         row.style.setProperty('--tree-depth', String(depth));
         visibleRows.set(normalizePath(entry.path), row);
+        visibleEntries.set(normalizePath(entry.path), entry);
 
         const icon = createFileRowIcon(entry);
 
@@ -275,7 +280,7 @@
             await activateEntry(entry);
             return;
           }
-          if (event.key === 'F2') {
+          if (keyboard && typeof keyboard.isFileTreeRenameShortcut === 'function' && keyboard.isFileTreeRenameShortcut(event)) {
             event.preventDefault();
             startInlineRename(entry, row, label);
             return;
@@ -307,6 +312,17 @@
       });
     }
 
+    function handleFileTreeRenameShortcut(event) {
+      if (!keyboard || typeof keyboard.isFileTreeRenameShortcut !== 'function' || !keyboard.isFileTreeRenameShortcut(event)) return;
+      if (activeRename) return;
+      const selectedPath = normalizePath(navigator.snapshot().selectedPath);
+      const row = visibleRows.get(selectedPath);
+      const entry = visibleEntries.get(selectedPath);
+      const label = row && typeof row.querySelector === 'function' ? row.querySelector('.file-row-label') : null;
+      if (!row || !entry || !label) return;
+      event.preventDefault();
+      startInlineRename(entry, row, label);
+    }
     function startInlineRename(entry, row, label) {
       if (!entry || entry.kind === 'folder') return;
       if (!isMarkdownPath(entry.path)) {
@@ -368,7 +384,12 @@
         await refreshTree();
         await refreshRenamedPreview(entry.path, result.targetPath);
         focusRenderedPath(result.targetPath);
-        setStatus('Renamed: ' + result.targetPath + '. Links were not updated in V1.');
+        setStatus('Renamed: ' + result.targetPath + '. Links were not updated in V1.', {
+          type: 'success',
+          action: 'Renamed',
+          targetPath: result.targetPath,
+          detail: 'Links were not updated in V1.'
+        });
       }
 
       activeRename = { cancel };
@@ -405,7 +426,12 @@
         if (navigator.isExpanded(entry.path)) {
           setStatus('Listing ' + entry.path + '...');
           await ensureFolderLoaded(entry.path);
-          setStatus('Folder listed: ' + entry.path);
+          setStatus('Folder listed: ' + entry.path, {
+            type: 'info',
+            action: 'Listed folder',
+            targetPath: entry.path,
+            detail: ''
+          });
         }
         renderTree();
         focusRenderedPath(entry.path);
@@ -439,9 +465,15 @@
       renderTree();
       focusRenderedPath(read.path);
       setPreviewSource(read.content, read.path);
+      await recordRecentMarkdown(read.path);
       if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
       else setText(context, 'Selection file: ' + read.path);
-      setStatus('Read: ' + read.path);
+      setStatus('Read: ' + read.path, {
+        type: 'success',
+        action: 'Read file',
+        targetPath: read.path,
+        detail: ''
+      });
     }
 
     function subscribeToVaultProfileState() {
@@ -512,7 +544,12 @@
           if (contextState) contextState.setFolder(entry.path, { readAllowed: canUsePathAsContext(entry.path) });
           setStatus('Listing ' + entry.path + '...');
           await ensureFolderLoaded(entry.path);
-          setStatus('Folder listed: ' + entry.path);
+          setStatus('Folder listed: ' + entry.path, {
+            type: 'info',
+            action: 'Listed folder',
+            targetPath: entry.path,
+            detail: ''
+          });
           renderTree();
           focusRenderedPath(entry.path);
         }
@@ -552,6 +589,7 @@
           if (!navigation.ok) return navigation;
           navigator.selectFile(read.path);
           setPreviewSource(read.content, read.path);
+          await recordRecentMarkdown(read.path);
           if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
           else setText(context, 'Selection file: ' + read.path);
           setStatus('Opened linked note: ' + read.path);
@@ -601,6 +639,7 @@
         if (!navigation.ok) return navigation;
       }
       setPreviewSource(read.content, read.path);
+      await recordRecentMarkdown(read.path);
       if (!behavior || behavior.updateSelection !== false) {
         navigator.selectFile(read.path);
         if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
@@ -906,7 +945,16 @@
       setPreviewMessage('Image file selected. Image preview unavailable.');
     }
 
-    function setStatus(value) {
+    function recordRecentMarkdown(path) {
+      if (!api || !api.vault || typeof api.vault.recordRecentFile !== 'function') return Promise.resolve(null);
+      return Promise.resolve(api.vault.recordRecentFile({ path })).catch(() => null);
+    }
+
+    function setStatus(value, activity) {
+      if (activityReporter && typeof activityReporter.report === 'function') {
+        activityReporter.report({ message: value, activity });
+        return;
+      }
       setText(status, value);
     }
 

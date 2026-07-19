@@ -7,7 +7,7 @@ const { createWorkspaceState, WORKSPACES } = require('../src/renderer/workspace/
 test('workspace state defaults to chat and exposes known workspace ids', () => {
   const state = createWorkspaceState();
 
-  assert.deepEqual(WORKSPACES, ['chat', 'search', 'suggestions', 'sessionLog']);
+  assert.deepEqual(WORKSPACES, ['home', 'chat', 'search', 'suggestions', 'review', 'sessionLog']);
   assert.equal(state.snapshot().activeWorkspace, 'chat');
 });
 

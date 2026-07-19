@@ -62,6 +62,33 @@
         duplicates
       };
     }
+    function restoreSnapshot(snapshot) {
+      const restoredItems = snapshot && Array.isArray(snapshot.items) ? snapshot.items : [];
+      items.length = 0;
+      nextId = 1;
+
+      restoredItems.forEach((proposal) => {
+        if (!proposal || proposal.status === 'dismissed') return;
+        const numericId = getProposalNumber(proposal.id);
+        const item = normalizeProposal(proposal, numericId || nextId);
+        item.status = normalizeRestoredStatus(proposal.status);
+        items.push(item);
+        nextId = Math.max(nextId, (numericId || 0) + 1);
+      });
+
+      emitChange();
+      return getSnapshot();
+    }
+
+    function getProposalNumber(value) {
+      const match = /^proposal-(\d+)$/.exec(String(value || ''));
+      return match ? Number(match[1]) : 0;
+    }
+
+    function normalizeRestoredStatus(value) {
+      const status = String(value || 'open').trim().toLowerCase();
+      return ['open', 'done', 'failed', 'rejected', 'stale'].includes(status) ? status : 'failed';
+    }
     function findOpenDuplicate(candidate) {
       return items.find((item) => item.status === 'open' && item.fingerprint === candidate.fingerprint) || null;
     }
@@ -152,6 +179,7 @@
       addProposal,
       upsertOpenManualUpdateProposal,
       addProposalPlan,
+      restoreSnapshot,
       setSelected,
       getSelectedOpenItems,
       updateStatus,

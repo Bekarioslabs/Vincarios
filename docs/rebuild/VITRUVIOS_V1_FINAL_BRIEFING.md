@@ -36,10 +36,10 @@ vitruvios V1 is not:
 6. Review Basket for grouped, selectable proposals.
 7. Diff and safe Markdown actions.
 8. Inbox cleanup reports and grouped Suggestions workspace.
-9. Local embeddings V1-light for similar-note discovery.
-10. New Project workflow from templates.
-11. Minimal settings foundation.
-12. Basic image file handling foundation only if it remains safe, small, and does not delay core Markdown workflows.
+9. Local embeddings V1-light for similar-note discovery plus deterministic Search over metadata and opt-in Full-text data.
+10. New Note and New Project workflows from deterministic presets.
+11. Vault-local settings for profiles, providers, action defaults, indexes, and built-in Light/Dark theme packs.
+12. Basic image preview and safe Markdown image-embed handling.
 
 ## Not V1
 
@@ -48,7 +48,7 @@ vitruvios V1 is not:
 - Cloud providers.
 - Plugin system.
 - Trusted/Yolo mode.
-- Theme system beyond basic CSS-variable readiness.
+- Theme Editor, shareable JSON theme packages, and Obsidian theme compatibility.
 - Large autonomous cleanup.
 - Complex link repair after mass rename.
 - Monetization.
@@ -64,13 +64,12 @@ vitruvios V1 is not:
 Left navigation | Main workspace | Vault panel
 ```
 
-Main workspace order:
+Main workspace choices:
 
 ```text
-Chat history
-Review Basket
-Context Basket
-Input field
+Chat: Chat history -> Context Basket -> Input field
+Review: Dedicated Review Basket workspace
+Search / Suggestions / Home: Dedicated local workspaces
 ```
 
 Vault panel keeps Files, Selection Actions, and Markdown Preview visible in the same workspace.
@@ -122,7 +121,7 @@ Selection and provider context are separate states.
 
 Selecting a file or folder in Files only changes the active UI target. It does not automatically attach content to provider requests.
 
-The Context Basket is the explicit selected-file/folder context source. Items are added through app flows such as Selection Actions, shown below the Review Basket, removable individually, clearable together, and clickable to reveal/select their target in Files.
+The Context Basket is the explicit selected-file/folder context source. Items are added through app flows such as Selection Actions, shown in the Chat workspace, removable individually, clearable together, and clickable to reveal/select their target in Files.
 
 File context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time. Folder context items attach path context only. Natural-language folder questions may show inline help, but they must not list folder contents. Folder contents are listed through deterministic app actions such as `List folder`, with `R` checked first. Attached context is request-scoped and is not stored in chat history.
 
@@ -205,13 +204,14 @@ V1 Options:
 - Vault Profile
 - Providers: persisted local URL overrides, active provider, selected model, capability display
 - Limits: provider timeout, model-list timeout, context/listing/analysis/review caps
-- Embeddings
+- Vault Indexes
 - Safety
 - Templates
+- Appearance: Light/Dark/System plus built-in Vault theme packs
 
 Not V1 Options:
 
-- themes
+- Theme Editor, shareable theme packages, and Obsidian theme compatibility
 - plugins
 - cloud providers
 - trusted/yolo mode

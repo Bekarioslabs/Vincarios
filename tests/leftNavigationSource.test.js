@@ -38,15 +38,15 @@ test('open vault is the primary action inside the vault group', () => {
   assert.equal(openVault < settings, true);
 });
 
-test('session log is a real workspace action, not a disabled placeholder', () => {
+test('Review Basket is a real workspace action and Session Log stays out of navigation', () => {
   const source = readShellSource();
   const workspace = source.indexOf('left-nav-group-workspace');
   const create = source.indexOf('left-nav-group-create');
   const workspaceBlock = source.slice(workspace, create);
 
-  assert.match(workspaceBlock, /data-workspace-tab="sessionLog"/);
-  assert.doesNotMatch(workspaceBlock, /data-future-slot="session-log"/);
-  assert.doesNotMatch(workspaceBlock, /data-workspace-tab="sessionLog"[^>]*disabled/);
+  assert.match(workspaceBlock, /data-workspace-tab="review"/);
+  assert.doesNotMatch(workspaceBlock, /data-workspace-tab="review"[^>]*disabled/);
+  assert.doesNotMatch(workspaceBlock, /data-workspace-tab="sessionLog"/);
 });
 test('create section has separate note and project preset toggles', () => {
   const source = readShellSource();

@@ -29,10 +29,18 @@ function createNode(tagName) {
     setAttribute(name, value) { this[name] = String(value); },
     appendChild(child) { this.children.push(child); return child; },
     addEventListener(type, handler) { this.listeners[type] = handler; },
-    querySelector(selector) { return this.nodes ? this.nodes[selector] || null : null; },
+    querySelector(selector) {
+      if (this.nodes && this.nodes[selector]) return this.nodes[selector];
+      if (String(selector || '').startsWith('.')) {
+        const className = String(selector).slice(1);
+        return this.children.find((child) => String(child.className || '').split(/\\s+/).includes(className)) || null;
+      }
+      return null;
+    },
     querySelectorAll() { return []; },
     closest() { return null; },
     focus() {},
+    select() {},
     scrollIntoView() {}
   };
   node.classList = createClassList(node);
@@ -279,6 +287,55 @@ test('file panel reloads the root listing when another vault is opened', async (
     await panel.openRoot();
 
     assert.equal(calls, 2);
+  } finally {
+    if (previousWindow === undefined) delete global.window;
+    else global.window = previousWindow;
+    if (previousDocument === undefined) delete global.document;
+    else global.document = previousDocument;
+  }
+});
+
+test('file tree F2 renames the selected Markdown row when a nested tree control owns focus', async () => {
+  const previousWindow = global.window;
+  const previousDocument = global.document;
+  const navigator = require('../src/renderer/files/fileNavigator');
+  const keyboard = require('../src/renderer/files/fileTreeKeyboard');
+  const permissions = require('../src/renderer/permissions/permissionState');
+  const { mountFilePanel } = require('../src/renderer/files/mountFilePanel');
+
+  global.document = { createElement: createNode };
+  global.window = {
+    VitruviosFileNavigator: navigator,
+    VitruviosFileTreeKeyboard: keyboard,
+    VitruviosIconRenderer: { createIconElement: () => createNode('img') }
+  };
+
+  try {
+    const root = createRoot();
+    const state = navigator.createFileNavigator();
+    const panel = mountFilePanel({
+      api: {
+        vault: {
+          listFolder: () => Promise.resolve({ ok: true, entries: [{ name: 'Draft.md', path: '00_Inbox/Draft.md', kind: 'markdown' }] }),
+          readMarkdown: () => Promise.resolve({ ok: true, path: '00_Inbox/Draft.md', content: '# Draft' }),
+          renameFile: () => Promise.resolve({ ok: true, targetPath: '00_Inbox/Renamed.md' })
+        }
+      },
+      root,
+      navigator: state,
+      keyboard,
+      permissionState: permissions.createPermissionState()
+    });
+
+    await panel.openRoot();
+    state.selectFile('00_Inbox/Draft.md');
+    const event = { key: 'F2', target: { closest: () => null }, preventDefault() { this.prevented = true; } };
+    await root.nodes['#file-tree'].listeners.keydown(event);
+
+    const row = root.nodes['#file-tree'].children[0];
+    const label = row.children.find((child) => child.className === 'file-row-label');
+    assert.equal(event.prevented, true);
+    assert.equal(label.children[0].className, 'file-rename-input');
   } finally {
     if (previousWindow === undefined) delete global.window;
     else global.window = previousWindow;

@@ -4,7 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   getFileTreeNavigation,
-  isFileTreeNavigationKey
+  isFileTreeNavigationKey,
+  isFileTreeRenameShortcut
 } = require('../src/renderer/files/fileTreeKeyboard');
 
 test('file tree keyboard handles only navigation keys', () => {
@@ -57,4 +58,10 @@ test('file tree keyboard distinguishes focus, scroll, expand, and collapse comma
     type: 'collapse',
     nextIndex: 1
   });
+});
+
+test('file tree rename shortcut requires an unmodified F2 key', () => {
+  assert.equal(isFileTreeRenameShortcut({ key: 'F2', ctrlKey: false, metaKey: false, altKey: false }), true);
+  assert.equal(isFileTreeRenameShortcut({ key: 'F2', ctrlKey: true, metaKey: false, altKey: false }), false);
+  assert.equal(isFileTreeRenameShortcut({ key: 'F3', ctrlKey: false, metaKey: false, altKey: false }), false);
 });

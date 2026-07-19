@@ -18,6 +18,13 @@ test('portable settings live under the project .vitruvios folder, not Electron u
   assert.equal(getPortableSettingsPath(projectRoot), path.join(projectRoot, '.vitruvios', 'settings.json'));
 });
 
+test('portable settings use the runtime data root when a packaged build provides one', () => {
+  const projectRoot = path.join(os.tmpdir(), 'vitruvios-packaged-source');
+  const dataRoot = path.join(os.tmpdir(), 'vitruvios-portable-release', '.vitruvios');
+
+  assert.equal(getPortableSettingsPath(projectRoot, { dataRoot }), path.join(dataRoot, 'settings.json'));
+});
+
 test('legacy userData settings migrate to portable storage and remove the old file', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-portable-migration-'));
   const projectRoot = path.join(root, 'app');

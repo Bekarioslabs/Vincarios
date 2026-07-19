@@ -17,6 +17,15 @@ test('editor formatting wraps and unwraps inline Markdown', () => {
   assert.equal(unwrapped.source, 'alpha beta');
 });
 
+test('editor formatting wraps and unwraps standard Markdown strikethrough', () => {
+  const struck = format('alpha beta', 'strikethrough', 6, 10);
+  assert.equal(struck.source, 'alpha ~~beta~~');
+  assert.deepEqual([struck.selectionStart, struck.selectionEnd], [8, 12]);
+
+  const unwrapped = format(struck.source, 'strikethrough', 6, 14);
+  assert.equal(unwrapped.source, 'alpha beta');
+});
+
 test('editor formatting applies line-based headings and lists', () => {
   const heading = format('First\nSecond', 'heading2', 0, 12);
   assert.equal(heading.source, '## First\n## Second');
