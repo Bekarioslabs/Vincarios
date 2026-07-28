@@ -12,7 +12,7 @@ test('vault Markdown source scans markdown files recursively and skips protected
   writeFile(root, 'Notes/One.md', '# One');
   writeFile(root, 'Notes/Two.txt', 'No');
   writeFile(root, 'Nested/Three.markdown', '# Three');
-  writeFile(root, '.vitruvios/index/documents.json', '{}');
+  writeFile(root, '.vincarios/index/documents.json', '{}');
   writeFile(root, '.obsidian/app.json', '{}');
 
   const source = createVaultMarkdownSource();
@@ -41,7 +41,7 @@ function writeFile(root, relativePath, content) {
 }
 
 function createTempVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-embedding-source-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-embedding-source-'));
 }
 
 test('vault Markdown source exposes a lightweight inventory and skips files that disappear during scanning', () => {

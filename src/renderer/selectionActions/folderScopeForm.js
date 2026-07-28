@@ -83,12 +83,12 @@
   }
 
   function getScopeOptions() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderScopeOptions) return window.VitruviosFolderScopeOptions;
+    if (typeof window !== 'undefined' && window.VincariosFolderScopeOptions) return window.VincariosFolderScopeOptions;
     if (typeof module !== 'undefined' && module.exports) return require('./folderScopeOptions');
-    throw new Error('vitruvios folder scope options API is not available.');
+    throw new Error('vincarios folder scope options API is not available.');
   }
 
   const api = { mountFolderScopeForm };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFolderScopeForm = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFolderScopeForm = Object.freeze(api);
 })();

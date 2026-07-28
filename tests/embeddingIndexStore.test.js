@@ -7,16 +7,16 @@ const os = require('node:os');
 const path = require('node:path');
 const { createEmbeddingIndexStore } = require('../src/main/embeddings/embeddingIndexStore');
 
-test('embedding index store resolves inside selected vault .vitruvios/index only', () => {
+test('embedding index store resolves inside selected vault .vincarios/index only', () => {
   const root = createTempVault();
   const store = createEmbeddingIndexStore();
   assert.equal(store.setRoot(root).ok, true);
 
   const location = store.getIndexLocation();
 
-  assert.equal(location.relativeFolder, '.vitruvios/index');
-  assert.equal(location.manifestPath, path.join(root, '.vitruvios', 'index', 'manifest.json'));
-  assert.equal(location.documentsPath, path.join(root, '.vitruvios', 'index', 'documents.json'));
+  assert.equal(location.relativeFolder, '.vincarios/index');
+  assert.equal(location.manifestPath, path.join(root, '.vincarios', 'index', 'manifest.json'));
+  assert.equal(location.documentsPath, path.join(root, '.vincarios', 'index', 'documents.json'));
 });
 
 test('embedding index store saves and loads manifest outside normal vault notes', () => {
@@ -30,7 +30,7 @@ test('embedding index store saves and loads manifest outside normal vault notes'
   assert.equal(saved.ok, true);
   assert.equal(loaded.ok, true);
   assert.equal(loaded.index.model.id, 'model-a');
-  assert.equal(fs.existsSync(path.join(root, '.vitruvios', 'index', 'manifest.json')), true);
+  assert.equal(fs.existsSync(path.join(root, '.vincarios', 'index', 'manifest.json')), true);
   assert.equal(fs.existsSync(path.join(root, 'manifest.json')), false);
 });
 
@@ -56,7 +56,7 @@ test('embedding index store saves and loads indexed document records', () => {
   assert.deepEqual(loaded.documents['Notes/One.md'].vectors[0], [1, 2, 3]);
 });
 function createTempVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-embedding-index-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-embedding-index-'));
 }
 
 
@@ -69,5 +69,5 @@ test('embedding index inspection is read-only when no index exists', () => {
 
   assert.equal(inspected.ok, true);
   assert.equal(inspected.exists, false);
-  assert.equal(fs.existsSync(path.join(root, '.vitruvios', 'index')), false);
+  assert.equal(fs.existsSync(path.join(root, '.vincarios', 'index')), false);
 });

@@ -58,11 +58,13 @@
   }
 
   function normalizePath(value) {
-    return String(value || '')
-      .trim()
-      .replace(/\\/g, '/')
-      .replace(/^\/+|\/+$/g, '')
-      .replace(/\/+/g, '/');
+    return getVaultPathApi().normalizeRelativePath(value);
+  }
+
+  function getVaultPathApi() {
+    if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+    if (typeof require === 'function') return require('../path/vaultPath');
+    throw new Error('Vault path contract unavailable.');
   }
 
   const api = {
@@ -74,5 +76,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosBlockedActionState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosBlockedActionState = Object.freeze(api);
 })();

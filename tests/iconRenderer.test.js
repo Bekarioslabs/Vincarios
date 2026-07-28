@@ -26,7 +26,7 @@ test('icon renderer creates accessible decorative icon elements', () => {
   try {
     const icon = createIconElement('refresh', 'file-refresh-icon');
     assert.equal(icon.tagName, 'img');
-    assert.equal(icon.className, 'vitruvios-icon file-refresh-icon');
+    assert.equal(icon.className, 'vincarios-icon file-refresh-icon');
     assert.equal(icon.attributes.src, './src/renderer/assets/icons/lucide/refresh-cw.svg');
     assert.equal(icon.attributes['aria-hidden'], 'true');
   } finally {
@@ -52,7 +52,7 @@ test('icon renderer creates decorative icons from validated local sources', () =
   try {
     const icon = createIconElementFromSource('data:image/svg+xml;base64,PHN2Zy8+', 'file-row-type-icon');
     assert.equal(icon.tagName, 'img');
-    assert.equal(icon.className, 'vitruvios-icon file-row-type-icon');
+    assert.equal(icon.className, 'vincarios-icon file-row-type-icon');
     assert.equal(icon.attributes.src, 'data:image/svg+xml;base64,PHN2Zy8+');
   } finally {
     global.document = previousDocument;

@@ -132,7 +132,7 @@
   line-height: 1;
 }
 
-.vitruvios-icon {
+.vincarios-icon {
   display: inline-block;
   width: 14px;
   height: 14px;
@@ -150,7 +150,7 @@
   filter: var(--icon-muted-filter);
 }
 
-.file-row.is-selected .vitruvios-icon {
+.file-row.is-selected .vincarios-icon {
   filter: var(--icon-accent-filter);
 }
 

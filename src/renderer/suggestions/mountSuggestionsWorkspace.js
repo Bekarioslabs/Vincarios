@@ -456,10 +456,10 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
   }
   function getDiffLineRenderer() {
-    if (typeof window !== 'undefined' && window.VitruviosDiffLineRenderer) return window.VitruviosDiffLineRenderer;
+    if (typeof window !== 'undefined' && window.VincariosDiffLineRenderer) return window.VincariosDiffLineRenderer;
     if (typeof require === 'function') {
       try {
         return require('../diff/diffLineRenderer');
@@ -471,7 +471,7 @@
   }
 
   function getSuggestionConverters() {
-    if (typeof window !== 'undefined' && window.VitruviosSuggestionConverters) return window.VitruviosSuggestionConverters;
+    if (typeof window !== 'undefined' && window.VincariosSuggestionConverters) return window.VincariosSuggestionConverters;
     if (typeof require === 'function') {
       try {
         return require('./suggestionConverters');
@@ -520,5 +520,5 @@
   const api = { mountSuggestionsWorkspace, formatSuggestionName, formatSuggestionParent, scoreToneClass, getSuggestionConverters };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosSuggestionsWorkspace = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosSuggestionsWorkspace = Object.freeze(api);
 })();

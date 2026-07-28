@@ -111,5 +111,5 @@
   });
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosThemePacks = api;
+  if (typeof window !== 'undefined') window.VincariosThemePacks = api;
 })();

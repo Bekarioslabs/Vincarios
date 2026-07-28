@@ -18,7 +18,7 @@
         {
           role: 'system',
           content: [
-            'You are vitruvios summarizing Markdown files in one selected folder scope.',
+            'You are vincarios summarizing Markdown files in one selected folder scope.',
             'Use only the provided Markdown file contents.',
             'Be concise and concrete.',
             'Do not propose edits, moves, tags, links, or write actions unless the user asks for them.',
@@ -35,9 +35,9 @@
   }
 
   function getSummaryPresentation() {
-    if (typeof window !== 'undefined' && window.VitruviosSummaryResponsePresentation) return window.VitruviosSummaryResponsePresentation;
+    if (typeof window !== 'undefined' && window.VincariosSummaryResponsePresentation) return window.VincariosSummaryResponsePresentation;
     if (typeof module !== 'undefined' && module.exports) return require('./summaryResponsePresentation');
-    throw new Error('vitruvios summary response presentation is not available.');
+    throw new Error('vincarios summary response presentation is not available.');
   }
 
   function normalizeFolderMarkdownFiles(input) {
@@ -137,5 +137,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFolderSummaryAction = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFolderSummaryAction = Object.freeze(api);
 })();

@@ -20,7 +20,7 @@ const DEFAULT_EMBEDDINGS = Object.freeze({
   license: 'apache-2.0',
   dimensions: 384,
   runtime: 'transformers-js-onnx',
-  indexLocation: 'vault-vitruvios',
+  indexLocation: 'vault-vincarios',
   similarNotes: DEFAULT_SIMILAR_NOTES
 });
 const DEFAULT_LIMITS = Object.freeze({
@@ -187,7 +187,7 @@ function normalizeAppSettings(value) {
     startup: Object.freeze(normalizeStartupSettings(value.startup || {})),
     theme: Object.freeze({
       mode: normalizeAppTheme(value.theme && value.theme.mode),
-      accent: normalizeId(value.theme && value.theme.accent) || 'vitruvios-amber'
+      accent: normalizeId(value.theme && value.theme.accent) || 'vincarios-amber'
     }),
     layout: Object.freeze(normalizeLayoutSettings(value.layout || {})),
     safety: Object.freeze({

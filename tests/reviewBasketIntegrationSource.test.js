@@ -32,9 +32,9 @@ test('index loads review basket modules before chat and shell modules', () => {
 test('shell mounts review basket view and passes it into chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /VitruviosReviewBasket\.mountReviewBasket/);
+  assert.match(source, /VincariosReviewBasket\.mountReviewBasket/);
   assert.match(source, /reviewBasket/);
-  assert.match(source, /mountChat\(\{ api, app, status: globalStatus, activityReporter, reviewBasket, contextState \}\)/);
+  assert.match(source, /mountChat\(\{ api, app, status: activityStatus, activityReporter, reviewBasket, contextState \}\)/);
 });
 
 test('shell passes review basket into Markdown preview update wiring', () => {
@@ -56,7 +56,7 @@ test('assistant messages render markdown through the shared renderer while user 
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
 
   assert.match(source, /renderMessageBody\(body, role, content\)/);
-  assert.match(source, /window\.VitruviosMarkdownRenderer/);
+  assert.match(source, /window\.VincariosMarkdownRenderer/);
   assert.match(source, /renderer\.renderMarkdown/);
   assert.match(source, /body\.innerHTML = renderer\.renderMarkdown/);
   assert.match(source, /body\.textContent = content/);
@@ -81,10 +81,10 @@ test('review basket view owns selection and execute controls without vault acces
   assert.doesNotMatch(viewSource, /fs\./);
 });
 
-test('shell executes create note proposals through the preload vault API only', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+test('review controller executes create note proposals through the preload vault API only', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'reviewExecutionController.js'), 'utf8');
 
-  assert.match(source, /function executeReviewProposal/);
+  assert.match(source, /function createReviewExecutionController/);
   assert.match(source, /api\.vault\.createNote/);
   assert.doesNotMatch(source, /require\('node:fs'\)/);
 });
@@ -125,8 +125,8 @@ test('review basket confirms update note proposals before execution', () => {
   assert.match(source, /Apply Update Preview/);
   assert.match(source, /Apply update/);
   assert.match(source, /item\.type === 'update_note'/);
-});test('shell executes update note proposals through the preload vault API only', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+});test('review controller executes update note proposals through the preload vault API only', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'reviewExecutionController.js'), 'utf8');
 
   assert.match(source, /api\.vault\.updateNote/);
   assert.match(source, /proposal\.currentContent/);
@@ -134,14 +134,14 @@ test('review basket confirms update note proposals before execution', () => {
 });
 
 
-test('shell refreshes the file panel after a successful create note proposal', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+test('shell composes review execution while the controller owns post-write refresh', () => {
+  const shellSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const controllerSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'reviewExecutionController.js'), 'utf8');
 
-  assert.match(source, /const updateFlashState = createUpdateFlashState\(\)/);
-  assert.match(source, /const vaultUi = \{ filePanel: null, vaultProfileState, updateFlashState, themeController \}/);
-  assert.match(source, /executeReviewProposal\(api, proposal, vaultUi\)/);
-  assert.match(source, /vaultUi\.filePanel = filePanel/);
-  assert.match(source, /refreshFilePanelAfterWrite\(vaultUi\)/);
+  assert.match(shellSource, /VincariosReviewExecution\.createReviewExecutionController/);
+  assert.match(shellSource, /executeProposal: reviewExecution\.executeProposal/);
+  assert.match(shellSource, /vaultUi\.filePanel = filePanel/);
+  assert.match(controllerSource, /filePanel\.refreshTree\(\)/);
 });
 test('shell exposes context basket and passes context state into chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
@@ -149,8 +149,8 @@ test('shell exposes context basket and passes context state into chat', () => {
   assert.match(source, /id="context-basket"/);
   assert.match(source, /id="context-basket-items"/);
   assert.match(source, /id="context-clear-all"/);
-  assert.match(source, /VitruviosContextBasket\.mountContextBasket/);
-  assert.match(source, /mountChat\(\{ api, app, status: globalStatus, activityReporter, reviewBasket, contextState \}\)/);
+  assert.match(source, /VincariosContextBasket\.mountContextBasket/);
+  assert.match(source, /mountChat\(\{ api, app, status: activityStatus, activityReporter, reviewBasket, contextState \}\)/);
   assert.doesNotMatch(source, /active-context-toggle/);
   assert.doesNotMatch(source, /setAutoContextEnabled/);
 });
@@ -235,7 +235,7 @@ test('chat does not auto-route selected Markdown update text into write proposal
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
 
   assert.doesNotMatch(source, /runSelectedUpdateProposalRequest/);
-  assert.doesNotMatch(source, /VitruviosSelectedUpdateProposalAction/);
+  assert.doesNotMatch(source, /VincariosSelectedUpdateProposalAction/);
 });
 test('index loads model action parser before model read action runner and chat', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -264,19 +264,19 @@ test('review basket exposes clear executed and compact dismiss controls', () => 
 });
 
 test('update instruction cancel protects typed text before removing the form', () => {
-  const viewSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const formSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'updateInstructionForm.js'), 'utf8');
 
-  assert.match(viewSource, /confirmDiscardActionForm\(textarea, 'Discard update instruction\?'\)/);
-  assert.match(viewSource, /function confirmDiscardActionForm/);
-  assert.match(viewSource, /window\.confirm\(message \|\| 'Discard unsaved changes\?'\)/);
+  assert.match(formSource, /canDiscard\(textarea, options\.confirmDiscard\)/);
+  assert.match(formSource, /function canDiscard/);
+  assert.match(formSource, /confirmDiscard\('Discard update instruction\?'\)/);
 });
 
-test('shell refreshes the active preview after a successful update note proposal', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+test('review controller refreshes the active preview after a successful update', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'reviewExecutionController.js'), 'utf8');
 
-  assert.match(source, /const result = await api.vault.updateNote/);
-  assert.equal(source.includes('refreshCurrentPreviewAfterUpdate(vaultUi, proposal.targetPath)'), true);
-  assert.equal(source.includes('filePanel.refreshLoadedMarkdown(targetPath)'), true);
+  assert.match(source, /const result = await api\.vault\.updateNote/);
+  assert.match(source, /await refreshLoadedMarkdown\(proposal\.targetPath\)/);
+  assert.match(source, /filePanel\.refreshLoadedMarkdown\(targetPath\)/);
 });
 
 test('review basket source disables and labels no-change proposals', () => {
@@ -303,22 +303,15 @@ test('template preset edit modal shows folders and files in the read-only plan p
   assert.doesNotMatch(source, /formatTemplateFilesPreview/);
 });
 
-test('shell executes template folder creation before template files', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
-  const executionStart = source.indexOf('async function executeReviewProposal(api, proposal, vaultUi)');
-  const branchStart = source.indexOf("if (proposal.type === 'create_from_template')", executionStart);
-  const branchEnd = source.indexOf("if (proposal.type === 'update_note')", branchStart);
-  const branch = source.slice(branchStart, branchEnd);
-  const folderLoopIndex = branch.indexOf('for (const folder of folders)');
-  const fileLoopIndex = branch.indexOf('for (const file of files)');
+test('reviewed templates cross one atomic main boundary instead of renderer file loops', () => {
+  const controllerSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'reviewExecutionController.js'), 'utf8');
+  const serviceSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'templates', 'reviewedTemplateService.js'), 'utf8');
 
-  assert.equal(branchStart > -1, true);
-  assert.equal(branchEnd > branchStart, true);
-  assert.equal(folderLoopIndex > -1, true);
-  assert.equal(fileLoopIndex > folderLoopIndex, true);
-  assert.equal(branch.includes('api.vault.createFolder({ targetFolder: folder })'), true);
-  assert.equal(branch.includes('api.vault.createNote({'), true);
-  assert.match(branch, /createdFolders/);
+  assert.match(controllerSource, /api\.templates\.createFromReview\(proposal\)/);
+  assert.doesNotMatch(controllerSource, /api\.vault\.createFolder/);
+  assert.match(serviceSource, /executeAuditedMutation/);
+  assert.match(serviceSource, /created\.slice\(\)\.reverse\(\)/);
+  assert.match(serviceSource, /createdFolders\.slice\(\)\.reverse\(\)/);
 });
 
 test('review basket empty state uses compact icon feedback', () => {
@@ -331,18 +324,16 @@ test('review basket empty state uses compact icon feedback', () => {
   assert.match(contextSource, /empty-state-icon/);
 });
 
-test('shell flashes written file rows after successful reviewed writes', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+test('review controller flashes written file rows after successful reviewed writes', () => {
+  const shellSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'reviewExecutionController.js'), 'utf8');
 
-  assert.match(source, /function createUpdateFlashState\(\)/);
-  assert.match(source, /updateFlashState: vaultUi && vaultUi\.updateFlashState/);
-  assert.match(source, /function flashReviewedWriteResult\(vaultUi, proposal, result\)/);
+  assert.match(shellSource, /function createUpdateFlashState\(\)/);
   assert.match(source, /function reviewedWriteFlashTargets\(proposal, result\)/);
   assert.match(source, /flashState\.flashTargets\(targets\)/);
   assert.match(source, /proposal\.type === 'create_note'/);
   assert.match(source, /proposal\.type === 'update_note'/);
   assert.match(source, /proposal\.type === 'create_from_template'/);
-  assert.doesNotMatch(source, /function flashFilePanelPath/);
   assert.doesNotMatch(source, /filePanel\.flashPath\(targetPath\)/);
 });
 

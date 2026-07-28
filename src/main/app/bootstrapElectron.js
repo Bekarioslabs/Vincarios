@@ -5,11 +5,16 @@ const { createMainWindow } = require('./createMainWindow');
 const { registerAppIpc } = require('../ipc/registerAppIpc');
 const { registerChatIpc } = require('../ipc/registerChatIpc');
 const { registerVaultIpc } = require('../ipc/registerVaultIpc');
+const {
+  createRecentVaultAuthorizer,
+  createVaultSessionCoordinator
+} = require('../vault/vaultSessionCoordinator');
 const { registerProviderIpc } = require('../ipc/registerProviderIpc');
 const { registerSettingsIpc } = require('../ipc/registerSettingsIpc');
 const { registerEmbeddingIpc } = require('../ipc/registerEmbeddingIpc');
 const { registerVaultIndexIpc } = require('../ipc/registerVaultIndexIpc');
 const { registerVaultSearchIpc } = require('../ipc/registerVaultSearchIpc');
+const { registerTemplateIpc } = require('../ipc/registerTemplateIpc');
 const { createProviderChatService } = require('../providers/providerChatService');
 const { createProviderStatusService } = require('../providers/providerStatusService');
 const { createProviderModelService } = require('../providers/providerModelService');
@@ -18,12 +23,14 @@ const { createSettingsStore, toProviderRegistryOptions } = require('../settings/
 const { createSettingsService } = require('../settings/settingsService');
 const { createVaultReadService } = require('../vault/vaultReadService');
 const { createVaultWriteService } = require('../vault/vaultWriteService');
+const { createReviewedTemplateService } = require('../templates/reviewedTemplateService');
 const { createVaultProfileService } = require('../vault/vaultProfileService');
 const { createVaultRecentFilesService } = require('../vault/vaultRecentFilesService');
 const { createVaultInventoryService } = require('../vault/vaultInventoryService');
 const { createVaultReviewBasketService } = require('../vault/vaultReviewBasketService');
 const { createVaultChangeService } = require('../vault/vaultChangeService');
 const { createVaultIndexFreshnessService } = require('../vault/vaultIndexFreshnessService');
+const { createIndexRefreshCoordinator } = require('../indexing/indexRefreshCoordinator');
 const { createEmbeddingSimilaritySearch } = require('../embeddings/embeddingSimilaritySearch');
 const { createEmbeddingIndexer } = require('../embeddings/embeddingIndexer');
 const { createEmbeddingIndexStatusService } = require('../embeddings/embeddingIndexStatusService');
@@ -36,7 +43,7 @@ const { createFullTextIndexStatusService } = require('../search/fullTextIndexSta
 const { createFullTextIndexHealthService } = require('../search/fullTextIndexHealthService');
 const { createVaultSearchService } = require('../search/vaultSearchService');
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
-const { getPortableSettingsPath, migrateLegacySettingsToPortable } = require('./portableDataPath');
+const { getPortableSettingsPath, migrateLegacyPortableNamespace, migrateLegacySettingsToPortable } = require('./portableDataPath');
 const { createRuntimePaths } = require('./runtimePaths');
 
 function bootstrapElectron(electron, options) {
@@ -51,6 +58,11 @@ function bootstrapElectron(electron, options) {
     resourcesPath: process.resourcesPath
   });
 
+  const namespaceMigration = migrateLegacyPortableNamespace(projectRoot, { dataRoot: runtimePaths.dataRoot });
+  if (!namespaceMigration.ok) {
+    throw new Error(namespaceMigration.message);
+  }
+
   const vaultReadService = options.vaultReadService || createVaultReadService();
   const settingsFilePath = options.settingsFilePath || getDefaultSettingsPath(app, projectRoot, runtimePaths);
   if (!options.settingsFilePath) {
@@ -61,6 +73,7 @@ function bootstrapElectron(electron, options) {
     initialSettings: options.initialSettings
   });
   const vaultWriteService = options.vaultWriteService || createVaultWriteService({ settingsStore });
+  const reviewedTemplateService = options.reviewedTemplateService || createReviewedTemplateService({ settingsStore });
   const vaultProfileService = options.vaultProfileService || createVaultProfileService();
   const vaultRecentFilesService = options.vaultRecentFilesService || createVaultRecentFilesService();
   const vaultInventoryService = options.vaultInventoryService || createVaultInventoryService();
@@ -84,6 +97,7 @@ function bootstrapElectron(electron, options) {
   }));
   const chatService = options.chatService || createProviderChatService(providerOptions);
   const vaultIndexFreshnessService = options.vaultIndexFreshnessService || createVaultIndexFreshnessService();
+  const indexRefreshCoordinator = options.indexRefreshCoordinator || createIndexRefreshCoordinator();
   const embeddingIndexer = options.embeddingIndexer || createEmbeddingIndexer({ settingsStore, projectRoot, runtimePaths });
   const embeddingSearchService = options.embeddingSearchService || createEmbeddingSimilaritySearch({
     settingsStore,
@@ -94,12 +108,13 @@ function bootstrapElectron(electron, options) {
   const embeddingIndexHealthService = options.embeddingIndexHealthService || createEmbeddingIndexHealthService({
     statusService: embeddingIndexStatusService,
     indexer: embeddingIndexer,
-    freshnessService: vaultIndexFreshnessService
+    freshnessService: vaultIndexFreshnessService,
+    refreshCoordinator: indexRefreshCoordinator
   });
 
   registerChatIpc(ipcMain, chatService);
   registerAppIpc(ipcMain, {
-    appName: 'vitruvios',
+    appName: 'vincarios',
     version: app.getVersion ? app.getVersion() : '0.1.0',
     shell: electron.shell
   });
@@ -110,23 +125,42 @@ function bootstrapElectron(electron, options) {
   const fullTextIndexHealthService = options.fullTextIndexHealthService || createFullTextIndexHealthService({
     indexer: fullTextIndexer,
     statusService: fullTextIndexStatusService,
-    freshnessService: vaultIndexFreshnessService
+    freshnessService: vaultIndexFreshnessService,
+    refreshCoordinator: indexRefreshCoordinator
   });
   const vaultIndexHealthService = options.vaultIndexHealthService || createVaultIndexHealthService({
     metadataIndexer,
     metadataStatusService: metadataIndexStatusService,
     embeddingHealthService: embeddingIndexHealthService,
     fullTextHealthService: fullTextIndexHealthService,
-    freshnessService: vaultIndexFreshnessService
+    freshnessService: vaultIndexFreshnessService,
+    refreshCoordinator: indexRefreshCoordinator
   });
   const vaultChangeService = options.vaultChangeService || createVaultChangeService();
   const vaultSearchService = options.vaultSearchService || createVaultSearchService();
-  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService);
+  const vaultSessionCoordinator = options.vaultSessionCoordinator || createVaultSessionCoordinator({
+    authorizeRoot: createRecentVaultAuthorizer(settingsService),
+    services: [
+      { name: 'read', service: vaultReadService },
+      { name: 'write', service: vaultWriteService },
+      { name: 'reviewed-templates', service: reviewedTemplateService },
+      { name: 'embedding-search', service: embeddingSearchService },
+      { name: 'profile', service: vaultProfileService },
+      { name: 'index-health', service: vaultIndexHealthService },
+      { name: 'watcher', service: vaultChangeService, optional: true },
+      { name: 'search', service: vaultSearchService },
+      { name: 'recent-files', service: vaultRecentFilesService },
+      { name: 'inventory', service: vaultInventoryService },
+      { name: 'review-basket', service: vaultReviewBasketService }
+    ]
+  });
+  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService, vaultSessionCoordinator);
   registerProviderIpc(ipcMain, providerStatusService, providerModelService);
   registerSettingsIpc(ipcMain, settingsService);
   registerEmbeddingIpc(ipcMain, embeddingSearchService, embeddingIndexHealthService);
   registerVaultIndexIpc(ipcMain, vaultIndexHealthService);
   registerVaultSearchIpc(ipcMain, vaultSearchService);
+  registerTemplateIpc(ipcMain, reviewedTemplateService);
   embeddingIndexHealthService.subscribe((health) => {
     BrowserWindow.getAllWindows().forEach((window) => {
       if (window && window.webContents) window.webContents.send(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, health);

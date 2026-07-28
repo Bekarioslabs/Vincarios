@@ -3,7 +3,7 @@
 const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 const { applyWindowZoom } = require('./windowZoom');
 
-const REPOSITORY_URL = 'https://github.com/Bekarioslabs/Vitruvios';
+const REPOSITORY_URL = 'https://github.com/Bekarioslabs/Vincarios';
 
 function createApplicationMenu(options) {
   options = options || {};

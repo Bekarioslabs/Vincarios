@@ -19,13 +19,13 @@
   }
 
   function loadMarkdownEngine() {
-    if (typeof window !== 'undefined' && window.VitruviosMarkdownEngine) return window.VitruviosMarkdownEngine;
+    if (typeof window !== 'undefined' && window.VincariosMarkdownEngine) return window.VincariosMarkdownEngine;
     if (typeof require === 'function') return require('./markdownEngine');
     throw new Error('Markdown engine unavailable.');
   }
 
   function loadMarkdownProperties() {
-    if (typeof window !== 'undefined' && window.VitruviosMarkdownProperties) return window.VitruviosMarkdownProperties;
+    if (typeof window !== 'undefined' && window.VincariosMarkdownProperties) return window.VincariosMarkdownProperties;
     if (typeof require === 'function') return require('./markdownProperties');
     throw new Error('Markdown properties unavailable.');
   }
@@ -33,5 +33,5 @@
   const api = { renderMarkdown, splitFrontmatter };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosMarkdownRenderer = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosMarkdownRenderer = Object.freeze(api);
 })();

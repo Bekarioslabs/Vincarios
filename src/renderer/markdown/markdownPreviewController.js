@@ -6,7 +6,8 @@
     const app = options.app;
     const api = options.api || null;
     const status = options.status || null;
-    if (!app) return null;
+    const resourcePolicy = getPreviewResourcePolicy(options.previewResourcePolicy);
+    if (!app || !resourcePolicy) return null;
 
     const preview = app.querySelector('#markdown-preview');
     const editor = app.querySelector('#markdown-source-editor');
@@ -28,15 +29,15 @@
     let loadedSource = '';
     let currentPath = '';
     let mode = 'preview';
-    let history = [];
-    let historyIndex = -1;
+    const previewHistory = resourcePolicy.createBoundedPreviewHistory();
+    const imageTaskPool = resourcePolicy.createPreviewTaskPool();
     let pendingUnsavedNavigation = null;
     let activeLinkSelection = null;
     let linkPicker = null;
 
     if (!preview || !editor || !editButton) return null;
 
-    const linkPickerApi = typeof window !== 'undefined' ? window.VitruviosMarkdownLinkPicker : null;
+    const linkPickerApi = typeof window !== 'undefined' ? window.VincariosMarkdownLinkPicker : null;
     if (linkPickerApi && typeof linkPickerApi.mountMarkdownLinkPicker === 'function') {
       linkPicker = linkPickerApi.mountMarkdownLinkPicker({
         root: linkPickerRoot,
@@ -83,8 +84,8 @@
     function setMessage(message) {
       clearLoadedPreviewState();
       setCurrentPath('');
-      history = [];
-      historyIndex = -1;
+      previewHistory.reset();
+      imageTaskPool.invalidate();
       if (title) title.textContent = '';
       if (revealButton) revealButton.disabled = true;
       preview.textContent = String(message || 'No file selected.');
@@ -97,10 +98,11 @@
       const targetPath = String(path || '');
       clearLoadedPreviewState();
       setCurrentPath(targetPath);
-      history = [];
-      historyIndex = -1;
+      previewHistory.reset();
+      imageTaskPool.invalidate();
       if (title) title.textContent = targetPath || 'Image Preview';
       if (revealButton) revealButton.disabled = !targetPath;
+      imageTaskPool.invalidate();
       preview.innerHTML = '<figure class="markdown-standalone-image"><img class="markdown-image-embed" data-image-target="' + escapeHtml(targetPath) + '" alt="" data-image-state="pending"></figure>';
       resolveMarkdownImages();
       clearPreviewStatus();
@@ -259,7 +261,7 @@
         openInternalLinkPicker();
         return;
       }
-      const formatter = typeof window !== 'undefined' ? window.VitruviosEditorFormatting : null;
+      const formatter = typeof window !== 'undefined' ? window.VincariosEditorFormatting : null;
       if (!formatter || typeof formatter.applyEditorFormat !== 'function') return;
       const viewport = captureEditorViewport();
       const result = formatter.applyEditorFormat({
@@ -287,7 +289,7 @@
     }
 
     function applyInternalLink(targetPath) {
-      const formatter = typeof window !== 'undefined' ? window.VitruviosEditorFormatting : null;
+      const formatter = typeof window !== 'undefined' ? window.VincariosEditorFormatting : null;
       if (!formatter || typeof formatter.insertInternalWikilink !== 'function' || !activeLinkSelection) return;
       const result = formatter.insertInternalWikilink({
         source: editor.value,
@@ -465,19 +467,12 @@
       if (proposeButton) proposeButton.disabled = !hasLocalChanges();
     }
     function recordHistory(source, path) {
-      if (!path) return;
-      const currentEntry = history[historyIndex];
-      if (currentEntry && currentEntry.path === path && currentEntry.source === source) return;
-      history = history.slice(0, historyIndex + 1);
-      history.push({ source, path });
-      historyIndex = history.length - 1;
+      previewHistory.push({ source, path });
     }
 
     async function moveHistory(offset) {
-      const nextIndex = historyIndex + offset;
-      if (nextIndex < 0 || nextIndex >= history.length) return;
-      historyIndex = nextIndex;
-      const entry = history[historyIndex];
+      const entry = previewHistory.move(offset);
+      if (!entry) return;
       setSource(entry.source, entry.path, { recordHistory: false });
       if (onOpenHistoryPath) {
         const result = await onOpenHistoryPath(entry.path);
@@ -487,16 +482,12 @@
     }
 
     function updateCurrentHistorySource(source) {
-      if (historyIndex < 0 || !history[historyIndex]) return;
-      history[historyIndex] = {
-        path: history[historyIndex].path,
-        source
-      };
+      previewHistory.replaceCurrent(source);
     }
 
     function updateHistoryButtons() {
-      if (backButton) backButton.disabled = historyIndex <= 0;
-      if (forwardButton) forwardButton.disabled = historyIndex < 0 || historyIndex >= history.length - 1;
+      if (backButton) backButton.disabled = !previewHistory.canMove(-1);
+      if (forwardButton) forwardButton.disabled = !previewHistory.canMove(1);
     }
 
     function showLinkFeedback(message) {
@@ -508,25 +499,39 @@
       clearPreviewStatus();
     }
     function renderPreview(source) {
-      if (!window.VitruviosMarkdownRenderer || !window.VitruviosMarkdownRenderer.renderMarkdown) {
+      imageTaskPool.invalidate();
+      if (!window.VincariosMarkdownRenderer || !window.VincariosMarkdownRenderer.renderMarkdown) {
         preview.textContent = String(source || '');
         return;
       }
-      preview.innerHTML = window.VitruviosMarkdownRenderer.renderMarkdown(source);
+      preview.innerHTML = window.VincariosMarkdownRenderer.renderMarkdown(source);
       resolveMarkdownImages();
     }
 
     function resolveMarkdownImages() {
       if (!api || !api.vault || typeof api.vault.readImageAsset !== 'function') return;
       const images = Array.from(preview.querySelectorAll('img.markdown-image-embed[data-image-target]'));
-      images.forEach((image) => resolveMarkdownImage(image));
+      images.forEach((image) => scheduleMarkdownImage(image));
     }
 
-    async function resolveMarkdownImage(image) {
+    function scheduleMarkdownImage(image) {
       const targetPath = image.dataset.imageTarget || '';
       if (!targetPath) return;
+      const sourcePath = currentPath;
       image.dataset.imageState = 'loading';
-      const result = await api.vault.readImageAsset({ targetPath, currentPath });
+      const scheduled = imageTaskPool.run(() => api.vault.readImageAsset({ targetPath, currentPath: sourcePath }));
+      scheduled.promise
+        .then((result) => {
+          if (!imageTaskPool.isCurrent(scheduled.generation) || !preview.contains(image)) return;
+          applyMarkdownImageResult(image, targetPath, result);
+        })
+        .catch(() => {
+          if (!imageTaskPool.isCurrent(scheduled.generation) || !preview.contains(image)) return;
+          applyMarkdownImageResult(image, targetPath, null);
+        });
+    }
+
+    function applyMarkdownImageResult(image, targetPath, result) {
       if (!result || !result.ok || !result.dataUrl) {
         image.dataset.imageState = 'missing';
         image.removeAttribute('src');
@@ -537,6 +542,7 @@
       image.dataset.imageState = 'loaded';
       image.setAttribute('data-image-path', result.path || targetPath);
     }
+
     function setVisibleMode() {
       const sourceMode = mode === 'source';
       preview.hidden = sourceMode;
@@ -593,6 +599,18 @@
     };
   }
 
+  function getPreviewResourcePolicy(override) {
+    if (override && typeof override.createBoundedPreviewHistory === 'function' && typeof override.createPreviewTaskPool === 'function') return override;
+    if (typeof window !== 'undefined' && window.VincariosPreviewResourcePolicy) return window.VincariosPreviewResourcePolicy;
+    if (typeof require === 'function') {
+      try {
+        return require('./previewResourcePolicy');
+      } catch (_error) {
+        return null;
+      }
+    }
+    return null;
+  }
   function escapeHtml(value) {
     return String(value || '')
       .replace(/&/g, '&amp;')
@@ -613,10 +631,10 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
   }
   const api = { mountMarkdownPreview };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosMarkdownPreview = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosMarkdownPreview = Object.freeze(api);
 })();

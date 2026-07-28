@@ -11,7 +11,7 @@ function read(relativePath) {
 
 test('startup screen displays the version from app metadata instead of a renderer constant', () => {
   const shell = read('src/renderer/shell/mountShell.js');
-  const css = read('src/renderer/styles/layout.css');
+  const css = read('src/renderer/styles/startup.css');
 
   assert.match(shell, /data-start-version/);
   assert.match(shell, /\[data-start-version\][\s\S]{0,120}info\.version/);

@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const DEFAULT_PROVIDER_ID = 'lm-studio';
 const DEFAULT_PROVIDER_CAPABILITIES = Object.freeze({ chat: true, vision: false, embeddings: false });
@@ -47,7 +47,7 @@ function normalizeProviderSettings(options) {
       defaultModel: definition.defaultModel,
       selectedModel: normalizeModelName(selectedModels[definition.id] || definition.model || definition.defaultModel),
       capabilities: normalizeCapabilities(definition.capabilities),
-      privacy: normalizeProviderPrivacy(definition.privacy)
+      privacy: resolveProviderPrivacy(baseUrl, definition.privacy)
     });
   });
   const activeProviderId = providers.some((provider) => provider.id === options.activeProviderId)
@@ -172,6 +172,26 @@ function normalizeProviderDefinition(provider) {
 }
 
 
+function resolveProviderPrivacy(baseUrl, value) {
+  const declared = normalizeProviderPrivacy(value);
+  if (declared === 'cloud' || declared === 'external') return declared;
+  return isLoopbackProviderUrl(baseUrl) ? 'local' : 'external';
+}
+
+function isLoopbackProviderUrl(value) {
+  try {
+    const hostname = new URL(String(value || '')).hostname.toLowerCase();
+    return hostname === 'localhost'
+      || hostname.endsWith('.localhost')
+      || hostname === '::1'
+      || hostname === '[::1]'
+      || /^127(?:\.\d{1,3}){3}$/.test(hostname);
+  } catch (error) {
+    return false;
+  }
+}
+
+
 function normalizeProviderPrivacy(value) {
   const normalized = String(value || '').trim().toLowerCase();
   if (normalized === 'cloud' || normalized === 'external') return normalized;
@@ -200,6 +220,7 @@ module.exports = {
   PROVIDER_DEFINITIONS,
   createProviderSettingsState,
   normalizeProviderSettings,
+  resolveProviderPrivacy,
   normalizeProviderDefinition,
   normalizeCapabilities,
   normalizeBaseUrl,

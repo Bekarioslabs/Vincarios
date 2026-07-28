@@ -19,7 +19,7 @@ test('vault home is registered as a first-class workspace', () => {
   assert.match(shell, /data-workspace-tab="home"/);
   assert.match(shell, /data-workspace-panel="home"/);
   assert.match(shell, /mountVaultHome/);
-  assert.match(bootstrap, /VitruviosVaultHome/);
+  assert.match(bootstrap, /VincariosVaultHome/);
   assert.equal(html.indexOf('./src/renderer/home/mountVaultHome.js') > -1, true);
 });
 
@@ -42,7 +42,8 @@ test('markdown preview waits for recent-file persistence before open succeeds', 
   const source = read('src/renderer/files/mountFilePanel.js');
 
   assert.match(source, /function recordRecentMarkdown/);
-  assert.match(source, /return Promise\.resolve\(api\.vault\.recordRecentFile\(\{ path \}\)\)\.catch/);
+  assert.match(source, /onRecentFileRecorded/);
+  assert.match(source, /result && result\.ok !== false && onRecentFileRecorded/);
   assert.match(source, /await recordRecentMarkdown\(read\.path\)/);
 });
 test('vault home presents local inventory, index health, and existing workspace shortcuts', () => {
@@ -61,4 +62,14 @@ test('vault home subscribes to live index health and exposes Review Basket navig
   assert.match(source, /api\.indexes\.onHealthChanged/);
   assert.match(source, /onOpenReviewBasket/);
   assert.match(source, /openReviewBasket/);
+});
+test('vault home receives successful recent-file updates through shell composition', () => {
+  const shell = read('src/renderer/shell/mountShell.js');
+  const home = read('src/renderer/home/mountVaultHome.js');
+
+  assert.match(shell, /vaultUi\.vaultHomeController = mountOptional/);
+  assert.match(shell, /onRecentFileRecorded/);
+  assert.match(shell, /controller\.refreshRecentFiles\(\)/);
+  assert.match(home, /async function refreshRecentFiles/);
+  assert.match(home, /Object\.freeze\(\{ refresh, refreshRecentFiles \}\)/);
 });

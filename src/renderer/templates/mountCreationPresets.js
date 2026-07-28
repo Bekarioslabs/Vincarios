@@ -170,17 +170,17 @@
 
   function getPresetApi() {
     if (typeof require === 'function') return require('../../shared/templates/presetRegistry');
-    return window.VitruviosTemplatePresets;
+    return window.VincariosTemplatePresets;
   }
 
   function getProposalApi() {
     if (typeof require === 'function') return require('../../shared/templates/presetProposals');
-    return window.VitruviosTemplatePresetProposals;
+    return window.VincariosTemplatePresetProposals;
   }
 
   function getVaultProfileApi() {
     if (typeof require === 'function') return require('../../shared/vaultProfile/defaults');
-    return window.VitruviosVaultProfile;
+    return window.VincariosVaultProfile;
   }
 
   function setText(node, value) {
@@ -188,7 +188,7 @@
   }
 
   function getModalBehavior() {
-    return window.VitruviosModalBehavior;
+    return window.VincariosModalBehavior;
   }
 
   function escapeHtml(value) {
@@ -203,5 +203,5 @@
   const api = { mountCreationPresets };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosCreationPresets = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosCreationPresets = Object.freeze(api);
 })();

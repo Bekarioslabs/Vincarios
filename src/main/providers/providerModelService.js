@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 const { createProviderSettingsState } = require('./providerRegistry');
 const { buildModelsUrl, normalizeModelList } = require('./providerProtocol');
@@ -31,6 +31,7 @@ function createProviderModelService(options) {
         activeProvider: publicProvider(provider),
         providers: settingsState.getProviders().map(publicProvider),
         selectedModel: provider.selectedModel,
+    privacy: provider.privacy,
         models
       };
     } catch (error) {

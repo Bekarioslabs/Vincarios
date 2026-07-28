@@ -135,9 +135,11 @@ function toCandidate(record, targetRecord, targetVectors, searchOptions, eligibi
 }
 
 function getDocumentVectors(record) {
+  const storedContent = normalizeVector(record && record.bodyCentroid);
+  const storedMetadata = normalizeVector(record && record.frontmatterCentroid);
   return {
-    content: averageVectors(record && Array.isArray(record.bodyVectors) && record.bodyVectors.length ? record.bodyVectors : record && record.vectors),
-    metadata: averageVectors(record && record.frontmatterVectors)
+    content: storedContent.length ? storedContent : averageVectors(record && Array.isArray(record.bodyVectors) && record.bodyVectors.length ? record.bodyVectors : record && record.vectors),
+    metadata: storedMetadata.length ? storedMetadata : averageVectors(record && record.frontmatterVectors)
   };
 }
 
@@ -191,6 +193,10 @@ function resolveVaultProfile(getVaultProfile) {
 }
 function toPercent(score) {
   return Number.isFinite(score) ? Math.round(score * 100) : null;
+}
+
+function normalizeVector(vector) {
+  return Array.isArray(vector) && vector.length ? vector.map((value) => Number(value) || 0) : [];
 }
 
 function averageVectors(vectors) {
@@ -263,6 +269,7 @@ module.exports = {
   DEFAULT_MINIMUM_SCORE_PERCENT,
   DEFAULT_SIMILAR_MODE,
   createEmbeddingSimilaritySearch,
+  getDocumentVectors,
   averageVectors,
   cosineSimilarity,
   normalizeSearchOptions

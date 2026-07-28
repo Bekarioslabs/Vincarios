@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const { createMetadataIndexStore } = require('../src/main/metadata/metadataIndexStore');
 
 function createVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-metadata-index-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-metadata-index-'));
 }
 
 test('metadata index store persists records separately under the selected vault', () => {
@@ -23,7 +23,7 @@ test('metadata index store persists records separately under the selected vault'
     }
   });
   assert.equal(saved.ok, true);
-  assert.equal(fs.existsSync(path.join(root, '.vitruvios', 'index', 'metadata', 'manifest.json')), true);
+  assert.equal(fs.existsSync(path.join(root, '.vincarios', 'index', 'metadata', 'manifest.json')), true);
 
   const loaded = store.load();
   assert.equal(loaded.ok, true);

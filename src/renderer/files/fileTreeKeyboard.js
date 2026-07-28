@@ -69,5 +69,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFileTreeKeyboard = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFileTreeKeyboard = Object.freeze(api);
 })();

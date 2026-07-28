@@ -62,7 +62,7 @@ test('model read action runner allows selected-file parent folder listing', () =
 test('model read action runner prefers browser global parser when available', async () => {
   const previousWindow = global.window;
   global.window = {
-    VitruviosModelActionParser: {
+    VincariosModelActionParser: {
       parseModelActionCalls() { return []; },
       stripModelActionCalls(text) { return String(text || ''); },
       normalizePathLike(value) { return String(value || ''); }

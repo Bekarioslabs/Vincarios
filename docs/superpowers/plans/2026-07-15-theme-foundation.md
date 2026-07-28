@@ -1,4 +1,4 @@
-# Vitruvios Theme Foundation Implementation Plan
+# vincarios Theme Foundation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,10 +10,10 @@
 
 ## Global Constraints
 
-- App default lives only in `.vitruvios/settings.json`; vault override lives only in `<vault>/.vitruvios/profile.json`.
+- App default lives only in `.vincarios/settings.json`; vault override lives only in `<vault>/.vincarios/profile.json`.
 - Never write to `.obsidian`.
 - V1 supports built-in `dark`, `light`, and `system` only.
-- Shareable package loading is V1.1: validated files in `.vitruvios/themes/`, never arbitrary CSS.
+- Shareable package loading is V1.1: validated files in `.vincarios/themes/`, never arbitrary CSS.
 - Components consume semantic tokens only; no hard-coded component light-mode exceptions.
 - Use test-first changes and run the full suite before the final commit.
 
@@ -117,14 +117,14 @@ assert.equal(document.documentElement.dataset.theme, 'dark');
 ### Task 5: Documentation And Full Verification
 
 **Files:**
-- Modify: `docs/rebuild/VITRUVIOS_V1_UI_AND_WORKFLOWS.md`
-- Modify: `docs/rebuild/VITRUVIOS_V1_ARCHITECTURE.md`
-- Modify: `docs/rebuild/VITRUVIOS_V1_IMPLEMENTATION_PLAN.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_UI_AND_WORKFLOWS.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_ARCHITECTURE.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`
 - Modify: `README.md`
 - Test: `tests/stylesSource.test.js`
 
 - [ ] Document the exact precedence rule: vault override, then app default, with System resolved locally.
-- [ ] Document V1.1 package direction: allow-listed token JSON under `.vitruvios/themes/`; no arbitrary CSS or package loader in V1.
+- [ ] Document V1.1 package direction: allow-listed token JSON under `.vincarios/themes/`; no arbitrary CSS or package loader in V1.
 - [ ] Add only token-boundary source assertions that protect the Light-mode design.
 - [ ] Run `npm test`; expect the full suite to pass.
 - [ ] Commit: `git commit -m "Document portable theme behavior"`.

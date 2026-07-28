@@ -50,12 +50,13 @@ test('Files collapse control exposes an accessible state', () => {
   assert.match(source, /collapseButton\.setAttribute\('aria-expanded', next \? 'false' : 'true'\)/);
 });
 test('file tree rows and permission buttons expose accessible names', () => {
-  const source = read('src/renderer/files/mountFilePanel.js');
+  const treeSource = read('src/renderer/files/fileTreeRenderer.js');
+  const panelSource = read('src/renderer/files/mountFilePanel.js');
 
-  assert.match(source, /row\.setAttribute\('aria-label', formatRowAriaLabel\(entry\)\)/);
-  assert.match(source, /row\.setAttribute\('aria-current', 'true'\)/);
-  assert.match(source, /button\.setAttribute\('aria-label', title \+ ': ' \+ path\)/);
-  assert.match(source, /function formatRowAriaLabel/);
+  assert.match(treeSource, /row\.setAttribute\('aria-label', options\.formatRowAriaLabel\(entry\)\)/);
+  assert.match(treeSource, /row\.setAttribute\('aria-current', 'true'\)/);
+  assert.match(panelSource, /button\.setAttribute\('aria-label', title \+ ': ' \+ path\)/);
+  assert.match(panelSource, /function formatRowAriaLabel/);
 });
 
 test('review basket dynamic controls and dialogs are labelled', () => {

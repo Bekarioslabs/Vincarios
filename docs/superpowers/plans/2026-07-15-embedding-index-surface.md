@@ -11,7 +11,7 @@
 ## Global Constraints
 
 - No index write occurs when a vault opens or when Settings merely renders.
-- Only an explicit Build, Refresh, or Rebuild action may create or replace `.vitruvios/index`.
+- Only an explicit Build, Refresh, or Rebuild action may create or replace `.vincarios/index`.
 - Renderer receives status/refresh APIs only; it never receives filesystem paths or Node APIs.
 - Dot folders remain hidden from normal Vault UI and blocked from context.
 - The bundled multilingual MiniLM model remains the only V1 model.
@@ -37,7 +37,7 @@
 
 - [x] **Step 1: Write failing status tests**
 
-Cover an unopened/no-index vault, a valid index with matching fingerprint, an old/mismatched fingerprint, missing model artifacts, and invalid index JSON. Assert that inspection never creates `.vitruvios/index`.
+Cover an unopened/no-index vault, a valid index with matching fingerprint, an old/mismatched fingerprint, missing model artifacts, and invalid index JSON. Assert that inspection never creates `.vincarios/index`.
 
 Run: `node --test tests/embeddingIndexStatusService.test.js`
 Expected: failure because the status service and inspection API do not exist.
@@ -109,7 +109,7 @@ Commit message: `Make embedding refresh atomic`.
 
 **Interfaces:**
 - Adds `EMBEDDINGS_GET_INDEX_STATUS` and `EMBEDDINGS_REFRESH_INDEX`.
-- Renderer API becomes `window.vitruvios.embeddings.getIndexStatus()` and `window.vitruvios.embeddings.refreshIndex()`.
+- Renderer API becomes `window.vincarios.embeddings.getIndexStatus()` and `window.vincarios.embeddings.refreshIndex()`.
 - IPC returns normalized result objects only.
 
 - [x] **Step 1: Write failing IPC/preload tests**
@@ -137,9 +137,9 @@ Commit message: `Expose embedding index status APIs`.
 **Files:**
 - Modify: `src/renderer/settings/mountSettingsPanel.js`
 - Modify: `src/renderer/styles/settings.css`
-- Modify: `docs/rebuild/VITRUVIOS_V1_ARCHITECTURE.md`
-- Modify: `docs/rebuild/VITRUVIOS_V1_UI_AND_WORKFLOWS.md`
-- Modify: `docs/rebuild/VITRUVIOS_V1_IMPLEMENTATION_PLAN.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_ARCHITECTURE.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_UI_AND_WORKFLOWS.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`
 - Test: `tests/embeddingSettingsPanelSource.test.js`
 - Test: `tests/settingsRendererIntegrationSource.test.js`
 
@@ -172,7 +172,7 @@ Mark the Phase 8 index surface complete only after tests and manual verification
 Run: `npm test`
 Expected: all tests pass.
 
-Manual test: open a new vault and confirm no `.vitruvios/index` exists; open Settings > Embeddings and see `No index yet`; Build once; close/reopen Settings and see indexed counts; edit/delete a Markdown file; Refresh and confirm counts update; temporarily remove model artifacts and confirm the UI reports unavailable without creating an index.
+Manual test: open a new vault and confirm no `.vincarios/index` exists; open Settings > Embeddings and see `No index yet`; Build once; close/reopen Settings and see indexed counts; edit/delete a Markdown file; Refresh and confirm counts update; temporarily remove model artifacts and confirm the UI reports unavailable without creating an index.
 
 - [ ] **Step 6: Commit the complete surface**
 

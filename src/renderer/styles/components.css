@@ -21,8 +21,8 @@
   color: var(--text-accent);
 }
 
-.ui-tool-button:hover:not(:disabled) .vitruvios-icon,
-.ui-tool-button:focus-visible .vitruvios-icon {
+.ui-tool-button:hover:not(:disabled) .vincarios-icon,
+.ui-tool-button:focus-visible .vincarios-icon {
   filter: var(--icon-accent-filter, var(--icon-muted-filter, none));
 }
 
@@ -36,7 +36,7 @@
   cursor: default;
 }
 
-.ui-tool-button .vitruvios-icon {
+.ui-tool-button .vincarios-icon {
   width: var(--icon-size-tool);
   height: var(--icon-size-tool);
 }

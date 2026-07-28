@@ -5,7 +5,7 @@ const { bootstrapElectron } = require('./app/bootstrapElectron');
 
 function main() {
   return {
-    app: 'vitruvios',
+    app: 'vincarios',
     status: 'scaffold',
     createVaultContext
   };

@@ -8,16 +8,16 @@ const test = require('node:test');
 const { createVaultInventoryService } = require('../src/main/vault/vaultInventoryService');
 
 test('counts visible vault folders and file types without reading file content', () => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-inventory-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-inventory-'));
   try {
     fs.mkdirSync(path.join(root, 'Notes'));
     fs.mkdirSync(path.join(root, 'Assets'));
-    fs.mkdirSync(path.join(root, '.vitruvios'));
+    fs.mkdirSync(path.join(root, '.vincarios'));
     fs.writeFileSync(path.join(root, 'Notes', 'Welcome.md'), '# Welcome');
     fs.writeFileSync(path.join(root, 'Assets', 'cover.png'), 'not-an-image');
     fs.writeFileSync(path.join(root, 'Assets', 'brief.pdf'), 'not-a-pdf');
     fs.writeFileSync(path.join(root, 'archive.zip'), 'not-a-zip');
-    fs.writeFileSync(path.join(root, '.vitruvios', 'recent-files.json'), '{}');
+    fs.writeFileSync(path.join(root, '.vincarios', 'recent-files.json'), '{}');
 
     const service = createVaultInventoryService();
     assert.equal(service.setRoot(root).ok, true);

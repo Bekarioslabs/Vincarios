@@ -66,7 +66,7 @@
       clear.className = 'search-clear ui-tool-button';
       clear.title = 'Clear search';
       clear.setAttribute('aria-label', 'Clear search');
-      const iconRenderer = window.VitruviosIconRenderer;
+      const iconRenderer = window.VincariosIconRenderer;
       if (iconRenderer && typeof iconRenderer.createIconElement === 'function') clear.appendChild(iconRenderer.createIconElement('close', 'search-clear-icon'));
       else clear.textContent = 'Clear';
       clear.hidden = !state.query;
@@ -152,7 +152,7 @@
       reveal.className = 'search-result-reveal ui-tool-button';
       reveal.title = 'Reveal in Files';
       reveal.setAttribute('aria-label', 'Reveal ' + (result.title || result.path) + ' in Files');
-      const iconRenderer = window.VitruviosIconRenderer;
+      const iconRenderer = window.VincariosIconRenderer;
       if (iconRenderer && typeof iconRenderer.createIconElement === 'function') reveal.appendChild(iconRenderer.createIconElement('folder', 'search-result-reveal-icon'));
       else reveal.textContent = 'Reveal';
       reveal.addEventListener('click', async () => {
@@ -188,5 +188,5 @@
 
   const api = { SEARCH_SCOPES, mountSearchWorkspace };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosSearchWorkspace = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosSearchWorkspace = Object.freeze(api);
 })();

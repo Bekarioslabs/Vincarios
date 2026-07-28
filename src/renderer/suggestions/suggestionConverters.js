@@ -77,7 +77,13 @@
   }
 
   function normalizePath(path) {
-    return String(path || '').trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
+    return getVaultPathApi().normalizeRelativePath(path);
+  }
+
+  function getVaultPathApi() {
+    if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+    if (typeof require === 'function') return require('../path/vaultPath');
+    throw new Error('Vault path contract unavailable.');
   }
 
   function baseName(path) {
@@ -90,7 +96,7 @@
   }
 
   function getDiffPreviewApi() {
-    if (typeof window !== 'undefined' && window.VitruviosDiffPreview) return window.VitruviosDiffPreview;
+    if (typeof window !== 'undefined' && window.VincariosDiffPreview) return window.VincariosDiffPreview;
     if (typeof require === 'function') {
       try {
         return require('../../shared/actions/diffPreview');
@@ -109,5 +115,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosSuggestionConverters = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosSuggestionConverters = Object.freeze(api);
 })();

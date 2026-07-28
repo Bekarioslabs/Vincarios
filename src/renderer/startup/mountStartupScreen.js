@@ -136,7 +136,7 @@
   }
 
   function appendIcon(root, iconName) {
-    const renderer = typeof window !== 'undefined' ? window.VitruviosIconRenderer : null;
+    const renderer = typeof window !== 'undefined' ? window.VincariosIconRenderer : null;
     if (renderer && typeof renderer.createIconElement === 'function') {
       root.appendChild(renderer.createIconElement(iconName, 'startup-icon'));
     }
@@ -180,5 +180,5 @@
 
   const api = { mountStartupScreen, normalizeRecentVaults, createRecentVault };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosStartup = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosStartup = Object.freeze(api);
 })();

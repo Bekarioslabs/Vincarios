@@ -28,8 +28,8 @@ test('index loads template preset modules before shell bootstrap', () => {
 test('shell mounts creation presets through a dedicated renderer module', () => {
   const source = read('src/renderer/shell/mountShell.js');
 
-  assert.match(source, /window\.VitruviosCreationPresets/);
-  assert.match(source, /mountCreationPresets\(\{ app, api, reviewBasket, status: globalStatus, vaultProfileState \}\)/);
+  assert.match(source, /window\.VincariosCreationPresets/);
+  assert.match(source, /mountCreationPresets\(\{ app, api, reviewBasket, status: activityStatus, vaultProfileState \}\)/);
 });
 
 test('create preset buttons are wired as real preset targets', () => {

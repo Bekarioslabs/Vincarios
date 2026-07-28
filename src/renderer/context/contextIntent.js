@@ -28,5 +28,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosContextIntent = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosContextIntent = Object.freeze(api);
 })();

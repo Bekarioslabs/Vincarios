@@ -35,5 +35,5 @@ test('shell wires one shared Vault Profile state into file, settings, and preset
 
   assert.match(source, /createVaultProfileState\(\{ api \}\)/);
   assert.match(source, /vaultProfileState/);
-  assert.match(source, /mountSettingsPanel\(\{ api, app, status: globalStatus, vaultProfileState, themeController \}\)/);
+  assert.match(source, /mountSettingsPanel\(\{ api, app, status: activityStatus, vaultProfileState, themeController \}\)/);
 });

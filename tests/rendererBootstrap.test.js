@@ -22,29 +22,29 @@ test('renderer bootstrap validates all required renderer modules', () => {
 });
 
 test('renderer bootstrap fails fast when model action parser is missing', () => {
-  const runtime = createRuntime({ VitruviosModelActionParser: undefined });
+  const runtime = createRuntime({ VincariosModelActionParser: undefined });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /VitruviosModelActionParser/);
+  assert.match(result.message, /VincariosModelActionParser/);
 });
 
 test('renderer bootstrap validates required parser methods', () => {
-  const runtime = createRuntime({ VitruviosModelActionParser: {} });
+  const runtime = createRuntime({ VincariosModelActionParser: {} });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /VitruviosModelActionParser\.parseModelActionCalls/);
+  assert.match(result.message, /VincariosModelActionParser\.parseModelActionCalls/);
 });
 test('renderer bootstrap requires the selected update proposal module', () => {
-  const runtime = createRuntime({ VitruviosSelectedUpdateProposalAction: undefined });
+  const runtime = createRuntime({ VincariosSelectedUpdateProposalAction: undefined });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /VitruviosSelectedUpdateProposalAction/);
+  assert.match(result.message, /VincariosSelectedUpdateProposalAction/);
 });
 test('renderer bootstrap requires the Markdown engine submodules', () => {
-  ['VitruviosObsidianMarkdownExtension', 'VitruviosMarkdownEngine', 'VitruviosMarkdownProperties'].forEach((globalName) => {
+  ['VincariosObsidianMarkdownExtension', 'VincariosMarkdownEngine', 'VincariosMarkdownProperties'].forEach((globalName) => {
     const runtime = createRuntime({ [globalName]: undefined });
     const result = validateRendererModules(runtime);
 
@@ -62,23 +62,23 @@ test('preview update validation uses permission state instead of requiring selec
 });
 
 test('renderer bootstrap requires the CSP-safe Vault Profile SVG renderer method', () => {
-  const runtime = createRuntime({ VitruviosVaultProfileVisualIconRenderer: {} });
+  const runtime = createRuntime({ VincariosVaultProfileVisualIconRenderer: {} });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /VitruviosVaultProfileVisualIconRenderer\.createFolderVisualIcon/);
+  assert.match(result.message, /VincariosVaultProfileVisualIconRenderer\.createFolderVisualIcon/);
 });
 test('renderer bootstrap requires the Vault Profile draft-state module', () => {
-  const runtime = createRuntime({ VitruviosVaultProfileDraftState: undefined });
+  const runtime = createRuntime({ VincariosVaultProfileDraftState: undefined });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /VitruviosVaultProfileDraftState/);
+  assert.match(result.message, /VincariosVaultProfileDraftState/);
 });
 test('renderer bootstrap requires the workspace shortcuts module', () => {
-  const runtime = createRuntime({ VitruviosWorkspaceShortcuts: undefined });
+  const runtime = createRuntime({ VincariosWorkspaceShortcuts: undefined });
   const result = validateRendererModules(runtime);
 
   assert.equal(result.ok, false);
-  assert.match(result.message, /VitruviosWorkspaceShortcuts/);
+  assert.match(result.message, /VincariosWorkspaceShortcuts/);
 });

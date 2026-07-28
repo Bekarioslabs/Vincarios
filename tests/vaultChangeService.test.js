@@ -16,7 +16,7 @@ test('vault change service debounces visible vault changes and ignores protected
 
   service.subscribe((event) => events.push(event));
   service.setRoot('D:/Vault');
-  watchCallback('change', '.vitruvios/index/metadata/records.json');
+  watchCallback('change', '.vincarios/index/metadata/records.json');
   watchCallback('rename', 'Notes/New.md');
   watchCallback('change', 'Assets/Cover.png');
 

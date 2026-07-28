@@ -141,5 +141,5 @@
 
   const api = Object.freeze({ applyEditorFormat, insertInternalWikilink });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosEditorFormatting = api;
+  if (typeof window !== 'undefined') window.VincariosEditorFormatting = api;
 })();

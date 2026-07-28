@@ -76,7 +76,7 @@ function createVaultApi() {
 
 test('mounted file panel reloads expanded folders for manual and external vault changes', async () => {
   const previousWindow = global.window;
-  global.window = { VitruviosFileNavigator: fileNavigator };
+  global.window = { VincariosFileNavigator: fileNavigator };
 
   try {
     const { root, elements } = createPanelRoot();
@@ -102,7 +102,7 @@ test('mounted file panel reloads expanded folders for manual and external vault 
 
 test('mounted file panel coalesces an overlapping vault refresh into one follow-up reload', async () => {
   const previousWindow = global.window;
-  global.window = { VitruviosFileNavigator: fileNavigator };
+  global.window = { VincariosFileNavigator: fileNavigator };
 
   let listCalls = 0;
   let releaseRefresh;

@@ -20,7 +20,7 @@ test('vault backup service copies an existing Markdown note before risky writes'
   assert.equal(result.ok, true);
   assert.equal(result.action, 'backup_note');
   assert.equal(result.sourcePath, '03_Wissen/Topic.md');
-  assert.equal(result.backupPath, '.vitruvios/backups/2026-06-24/03_Wissen/Topic.2026-06-24_10-11-12.md');
+  assert.equal(result.backupPath, '.vincarios/backups/2026-06-24/03_Wissen/Topic.2026-06-24_10-11-12.md');
   assert.equal(fs.readFileSync(path.join(root, result.backupPath), 'utf8'), '# Topic\n\nOld body.');
   assert.equal(fs.readFileSync(path.join(root, '03_Wissen', 'Topic.md'), 'utf8'), '# Topic\n\nOld body.');
 
@@ -52,10 +52,10 @@ test('vault backup service requires an opened vault', () => {
 });
 
 function createTempVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-backup-vault-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-backup-vault-'));
 }
 
 function readAudit(root) {
-  const text = fs.readFileSync(path.join(root, '.vitruvios', 'audit.jsonl'), 'utf8').trim();
+  const text = fs.readFileSync(path.join(root, '.vincarios', 'audit.jsonl'), 'utf8').trim();
   return text.split(/\r?\n/).map((line) => JSON.parse(line));
 }

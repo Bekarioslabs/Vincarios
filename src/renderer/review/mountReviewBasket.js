@@ -18,9 +18,9 @@
     const persistenceApi = getReviewBasketPersistenceApi();
     const persistence = persistenceApi ? persistenceApi.createReviewBasketPersistence({ api }) : null;
 
-    if (!window.VitruviosReviewBasketState || !root) return null;
+    if (!window.VincariosReviewBasketState || !root) return null;
 
-    const state = window.VitruviosReviewBasketState.createReviewBasketState({
+    const state = window.VincariosReviewBasketState.createReviewBasketState({
       onChange(snapshot) {
         renderReviewBasket(root, snapshot, state);
         updateCountBadge(countBadge, snapshot && snapshot.items);
@@ -96,7 +96,7 @@
   }
 
   function getReviewBasketPersistenceApi() {
-    if (typeof window !== 'undefined' && window.VitruviosReviewBasketPersistence) return window.VitruviosReviewBasketPersistence;
+    if (typeof window !== 'undefined' && window.VincariosReviewBasketPersistence) return window.VincariosReviewBasketPersistence;
     if (typeof require === 'function') {
       try { return require('./reviewBasketPersistence'); } catch (_error) {}
     }
@@ -473,12 +473,10 @@
       const result = await executeProposal(proposal);
       if (result && result.ok) {
         state.updateStatus(item.id, 'done', { path: result.path });
-        setText(status, getSuccessMessage(proposal, result));
       } else {
         state.updateStatus(item.id, 'failed', {
           error: result && (result.message || result.code) ? (result.message || result.code) : 'Action failed.'
         });
-        setText(status, 'Review action failed.');
       }
     }
 
@@ -490,12 +488,6 @@
     return Promise.resolve({ ok: true, patch: {} });
   }
 
-  function getSuccessMessage(proposal, result) {
-    if (proposal && proposal.type === 'update_note') {
-      return 'Updated note: ' + (result.path || proposal.targetPath || 'unknown');
-    }
-    return 'Created note: ' + (result.path || 'unknown');
-  }
   function updateExecuteButton(button, state, busy) {
     if (!button || !state || typeof state.getSelectedOpenItems !== 'function') return;
     const count = state.getSelectedOpenItems().length;
@@ -579,7 +571,7 @@
   }
 
   function getDiffLineRenderer() {
-    if (typeof window !== 'undefined' && window.VitruviosDiffLineRenderer) return window.VitruviosDiffLineRenderer;
+    if (typeof window !== 'undefined' && window.VincariosDiffLineRenderer) return window.VincariosDiffLineRenderer;
     if (typeof require === 'function') {
       try {
         return require('../diff/diffLineRenderer');
@@ -591,11 +583,11 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
   }
 
   function getModalBehavior() {
-    return window.VitruviosModalBehavior;
+    return window.VincariosModalBehavior;
   }
 
   if (typeof module !== 'undefined' && module.exports) {
@@ -603,6 +595,6 @@
   }
 
   if (typeof window !== 'undefined') {
-    window.VitruviosReviewBasket = Object.freeze({ mountReviewBasket });
+    window.VincariosReviewBasket = Object.freeze({ mountReviewBasket });
   }
 })();

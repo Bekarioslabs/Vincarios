@@ -1,8 +1,8 @@
-# Vitruvios Theme Foundation
+# vincarios Theme Foundation
 
 ## Goal
 
-Add a small, portable Light/Dark/System theme foundation to Vitruvios V1. It must respect the existing token system and make later theme presets possible without changing component logic.
+Add a small, portable Light/Dark/System theme foundation to vincarios V1. It must respect the existing token system and make later theme presets possible without changing component logic.
 
 ## Effective Theme
 
@@ -15,9 +15,9 @@ The splash screen has no vault context, so it always uses the portable app defau
 
 ## Storage
 
-- App default: `D:\ZEUS_AGENT\.vitruvios\settings.json`, under `theme.mode`.
-- Vault override: `<vault>/.vitruvios/profile.json`, under a dedicated appearance field with `inherit`, `dark`, or `light`.
-- Vitruvios never writes theme information to `.obsidian`.
+- App default: `D:\ZEUS_AGENT\.vincarios\settings.json`, under `theme.mode`.
+- Vault override: `<vault>/.vincarios/profile.json`, under a dedicated appearance field with `inherit`, `dark`, or `light`.
+- vincarios never writes theme information to `.obsidian`.
 
 ## UI
 
@@ -38,7 +38,7 @@ No theme presets, custom accent pickers, or per-project styles are included in t
 
 ## Boundaries
 
-- Theme is Vitruvios UI state, not Markdown content styling.
+- Theme is vincarios UI state, not Markdown content styling.
 - Markdown project style presets remain a later, separate workflow.
 - The setting affects no provider, permission, review, context, indexing, or vault-write behavior.
 
@@ -51,7 +51,7 @@ No theme presets, custom accent pickers, or per-project styles are included in t
 
 ## Future Theme Packages
 
-V1 prepares, but does not load or manage, shareable theme packages. V1.1 may discover validated JSON files under the portable app path `.vitruvios/themes/`.
+V1 prepares, but does not load or manage, shareable theme packages. V1.1 may discover validated JSON files under the portable app path `.vincarios/themes/`.
 
 - A package extends the built-in `dark` or `light` theme and may override only an allow-listed semantic token registry.
 - Allowed values will be colors, a bounded typography scale, control radii, and approved shadow or opacity values.

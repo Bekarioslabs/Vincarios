@@ -10,10 +10,13 @@
       const app = document.createElement('main');
       app.className = 'app-shell is-start';
       app.innerHTML = [
-        '<section class="start-screen" data-startup-screen aria-label="Welcome to vitruvios">',
+        '<section class="start-screen" data-startup-screen aria-label="Welcome to vincarios">',
         '  <div class="start-screen-content">',
-        '    <div class="start-logo-slot" aria-hidden="true"><img src="./src/renderer/assets/brand/vitruvios-logo-placeholder_white.svg" alt=""></div>',
-        '    <h1 class="start-wordmark"><span>vitru</span><span>vios</span></h1>',
+        '    <div class="start-logo-slot" aria-hidden="true">',
+        '      <img class="start-logo start-logo-dark" src="./src/renderer/assets/brand/vincarios-logo-dark.svg" alt="">',
+        '      <img class="start-logo start-logo-light" src="./src/renderer/assets/brand/vincarios-logo-light.svg" alt="">',
+        '    </div>',
+        '    <h1 class="start-wordmark"><span>vinca</span><span>rios</span></h1>',
         '    <p class="start-kicker">Local-first Markdown assistant</p>',
         '    <p class="start-version" data-start-version></p>',
         '    <button type="button" class="start-open" data-open-vault>Open Vault</button>',
@@ -22,7 +25,7 @@
         '  </div>',
         '</section>',
         '<header class="titlebar">',
-        '  <div class="titlebar-brand" aria-label="vitruvios"><span>vitru</span><span>vios</span></div>',
+        '  <div class="titlebar-brand" aria-label="vincarios"><span>vinca</span><span>rios</span></div>',
         '  <div class="titlebar-spacer"></div>',
         '  <div class="topbar-actions" aria-label="Provider status" data-provider-status-widget>',
         '    <span id="provider-status" class="status-pill" data-provider-status="offline">',
@@ -185,60 +188,62 @@
       wireActivityDrawer(app, workspaceState);
       const activityState = createActivityState();
       const activityReporter = createActivityReporter({ status: globalStatus, activityState });
-      app.__vitruviosActivityState = activityState;
+      const activityStatus = activityReporter.createStatusSink();
+      app.__vincariosActivityState = activityState;
       const contextState = createContextState();
       const suggestionState = createSuggestionState();
       const panelLayoutState = createPanelLayoutState();
       await hydratePanelLayoutPreferences(api, panelLayoutState);
-      app.__vitruviosPanelLayoutState = panelLayoutState;
+      app.__vincariosPanelLayoutState = panelLayoutState;
       let selectionActionsController = null;
-      wireLeftNavigationPanelLayout(app, api, panelLayoutState, globalStatus);
-      const filesPanelLayout = wireFilesPanelLayout(app, api, panelLayoutState, globalStatus);
-      const requestSelectionActionsPanelExpand = wireSelectionActionsPanelLayout(app, api, panelLayoutState, globalStatus, () => {
+      wireLeftNavigationPanelLayout(app, api, panelLayoutState, activityStatus);
+      const filesPanelLayout = wireFilesPanelLayout(app, api, panelLayoutState, activityStatus);
+      const requestSelectionActionsPanelExpand = wireSelectionActionsPanelLayout(app, api, panelLayoutState, activityStatus, () => {
         if (selectionActionsController && typeof selectionActionsController.closeOpenForms === 'function') selectionActionsController.closeOpenForms();
       });
       wireSuggestionIndicator(app, suggestionState);
       const updateFlashState = createUpdateFlashState();
-      const vaultProfileState = window.VitruviosVaultProfileState
-        ? window.VitruviosVaultProfileState.createVaultProfileState({ api })
+      const vaultProfileState = window.VincariosVaultProfileState
+        ? window.VincariosVaultProfileState.createVaultProfileState({ api })
         : null;
       const vaultUi = { filePanel: null, vaultProfileState, updateFlashState, themeController };
-      const reviewBasket = mountOptional('review basket', globalStatus, () => window.VitruviosReviewBasket
-        ? window.VitruviosReviewBasket.mountReviewBasket({ app, api, status: globalStatus, executeProposal: (proposal) => executeReviewProposalWithActivity(api, proposal, vaultUi, activityState), onSnapshotChange: (snapshot) => renderReviewWorkspaceIndicator(app, snapshot) })
+      const reviewExecution = window.VincariosReviewExecution.createReviewExecutionController({ api, vaultUi, activityReporter });
+      const reviewBasket = mountOptional('review basket', activityStatus, () => window.VincariosReviewBasket
+        ? window.VincariosReviewBasket.mountReviewBasket({ app, api, status: activityStatus, executeProposal: reviewExecution.executeProposal, onSnapshotChange: (snapshot) => renderReviewWorkspaceIndicator(app, snapshot) })
         : null);
       if (reviewBasket && typeof reviewBasket.getSnapshot === 'function') renderReviewWorkspaceIndicator(app, reviewBasket.getSnapshot());
-      mountOptional('creation presets', globalStatus, () => window.VitruviosCreationPresets && window.VitruviosCreationPresets.mountCreationPresets({ app, api, reviewBasket, status: globalStatus, vaultProfileState }));
+      mountOptional('creation presets', activityStatus, () => window.VincariosCreationPresets && window.VincariosCreationPresets.mountCreationPresets({ app, api, reviewBasket, status: activityStatus, vaultProfileState }));
       wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout, activityReporter);
 
-      mountOptional('provider status', globalStatus, () => window.VitruviosProviderStatus && window.VitruviosProviderStatus.mountProviderStatus({ api, app }));
-      mountOptional('settings panel', globalStatus, () => window.VitruviosSettingsPanel && window.VitruviosSettingsPanel.mountSettingsPanel({ api, app, status: globalStatus, vaultProfileState, themeController }));
-      mountOptional('workspace shortcuts', globalStatus, () => window.VitruviosWorkspaceShortcuts && window.VitruviosWorkspaceShortcuts.mountWorkspaceShortcuts({ app, workspaceState, appMenu: api && api.appMenu }));
-      mountOptional('inbox cleanup', globalStatus, () => window.VitruviosInboxCleanup && window.VitruviosInboxCleanup.mountInboxCleanup({ api, app, status: globalStatus, reviewBasket, onOpenChat: () => workspaceState.setActiveWorkspace('chat') }));
-      mountOptional('chat', globalStatus, () => window.VitruviosChat && window.VitruviosChat.mountChat({ api, app, status: globalStatus, activityReporter, reviewBasket, contextState }));
-      mountOptional('context basket', globalStatus, () => window.VitruviosContextBasket && window.VitruviosContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
-      mountOptional('suggestions workspace', globalStatus, () => window.VitruviosSuggestionsWorkspace && window.VitruviosSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: globalStatus, onOpenSuggestion: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPath ? vaultUi.filePanel.openMarkdownPath(path) : { ok: false, message: 'File panel unavailable.' } }));
-      mountOptional('search workspace', globalStatus, () => window.VitruviosSearchWorkspace && window.VitruviosSearchWorkspace.mountSearchWorkspace({ root: app.querySelector('#search-workspace'), api, status: globalStatus, onOpenResult: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onRevealResult: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' } }));
-      mountOptional('vault home', globalStatus, () => window.VitruviosVaultHome && window.VitruviosVaultHome.mountVaultHome({ root: app.querySelector('#vault-home-workspace'), api, workspaceState, onOpen: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onReveal: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' }, onRevealFolder: (path) => vaultUi.filePanel && vaultUi.filePanel.revealFolder ? vaultUi.filePanel.revealFolder(path) : { ok: false, message: 'File panel unavailable.' }, onOpenReviewBasket: () => { if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') workspaceState.setActiveWorkspace('review'); if (reviewBasket && typeof reviewBasket.reveal === 'function') reviewBasket.reveal(); } }));
-      mountOptional('session log', globalStatus, () => window.VitruviosSessionLog && window.VitruviosSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
-      selectionActionsController = mountOptional('selection actions', globalStatus, () => window.VitruviosSelectionActions && window.VitruviosSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: globalStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true, openSourceEditor: (targetPath) => vaultUi.previewController && typeof vaultUi.previewController.openSource === 'function' ? vaultUi.previewController.openSource(targetPath) : false }));
-      mountOptional('pane resize', globalStatus, () => window.VitruviosPaneResize && window.VitruviosPaneResize.mountPaneResize(app));
-      mountOptional('scoped selection', globalStatus, () => window.VitruviosScopedSelection && window.VitruviosScopedSelection.mountScopedSelection({ app }));
+      mountOptional('provider status', activityStatus, () => window.VincariosProviderStatus && window.VincariosProviderStatus.mountProviderStatus({ api, app }));
+      mountOptional('settings panel', activityStatus, () => window.VincariosSettingsPanel && window.VincariosSettingsPanel.mountSettingsPanel({ api, app, status: activityStatus, vaultProfileState, themeController }));
+      mountOptional('workspace shortcuts', activityStatus, () => window.VincariosWorkspaceShortcuts && window.VincariosWorkspaceShortcuts.mountWorkspaceShortcuts({ app, workspaceState, appMenu: api && api.appMenu }));
+      mountOptional('inbox cleanup', activityStatus, () => window.VincariosInboxCleanup && window.VincariosInboxCleanup.mountInboxCleanup({ api, app, status: activityStatus, reviewBasket, onOpenChat: () => workspaceState.setActiveWorkspace('chat') }));
+      mountOptional('chat', activityStatus, () => window.VincariosChat && window.VincariosChat.mountChat({ api, app, status: activityStatus, activityReporter, reviewBasket, contextState }));
+      mountOptional('context basket', activityStatus, () => window.VincariosContextBasket && window.VincariosContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
+      mountOptional('suggestions workspace', activityStatus, () => window.VincariosSuggestionsWorkspace && window.VincariosSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: activityStatus, onOpenSuggestion: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPath ? vaultUi.filePanel.openMarkdownPath(path) : { ok: false, message: 'File panel unavailable.' } }));
+      mountOptional('search workspace', activityStatus, () => window.VincariosSearchWorkspace && window.VincariosSearchWorkspace.mountSearchWorkspace({ root: app.querySelector('#search-workspace'), api, status: activityStatus, onOpenResult: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onRevealResult: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' } }));
+      vaultUi.vaultHomeController = mountOptional('vault home', activityStatus, () => window.VincariosVaultHome && window.VincariosVaultHome.mountVaultHome({ root: app.querySelector('#vault-home-workspace'), api, workspaceState, onOpen: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onReveal: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' }, onRevealFolder: (path) => vaultUi.filePanel && vaultUi.filePanel.revealFolder ? vaultUi.filePanel.revealFolder(path) : { ok: false, message: 'File panel unavailable.' }, onOpenReviewBasket: () => { if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') workspaceState.setActiveWorkspace('review'); if (reviewBasket && typeof reviewBasket.reveal === 'function') reviewBasket.reveal(); } }));
+      mountOptional('session log', activityStatus, () => window.VincariosSessionLog && window.VincariosSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
+      selectionActionsController = mountOptional('selection actions', activityStatus, () => window.VincariosSelectionActions && window.VincariosSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: activityStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true, openSourceEditor: (targetPath) => vaultUi.previewController && typeof vaultUi.previewController.openSource === 'function' ? vaultUi.previewController.openSource(targetPath) : false }));
+      mountOptional('pane resize', activityStatus, () => window.VincariosPaneResize && window.VincariosPaneResize.mountPaneResize(app));
+      mountOptional('scoped selection', activityStatus, () => window.VincariosScopedSelection && window.VincariosScopedSelection.mountScopedSelection({ app }));
     });
   }
 
 
   function createThemeController(api) {
-    if (!window.VitruviosThemeController || typeof window.VitruviosThemeController.createThemeController !== 'function') {
-      throw new Error('vitruvios theme controller is not available.');
+    if (!window.VincariosThemeController || typeof window.VincariosThemeController.createThemeController !== 'function') {
+      throw new Error('vincarios theme controller is not available.');
     }
-    return window.VitruviosThemeController.createThemeController({ api });
+    return window.VincariosThemeController.createThemeController({ api });
   }
 
   function createPanelLayoutState() {
-    if (!window.VitruviosPanelLayoutState || typeof window.VitruviosPanelLayoutState.createPanelLayoutState !== 'function') {
-      throw new Error('vitruvios panel layout state is not available.');
+    if (!window.VincariosPanelLayoutState || typeof window.VincariosPanelLayoutState.createPanelLayoutState !== 'function') {
+      throw new Error('vincarios panel layout state is not available.');
     }
-    return window.VitruviosPanelLayoutState.createPanelLayoutState();
+    return window.VincariosPanelLayoutState.createPanelLayoutState();
   }
 
   async function hydratePanelLayoutPreferences(api, panelLayoutState) {
@@ -323,7 +328,7 @@
       const collapsed = snapshot.filesCollapsed === true;
       vaultPanel.classList.toggle('is-files-collapsed', collapsed);
       if (filePanel && typeof filePanel.setCollapsed === 'function') filePanel.setCollapsed(collapsed);
-      app.dispatchEvent(new CustomEvent('vitruvios:files-collapse-change', { detail: { collapsed } }));
+      app.dispatchEvent(new CustomEvent('vincarios:files-collapse-change', { detail: { collapsed } }));
     }
 
     function setCollapsed(collapsed) {
@@ -333,7 +338,7 @@
     }
 
     if (filesResizer) {
-      filesResizer.addEventListener('vitruvios:panel-resize-start', () => {
+      filesResizer.addEventListener('vincarios:panel-resize-start', () => {
         if (panelLayoutState.snapshot().filesCollapsed) setCollapsed(false);
       });
     }
@@ -381,7 +386,7 @@
     }
 
     if (actionsResizer) {
-      actionsResizer.addEventListener('vitruvios:panel-resize-start', () => {
+      actionsResizer.addEventListener('vincarios:panel-resize-start', () => {
         if (panelLayoutState.snapshot().selectionActionsCollapsed) setCollapsed(false);
       });
     }
@@ -409,28 +414,28 @@
     slot.textContent = collapsed ? '<' : '>';
   }
   function createWorkspaceState() {
-    if (!window.VitruviosWorkspaceState) return null;
-    return window.VitruviosWorkspaceState.createWorkspaceState();
+    if (!window.VincariosWorkspaceState) return null;
+    return window.VincariosWorkspaceState.createWorkspaceState();
   }
 
   function createSuggestionState() {
-    if (!window.VitruviosSuggestionState) return null;
-    return window.VitruviosSuggestionState.createSuggestionState();
+    if (!window.VincariosSuggestionState) return null;
+    return window.VincariosSuggestionState.createSuggestionState();
   }
 
   function createActivityState() {
-    if (!window.VitruviosActivityState) return null;
-    return window.VitruviosActivityState.createActivityState();
+    if (!window.VincariosActivityState) return null;
+    return window.VincariosActivityState.createActivityState();
   }
 
   function createActivityReporter(options) {
-    if (!window.VitruviosActivityReporter || typeof window.VitruviosActivityReporter.createActivityReporter !== 'function') return null;
-    return window.VitruviosActivityReporter.createActivityReporter(options);
+    if (!window.VincariosActivityReporter || typeof window.VincariosActivityReporter.createActivityReporter !== 'function') return null;
+    return window.VincariosActivityReporter.createActivityReporter(options);
   }
 
   function createUpdateFlashState() {
-    if (!window.VitruviosUpdateFlashState || typeof window.VitruviosUpdateFlashState.createUpdateFlashState !== 'function') return null;
-    return window.VitruviosUpdateFlashState.createUpdateFlashState({ normalizePath });
+    if (!window.VincariosUpdateFlashState || typeof window.VincariosUpdateFlashState.createUpdateFlashState !== 'function') return null;
+    return window.VincariosUpdateFlashState.createUpdateFlashState({ normalizePath });
   }
 
   function wireActivityDrawer(app, workspaceState) {
@@ -519,8 +524,8 @@
   }
 
   function createContextState() {
-    if (!window.VitruviosContextState) return null;
-    return window.VitruviosContextState.createContextState();
+    if (!window.VincariosContextState) return null;
+    return window.VincariosContextState.createContextState();
   }
 
   function mountOptional(name, status, mount) {
@@ -532,8 +537,8 @@
     }
   }
   function createPermissionState(statusBar) {
-    if (!window.VitruviosPermissionState) return null;
-    return window.VitruviosPermissionState.createPermissionState({
+    if (!window.VincariosPermissionState) return null;
+    return window.VincariosPermissionState.createPermissionState({
       onChange(entry) {
         const modes = [];
         if (entry.read) modes.push('read');
@@ -599,7 +604,7 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
   }
   function addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState, permissionState) {
     const permission = validatePreviewUpdatePermission(proposal, contextState, permissionState);
@@ -633,7 +638,13 @@
   }
 
   function normalizePath(value) {
-    return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
+    return getVaultPathApi().normalizeRelativePath(value);
+  }
+
+  function getVaultPathApi() {
+    if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+    if (typeof require === 'function') return require('../path/vaultPath');
+    throw new Error('Vault path contract unavailable.');
   }
   function revealContextItem(vaultUi, item) {
     const filePanel = vaultUi && vaultUi.filePanel;
@@ -641,194 +652,27 @@
     if (item.kind === 'file' && typeof filePanel.revealPath === 'function') filePanel.revealPath(item.path);
     if ((item.kind === 'folder' || item.kind === 'folder_snapshot') && typeof filePanel.revealFolder === 'function') filePanel.revealFolder(item.path);
   }
-  async function executeReviewProposalWithActivity(api, proposal, vaultUi, activityState) {
-    const result = await executeReviewProposal(api, proposal, vaultUi);
-    recordReviewActivity(activityState, proposal, result);
-    return result;
-  }
-
-  function recordReviewActivity(activityState, proposal, result) {
-    if (!activityState || typeof activityState.record !== 'function' || !proposal || !result) return;
-    const ok = result.ok === true;
-    activityState.record({
-      type: ok ? 'success' : 'error',
-      action: reviewActivityLabel(proposal),
-      targetPath: result.path || proposal.targetPath || proposal.targetFolder || '',
-      detail: ok ? 'Review action executed.' : (result.message || 'Review action failed.')
-    });
-  }
-
-  function reviewActivityLabel(proposal) {
-    if (proposal.type === 'create_note') return 'Created note';
-    if (proposal.type === 'create_from_template') return 'Created template';
-    if (proposal.type === 'update_note') return 'Updated note';
-    return 'Review action';
-  }
-
-  async function executeReviewProposal(api, proposal, vaultUi) {
-    if (!proposal) {
-      return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
-    }
-    if (!api || !api.vault) {
-      return { ok: false, code: 'write_unavailable', message: 'Vault write API unavailable.' };
-    }
-    if (proposal.type === 'create_note') {
-      if (typeof api.vault.createNote !== 'function') {
-        return { ok: false, code: 'write_unavailable', message: 'Vault create API unavailable.' };
-      }
-      const result = await api.vault.createNote({
-        targetFolder: proposal.targetFolder,
-        title: proposal.title,
-        content: proposal.content
-      });
-      if (result && result.ok) {
-        await refreshFilePanelAfterWrite(vaultUi);
-        flashReviewedWriteResult(vaultUi, proposal, result);
-      }
-      return result;
-    }
-    if (proposal.type === 'create_from_template') {
-      if (typeof api.vault.createFolder !== 'function') {
-        return { ok: false, code: 'write_unavailable', message: 'Vault folder create API unavailable.' };
-      }
-      if (typeof api.vault.createNote !== 'function') {
-        return { ok: false, code: 'write_unavailable', message: 'Vault create API unavailable.' };
-      }
-      const folders = Array.isArray(proposal.folders) ? proposal.folders : [];
-      const files = Array.isArray(proposal.files) ? proposal.files : [];
-      const createdFolders = [];
-      const created = [];
-      for (const folder of folders) {
-        const result = await api.vault.createFolder({ targetFolder: folder });
-        if (!result || !result.ok) {
-          return Object.assign({}, result || {}, {
-            ok: false,
-            code: (result && result.code) || 'template_folder_create_failed',
-            message: (result && result.message) || 'Template folder creation failed.',
-            createdFolders,
-            created
-          });
-        }
-        createdFolders.push(result.path);
-      }
-      for (const file of files) {
-        const parts = splitPath(file.path);
-        const fileName = parts.pop() || 'Untitled.md';
-        const result = await api.vault.createNote({
-          targetFolder: parts.join('/'),
-          title: fileName.replace(/\.md$/i, ''),
-          content: file.content || ''
-        });
-        if (!result || !result.ok) {
-          return Object.assign({}, result || {}, {
-            ok: false,
-            code: (result && result.code) || 'template_create_failed',
-            message: (result && result.message) || 'Template creation failed.',
-            createdFolders,
-            created
-          });
-        }
-        created.push(result.path);
-      }
-      await refreshFilePanelAfterWrite(vaultUi);
-      const result = { ok: true, action: 'create_from_template', path: proposal.targetPath || proposal.templatePlanRootPath || '', createdFolders, created };
-      flashReviewedWriteResult(vaultUi, proposal, result);
-      return result;
-    }
-    if (proposal.type === 'update_note') {
-      if (typeof api.vault.updateNote !== 'function') {
-        return { ok: false, code: 'write_unavailable', message: 'Vault update API unavailable.' };
-      }
-      const result = await api.vault.updateNote({
-        targetPath: proposal.targetPath,
-        currentContent: proposal.currentContent,
-        proposedContent: proposal.proposedContent
-      });
-      if (result && result.ok) {
-        await refreshCurrentPreviewAfterUpdate(vaultUi, proposal.targetPath);
-        flashReviewedWriteResult(vaultUi, proposal, result);
-      }
-      return result;
-    }
-    return { ok: false, code: 'unsupported_action', message: 'Unsupported review action.' };
-  }
-
-  function splitPath(value) {
-    return String(value || '').replace(/\\/g, '/').split('/').map((part) => part.trim()).filter(Boolean);
-  }
-
-  function flashReviewedWriteResult(vaultUi, proposal, result) {
-    const flashState = vaultUi && vaultUi.updateFlashState;
-    if (!flashState || typeof flashState.flashTargets !== 'function') return;
-    const targets = reviewedWriteFlashTargets(proposal, result);
-    if (targets.length) flashState.flashTargets(targets);
-  }
-
-  function reviewedWriteFlashTargets(proposal, result) {
-    if (!proposal || !result || result.ok !== true) return [];
-    if (proposal.type === 'create_note') {
-      return compactFlashTargets([{ path: result.path || proposal.targetPath, kind: 'file', reason: 'created' }]);
-    }
-    if (proposal.type === 'update_note') {
-      return compactFlashTargets([{ path: proposal.targetPath, kind: 'file', reason: 'updated' }]);
-    }
-    if (proposal.type === 'create_from_template') {
-      return compactFlashTargets([
-        { path: result.path || proposal.templatePlanRootPath || proposal.targetPath, kind: 'folder', reason: 'template_created' },
-        { path: Array.isArray(result.created) ? result.created[0] : '', kind: 'file', reason: 'created' }
-      ]);
-    }
-    return [];
-  }
-
-  function compactFlashTargets(targets) {
-    const seen = new Set();
-    return (Array.isArray(targets) ? targets : []).filter((target) => {
-      const path = normalizePath(target && target.path);
-      if (!path || seen.has(path)) return false;
-      seen.add(path);
-      target.path = path;
-      return true;
-    });
-  }
-
-  async function refreshFilePanelAfterWrite(vaultUi) {
-    const filePanel = vaultUi && vaultUi.filePanel;
-    if (!filePanel || typeof filePanel.refreshTree !== 'function') return;
-    try {
-      await filePanel.refreshTree();
-    } catch (error) {
-      // A refresh failure must not turn an already completed vault write into a failed write.
-    }
-  }
-
-  async function refreshCurrentPreviewAfterUpdate(vaultUi, targetPath) {
-    const filePanel = vaultUi && vaultUi.filePanel;
-    if (!filePanel || typeof filePanel.refreshLoadedMarkdown !== 'function') return;
-    try {
-      await filePanel.refreshLoadedMarkdown(targetPath);
-    } catch (error) {
-      // A preview refresh failure must not turn an already completed vault write into a failed write.
-    }
-  }
   async function getAppInfo(api) {
     if (api && typeof api.appInfo === 'function') {
       try {
         return await api.appInfo();
       } catch (error) {
-        return { name: 'vitruvios', version: 'unavailable' };
+        return { name: 'vincarios', version: 'unavailable' };
       }
     }
-    return { name: 'vitruvios', version: '0.1.0' };
+    return { name: 'vincarios', version: '0.1.0-beta.1' };
   }
 
   function wireVaultShell(api, app, contextState, vaultUi, reviewBasket, filesPanelLayout, activityReporter) {
     const openButtons = app.querySelectorAll('[data-open-vault]');
     const filePanelRoot = app.querySelector('#file-panel');
-    const statusBar = app.querySelector('#status-bar-global');
+    const rawStatusBar = app.querySelector('#status-bar-global');
+    const statusBar = activityReporter && typeof activityReporter.createStatusSink === 'function'
+      ? activityReporter.createStatusSink()
+      : rawStatusBar;
     let filePanel = null;
-    const previewController = window.VitruviosMarkdownPreview
-      ? window.VitruviosMarkdownPreview.mountMarkdownPreview({
+    const previewController = window.VincariosMarkdownPreview
+      ? window.VincariosMarkdownPreview.mountMarkdownPreview({
         app,
         api,
         status: statusBar,
@@ -850,10 +694,10 @@
 
     if (!api || !api.vault) {
       setText(statusBar, 'Vault API unavailable.');
-    } else if (!window.VitruviosFilePanel) {
+    } else if (!window.VincariosFilePanel) {
       setText(statusBar, 'File panel unavailable.');
     } else {
-      filePanel = window.VitruviosFilePanel.mountFilePanel({
+      filePanel = window.VincariosFilePanel.mountFilePanel({
         api,
         root: filePanelRoot,
         previewController,
@@ -864,20 +708,31 @@
         updateFlashState: vaultUi && vaultUi.updateFlashState,
         vaultProfileState: vaultUi && vaultUi.vaultProfileState,
         onToggleCollapse: filesPanelLayout && filesPanelLayout.toggle,
-        onRequestExpand: filesPanelLayout && filesPanelLayout.requestExpand
+        onRequestExpand: filesPanelLayout && filesPanelLayout.requestExpand,
+        onRecentFileRecorded: () => {
+          const controller = vaultUi && vaultUi.vaultHomeController;
+          if (controller && typeof controller.refreshRecentFiles === 'function') return controller.refreshRecentFiles();
+          return null;
+        }
       });
       if (filesPanelLayout && typeof filesPanelLayout.attachFilePanel === 'function') filesPanelLayout.attachFilePanel(filePanel);
       if (vaultUi) vaultUi.filePanel = filePanel;
     }
 
-    const startupScreen = window.VitruviosStartup && typeof window.VitruviosStartup.mountStartupScreen === 'function'
-      ? window.VitruviosStartup.mountStartupScreen({ app, api, onOpenRecent: openRecentVault })
+    const startupScreen = window.VincariosStartup && typeof window.VincariosStartup.mountStartupScreen === 'function'
+      ? window.VincariosStartup.mountStartupScreen({ app, api, onOpenRecent: openRecentVault })
       : null;
 
     async function completeVaultOpen(root) {
       const vaultName = baseName(root);
-      setText(statusBar, 'Vault opened.');
-      recordActivityFromStatus(app, 'success', 'Vault opened', vaultName || 'Vault', '');
+      if (activityReporter && typeof activityReporter.report === 'function') {
+        activityReporter.report({
+          message: 'Vault opened.',
+          activity: { type: 'success', action: 'Vault opened', targetPath: vaultName || 'Vault', detail: '' }
+        });
+      } else {
+        setText(statusBar, 'Vault opened.');
+      }
       app.classList.remove('is-start');
       filePanel.setVaultName(vaultName || 'Vault');
       await filePanel.openRoot();
@@ -948,11 +803,6 @@
     return normalized.split('/').pop() || normalized;
   }
 
-  function recordActivityFromStatus(app, type, action, targetPath, detail) {
-    const state = app && app.__vitruviosActivityState;
-    if (!state || typeof state.record !== 'function') return;
-    state.record({ type, action, targetPath, detail });
-  }
 
   function setText(node, value) {
     if (node) node.textContent = value;
@@ -963,6 +813,6 @@
   }
 
   if (typeof window !== 'undefined') {
-    window.VitruviosShell = Object.freeze({ mountShell });
+    window.VincariosShell = Object.freeze({ mountShell });
   }
 })();

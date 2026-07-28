@@ -16,7 +16,7 @@
 
   function createIconElementFromSource(source, className) {
     const icon = document.createElement('img');
-    icon.className = ['vitruvios-icon', className || ''].filter(Boolean).join(' ');
+    icon.className = ['vincarios-icon', className || ''].filter(Boolean).join(' ');
     icon.setAttribute('src', String(source || ''));
     icon.setAttribute('alt', '');
     icon.setAttribute('aria-hidden', 'true');
@@ -25,7 +25,7 @@
   }
 
   function getRegistry() {
-    if (typeof window !== 'undefined' && window.VitruviosIconRegistry) return window.VitruviosIconRegistry;
+    if (typeof window !== 'undefined' && window.VincariosIconRegistry) return window.VincariosIconRegistry;
     if (typeof module !== 'undefined' && module.exports) return require('./iconRegistry');
     return null;
   }
@@ -33,5 +33,5 @@
   const api = { getIconPath, createIconElement, createIconElementFromSource };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosIconRenderer = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosIconRenderer = Object.freeze(api);
 })();

@@ -164,5 +164,5 @@
 
   const api = Object.freeze({ MAX_RESULTS, normalizeLinkResults, mountMarkdownLinkPicker });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosMarkdownLinkPicker = api;
+  if (typeof window !== 'undefined') window.VincariosMarkdownLinkPicker = api;
 })();

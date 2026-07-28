@@ -7,7 +7,7 @@ It is not product documentation. Do not read this file for architecture or featu
 
 ## Environment Assumptions
 
-- Platform: Windows (`D:\Vitruvios_AGENT`)
+- Platform: Windows (`<project-root>`; the checkout folder name is not product identity)
 - Node runtime: available via `npm` or bundled Node path
 - Shell: PowerShell by default, cmd fallback when needed
 - Electron: dev dependency, started via `npm start` or `npx electron .`
@@ -56,10 +56,15 @@ If `npm` is unavailable in the shell:
 ## Standard Commands
 
 ```bash
-npm test          # full test suite - run before every commit
-npm run check     # JS syntax/lint check
-npm start         # start Electron app
-start.bat         # Windows launcher; uses %LOCALAPPDATA%\Vitruvios_AGENT for Electron user-data/cache
+npm test                    # full test suite - run before every commit
+npm run check               # JavaScript source check
+npm run audit:security      # runtime audit plus documented build-only exception policy
+npm run licenses:check      # lockfile-derived runtime license policy
+npm run model:provision     # download and verify the pinned embedding artifacts
+npm run model:verify        # verify all local embedding artifact hashes
+npm run build:win           # verified Windows portable package
+npm start                   # start Electron app
+start.bat                   # Windows launcher; project-local .vincarios user-data/cache
 ```
 
 Run targeted tests first for small changes. Reserve `npm test` for commits, safety-sensitive changes, and broad shell/IPC/provider/context changes.

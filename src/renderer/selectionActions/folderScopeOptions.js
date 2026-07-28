@@ -9,13 +9,13 @@
   }
 
   function getActionDefaults() {
-    if (typeof window !== 'undefined' && window.VitruviosActionDefaults) return window.VitruviosActionDefaults;
+    if (typeof window !== 'undefined' && window.VincariosActionDefaults) return window.VincariosActionDefaults;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/settings/actionDefaults');
-    throw new Error('vitruvios action defaults API is not available.');
+    throw new Error('vincarios action defaults API is not available.');
   }
 
   const api = { DEFAULT_FOLDER_SCOPE_OPTIONS, normalizeFolderScopeOptions };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFolderScopeOptions = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFolderScopeOptions = Object.freeze(api);
 })();

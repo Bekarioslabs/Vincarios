@@ -3,7 +3,7 @@
 const frontmatter = require('../metadata/frontmatterContract');
 
 const FULL_TEXT_INDEX_VERSION = 1;
-const FULL_TEXT_INDEX_STORAGE = 'vault-vitruvios-full-text-index';
+const FULL_TEXT_INDEX_STORAGE = 'vault-vincarios-full-text-index';
 const MAX_TOKEN_LENGTH = 64;
 const MAX_TOKENS_PER_DOCUMENT = 20000;
 

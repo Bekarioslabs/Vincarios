@@ -36,7 +36,7 @@
   }
 
   function getFrontmatterContract() {
-    if (typeof window !== 'undefined' && window.VitruviosFrontmatterContract) return window.VitruviosFrontmatterContract;
+    if (typeof window !== 'undefined' && window.VincariosFrontmatterContract) return window.VincariosFrontmatterContract;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/metadata/frontmatterContract');
     throw new Error('Frontmatter contract unavailable.');
   }
@@ -44,5 +44,5 @@
   const api = { splitFrontmatter, renderProperties };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosMarkdownProperties = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosMarkdownProperties = Object.freeze(api);
 })();

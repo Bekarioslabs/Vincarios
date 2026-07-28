@@ -52,5 +52,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosWorkspaceState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosWorkspaceState = Object.freeze(api);
 })();

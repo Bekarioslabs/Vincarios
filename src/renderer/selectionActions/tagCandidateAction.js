@@ -296,7 +296,13 @@
   }
 
   function normalizePath(value) {
-    return String(value || '').trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
+    return getVaultPathApi().normalizeRelativePath(value);
+  }
+
+  function getVaultPathApi() {
+    if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+    if (typeof require === 'function') return require('../path/vaultPath');
+    throw new Error('Vault path contract unavailable.');
   }
 
   function normalizeMaxTags(value) {
@@ -309,13 +315,13 @@
   }
 
     function getFrontmatterContract() {
-    if (typeof window !== 'undefined' && window.VitruviosFrontmatterContract) return window.VitruviosFrontmatterContract;
+    if (typeof window !== 'undefined' && window.VincariosFrontmatterContract) return window.VincariosFrontmatterContract;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/metadata/frontmatterContract');
     throw new Error('Frontmatter contract unavailable.');
   }
 
   function getVaultProfileApi() {
-    if (typeof window !== 'undefined' && window.VitruviosVaultProfile) return window.VitruviosVaultProfile;
+    if (typeof window !== 'undefined' && window.VincariosVaultProfile) return window.VincariosVaultProfile;
     if (typeof module !== 'undefined' && module.exports) {
       try {
         return require('../../shared/vaultProfile/defaults');
@@ -329,5 +335,5 @@
   const api = { buildTagCandidates, suggestTags, extractTags, applyTagsToMarkdown };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosTagCandidateAction = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosTagCandidateAction = Object.freeze(api);
 })();

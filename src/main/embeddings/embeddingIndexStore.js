@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { createVaultContext } = require('../vault/vaultContext');
+const { createIndexSnapshotCache } = require('../indexing/indexSnapshotCache');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 const { createEmptyEmbeddingIndex, createIndexedDocumentRecord } = require('../../shared/embeddings/embeddingIndexSchema');
 
@@ -14,6 +15,7 @@ const DOCUMENTS_FILE = 'documents.json';
 function createEmbeddingIndexStore(options) {
   options = options || {};
   const fileSystem = options.fs || fs;
+  const snapshotCache = options.snapshotCache || createIndexSnapshotCache({ fs: fileSystem });
   let vault = null;
 
   function setRoot(vaultRoot) {
@@ -27,6 +29,7 @@ function createEmbeddingIndexStore(options) {
     } catch (error) {
       return fail('vault_not_found', 'Vault root does not exist.');
     }
+    snapshotCache.invalidate();
     vault = createVaultContext(resolvedRoot);
     return ok({ root: vault.root });
   }
@@ -47,12 +50,14 @@ function createEmbeddingIndexStore(options) {
   function inspect() {
     const location = getIndexLocation();
     if (!location.ok) return location;
+    return snapshotCache.read(snapshotKey(), [location.manifestPath, location.documentsPath], () => inspectLocation(location));
+  }
+
+  function inspectLocation(location) {
     const manifestExists = fileSystem.existsSync(location.manifestPath);
     const documentsExists = fileSystem.existsSync(location.documentsPath);
     if (!manifestExists && !documentsExists) return ok({ exists: false, manifest: null, documents: {} });
-    if (!manifestExists || !documentsExists) {
-      return fail('invalid_embedding_index', 'Embedding index files are incomplete.');
-    }
+    if (!manifestExists || !documentsExists) return fail('invalid_embedding_index', 'Embedding index files are incomplete.');
     try {
       const manifest = JSON.parse(fileSystem.readFileSync(location.manifestPath, 'utf8'));
       const documentPayload = JSON.parse(fileSystem.readFileSync(location.documentsPath, 'utf8'));
@@ -65,14 +70,14 @@ function createEmbeddingIndexStore(options) {
   function loadManifest() {
     const location = getIndexLocation();
     if (!location.ok) return location;
-    if (!fileSystem.existsSync(location.manifestPath)) {
-      return ok({ index: createEmptyEmbeddingIndex() });
-    }
-    try {
-      return ok({ index: JSON.parse(fileSystem.readFileSync(location.manifestPath, 'utf8')) });
-    } catch (error) {
-      return fail('invalid_embedding_manifest', 'Embedding index manifest could not be read.');
-    }
+    return snapshotCache.read(snapshotKey() + ':manifest', [location.manifestPath], () => {
+      if (!fileSystem.existsSync(location.manifestPath)) return ok({ index: createEmptyEmbeddingIndex() });
+      try {
+        return ok({ index: JSON.parse(fileSystem.readFileSync(location.manifestPath, 'utf8')) });
+      } catch (_error) {
+        return fail('invalid_embedding_manifest', 'Embedding index manifest could not be read.');
+      }
+    });
   }
 
   function saveIndex(options, documents) {
@@ -86,6 +91,9 @@ function createEmbeddingIndexStore(options) {
       fileSystem.mkdirSync(location.folderPath, { recursive: true });
       fileSystem.writeFileSync(location.manifestPath, JSON.stringify(index, null, 2) + '\n', 'utf8');
       fileSystem.writeFileSync(location.documentsPath, JSON.stringify({ documents: normalized }, null, 2) + '\n', 'utf8');
+      snapshotCache.store(snapshotKey(), [location.manifestPath, location.documentsPath], ok({ exists: true, manifest: index, documents: normalized }));
+      snapshotCache.store(snapshotKey() + ':manifest', [location.manifestPath], ok({ index }));
+      snapshotCache.store(snapshotKey() + ':documents', [location.documentsPath], ok({ documents: normalized }));
       return ok({ index, documents: normalized, manifestPath: location.manifestPath, documentsPath: location.documentsPath });
     } catch (error) {
       restoreFile(location.manifestPath, previousManifest);
@@ -121,6 +129,7 @@ function createEmbeddingIndexStore(options) {
       if (!fileSystem.existsSync(location.documentsPath)) {
         fileSystem.writeFileSync(location.documentsPath, JSON.stringify({ documents: {} }, null, 2) + '\n', 'utf8');
       }
+      invalidateSnapshots();
       return ok({ index, manifestPath: location.manifestPath });
     } catch (error) {
       return fail('embedding_index_write_failed', 'Embedding index manifest could not be written.');
@@ -130,15 +139,15 @@ function createEmbeddingIndexStore(options) {
   function loadDocuments() {
     const location = getIndexLocation();
     if (!location.ok) return location;
-    if (!fileSystem.existsSync(location.documentsPath)) {
-      return ok({ documents: {} });
-    }
-    try {
-      const parsed = JSON.parse(fileSystem.readFileSync(location.documentsPath, 'utf8'));
-      return ok({ documents: normalizeDocuments(parsed.documents) });
-    } catch (error) {
-      return fail('invalid_embedding_documents', 'Embedding index documents could not be read.');
-    }
+    return snapshotCache.read(snapshotKey() + ':documents', [location.documentsPath], () => {
+      if (!fileSystem.existsSync(location.documentsPath)) return ok({ documents: {} });
+      try {
+        const parsed = JSON.parse(fileSystem.readFileSync(location.documentsPath, 'utf8'));
+        return ok({ documents: normalizeDocuments(parsed.documents) });
+      } catch (_error) {
+        return fail('invalid_embedding_documents', 'Embedding index documents could not be read.');
+      }
+    });
   }
 
   function saveDocuments(documents) {
@@ -148,10 +157,21 @@ function createEmbeddingIndexStore(options) {
     try {
       fileSystem.mkdirSync(location.folderPath, { recursive: true });
       fileSystem.writeFileSync(location.documentsPath, JSON.stringify({ documents: normalized }, null, 2) + '\n', 'utf8');
+      invalidateSnapshots();
       return ok({ documents: normalized, documentsPath: location.documentsPath });
     } catch (error) {
       return fail('embedding_documents_write_failed', 'Embedding index documents could not be written.');
     }
+  }
+
+  function invalidateSnapshots() {
+    snapshotCache.invalidate(snapshotKey());
+    snapshotCache.invalidate(snapshotKey() + ':manifest');
+    snapshotCache.invalidate(snapshotKey() + ':documents');
+  }
+
+  function snapshotKey() {
+    return vault ? vault.root + ':embeddings' : 'no-vault:embeddings';
   }
 
   function requireVault() {

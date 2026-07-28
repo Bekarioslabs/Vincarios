@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make `Vault/.vitruvios/profile.json` the single portable source for standard role mappings and their icon/color identities.
+**Goal:** Make `Vault/.vincarios/profile.json` the single portable source for standard role mappings and their icon/color identities.
 
 **Architecture:** The main-process vault profile service validates and persists the profile. Settings is the only profile editor. The File Tree consumes the resolved active profile and exposes no profile mutation UI.
 
@@ -12,7 +12,7 @@
 
 - Roles and visuals apply only to existing top-level folders in V1.
 - One standard role maps to at most one top-level folder; one folder may not be assigned to two roles.
-- No writes to `.obsidian`; `.vitruvios/profile.json` is Vitruvios-owned vault metadata.
+- No writes to `.obsidian`; `.vincarios/profile.json` is vincarios-owned vault metadata.
 - Profile library, custom roles, and multiple project destinations remain V1.1.
 - All writes validate in main; no renderer filesystem access.
 

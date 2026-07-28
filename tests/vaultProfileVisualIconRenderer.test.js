@@ -12,7 +12,7 @@ test('Vault Profile visual icon renderer uses a validated local source when pres
   };
   const icon = createFolderVisualIcon({
     renderer,
-    visual: { icon: { kind: 'custom', path: '.vitruvios/icons/work.svg', src: 'data:image/svg+xml;base64,PHN2Zy8+' } },
+    visual: { icon: { kind: 'custom', path: '.vincarios/icons/work.svg', src: 'data:image/svg+xml;base64,PHN2Zy8+' } },
     className: 'file-row-type-icon',
     resolveBuiltinIconName: () => 'folderVisualFolder'
   });

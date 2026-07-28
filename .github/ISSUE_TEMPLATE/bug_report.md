@@ -1,6 +1,6 @@
 ---
 name: Bug report
-aabout: Report a reproducible Vitruvios problem without private vault data
+about: Report a reproducible vincarios problem without private vault data
 title: "[Bug]: "
 labels: bug
 assignees: ''
@@ -8,7 +8,7 @@ assignees: ''
 
 ## Before you submit
 
-Do **not** attach private Markdown notes, screenshots containing private note content, absolute local paths, provider logs, API keys, tokens, or `.vitruvios/` backup/audit files without reviewing and redacting them first.
+Do **not** attach private Markdown notes, screenshots containing private note content, absolute local paths, provider logs, API keys, tokens, or `.vincarios/` backup/audit files without reviewing and redacting them first.
 
 For a suspected security issue, do not use this template. Follow `SECURITY.md` and report privately.
 
@@ -24,11 +24,11 @@ Describe the visible result in one or two sentences.
 
 ## Expected behavior
 
-What should Vitruvios have done?
+What should vincarios have done?
 
 ## Environment
 
-- Vitruvios version or commit:
+- vincarios version or commit:
 - Windows version:
 - Installation type: source / unsigned beta build
 - Provider, if relevant: LM Studio / Ollama / none
@@ -40,5 +40,5 @@ Paste only redacted error text. Replace note titles, paths, and note content wit
 ## Backup / data impact
 
 - [ ] No vault data was modified.
-- [ ] A note changed unexpectedly; I checked `.vitruvios/backups/`.
+- [ ] A note changed unexpectedly; I checked `.vincarios/backups/`.
 - [ ] I may have found a security issue and will report it privately instead.

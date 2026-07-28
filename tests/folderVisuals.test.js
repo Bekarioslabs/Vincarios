@@ -25,13 +25,13 @@ test('folder visuals expose fixed Lucide icon ids and a fixed palette', () => {
 test('folder visuals preserve only top-level records with fixed palette colors', () => {
   const visuals = normalizeTopLevelFolderVisuals({
     '00_Inbox': { icon: { kind: 'builtin', id: 'inbox' }, color: { kind: 'token', id: 'amber-400' } },
-    '02_Projects/vitruvios': { icon: { kind: 'builtin', id: 'briefcase' }, color: { kind: 'token', id: 'violet-400' } },
-    '99_Archive': { icon: { kind: 'custom', path: '.vitruvios/icons/archive.svg' }, color: { kind: 'token', id: 'red-400' } }
+    '02_Projects/vincarios': { icon: { kind: 'builtin', id: 'briefcase' }, color: { kind: 'token', id: 'violet-400' } },
+    '99_Archive': { icon: { kind: 'custom', path: '.vincarios/icons/archive.svg' }, color: { kind: 'token', id: 'red-400' } }
   });
 
   assert.deepEqual(visuals, {
     '00_Inbox': { icon: { kind: 'builtin', id: 'inbox' }, color: { kind: 'token', id: 'amber-400' } },
-    '99_Archive': { icon: { kind: 'custom', path: '.vitruvios/icons/archive.svg' }, color: { kind: 'token', id: 'red-400' } }
+    '99_Archive': { icon: { kind: 'custom', path: '.vincarios/icons/archive.svg' }, color: { kind: 'token', id: 'red-400' } }
   });
 });
 
@@ -41,7 +41,7 @@ test('folder visual identities never resolve for nested paths', () => {
   });
 
   assert.deepEqual(resolveTopLevelFolderVisual('02_Projects', visuals), { icon: { kind: 'builtin', id: 'briefcase' }, color: { kind: 'token', id: 'violet-400' } });
-  assert.equal(resolveTopLevelFolderVisual('02_Projects/vitruvios/Notes.md', visuals), null);
+  assert.equal(resolveTopLevelFolderVisual('02_Projects/vincarios/Notes.md', visuals), null);
 });
 
 test('role visuals use fixed palette ids and migrate the previous color ids', () => {
@@ -59,12 +59,12 @@ test('role visuals use fixed palette ids and migrate the previous color ids', ()
 test('legacy custom hex colors migrate to a fixed palette color', () => {
   assert.deepEqual(normalizeRoleVisuals({
     projects: {
-      icon: { kind: 'custom', path: '.vitruvios/icons/work.svg' },
+      icon: { kind: 'custom', path: '.vincarios/icons/work.svg' },
       color: { kind: 'custom', value: '#7c3aed' }
     }
   }), {
     projects: {
-      icon: { kind: 'custom', path: '.vitruvios/icons/work.svg' },
+      icon: { kind: 'custom', path: '.vincarios/icons/work.svg' },
       color: { kind: 'token', id: 'violet-600' }
     }
   });

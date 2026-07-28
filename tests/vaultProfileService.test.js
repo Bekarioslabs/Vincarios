@@ -59,7 +59,7 @@ test('vault profile prevents one folder from being assigned to two roles and res
 test('vault profile migrates legacy path-keyed folder visuals when they match a detected default role', () => {
   const root = createTempVault();
   fs.mkdirSync(path.join(root, '99_Archive'));
-  fs.mkdirSync(path.join(root, '.vitruvios'));
+  fs.mkdirSync(path.join(root, '.vincarios'));
   fs.writeFileSync(path.join(root, PROFILE_RELATIVE_PATH), JSON.stringify({
     version: 1,
     futureProfileField: 'keep',
@@ -77,11 +77,11 @@ test('vault profile migrates legacy path-keyed folder visuals when they match a 
 });
 
 function createTempVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-vault-profile-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-vault-profile-'));
 }
 test('vault profile lists only safe local SVG icons from the portable icon folder', () => {
   const root = createTempVault();
-  const iconRoot = path.join(root, '.vitruvios', 'icons');
+  const iconRoot = path.join(root, '.vincarios', 'icons');
   fs.mkdirSync(iconRoot, { recursive: true });
   fs.writeFileSync(path.join(iconRoot, 'briefcase.svg'), '<svg viewBox="0 0 24 24"><path d="M0 0h24v24H0z"/></svg>');
   fs.writeFileSync(path.join(iconRoot, 'unsafe.svg'), '<svg><script>alert(1)</script></svg>');
@@ -93,7 +93,7 @@ test('vault profile lists only safe local SVG icons from the portable icon folde
 
   assert.equal(result.ok, true);
   assert.equal(result.icons.length, 1);
-  assert.equal(result.icons[0].path, '.vitruvios/icons/briefcase.svg');
+  assert.equal(result.icons[0].path, '.vincarios/icons/briefcase.svg');
   assert.match(result.icons[0].src, /^data:image\/svg\+xml;base64,/);
 });
 test('vault profile persists a normalized appearance theme override', () => {

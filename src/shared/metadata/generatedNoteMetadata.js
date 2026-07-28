@@ -24,19 +24,19 @@
       tags: Object.freeze(['ai-response']),
       type: 'ai-response',
       status: 'draft',
-      source: 'vitruvios'
+      source: 'vincarios'
     }),
     [ORIGIN_ACTIONS.summarizeFile]: Object.freeze({
       tags: Object.freeze(['ai-summary']),
       type: 'summary',
       status: 'draft',
-      source: 'vitruvios'
+      source: 'vincarios'
     }),
     [ORIGIN_ACTIONS.summarizeFolder]: Object.freeze({
       tags: Object.freeze(['ai-summary']),
       type: 'summary',
       status: 'draft',
-      source: 'vitruvios'
+      source: 'vincarios'
     }),
     [ORIGIN_ACTIONS.importMarkdown]: Object.freeze({
       tags: Object.freeze(['imported-note']),
@@ -52,7 +52,7 @@
       tags: Object.freeze(['ai-draft']),
       type: 'ai-draft',
       status: 'draft',
-      source: 'vitruvios'
+      source: 'vincarios'
     })
   });
 
@@ -147,7 +147,7 @@
   }
 
   function getFrontmatterContract() {
-    if (typeof window !== 'undefined' && window.VitruviosFrontmatterContract) return window.VitruviosFrontmatterContract;
+    if (typeof window !== 'undefined' && window.VincariosFrontmatterContract) return window.VincariosFrontmatterContract;
     if (typeof module !== 'undefined' && module.exports) return require('./frontmatterContract');
     throw new Error('Frontmatter contract unavailable.');
   }
@@ -159,5 +159,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosGeneratedNoteMetadata = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosGeneratedNoteMetadata = Object.freeze(api);
 })();

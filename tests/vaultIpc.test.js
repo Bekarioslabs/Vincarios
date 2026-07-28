@@ -17,10 +17,52 @@ test('vault IPC sets read and write roots after folder selection', async () => {
   const readService = { setRoot(root) { roots.push(['read', root]); return { ok: true, root }; }, getState() { return {}; }, listFolder() {}, readMarkdown() {} };
   const writeService = { setRoot(root) { roots.push(['write', root]); return { ok: true, root }; }, createNote() {} };
 
-  registerVaultIpc(ipcMain, dialog, null, readService, writeService);
+  registerVaultIpc(ipcMain, dialog, null, readService, writeService, null, null, null, null, null, null, null, null, createRootCoordinator([readService, writeService]));
   await handlers.get(IPC_CHANNELS.VAULT_SELECT_FOLDER)();
 
   assert.deepEqual(roots, [['read', 'D:/Vault'], ['write', 'D:/Vault']]);
+});
+
+test('vault IPC delegates root activation to the main-owned session coordinator', async () => {
+  const handlers = new Map();
+  const calls = [];
+  const ipcMain = { handle(channel, handler) { handlers.set(channel, handler); } };
+  const readService = {
+    getState() { return {}; },
+    listFolder() {},
+    readMarkdown() {},
+    setRoot() {
+      throw new Error('IPC must not activate the read service directly.');
+    }
+  };
+  const sessionCoordinator = {
+    activateRoot(root, context) {
+      calls.push([root, context]);
+      return { ok: true, root, namespaceMigration: { ok: true, mode: 'none' }, warnings: [] };
+    }
+  };
+
+  registerVaultIpc(
+    ipcMain,
+    {},
+    null,
+    readService,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    sessionCoordinator
+  );
+
+  const result = await handlers.get(IPC_CHANNELS.VAULT_SET_ROOT)(null, 'D:/Vault');
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(calls, [['D:/Vault', { source: 'recent' }]]);
 });
 
 test('vault IPC exposes read image assets through a read-specific channel', async () => {
@@ -123,7 +165,7 @@ test('vault IPC also sets embedding root after folder selection and direct root 
   const vaultChangeService = { setRoot(root) { roots.push(['vault-change', root]); return { ok: true, root }; } };
   const vaultSearchService = { setRoot(root) { roots.push(['vault-search', root]); return { ok: true, root }; } };
 
-  registerVaultIpc(ipcMain, dialog, null, readService, writeService, embeddingService, null, embeddingIndexStatusService, vaultChangeService, vaultSearchService);
+  registerVaultIpc(ipcMain, dialog, null, readService, writeService, embeddingService, null, embeddingIndexStatusService, vaultChangeService, vaultSearchService, null, null, null, createRootCoordinator([readService, writeService, embeddingService, embeddingIndexStatusService, vaultChangeService, vaultSearchService]));
   await handlers.get(IPC_CHANNELS.VAULT_SELECT_FOLDER)();
   await handlers.get(IPC_CHANNELS.VAULT_SET_ROOT)(null, 'D:/Vault2');
 
@@ -168,14 +210,14 @@ test('vault IPC lists local profile SVGs through the main-process service', () =
   const readService = { setRoot() {}, getState() { return {}; }, listFolder() {}, readMarkdown() {} };
   const profileService = {
     listLocalIcons() {
-      return { ok: true, icons: [{ kind: 'custom', path: '.vitruvios/icons/compass.svg' }] };
+      return { ok: true, icons: [{ kind: 'custom', path: '.vincarios/icons/compass.svg' }] };
     }
   };
 
   registerVaultIpc(ipcMain, {}, null, readService, null, null, profileService);
   assert.deepEqual(handlers.get(IPC_CHANNELS.VAULT_LIST_PROFILE_ICONS)(), {
     ok: true,
-    icons: [{ kind: 'custom', path: '.vitruvios/icons/compass.svg' }]
+    icons: [{ kind: 'custom', path: '.vincarios/icons/compass.svg' }]
   });
 });
 
@@ -195,7 +237,7 @@ test('vault IPC routes vault-local recent files through the dedicated main servi
     record(payload) { return { ok: true, files: [{ path: payload.path, openedAt: '2026-07-17T12:00:00.000Z' }] }; }
   };
 
-  registerVaultIpc(ipcMain, {}, null, readService, null, null, null, null, null, null, recentFilesService);
+  registerVaultIpc(ipcMain, {}, null, readService, null, null, null, null, null, null, recentFilesService, null, null, createRootCoordinator([readService, recentFilesService]));
   await handlers.get(IPC_CHANNELS.VAULT_SET_ROOT)(null, 'D:/Vault');
 
   assert.deepEqual(calls, [['read-root', 'D:/Vault'], ['recent-root', 'D:/Vault']]);
@@ -224,7 +266,7 @@ test('vault IPC routes persistent review basket snapshots through the dedicated 
     save(payload) { return { ok: true, snapshot: payload }; }
   };
 
-  registerVaultIpc(ipcMain, {}, null, readService, null, null, null, null, null, null, null, null, reviewBasketService);
+  registerVaultIpc(ipcMain, {}, null, readService, null, null, null, null, null, null, null, null, reviewBasketService, createRootCoordinator([readService, reviewBasketService]));
   await handlers.get(IPC_CHANNELS.VAULT_SET_ROOT)(null, 'D:/Vault');
 
   assert.deepEqual(calls, [['read-root', 'D:/Vault'], ['review-root', 'D:/Vault']]);
@@ -234,3 +276,19 @@ test('vault IPC routes persistent review basket snapshots through the dedicated 
     snapshot: { items: [{ id: 'proposal-1' }] }
   });
 });
+function createRootCoordinator(services) {
+  return {
+    activateRoot(root) {
+      for (const service of services) {
+        const result = service.setRoot(root);
+        if (result && result.ok === false) return result;
+      }
+      return {
+        ok: true,
+        root,
+        namespaceMigration: { ok: true, mode: 'none' },
+        warnings: []
+      };
+    }
+  };
+}

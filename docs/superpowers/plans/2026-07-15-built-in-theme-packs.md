@@ -36,7 +36,7 @@
 
 ### Task 3: Documentation and verification
 
-**Files:** `docs/rebuild/VITRUVIOS_V1_ARCHITECTURE.md`, `docs/rebuild/VITRUVIOS_V1_UI_AND_WORKFLOWS.md`, `docs/rebuild/VITRUVIOS_V1_IMPLEMENTATION_PLAN.md`, `README.md` if user-facing theme copy exists.
+**Files:** `docs/rebuild/VINCARIOS_V1_ARCHITECTURE.md`, `docs/rebuild/VINCARIOS_V1_UI_AND_WORKFLOWS.md`, `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`, `README.md` if user-facing theme copy exists.
 
 - [x] Document precedence and the fixed built-in pack boundary.
 - [x] State that JSON imports and the Theme Editor remain a future, validated extension.

@@ -21,7 +21,7 @@ test('Inbox Review reports retain the shared Save as Note review flow', () => {
   const shell = read('src/renderer/shell/mountShell.js');
   const cleanup = read('src/renderer/cleanup/mountInboxCleanup.js');
 
-  assert.match(shell, /mountInboxCleanup\(\{ api, app, status: globalStatus, reviewBasket, onOpenChat:/);
+  assert.match(shell, /mountInboxCleanup\(\{ api, app, status: activityStatus, reviewBasket, onOpenChat:/);
   assert.match(cleanup, /const reviewBasket = options\.reviewBasket \|\| null;/);
   assert.match(cleanup, /appendReportMessage\(chatLog, markdown, \{ reviewBasket, status,/);
 });

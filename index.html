@@ -4,10 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: file:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>vitruvios</title>
+  <title>vincarios</title>
   <link rel="stylesheet" href="./src/renderer/styles/tokens.css">
   <link rel="stylesheet" href="./src/renderer/styles/components.css">
   <link rel="stylesheet" href="./src/renderer/styles/layout.css">
+  <link rel="stylesheet" href="./src/renderer/styles/chat.css">
+  <link rel="stylesheet" href="./src/renderer/styles/selectionActions.css">
+  <link rel="stylesheet" href="./src/renderer/styles/startup.css">
   <link rel="stylesheet" href="./src/renderer/styles/files.css">
   <link rel="stylesheet" href="./src/renderer/styles/markdown.css">
   <link rel="stylesheet" href="./src/renderer/styles/review.css">
@@ -39,11 +42,13 @@
   <script src="./src/renderer/diff/diffLineRenderer.js"></script>
   <script src="./src/renderer/layout/paneResize.js"></script>
   <script src="./src/renderer/layout/panelLayoutState.js"></script>
+  <script src="./src/renderer/path/vaultPath.js"></script>
   <script src="./src/renderer/files/fileNavigator.js"></script>
   <script src="./src/renderer/vaultProfile/vaultProfileState.js"></script>
   <script src="./src/renderer/vaultProfile/vaultProfileDraftState.js"></script>
   <script src="./src/renderer/vaultProfile/visualIconRenderer.js"></script>
   <script src="./src/renderer/files/fileTreeKeyboard.js"></script>
+  <script src="./src/renderer/files/fileTreeRenderer.js"></script>
   <script src="./src/renderer/context/contextIntent.js"></script>
   <script src="./src/renderer/context/contextLimits.js"></script>
   <script src="./src/renderer/context/pendingActionState.js"></script>
@@ -80,6 +85,8 @@
   <script src="./src/renderer/selectionActions/tagCandidateAction.js"></script>
   <script src="./src/renderer/selectionActions/similarNotesPresentation.js"></script>
   <script src="./src/renderer/embeddings/similaritySourceOptions.js"></script>
+  <script src="./src/renderer/selectionActions/similarNotesForm.js"></script>
+  <script src="./src/renderer/selectionActions/updateInstructionForm.js"></script>
   <script src="./src/renderer/selectionActions/mountSelectionActions.js"></script>
   <script src="./src/renderer/selection/scopedSelection.js"></script>
   <script src="./src/renderer/permissions/permissionPathCollector.js"></script>
@@ -93,19 +100,23 @@
   <script src="./src/renderer/markdown/markdownProperties.js"></script>
   <script src="./src/renderer/markdown/markdownRenderer.js"></script>
   <script src="./src/renderer/markdown/markdownLinkResolver.js"></script>
+  <script src="./src/renderer/markdown/previewResourcePolicy.js"></script>
   <script src="./src/renderer/markdown/markdownPreviewController.js"></script>
   <script src="./src/renderer/files/mountFilePanel.js"></script>
   <script src="./src/renderer/providers/mountProviderStatus.js"></script>
   <script src="./src/renderer/ui/modalBehavior.js"></script>
+  <script src="./src/renderer/settings/indexSettingsController.js"></script>
   <script src="./src/renderer/settings/mountSettingsPanel.js"></script>
   <script src="./src/renderer/review/reviewBasketState.js"></script>
   <script src="./src/renderer/review/reviewBasketPersistence.js"></script>
+  <script src="./src/renderer/review/reviewExecutionController.js"></script>
   <script src="./src/renderer/review/mountReviewBasket.js"></script>
   <script src="./src/renderer/templates/mountCreationPresets.js"></script>
   <script src="./src/renderer/chat/modelReadActionRunner.js"></script>
   <script src="./src/renderer/chat/readContextPreflight.js"></script>
   <script src="./src/renderer/chat/selectedUpdateProposalAction.js"></script>
   <script src="./src/renderer/chat/markdownDropController.js"></script>
+  <script src="./src/renderer/providers/externalProviderConsent.js"></script>
   <script src="./src/renderer/chat/mountChat.js"></script>
   <script src="./src/renderer/cleanup/mountInboxCleanup.js"></script>
   <script src="./src/renderer/startup/mountStartupScreen.js"></script>

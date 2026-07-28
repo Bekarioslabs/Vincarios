@@ -1,8 +1,10 @@
 # Changelog
 
-All notable changes to Vitruvios will be documented here.
+All notable changes to Vincarios will be documented here.
 
 This project follows a practical pre-1.0 changelog style while the V1 rebuild is in progress.
+
+The first public build is planned as `v0.1.0-beta.1`: a Windows-only public beta, not a stable release.
 
 ## Unreleased
 
@@ -19,6 +21,8 @@ This project follows a practical pre-1.0 changelog style while the V1 rebuild is
 - Renderer Content Security Policy.
 - Payload-size guards for create/update note content and provider message payloads.
 - GitHub Actions CI for JavaScript syntax checks and Node tests.
+- Reproducible Windows portable packaging smoke job with a pinned, hash-verified local embedding model.
+- Lockfile-derived runtime license inventory and bundled third-party notices.
 
 ### Changed
 
@@ -30,3 +34,5 @@ This project follows a practical pre-1.0 changelog style while the V1 rebuild is
 - Providers cannot read or write vault files directly.
 - Main process validates vault paths and blocks dot-folder access.
 - Existing-file writes require review, backup, and audit logging.
+- Runtime dependencies pass the high-severity audit gate; the one remaining Electron Builder advisory is build-only, explicitly identified, and rejected if its dependency path changes.
+- Package install scripts are denied by default and limited to reviewed native/runtime packaging requirements.

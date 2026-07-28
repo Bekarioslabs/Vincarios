@@ -13,7 +13,7 @@
     'violet-200', 'violet-300', 'violet-400', 'violet-500', 'violet-600',
     'orange-200', 'orange-300', 'orange-400', 'orange-500', 'orange-600'
   ]);
-  const CUSTOM_ICON_PREFIX = '.vitruvios/icons/';
+  const CUSTOM_ICON_PREFIX = '.vincarios/icons/';
 
   const DEFAULT_FOLDER_ROLE_VISUALS = Object.freeze({
     inbox: Object.freeze(createBuiltinVisual('inbox', 'amber-400')),
@@ -149,5 +149,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFolderVisuals = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFolderVisuals = Object.freeze(api);
 })();

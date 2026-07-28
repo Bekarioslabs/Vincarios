@@ -130,7 +130,7 @@
 
   function createMissingScopeMessage(selection, scopeChoice) {
     const path = selection && selection.path ? normalizePath(selection.path) : '';
-    const message = 'No open folder scope choice. Ask vitruvios to check or list a folder first, then choose current level or all subfolders.' + (path ? ' Current selection: ' + path : '');
+    const message = 'No open folder scope choice. Ask vincarios to check or list a folder first, then choose current level or all subfolders.' + (path ? ' Current selection: ' + path : '');
     return {
       handled: true,
       kind: 'message',
@@ -143,7 +143,7 @@
     const message = [
       'Choose folder scope for current selection ' + pendingAction.selectionId + ': ' + pendingAction.targetPath,
       '',
-      'vitruvios can list the current level or include all subfolders. Markdown file contents will not be read.'
+      'vincarios can list the current level or include all subfolders. Markdown file contents will not be read.'
     ].join('\n');
 
     return {
@@ -348,11 +348,13 @@
   }
 
   function normalizePath(value) {
-    return String(value || '')
-      .trim()
-      .replace(/\\/g, '/')
-      .replace(/^\/+|\/+$/g, '')
-      .replace(/\/+/g, '/');
+    return getVaultPathApi().normalizeRelativePath(value);
+  }
+
+  function getVaultPathApi() {
+    if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+    if (typeof require === 'function') return require('../path/vaultPath');
+    throw new Error('Vault path contract unavailable.');
   }
 
   function positiveIntegerOrDefault(value, fallback) {
@@ -373,25 +375,25 @@
 
 
   function getIntentApi() {
-    if (typeof window !== 'undefined' && window.VitruviosContextIntent) return window.VitruviosContextIntent;
+    if (typeof window !== 'undefined' && window.VincariosContextIntent) return window.VincariosContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');
     return null;
   }
 
   function getLimitsApi() {
-    if (typeof window !== 'undefined' && window.VitruviosContextLimits) return window.VitruviosContextLimits;
+    if (typeof window !== 'undefined' && window.VincariosContextLimits) return window.VincariosContextLimits;
     if (typeof module !== 'undefined' && module.exports) return require('./contextLimits');
-    throw new Error('vitruvios context limits API is not available.');
+    throw new Error('vincarios context limits API is not available.');
   }
 
 
   function getBlockedActionStateApi() {
-    if (typeof window !== 'undefined' && window.VitruviosBlockedActionState) return window.VitruviosBlockedActionState;
+    if (typeof window !== 'undefined' && window.VincariosBlockedActionState) return window.VincariosBlockedActionState;
     if (typeof module !== 'undefined' && module.exports) return require('./blockedActionState');
     return null;
   }
   function getPendingActionStateApi() {
-    if (typeof window !== 'undefined' && window.VitruviosPendingActionState) return window.VitruviosPendingActionState;
+    if (typeof window !== 'undefined' && window.VincariosPendingActionState) return window.VincariosPendingActionState;
     if (typeof module !== 'undefined' && module.exports) return require('./pendingActionState');
     return null;
   }
@@ -407,5 +409,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFolderContextController = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFolderContextController = Object.freeze(api);
 })();

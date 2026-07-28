@@ -32,6 +32,7 @@ async function checkProvider(provider, fetchImpl, timeoutMs) {
     label: provider.label,
     baseUrl: provider.baseUrl,
     selectedModel: provider.selectedModel,
+    privacy: provider.privacy,
     healthUrl
   };
 

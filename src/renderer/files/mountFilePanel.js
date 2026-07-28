@@ -15,8 +15,9 @@
     const vaultProfileState = options.vaultProfileState || null;
     const onToggleCollapse = typeof options.onToggleCollapse === 'function' ? options.onToggleCollapse : null;
     const onRequestExpand = typeof options.onRequestExpand === 'function' ? options.onRequestExpand : null;
-    const navigator = options.navigator || window.VitruviosFileNavigator.createFileNavigator();
-    const keyboard = options.keyboard || window.VitruviosFileTreeKeyboard || null;
+    const onRecentFileRecorded = typeof options.onRecentFileRecorded === 'function' ? options.onRecentFileRecorded : null;
+    const navigator = options.navigator || window.VincariosFileNavigator.createFileNavigator();
+    const keyboard = options.keyboard || window.VincariosFileTreeKeyboard || null;
     const entriesByFolder = new Map();
     const loadingFolders = new Set();
     const visibleRows = new Map();
@@ -47,6 +48,13 @@
     const breadcrumb = root.querySelector('#file-breadcrumb');
     const tree = root.querySelector('#file-tree');
     const vaultName = root.querySelector('#file-vault-name');
+    const treeRenderer = getFileTreeRenderer().createFileTreeRenderer({
+      tree, navigator, entriesByFolder, loadingFolders, visibleRows, visibleEntries, keyboard,
+      updateNavigation, normalizePath, formatRowAriaLabel,
+      createEntryIcon: createFileRowIcon,
+      createPermissionControls, applyFlashClass, focusTreeRow, activateEntry,
+      startInlineRename, handlePermissionHotkey, handleTreeKeydown
+    });
 
     attachRefreshIcon();
     setCollapsed(false);
@@ -145,7 +153,7 @@
     }
 
     async function ensureFolderLoaded(folderPath) {
-      const normalized = window.VitruviosFileNavigator.normalizePath(folderPath || '');
+      const normalized = window.VincariosFileNavigator.normalizePath(folderPath || '');
       if (entriesByFolder.has(normalized) || loadingFolders.has(normalized)) return;
       if (!api || !api.vault) {
         setStatus('Vault API unavailable.');
@@ -165,33 +173,7 @@
     }
 
     function renderTree() {
-      const state = navigator.snapshot();
-      updateNavigation(state);
-      tree.innerHTML = '';
-      visibleRows.clear();
-      visibleEntries.clear();
-      tree.className = 'file-tree';
-
-      const rootData = entriesByFolder.get('');
-      if (!rootData) {
-        tree.className = 'file-tree muted';
-        tree.textContent = 'Open a vault to list files.';
-        return;
-      }
-
-      if (!rootData.ok) {
-        tree.className = 'file-tree error';
-        tree.textContent = rootData.message;
-        return;
-      }
-
-      if (!rootData.entries.length) {
-        tree.className = 'file-tree muted';
-        tree.textContent = 'No Markdown files or visible folders here.';
-        return;
-      }
-
-      renderEntries(rootData.entries, 0, tree);
+      treeRenderer.render();
     }
 
     function attachRefreshIcon() {
@@ -239,79 +221,6 @@
       wrapper.appendChild(renderer.createIconElement(entry.kind === 'image' ? 'image' : (isMarkdownPath(entry.path) ? 'markdownFile' : 'file'), 'file-row-type-icon'));
       return wrapper;
     }
-    function renderEntries(entries, depth, parentNode) {
-      entries.forEach((entry) => {
-        const row = document.createElement('div');
-        row.setAttribute('role', 'button');
-        row.setAttribute('aria-label', formatRowAriaLabel(entry));
-        row.tabIndex = 0;
-        row.className = 'file-row file-row-' + entry.kind;
-        row.dataset.path = entry.path;
-        row.style.setProperty('--tree-depth', String(depth));
-        visibleRows.set(normalizePath(entry.path), row);
-        visibleEntries.set(normalizePath(entry.path), entry);
-
-        const icon = createFileRowIcon(entry);
-
-        const label = document.createElement('span');
-        label.className = 'file-row-label';
-        label.textContent = entry.name;
-
-        row.appendChild(createPermissionControls(entry.path));
-        row.appendChild(icon);
-        row.appendChild(label);
-        applyFlashClass(row, entry.path);
-
-
-        const selected = navigator.snapshot().selectedPath === entry.path;
-        if (selected) {
-          row.classList.add('is-selected');
-          row.setAttribute('aria-current', 'true');
-        }
-
-        row.addEventListener('click', async () => {
-          focusTreeRow(row);
-          await activateEntry(entry);
-        });
-        row.addEventListener('keydown', async (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            focusTreeRow(row);
-            await activateEntry(entry);
-            return;
-          }
-          if (keyboard && typeof keyboard.isFileTreeRenameShortcut === 'function' && keyboard.isFileTreeRenameShortcut(event)) {
-            event.preventDefault();
-            startInlineRename(entry, row, label);
-            return;
-          }
-          if (handlePermissionHotkey(event, entry)) return;
-          handleTreeKeydown(event, row, entry);
-        });
-
-        parentNode.appendChild(row);
-
-        if (entry.kind === 'folder' && navigator.isExpanded(entry.path)) {
-          const childData = entriesByFolder.get(entry.path);
-          if (childData && childData.ok) {
-            renderEntries(childData.entries, depth + 1, parentNode);
-          } else if (childData && !childData.ok) {
-            const error = document.createElement('div');
-            error.className = 'file-tree-inline-error';
-            error.style.setProperty('--tree-depth', String(depth + 1));
-            error.textContent = childData.message;
-            parentNode.appendChild(error);
-          } else if (loadingFolders.has(entry.path)) {
-            const loading = document.createElement('div');
-            loading.className = 'file-tree-inline-muted';
-            loading.style.setProperty('--tree-depth', String(depth + 1));
-            loading.textContent = 'Loading...';
-            parentNode.appendChild(loading);
-          }
-        }
-      });
-    }
-
     function handleFileTreeRenameShortcut(event) {
       if (!keyboard || typeof keyboard.isFileTreeRenameShortcut !== 'function' || !keyboard.isFileTreeRenameShortcut(event)) return;
       if (activeRename) return;
@@ -412,7 +321,7 @@
 
     async function refreshRenamedPreview(oldPath, newPath) {
       if (!previewController || typeof previewController.getCurrentPath !== 'function') return;
-      if (window.VitruviosFileNavigator.normalizePath(previewController.getCurrentPath()) !== window.VitruviosFileNavigator.normalizePath(oldPath)) return;
+      if (window.VincariosFileNavigator.normalizePath(previewController.getCurrentPath()) !== window.VincariosFileNavigator.normalizePath(oldPath)) return;
       const read = await api.vault.readMarkdown(newPath);
       if (!read.ok) return;
       setPreviewSource(read.content, read.path, { recordHistory: false });
@@ -503,9 +412,9 @@
     }
 
     async function refreshLoadedMarkdown(path) {
-      const targetPath = window.VitruviosFileNavigator.normalizePath(path || '');
+      const targetPath = window.VincariosFileNavigator.normalizePath(path || '');
       if (!targetPath || !previewController || typeof previewController.getCurrentPath !== 'function') return { ok: false, message: 'No preview file to refresh.' };
-      if (window.VitruviosFileNavigator.normalizePath(previewController.getCurrentPath()) !== targetPath) return { ok: true, skipped: true };
+      if (window.VincariosFileNavigator.normalizePath(previewController.getCurrentPath()) !== targetPath) return { ok: true, skipped: true };
       const read = await api.vault.readMarkdown(targetPath);
       if (!read.ok) return read;
       setPreviewSource(read.content, read.path, { recordHistory: false });
@@ -574,7 +483,7 @@
       focusTreeRow(rows.find((item) => item.dataset.path === path));
     }
     async function openLinkedMarkdown(target, currentPath) {
-      const resolver = window.VitruviosMarkdownLinkResolver;
+      const resolver = window.VincariosMarkdownLinkResolver;
       if (!resolver || !resolver.createMarkdownLinkCandidates) {
         return { ok: false, message: 'Markdown link resolver unavailable.' };
       }
@@ -602,7 +511,7 @@
 
     async function revealPath(path) {
       if (onRequestExpand) onRequestExpand();
-      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
+      const normalizedPath = window.VincariosFileNavigator.normalizePath(path || '');
       if (!normalizedPath) return { ok: false, message: 'No preview file to reveal.' };
 
       const folders = ancestorFolders(normalizedPath);
@@ -624,7 +533,7 @@
     }
 
     async function openMarkdownPreview(path, behavior) {
-      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
+      const normalizedPath = window.VincariosFileNavigator.normalizePath(path || '');
       if (!normalizedPath) return { ok: false, message: 'No Markdown note selected.' };
 
       const read = await api.vault.readMarkdown(normalizedPath);
@@ -650,7 +559,7 @@
     }
     async function revealFolder(path) {
       if (onRequestExpand) onRequestExpand();
-      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
+      const normalizedPath = window.VincariosFileNavigator.normalizePath(path || '');
       const folders = ancestorFolders(normalizedPath + '/placeholder.md');
       for (const folder of folders) {
         navigator.expandFolder(folder);
@@ -664,7 +573,7 @@
     }
 
     function ancestorFolders(path) {
-      const parent = window.VitruviosFileNavigator.parentFolder(path);
+      const parent = window.VincariosFileNavigator.parentFolder(path);
       if (!parent) return [''];
       const parts = parent.split('/').filter(Boolean);
       const folders = [''];
@@ -694,11 +603,11 @@
     }
 
     function getVaultProfileVisualIconRenderer() {
-      return typeof window !== 'undefined' ? window.VitruviosVaultProfileVisualIconRenderer : null;
+      return typeof window !== 'undefined' ? window.VincariosVaultProfileVisualIconRenderer : null;
     }
 
     function resolveFolderVisualIconName(visual) {
-      const registry = typeof window !== 'undefined' ? window.VitruviosIconRegistry : null;
+      const registry = typeof window !== 'undefined' ? window.VincariosIconRegistry : null;
       const helpers = getFolderVisualHelpers();
       if (!visual || !registry || typeof registry.resolveFolderVisualIconName !== 'function') return 'folder';
       const iconId = helpers && typeof helpers.getVisualIconId === 'function' ? helpers.getVisualIconId(visual) : 'folder';
@@ -712,11 +621,19 @@
 
 
     function getFolderVisualHelpers() {
-      return typeof window !== 'undefined' ? window.VitruviosFolderVisuals : null;
+      return typeof window !== 'undefined' ? window.VincariosFolderVisuals : null;
     }
 
     function getIconRenderer() {
-      return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+      return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
+    }
+
+    function getFileTreeRenderer() {
+      if (typeof window !== 'undefined' && window.VincariosFileTreeRenderer) {
+        return window.VincariosFileTreeRenderer;
+      }
+      if (typeof require === 'function') return require('./fileTreeRenderer');
+      return null;
     }
 
     function isMarkdownPath(path) {
@@ -727,11 +644,11 @@
         content: '',
         readAllowed: canUsePathAsContext(path),
         writeAllowed: canUsePathAsUpdateTarget(path),
-        parentReadAllowed: canUsePathAsContext(window.VitruviosFileNavigator.parentFolder(path) || '')
+        parentReadAllowed: canUsePathAsContext(window.VincariosFileNavigator.parentFolder(path) || '')
       };
     }
     function createContextDetails(path, content) {
-      const parentFolder = window.VitruviosFileNavigator.parentFolder(path);
+      const parentFolder = window.VincariosFileNavigator.parentFolder(path);
       return {
         content,
         readAllowed: canUsePathAsContext(path),
@@ -762,7 +679,7 @@
     }
 
     function permissionCandidates(path) {
-      const normalized = window.VitruviosFileNavigator.normalizePath(path || '');
+      const normalized = window.VincariosFileNavigator.normalizePath(path || '');
       if (!normalized) return [''];
       const parts = normalized.split('/').filter(Boolean);
       const candidates = [normalized];
@@ -848,20 +765,20 @@
     }
 
     async function recursiveDescendantPaths(path) {
-      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
-      const collector = window.VitruviosPermissionPathCollector;
+      const normalizedPath = window.VincariosFileNavigator.normalizePath(path || '');
+      const collector = window.VincariosPermissionPathCollector;
       if (!collector || !collector.collectRecursivePermissionPaths) return knownVisibleDescendantPaths(normalizedPath);
 
       return collector.collectRecursivePermissionPaths(normalizedPath, async (folderPath) => {
         await ensureFolderLoaded(folderPath);
-        const folderData = entriesByFolder.get(window.VitruviosFileNavigator.normalizePath(folderPath || ''));
+        const folderData = entriesByFolder.get(window.VincariosFileNavigator.normalizePath(folderPath || ''));
         if (!folderData || !folderData.ok) return { ok: false, entries: [] };
         return { ok: true, entries: folderData.entries || [] };
       });
     }
 
     function knownVisibleDescendantPaths(path) {
-      const normalizedPath = window.VitruviosFileNavigator.normalizePath(path || '');
+      const normalizedPath = window.VincariosFileNavigator.normalizePath(path || '');
       const paths = new Set([normalizedPath]);
       collectVisibleDescendants(normalizedPath, paths);
       return Array.from(paths);
@@ -922,7 +839,7 @@
     }
 
     function normalizePath(value) {
-      return window.VitruviosFileNavigator.normalizePath(value || '');
+      return window.VincariosFileNavigator.normalizePath(value || '');
     }
 
     async function requestPreviewNavigation(path) {
@@ -945,9 +862,15 @@
       setPreviewMessage('Image file selected. Image preview unavailable.');
     }
 
-    function recordRecentMarkdown(path) {
-      if (!api || !api.vault || typeof api.vault.recordRecentFile !== 'function') return Promise.resolve(null);
-      return Promise.resolve(api.vault.recordRecentFile({ path })).catch(() => null);
+    async function recordRecentMarkdown(path) {
+      if (!api || !api.vault || typeof api.vault.recordRecentFile !== 'function') return null;
+      try {
+        const result = await Promise.resolve(api.vault.recordRecentFile({ path }));
+        if (result && result.ok !== false && onRecentFileRecorded) await Promise.resolve(onRecentFileRecorded(path, result));
+        return result;
+      } catch (_error) {
+        return null;
+      }
     }
 
     function setStatus(value, activity) {
@@ -983,5 +906,5 @@
   const api = { mountFilePanel };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFilePanel = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFilePanel = Object.freeze(api);
 })();

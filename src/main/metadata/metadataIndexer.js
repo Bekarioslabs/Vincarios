@@ -2,6 +2,7 @@
 
 const crypto = require('node:crypto');
 const { createVaultMarkdownSource } = require('../vault/vaultMarkdownSource');
+const { yieldToEventLoop } = require('../indexing/asyncVaultMarkdownScanner');
 const { createMetadataIndexStore } = require('./metadataIndexStore');
 const { createMetadataRecordFromSource, shouldReindexMetadata } = require('../../shared/metadata/metadataIndexSchema');
 
@@ -17,8 +18,11 @@ function createMetadataIndexer(options) {
     return storeResult.ok ? ok({ root: storeResult.root || sourceResult.root }) : storeResult;
   }
 
-  function rebuildIndex() {
-    const listed = source.listMarkdownDocuments();
+  async function rebuildIndex(rebuildOptions) {
+    rebuildOptions = rebuildOptions || {};
+    const listed = typeof source.listMarkdownDocumentsAsync === 'function'
+      ? await source.listMarkdownDocumentsAsync(rebuildOptions)
+      : source.listMarkdownDocuments();
     if (!listed.ok) return listed;
     const existing = indexStore.load();
     const previousDocuments = existing.ok && existing.exists ? existing.documents : {};
@@ -27,7 +31,14 @@ function createMetadataIndexer(options) {
     let reusedCount = 0;
     let malformedCount = 0;
 
+    let processedDocuments = 0;
     for (const document of listed.documents) {
+      if (rebuildOptions.signal && rebuildOptions.signal.aborted) return fail('index_canceled', 'Index refresh was canceled.');
+      if (processedDocuments > 0 && processedDocuments % 100 === 0) {
+        if (typeof rebuildOptions.onProgress === 'function') rebuildOptions.onProgress({ processed: processedDocuments, total: listed.documents.length });
+        await yieldToEventLoop();
+      }
+      processedDocuments += 1;
       const hash = createContentHash(document.content);
       const previous = previousDocuments[document.path];
       if (!shouldReindexMetadata(previous, { hash, mtimeMs: document.mtimeMs })) {

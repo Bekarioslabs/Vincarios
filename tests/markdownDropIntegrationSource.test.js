@@ -19,7 +19,7 @@ test('index loads markdown drop controller before chat and shell', () => {
 test('bootstrap requires markdown drop controller for startup validation', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'bootstrap.js'), 'utf8');
 
-  assert.match(source, /VitruviosMarkdownDropController/);
+  assert.match(source, /VincariosMarkdownDropController/);
   assert.match(source, /mountMarkdownDropController/);
 });
 
@@ -27,7 +27,7 @@ test('chat mounts markdown drop controller with context and review basket', () =
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'chat', 'mountChat.js'), 'utf8');
 
   assert.match(source, /mountOptionalMarkdownDropController/);
-  assert.match(source, /window\.VitruviosMarkdownDropController/);
+  assert.match(source, /window\.VincariosMarkdownDropController/);
   assert.match(source, /contextState/);
   assert.match(source, /reviewBasket/);
 });

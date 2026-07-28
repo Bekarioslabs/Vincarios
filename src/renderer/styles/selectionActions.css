@@ -1,0 +1,436 @@
+/* Selection Actions panel, forms, and inline results. */
+
+.selection-actions-pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--surface-app);
+}
+
+.selection-actions-content {
+  min-height: 0;
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  overflow: auto;
+}
+
+.selection-actions-header {
+  flex: 0 0 auto;
+  justify-content: space-between;
+  padding: 0 var(--space-3);
+}
+
+.selection-actions-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selection-actions-toggle-icon-svg {
+  width: var(--icon-size-tool);
+  height: var(--icon-size-tool);
+  filter: var(--icon-muted-filter, none);
+}
+
+.selection-actions-empty {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.selection-action-row {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.selection-action-button:disabled {
+  opacity: .48;
+  cursor: default;
+}
+
+.selection-action-button.is-soft-disabled,
+.selection-action-button.is-layout-locked {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-muted);
+  box-shadow: none;
+  opacity: .72;
+  cursor: help;
+}
+
+.selection-action-button.is-soft-disabled:hover,
+.selection-action-button.is-layout-locked:hover {
+  background: var(--surface-hover);
+  color: var(--text-ui-emphasis);
+  opacity: .9;
+}
+
+.selection-action-icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  margin-left: 0;
+  filter: var(--icon-muted-filter, none);
+}
+
+.selection-action-category-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--background-modifier-border);
+}
+
+.selection-action-button.is-soft-disabled .selection-action-category-dot,
+.selection-action-button.is-layout-locked .selection-action-category-dot { background: var(--background-modifier-border); }
+
+.selection-action-button:not(.is-soft-disabled):not(.is-layout-locked)[data-action-category="context"] .selection-action-category-dot { background: var(--action-context); }
+.selection-action-button:not(.is-soft-disabled):not(.is-layout-locked)[data-action-category="read"] .selection-action-category-dot { background: var(--action-read); }
+.selection-action-button:not(.is-soft-disabled):not(.is-layout-locked)[data-action-category="write"] .selection-action-category-dot { background: var(--action-write); }
+.selection-action-button:not(.is-soft-disabled):not(.is-layout-locked)[data-action-category="organize"] .selection-action-category-dot { background: var(--action-organize); }
+
+.selection-action-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selection-action-execution-icon,
+.selection-action-lock-icon {
+  width: var(--icon-size-tool);
+  height: var(--icon-size-tool);
+  flex: 0 0 auto;
+}
+
+.selection-action-execution-icon {
+  margin-left: auto;
+}
+
+.selection-action-label + .selection-action-lock-icon {
+  margin-left: auto;
+}
+
+.selection-action-execution-icon.is-provider {
+  filter: var(--icon-accent-filter, none);
+}
+
+.selection-action-execution-icon.is-embedding,
+.selection-action-lock-icon {
+  filter: var(--icon-muted-filter, none);
+}
+
+.selection-action-lock-icon {
+  margin-right: 0;
+  opacity: .8;
+}
+
+.selection-action-button.is-soft-disabled:hover .selection-action-lock-icon {
+  opacity: .95;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-actions-pane {
+  min-width: 0;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+  padding: 0 6px;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-actions-header {
+  width: 100%;
+  justify-content: center;
+  padding: 0;
+  border-bottom: 0;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-actions-collapse-toggle {
+  width: var(--control-size-tool);
+  height: var(--control-size-tool);
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-actions-content {
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-action-row {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-actions-title,
+.vault-panel.is-selection-actions-collapsed .selection-actions-empty,
+.vault-panel.is-selection-actions-collapsed .selection-action-label {
+  display: none;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-action-row {
+  width: 100%;
+  justify-items: center;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-action-button {
+  position: relative;
+  width: 34px;
+  min-height: 34px;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-action-icon {
+  margin-left: 0;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-action-category-dot {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-action-execution-icon {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  width: 10px;
+  height: 10px;
+  margin: 0;
+}
+
+.vault-panel.is-selection-actions-collapsed .selection-action-lock-icon {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 10px;
+  height: 10px;
+  margin: 0;
+}
+.selection-action-form {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-lg);
+  background: var(--background-secondary);
+}
+
+.selection-action-form-label {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: var(--font-weight-ui-strong);
+  letter-spacing: .08em;
+  text-transform: none;
+}
+
+.selection-action-form textarea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-control);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 8px;
+  outline: none;
+}
+
+.selection-action-form textarea:focus {
+  border-color: rgba(var(--interactive-accent-rgb), .55);
+}
+
+
+.selection-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.selection-action-grid label {
+  display: grid;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.selection-action-grid .selection-action-range,
+.selection-action-grid .selection-action-check {
+  grid-column: 1 / -1;
+}
+
+.selection-action-grid .selection-action-range strong {
+  color: var(--text-accent);
+  font-weight: var(--font-weight-ui-semibold);
+}
+
+.selection-action-grid .selection-action-check {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.selection-action-grid .selection-action-check input {
+  width: 14px;
+  height: 14px;
+}
+
+.selection-action-grid input,
+.selection-action-grid select {
+  min-width: 0;
+  height: 28px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-control);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 0 8px;
+  outline: none;
+}
+
+.selection-action-grid input:focus,
+.selection-action-grid select:focus {
+  border-color: rgba(var(--interactive-accent-rgb), .55);
+}
+
+.selection-action-form input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.selection-action-form input[type="number"]::-webkit-outer-spin-button,
+.selection-action-form input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.selection-action-form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.selection-action-form-actions button {
+  min-height: var(--control-size-tool);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-control);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: var(--font-weight-ui-semibold);
+}
+
+.selection-action-results {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-lg);
+  background: var(--background-secondary);
+}
+
+.selection-action-results-title {
+  color: var(--text-normal);
+  font-size: 12px;
+  font-weight: var(--font-weight-ui-strong);
+}
+
+.selection-action-results-meta,
+.selection-action-results-empty,
+.selection-action-results-warning {
+  color: var(--text-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.selection-action-results-warning {
+  color: var(--text-accent);
+}
+
+.selection-action-result-item {
+  display: grid;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-control);
+  background: var(--background-primary);
+}
+
+.selection-action-score {
+  justify-self: start;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-pill);
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: var(--font-weight-ui-semibold);
+  color: var(--text-muted);
+}
+
+.selection-action-score.is-strong {
+  border-color: rgba(var(--score-strong-rgb), .35);
+  color: var(--status-success);
+}
+
+.selection-action-score.is-medium {
+  border-color: rgba(var(--interactive-accent-rgb), .4);
+  color: var(--text-accent);
+}
+
+.selection-action-score.is-weak {
+  border-color: rgba(var(--interactive-accent-rgb), .22);
+  color: var(--text-muted);
+}
+
+.selection-action-score.is-noisy {
+  border-color: rgba(var(--score-noisy-rgb), .25);
+  color: var(--text-muted);
+}
+
+.selection-action-result-path {
+  overflow-wrap: anywhere;
+  color: var(--text-normal);
+  font-family: var(--font-monospace);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.selection-action-result-details {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.selection-action-form-actions button[type="submit"] {
+  border-color: rgba(var(--interactive-accent-rgb), .55);
+  background: rgba(var(--interactive-accent-rgb), .14);
+  color: var(--text-accent);
+}
+.selection-action-grid .selection-action-source {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.selection-action-source legend {
+  width: 100%;
+  margin-bottom: 2px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.selection-action-grid .selection-action-source label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-normal);
+}
+
+.selection-action-source input { accent-color: var(--interactive-accent); }

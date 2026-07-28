@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { createVaultContext } = require('../vault/vaultContext');
+const { createIndexSnapshotCache } = require('../indexing/indexSnapshotCache');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 const { FULL_TEXT_INDEX_STORAGE, FULL_TEXT_INDEX_VERSION, createEmptyFullTextIndex } = require('../../shared/search/fullTextIndexSchema');
 
@@ -14,6 +15,7 @@ const TERMS_FILE = 'terms.json';
 function createFullTextIndexStore(options) {
   options = options || {};
   const fileSystem = options.fs || fs;
+  const snapshotCache = options.snapshotCache || createIndexSnapshotCache({ fs: fileSystem });
   let vault = null;
 
   function setRoot(vaultRoot) {
@@ -24,6 +26,7 @@ function createFullTextIndexStore(options) {
     } catch (error) {
       return fail('vault_not_found', 'Vault root does not exist.');
     }
+    snapshotCache.invalidate();
     vault = createVaultContext(root);
     return ok({ root: vault.root });
   }
@@ -58,6 +61,7 @@ function createFullTextIndexStore(options) {
     try {
       fileSystem.mkdirSync(location.folderPath, { recursive: true });
       fileSystem.writeFileSync(location.settingsPath, JSON.stringify({ enabled: enabled === true }, null, 2) + '\n', 'utf8');
+      snapshotCache.invalidate(snapshotKey());
       return ok({ enabled: enabled === true });
     } catch (error) {
       return fail('full_text_settings_write_failed', 'Full-text search settings could not be saved.');
@@ -69,6 +73,10 @@ function createFullTextIndexStore(options) {
     if (!location.ok) return location;
     const preference = getPreference();
     if (!preference.ok) return preference;
+    return snapshotCache.read(snapshotKey(), [location.manifestPath, location.termsPath], () => loadLocation(location, preference));
+  }
+
+  function loadLocation(location, preference) {
     const manifestExists = fileSystem.existsSync(location.manifestPath);
     const termsExists = fileSystem.existsSync(location.termsPath);
     if (!manifestExists && !termsExists) return ok({ exists: false, enabled: preference.enabled, index: createEmptyFullTextIndex() });
@@ -109,6 +117,12 @@ function createFullTextIndexStore(options) {
         documents: normalized.documents
       }, null, 2) + '\n', 'utf8');
       fileSystem.writeFileSync(location.termsPath, JSON.stringify({ terms: normalized.terms }, null, 2) + '\n', 'utf8');
+      const preference = getPreference();
+      snapshotCache.store(snapshotKey(), [location.manifestPath, location.termsPath], ok({
+        exists: true,
+        enabled: preference.ok && preference.enabled === true,
+        index: Object.assign({}, normalized, { enabled: preference.ok && preference.enabled === true })
+      }));
       return ok({ index: normalized, location });
     } catch (error) {
       restoreFile(location.manifestPath, previousManifest);
@@ -124,10 +138,15 @@ function createFullTextIndexStore(options) {
       [location.manifestPath, location.termsPath].forEach((filePath) => {
         if (fileSystem.existsSync(filePath)) fileSystem.unlinkSync(filePath);
       });
+      snapshotCache.invalidate(snapshotKey());
       return ok({ deleted: true });
     } catch (error) {
       return fail('full_text_index_delete_failed', 'Full-text index could not be deleted.');
     }
+  }
+
+  function snapshotKey() {
+    return vault ? vault.root + ':full-text' : 'no-vault:full-text';
   }
 
   function captureFile(filePath) {

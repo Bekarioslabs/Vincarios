@@ -4,8 +4,8 @@
   --folder-visual-opacity: .9;
 }
 
-.folder-visual-color .vitruvios-icon,
-.file-row-icon.has-folder-visual .vitruvios-icon {
+.folder-visual-color .vincarios-icon,
+.file-row-icon.has-folder-visual .vincarios-icon {
   filter: var(--folder-visual-filter);
   opacity: var(--folder-visual-opacity);
 }

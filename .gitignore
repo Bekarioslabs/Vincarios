@@ -5,12 +5,15 @@ node_modules/
 *.log
 npm-debug.log*
 .vitruvios/
+.vincarios/
 .superpowers/
 
 # private vault/runtime data
 vitruvios/
+vincarios/
 demo-vault/.obsidian/
 demo-vault/.vitruvios/
+demo-vault/.vincarios/
 
 # OS/editor noise
 .DS_Store
@@ -28,6 +31,7 @@ build/
 out/
 release/
 release-candidate/
+portable-smoke/
 
 # local development vault
 dev-vault/

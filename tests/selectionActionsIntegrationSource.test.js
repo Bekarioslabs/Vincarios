@@ -27,22 +27,22 @@ test('index loads selection action modules before shell', () => {
 test('bootstrap requires selection action renderer modules', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'bootstrap.js'), 'utf8');
 
-  assert.match(source, /VitruviosSelectionActionCategories/);
-  assert.match(source, /VitruviosSelectionActionPermissionText/);
-  assert.match(source, /VitruviosSelectionActionRegistry/);
-  assert.match(source, /VitruviosSelectionActions/);
-  assert.match(source, /VitruviosFileSummaryAction/);
-  assert.match(source, /VitruviosFolderScopeOptions/);
-  assert.match(source, /VitruviosSummaryResponsePresentation/);
-  assert.match(source, /VitruviosFolderScopeForm/);
-  assert.match(source, /VitruviosFolderMarkdownScopeReader/);
-  assert.match(source, /VitruviosFolderContextSnapshotAction/);
+  assert.match(source, /VincariosSelectionActionCategories/);
+  assert.match(source, /VincariosSelectionActionPermissionText/);
+  assert.match(source, /VincariosSelectionActionRegistry/);
+  assert.match(source, /VincariosSelectionActions/);
+  assert.match(source, /VincariosFileSummaryAction/);
+  assert.match(source, /VincariosFolderScopeOptions/);
+  assert.match(source, /VincariosSummaryResponsePresentation/);
+  assert.match(source, /VincariosFolderScopeForm/);
+  assert.match(source, /VincariosFolderMarkdownScopeReader/);
+  assert.match(source, /VincariosFolderContextSnapshotAction/);
 });
 
 test('shell mounts selection action panel with context state', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /VitruviosSelectionActions\.mountSelectionActions/);
+  assert.match(source, /VincariosSelectionActions\.mountSelectionActions/);
   assert.match(source, /contextState/);
   assert.match(source, /reviewBasket/);
   assert.match(source, /suggestionState/);
@@ -104,7 +104,7 @@ test('summarize file uses the dedicated summary action module and provider API',
   assert.match(source, /summarizeFile/);
   assert.match(source, /buildFileSummaryMessages/);
   assert.match(source, /api\.chat\.send/);
-  assert.match(source, /VitruviosChat\.appendMessage/);
+  assert.match(source, /VincariosChat\.appendMessage/);
 });
 
 test('provider-backed selection actions use removable pending action messages', () => {
@@ -168,15 +168,17 @@ test('propose update uses the selected update proposal builder from selection ac
   assert.match(source, /reviewBasket\.addProposal\(proposal\.proposal\)/);
 });
 test('propose update uses an inline instruction form instead of browser prompt', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const mountSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const formSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'updateInstructionForm.js'), 'utf8');
 
-  assert.match(source, /renderUpdateInstructionForm\(snapshot, host\)/);
-  assert.match(source, /selection-action-form/);
-  assert.match(source, /textarea/);
-  assert.match(source, /Create proposal/);
-  assert.match(source, /Content update instruction/);
-  assert.match(source, /Rename\/move are not part of this action/);
-  assert.doesNotMatch(source, /window\.prompt/);
+  assert.match(mountSource, /renderUpdateInstructionForm\(snapshot, host\)/);
+  assert.match(mountSource, /mountUpdateInstructionForm/);
+  assert.match(formSource, /selection-action-form/);
+  assert.match(formSource, /textarea/);
+  assert.match(formSource, /Create proposal/);
+  assert.match(formSource, /Content update instruction/);
+  assert.match(formSource, /Rename\/move are not part of this action/);
+  assert.doesNotMatch(formSource, /window\.prompt/);
 });
 
 test('propose update reports provider parser and review basket diagnostics', () => {
@@ -217,7 +219,7 @@ test('propose update routes missing W through permission guidance without retry 
 
 test('propose update soft-disabled state is visual only', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'selectionActions.css'), 'utf8');
 
   assert.match(source, /action\.softDisabled/);
   assert.match(source, /is-soft-disabled/);
@@ -252,25 +254,26 @@ test('find similar notes action routes details to suggestions workspace', () => 
 
 
 test('find similar notes opens a settings-backed mini form', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const mountSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const formSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'similarNotesForm.js'), 'utf8');
 
-  assert.match(source, /renderSimilarNotesForm\(snapshot, host\)/);
-  assert.match(source, /let similarNotesSessionOptions = null/);
-  assert.match(source, /getSimilaritySourceOptions/);
-  assert.match(source, /loadSimilarNotesDefaults/);
-  assert.match(source, /api.settings.get/);
-  assert.match(source, /data-similar-source/);
-  assert.match(source, /data-similar-min/);
-  assert.doesNotMatch(source, /data-similar-content-weight/);
-  assert.match(source, /data-similar-refresh-index/);
-  assert.match(source, /data-similar-scope/);
-  assert.match(source, /Relevant area/);
-  assert.match(source, /scope: selectedScope && selectedScope.value/);
-  assert.match(source, /createActionRow/);
-  assert.match(source, /selection-action-row/);
-  assert.match(source, /appendActionForm\(host, form\)/);
-  assert.match(source, /addSimilarNotesSuggestionGroup/);
-  assert.doesNotMatch(source, /reviewBasket.addProposal[sS]{0,500}file.findSimilar/);
+  assert.match(mountSource, /renderSimilarNotesForm\(snapshot, host\)/);
+  assert.match(mountSource, /let similarNotesSessionOptions = null/);
+  assert.match(mountSource, /getSimilaritySourceOptions/);
+  assert.match(mountSource, /loadSimilarNotesDefaults/);
+  assert.match(mountSource, /api.settings.get/);
+  assert.match(formSource, /data-similar-source/);
+  assert.match(formSource, /data-similar-min/);
+  assert.doesNotMatch(formSource, /data-similar-content-weight/);
+  assert.match(formSource, /data-similar-refresh-index/);
+  assert.match(formSource, /data-similar-scope/);
+  assert.match(formSource, /Relevant area/);
+  assert.match(formSource, /normalizeSimilarNotesFormOptions/);
+  assert.match(mountSource, /createActionRow/);
+  assert.match(mountSource, /selection-action-row/);
+  assert.match(formSource, /host\.appendChild\(form\)/);
+  assert.match(mountSource, /addSimilarNotesSuggestionGroup/);
+  assert.doesNotMatch(mountSource, /reviewBasket.addProposal[sS]{0,500}file.findSimilar/);
 });
 
 test('similar note suggestions carry numeric scores for workspace presentation', () => {
@@ -284,9 +287,9 @@ test('similar note suggestions carry numeric scores for workspace presentation',
 test('files collapse locks selection actions without clearing the selected target', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'selectionActions.css'), 'utf8');
 
-  assert.match(shell, /vitruvios:files-collapse-change/);
+  assert.match(shell, /vincarios:files-collapse-change/);
   assert.match(shell, /isTargetAvailable:\s*\(\) => filesPanelLayout\.isCollapsed\(\) !== true/);
   assert.match(source, /files-collapse-change/);
   assert.match(source, /createLayoutLockedAction/);
@@ -317,19 +320,18 @@ test('folder context uses the shared scope form and bounded snapshot action', ()
 });
 
 test('Similar Notes uses one explicit source mode instead of a content metadata weight slider', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const formSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'similarNotesForm.js'), 'utf8');
 
-  assert.match(source, /data-similar-source/);
-  assert.match(source, /Content/);
-  assert.match(source, /Metadata/);
-  assert.match(source, /Both/);
-  assert.doesNotMatch(source, /data-similar-content-weight/);
-  assert.doesNotMatch(source, /wireSimilarWeightSlider/);
+  assert.match(formSource, /data-similar-source/);
+  assert.match(formSource, /Content/);
+  assert.match(formSource, /Metadata/);
+  assert.match(formSource, /Both/);
+  assert.doesNotMatch(formSource, /data-similar-content-weight/);
+  assert.doesNotMatch(formSource, /wireSimilarWeightSlider/);
 });
-
 
 test('Similar Notes resets session-only choices when Embedding defaults are saved', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
-  assert.match(source, /vitruvios:embedding-similar-defaults-change/);
+  assert.match(source, /vincarios:embedding-similar-defaults-change/);
   assert.match(source, /similarNotesSessionOptions = null/);
 });

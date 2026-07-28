@@ -40,5 +40,5 @@
 
   const api = { DEFAULT_FOLDER_ACTION_DEFAULTS, normalizeFolderScopeOptions, normalizeActionDefaults, getFolderActionDefault };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosActionDefaults = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosActionDefaults = Object.freeze(api);
 })();

@@ -36,5 +36,5 @@
 
   const api = { createReviewBasketPersistence };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosReviewBasketPersistence = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosReviewBasketPersistence = Object.freeze(api);
 })();

@@ -15,7 +15,7 @@ test('settings expose MiniLM as the V1 bundled embedding default', () => {
   assert.equal(settings.embeddings.bundledModelId, DEFAULT_EMBEDDINGS.defaultModelId);
   assert.equal(settings.embeddings.artifactRepoId, 'Xenova/paraphrase-multilingual-MiniLM-L12-v2');
   assert.equal(settings.embeddings.dimensions, 384);
-  assert.equal(settings.embeddings.indexLocation, 'vault-vitruvios');
+  assert.equal(settings.embeddings.indexLocation, 'vault-vincarios');
 });
 
 test('settings normalize custom local embedding model path without changing provider settings', () => {

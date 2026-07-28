@@ -127,10 +127,10 @@ function createVaultProfileService(options) {
     if (!fileSystem.existsSync(profilePath)) return ok({ value: createEmptyProfile() });
     try {
       const parsed = JSON.parse(fileSystem.readFileSync(profilePath, 'utf8'));
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return fail('invalid_profile', 'vitruvios Vault Profile is invalid.');
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return fail('invalid_profile', 'vincarios Vault Profile is invalid.');
       return ok({ value: normalizeProfile(parsed) });
     } catch (error) {
-      return fail('invalid_profile', 'vitruvios Vault Profile could not be read.');
+      return fail('invalid_profile', 'vincarios Vault Profile could not be read.');
     }
   }
 

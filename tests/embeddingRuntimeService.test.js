@@ -24,7 +24,7 @@ test('embedding runtime refuses to load when bundled artifacts are unavailable',
 
 test('embedding runtime loads local model with remote models disabled', async () => {
   const calls = [];
-  const modelPath = path.join('D:', 'Vitruvios_AGENT', '.vitruvios', 'models', 'embeddings', 'model');
+  const modelPath = path.join('D:', 'Vincarios_AGENT', '.vincarios', 'models', 'embeddings', 'model');
   const service = createEmbeddingRuntimeService({
     modelStore: createAvailableModelStore(modelPath),
     loadTransformers: async () => {
@@ -93,4 +93,27 @@ function createAvailableModelStore(folderPath) {
 function shouldNotLoad() {
   throw new Error('transformers loader should not be called');
 }
+test('embedding runtime refuses to load a model that fails integrity verification', async () => {
+  const service = createEmbeddingRuntimeService({
+    modelStore: {
+      checkBundledModelAvailability() {
+        return { available: true, folderPath: 'tampered-model', modelId: 'test-model' };
+      },
+      async verifyBundledModelIntegrity() {
+        return {
+          available: false,
+          integrityValid: false,
+          code: 'embedding_model_integrity_mismatch',
+          message: 'Local embedding model integrity verification failed.',
+          artifact: 'model.bin',
+        };
+      },
+    },
+    loadTransformers: shouldNotLoad,
+  });
 
+  const result = await service.embedText('hello');
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'embedding_model_integrity_mismatch');
+  assert.equal(result.artifact, 'model.bin');
+});

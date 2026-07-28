@@ -3,6 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { buildFolderContextSnapshot } = require('../src/renderer/selectionActions/folderContextSnapshotAction');
+const { listFolderTree } = require('../src/renderer/context/folderContextController');
 
 test('folder context snapshot reads only Markdown files from the current folder', async () => {
   const reads = [];
@@ -68,4 +69,43 @@ test('folder context snapshot returns a clear empty result when no Markdown note
   });
 
   assert.deepEqual(result, { ok: false, code: 'no_markdown_files', message: 'No Markdown notes found in the selected folder scope.' });
+});
+test('folder context snapshot forwards recursive scope options to the shared reader', async () => {
+  const entriesByFolder = {
+    '00_Inbox/Scope': [
+      { kind: 'markdown', path: '00_Inbox/Scope/Direct.md' },
+      { kind: 'folder', path: '00_Inbox/Scope/Nested' }
+    ],
+    '00_Inbox/Scope/Nested': [
+      { kind: 'markdown', path: '00_Inbox/Scope/Nested/Deep.md' }
+    ]
+  };
+  const contentByPath = {
+    '00_Inbox/Scope/Direct.md': 'amber maple station',
+    '00_Inbox/Scope/Nested/Deep.md': 'copper forest station'
+  };
+  const vaultApi = {
+    async listFolder(path) {
+      return { ok: true, entries: entriesByFolder[path] || [] };
+    },
+    async readMarkdown(path) {
+      return { ok: true, path, content: contentByPath[path] };
+    }
+  };
+
+  const result = await buildFolderContextSnapshot({
+    vaultApi,
+    folderController: { listFolderTree },
+    path: '00_Inbox/Scope',
+    scopeOptions: { scope: 'subfolders', maxDepth: 3, maxFiles: 10 },
+    limits: { maxSelectedFileChars: 1000, maxListedFolders: 10, maxListedFiles: 10 }
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.item.files.map((file) => file.path), [
+    '00_Inbox/Scope/Direct.md',
+    '00_Inbox/Scope/Nested/Deep.md'
+  ]);
+  assert.equal(result.item.files[1].content, 'copper forest station');
+  assert.equal(result.item.scope.scope, 'subfolders');
 });

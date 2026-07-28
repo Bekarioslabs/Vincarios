@@ -138,5 +138,5 @@
   const api = { createPermissionState, normalizePermissionPath };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosPermissionState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosPermissionState = Object.freeze(api);
 })();

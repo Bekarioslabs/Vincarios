@@ -65,7 +65,7 @@
   }
 
   function getPermissionText() {
-    if (typeof window !== 'undefined' && window.VitruviosSelectionActionPermissionText) return window.VitruviosSelectionActionPermissionText;
+    if (typeof window !== 'undefined' && window.VincariosSelectionActionPermissionText) return window.VincariosSelectionActionPermissionText;
     if (typeof require === 'function') return require('./permissionText');
     return {
       fileReadReason: () => 'Requires R and loaded Markdown content.',
@@ -78,5 +78,5 @@
   const api = { getSelectionActions, getTargetKind };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosSelectionActionRegistry = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosSelectionActionRegistry = Object.freeze(api);
 })();

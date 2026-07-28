@@ -57,7 +57,13 @@
   }
 
   function normalizePath(value) {
-    return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
+    return getVaultPathApi().normalizeRelativePath(value);
+  }
+
+  function getVaultPathApi() {
+    if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+    if (typeof require === 'function') return require('../path/vaultPath');
+    throw new Error('Vault path contract unavailable.');
   }
 
   function failure(code, message) {
@@ -65,18 +71,18 @@
   }
 
   function getScopeOptions() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderScopeOptions) return window.VitruviosFolderScopeOptions;
+    if (typeof window !== 'undefined' && window.VincariosFolderScopeOptions) return window.VincariosFolderScopeOptions;
     if (typeof module !== 'undefined' && module.exports) return require('./folderScopeOptions');
-    throw new Error('vitruvios folder scope options API is not available.');
+    throw new Error('vincarios folder scope options API is not available.');
   }
 
   function getFolderController() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderContextController) return window.VitruviosFolderContextController;
+    if (typeof window !== 'undefined' && window.VincariosFolderContextController) return window.VincariosFolderContextController;
     if (typeof module !== 'undefined' && module.exports) return require('../context/folderContextController');
     return null;
   }
 
   const api = { listScopedMarkdownFiles };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFolderMarkdownScopeReader = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFolderMarkdownScopeReader = Object.freeze(api);
 })();

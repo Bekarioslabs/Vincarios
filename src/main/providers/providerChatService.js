@@ -27,6 +27,10 @@ function createProviderChatService(options) {
     const signal = requestOptions.signal;
     const messages = normalizeMessages(payload && payload.messages);
 
+    if (requiresExternalContextApproval(provider, payload)) {
+      return createErrorResult(provider, 'External provider approval is required before sending vault context.', 'external_context_approval_required');
+    }
+
     if (signal && signal.aborted) {
       return createCanceledResult(provider);
     }
@@ -131,12 +135,14 @@ function createCanceledResult(provider) {
   };
 }
 
-function createErrorResult(provider, error) {
-  return {
+function createErrorResult(provider, error, code) {
+  const result = {
     ok: false,
     provider: publicProvider(provider),
     error
   };
+  if (code) result.code = code;
+  return result;
 }
 
 function publicProvider(provider) {
@@ -144,8 +150,27 @@ function publicProvider(provider) {
     id: provider.id,
     label: provider.label,
     baseUrl: provider.baseUrl,
-    selectedModel: provider.selectedModel
+    selectedModel: provider.selectedModel,
+    privacy: provider.privacy
   };
+}
+
+function requiresExternalContextApproval(provider, payload) {
+  const privacy = payload && payload.privacy ? payload.privacy : {};
+  if (!provider || provider.privacy !== 'external' || privacy.containsVaultContext !== true) return false;
+  if (privacy.externalContextApproved !== true) return true;
+  return normalizeApprovalEndpoint(privacy.approvedEndpoint) !== normalizeApprovalEndpoint(provider.baseUrl);
+}
+
+function normalizeApprovalEndpoint(value) {
+  try {
+    const url = new URL(String(value || '').trim());
+    url.hash = '';
+    url.search = '';
+    return url.toString().replace(/\/+$/g, '');
+  } catch (_error) {
+    return '';
+  }
 }
 
 async function fetchWithTimeout(fetchImpl, url, options, timeoutMs, externalSignal) {
@@ -198,5 +223,6 @@ module.exports = {
   createProviderChatService,
   normalizeMessages,
   getProviderTimeoutMs,
+  requiresExternalContextApproval,
   buildChatUrl
 };

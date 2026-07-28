@@ -1,30 +1,30 @@
 # Restore A Markdown Note From A Backup
 
-Vitruvios creates a backup before it executes a reviewed update to an existing Markdown note. V1 does not yet provide an in-app Restore button, so restoration is a deliberate manual file copy.
+vincarios creates a backup before it executes a reviewed update to an existing Markdown note. V1 does not yet provide an in-app Restore button, so restoration is a deliberate manual file copy.
 
 ## Where Backups Live
 
-For an updated note, Vitruvios writes a timestamped snapshot inside the same vault:
+For an updated note, vincarios writes a timestamped snapshot inside the same vault:
 
 ```text
-<vault>/.vitruvios/backups/YYYY-MM-DD/<original folders>/<note-name>.YYYY-MM-DD_HH-MM-SS.md
+<vault>/.vincarios/backups/YYYY-MM-DD/<original folders>/<note-name>.YYYY-MM-DD_HH-MM-SS.md
 ```
 
 For example:
 
 ```text
-My Vault/.vitruvios/backups/2026-07-18/03_Knowledge/Topic.2026-07-18_14-05-31.md
+My Vault/.vincarios/backups/2026-07-18/03_Knowledge/Topic.2026-07-18_14-05-31.md
 ```
 
-The matching `.vitruvios/audit.jsonl` entry records the original path and backup path.
+The matching `.vincarios/audit.jsonl` entry records the original path and backup path.
 
 ## Restore Safely
 
-1. Stop editing the affected note and close Vitruvios.
+1. Stop editing the affected note and close vincarios.
 2. Copy the current version of the note somewhere safe first, in case you need it later.
-3. Find the desired timestamped backup under `.vitruvios/backups/`.
+3. Find the desired timestamped backup under `.vincarios/backups/`.
 4. Copy that backup over the original note at the same relative vault path.
-5. Reopen Vitruvios and verify the restored note in Preview.
+5. Reopen vincarios and verify the restored note in Preview.
 
 ## Scope And Limits
 

@@ -70,9 +70,9 @@
 ### Task 4: Documentation And Verification
 
 **Files:**
-- Modify: `docs/rebuild/VITRUVIOS_V1_ARCHITECTURE.md`
-- Modify: `docs/rebuild/VITRUVIOS_V1_UI_AND_WORKFLOWS.md`
-- Modify: `docs/rebuild/VITRUVIOS_V1_IMPLEMENTATION_PLAN.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_ARCHITECTURE.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_UI_AND_WORKFLOWS.md`
+- Modify: `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`
 
 - [x] Document the scope, calibrated-score contract, and explicit non-goals.
 - [x] Run `node --check` on changed JavaScript files, targeted tests, then `npm test`.

@@ -1,7 +1,7 @@
 'use strict';
 
 const INDEX_VERSION = 1;
-const INDEX_STORAGE = 'vault-vitruvios-index';
+const INDEX_STORAGE = 'vault-vincarios-index';
 
 function createEmptyEmbeddingIndex(options) {
   options = options || {};
@@ -43,16 +43,24 @@ function embeddingFingerprintsMatch(left, right) {
 
 function createIndexedDocumentRecord(input) {
   input = input || {};
+  const vectors = normalizeVectors(input.vectors);
+  const bodyVectors = normalizeVectors(input.bodyVectors);
+  const frontmatterVectors = normalizeVectors(input.frontmatterVectors);
+  const contentVectors = bodyVectors.length ? bodyVectors : vectors;
+  const bodyCentroid = normalizeVector(input.bodyCentroid);
+  const frontmatterCentroid = normalizeVector(input.frontmatterCentroid);
   return {
     path: normalizePath(input.path),
     hash: normalizeString(input.hash),
     mtimeMs: normalizePositiveNumber(input.mtimeMs, 0),
     chunks: normalizeChunks(input.chunks),
-    vectors: normalizeVectors(input.vectors),
+    vectors,
     bodyChunks: normalizeChunks(input.bodyChunks),
-    bodyVectors: normalizeVectors(input.bodyVectors),
+    bodyVectors,
+    bodyCentroid: bodyCentroid.length ? bodyCentroid : averageVectors(contentVectors),
     frontmatterChunks: normalizeChunks(input.frontmatterChunks),
-    frontmatterVectors: normalizeVectors(input.frontmatterVectors)
+    frontmatterVectors,
+    frontmatterCentroid: frontmatterCentroid.length ? frontmatterCentroid : averageVectors(frontmatterVectors)
   };
 }
 
@@ -84,6 +92,24 @@ function normalizeVectors(vectors) {
   });
 }
 
+function normalizeVector(vector) {
+  if (!Array.isArray(vector)) return [];
+  return vector.map((value) => Number.isFinite(Number(value)) ? Number(value) : 0);
+}
+
+function averageVectors(vectors) {
+  const valid = Array.isArray(vectors) ? vectors.filter((vector) => Array.isArray(vector) && vector.length) : [];
+  if (!valid.length) return [];
+  const dimensions = valid[0].length;
+  const sums = new Array(dimensions).fill(0);
+  let count = 0;
+  valid.forEach((vector) => {
+    if (vector.length !== dimensions) return;
+    vector.forEach((value, index) => { sums[index] += Number(value) || 0; });
+    count += 1;
+  });
+  return count ? sums.map((value) => value / count) : [];
+}
 function normalizePath(value) {
   return normalizeString(value).replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
 }

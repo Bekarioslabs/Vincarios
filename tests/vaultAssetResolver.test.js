@@ -55,5 +55,5 @@ test('asset resolver skips protected dot folders during basename fallback', () =
 });
 
 function createTempVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-vault-assets-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-vault-assets-'));
 }

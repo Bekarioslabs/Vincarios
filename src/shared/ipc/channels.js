@@ -31,6 +31,7 @@ const IPC_CHANNELS = Object.freeze({
   INDEXES_DELETE_FULL_TEXT: 'indexes:delete-full-text',
   INDEXES_HEALTH_CHANGED: 'indexes:health-changed',
   SEARCH_QUERY: 'search:query',
+  TEMPLATE_CREATE_FROM_REVIEW: 'template:create-from-review',
   VAULT_STATE: 'vault:state',
   VAULT_CONTENT_CHANGED: 'vault:content-changed',
   VAULT_SELECT_FOLDER: 'vault:select-folder',

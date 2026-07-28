@@ -73,6 +73,7 @@
 
         await runProviderRequest({
           api,
+          app,
           chatLog,
           content,
           messages,
@@ -131,12 +132,12 @@
 
 
   function mountOptionalMarkdownDropController(options) {
-    const controller = typeof window !== 'undefined' ? window.VitruviosMarkdownDropController : null;
+    const controller = typeof window !== 'undefined' ? window.VincariosMarkdownDropController : null;
     if (!controller || typeof controller.mountMarkdownDropController !== 'function') return null;
     return controller.mountMarkdownDropController(options);
   }
   async function runReadContextPreflight(options) {
-    const preflight = typeof window !== 'undefined' ? window.VitruviosReadContextPreflight : null;
+    const preflight = typeof window !== 'undefined' ? window.VincariosReadContextPreflight : null;
     if (!preflight || typeof preflight.runReadContextPreflight !== 'function') return { handled: false };
     return preflight.runReadContextPreflight({
       api: options.api,
@@ -196,8 +197,32 @@
     const providerMessages = options.includeUserMessage === false
       ? options.messages.concat({ role: 'user', content: options.content })
       : options.messages;
-    const outboundMessages = buildOutboundMessages(providerMessages, options.content, options.contextState);
-    const result = await options.api.chat.send({ requestId: options.requestId, messages: outboundMessages });
+    const outboundRequest = buildOutboundRequest(providerMessages, options.content, options.contextState);
+    const consentApi = typeof window !== 'undefined' ? window.VincariosExternalProviderConsent : null;
+    let consent = { approved: true, external: false, endpoint: '' };
+    if (outboundRequest.containsVaultContext) {
+      consent = consentApi && typeof consentApi.requestExternalProviderContextConsent === 'function'
+        ? await consentApi.requestExternalProviderContextConsent({
+          api: options.api,
+          app: options.app,
+          containsVaultContext: true
+        })
+        : { approved: false, external: true, endpoint: '' };
+      if (!consent.approved) {
+        options.pending.remove();
+        setText(options.status, 'Vault context send canceled.');
+        return;
+      }
+    }
+    const result = await options.api.chat.send({
+      requestId: options.requestId,
+      messages: outboundRequest.messages,
+      privacy: {
+        containsVaultContext: outboundRequest.containsVaultContext,
+        externalContextApproved: consent.external === true,
+        approvedEndpoint: consent.endpoint
+      }
+    });
     if (typeof options.isRequestActive === 'function' && !options.isRequestActive()) {
       options.pending.remove();
       setText(options.status, 'Request canceled.');
@@ -234,27 +259,35 @@
   }
 
   function buildOutboundMessages(messages, userText, contextState) {
-    const outboundMessages = messages.slice();
-    if (!contextState || !window.VitruviosContextState || !window.VitruviosContextState.buildChatContextPackage) return outboundMessages;
+    return buildOutboundRequest(messages, userText, contextState).messages;
+  }
 
-    const contextPackage = window.VitruviosContextState.buildChatContextPackage({
+  function buildOutboundRequest(messages, userText, contextState) {
+    const outboundMessages = messages.slice();
+    if (!contextState || !window.VincariosContextState || !window.VincariosContextState.buildChatContextPackage) {
+      return { messages: outboundMessages, containsVaultContext: false };
+    }
+
+    const contextPackage = window.VincariosContextState.buildChatContextPackage({
       userText,
       selection: contextState.snapshot()
     });
-    if (!contextPackage.shouldAttach || !contextPackage.content || outboundMessages.length === 0) return outboundMessages;
+    if (!contextPackage.shouldAttach || !contextPackage.content || outboundMessages.length === 0) {
+      return { messages: outboundMessages, containsVaultContext: false };
+    }
 
     const last = outboundMessages[outboundMessages.length - 1];
-    if (!last || last.role !== 'user') return outboundMessages;
+    if (!last || last.role !== 'user') return { messages: outboundMessages, containsVaultContext: false };
 
     outboundMessages[outboundMessages.length - 1] = {
       role: 'user',
       content: contextPackage.content + '\n\n## User Request\n\n' + userText
     };
-    return outboundMessages;
+    return { messages: outboundMessages, containsVaultContext: true };
   }
 
   async function handleAssistantContent(options) {
-    const runner = typeof window !== 'undefined' ? window.VitruviosModelReadActionRunner : null;
+    const runner = typeof window !== 'undefined' ? window.VincariosModelReadActionRunner : null;
     if (!runner || typeof runner.runModelReadActions !== 'function') return false;
 
     const result = await runner.runModelReadActions({
@@ -298,7 +331,7 @@
 
     const label = document.createElement('div');
     label.className = 'chat-message-label';
-    label.textContent = role === 'user' ? 'You' : 'vitruvios';
+    label.textContent = role === 'user' ? 'You' : 'vincarios';
 
     const body = document.createElement('div');
     body.className = 'chat-message-body';
@@ -317,7 +350,7 @@
   }
 
   function getMarkdownRenderer() {
-    return typeof window !== 'undefined' ? window.VitruviosMarkdownRenderer : null;
+    return typeof window !== 'undefined' ? window.VincariosMarkdownRenderer : null;
   }
 
   function renderMessageBody(body, role, content) {
@@ -413,7 +446,7 @@
     button.className = 'chat-save-note-button chat-message-save';
     button.textContent = 'Save as Note';
     button.addEventListener('click', () => {
-      const factory = window.VitruviosReviewBasketState && window.VitruviosReviewBasketState.createSaveAssistantResponseProposal;
+      const factory = window.VincariosReviewBasketState && window.VincariosReviewBasketState.createSaveAssistantResponseProposal;
       if (!options.reviewBasket || typeof options.reviewBasket.addProposal !== 'function' || !factory) {
         setText(options.status, 'Review Basket unavailable.');
         return;
@@ -466,7 +499,7 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
   }
   function autoSizeChatInput(input) {
     if (!input || !input.style) return;
@@ -523,10 +556,10 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountChat, appendMessage, buildOutboundMessages, runProviderRequest, createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest, formatMessageTime, autoSizeChatInput };
+    module.exports = { mountChat, appendMessage, buildOutboundMessages, buildOutboundRequest, runProviderRequest, createChatRequestId, isRequestActive, setChatBusy, cancelActiveChatRequest, formatMessageTime, autoSizeChatInput };
   }
 
   if (typeof window !== 'undefined') {
-    window.VitruviosChat = Object.freeze({ mountChat, appendMessage });
+    window.VincariosChat = Object.freeze({ mountChat, appendMessage });
   }
 })();

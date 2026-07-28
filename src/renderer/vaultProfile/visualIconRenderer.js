@@ -22,5 +22,5 @@
 
   const api = { createFolderVisualIcon, isLocalSvgSource };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosVaultProfileVisualIconRenderer = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosVaultProfileVisualIconRenderer = Object.freeze(api);
 })();

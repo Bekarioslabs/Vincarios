@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -116,7 +116,7 @@ test('vault write service rejects oversized create and update note payloads befo
   assert.equal(updateResult.code, 'payload_too_large');
   assert.equal(fs.existsSync(path.join(root, '00_Inbox', 'Too Large.md')), false);
   assert.equal(fs.readFileSync(path.join(root, '03_Knowledge', 'Topic.md'), 'utf8'), 'old');
-  assert.equal(fs.existsSync(path.join(root, '.vitruvios', 'backups')), false);
+  assert.equal(fs.existsSync(path.join(root, '.vincarios', 'backups')), false);
 });
 test('vault write service requires an opened vault', () => {
   const service = createVaultWriteService();
@@ -127,11 +127,11 @@ test('vault write service requires an opened vault', () => {
 });
 
 function createTempVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-write-vault-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-write-vault-'));
 }
 
 function readAudit(root) {
-  const text = fs.readFileSync(path.join(root, '.vitruvios', 'audit.jsonl'), 'utf8').trim();
+  const text = fs.readFileSync(path.join(root, '.vincarios', 'audit.jsonl'), 'utf8').trim();
   return text.split(/\r?\n/).map((line) => JSON.parse(line));
 }
 test('vault write service updates Markdown notes only after backup and content match', () => {
@@ -150,7 +150,7 @@ test('vault write service updates Markdown notes only after backup and content m
   assert.equal(result.ok, true);
   assert.equal(result.action, 'update_note');
   assert.equal(result.path, '03_Wissen/Topic.md');
-  assert.equal(result.backupPath, '.vitruvios/backups/2026-06-24/03_Wissen/Topic.2026-06-24_10-11-12.md');
+  assert.equal(result.backupPath, '.vincarios/backups/2026-06-24/03_Wissen/Topic.2026-06-24_10-11-12.md');
   assert.equal(fs.readFileSync(path.join(root, '03_Wissen', 'Topic.md'), 'utf8'), '# Topic\n\nNew body.');
   assert.equal(fs.readFileSync(path.join(root, result.backupPath), 'utf8'), '# Topic\n\nOld body.');
 
@@ -177,7 +177,7 @@ test('vault write service rejects stale update proposals before backup or write'
   assert.equal(result.ok, false);
   assert.equal(result.code, 'stale_content');
   assert.equal(fs.readFileSync(path.join(root, '03_Wissen', 'Topic.md'), 'utf8'), 'Changed elsewhere');
-  assert.equal(fs.existsSync(path.join(root, '.vitruvios', 'backups')), false);
+  assert.equal(fs.existsSync(path.join(root, '.vincarios', 'backups')), false);
 });
 
 test('vault write service updates YAML frontmatter content with backup', () => {
@@ -216,15 +216,19 @@ test('vault write service renames one Markdown file in place and appends audit e
   assert.equal(result.action, 'rename_file');
   assert.equal(result.path, '03_Knowledge/Old Name.md');
   assert.equal(result.targetPath, '03_Knowledge/New Name.md');
+  assert.equal(result.backupPath.includes('.vincarios/backups/'), true);
   assert.equal(result.linksUpdated, false);
   assert.equal(fs.existsSync(path.join(root, '03_Knowledge', 'Old Name.md')), false);
   assert.equal(fs.readFileSync(path.join(root, '03_Knowledge', 'New Name.md'), 'utf8'), '# Old');
 
   const audit = readAudit(root);
-  assert.equal(audit[0].action, 'rename_file');
-  assert.equal(audit[0].path, '03_Knowledge/Old Name.md');
-  assert.equal(audit[0].targetPath, '03_Knowledge/New Name.md');
-  assert.equal(audit[0].linksUpdated, false);
+  assert.equal(audit[0].action, 'backup_note');
+  assert.equal(audit[0].reason, 'rename_file');
+  assert.equal(audit[1].action, 'rename_file');
+  assert.equal(audit[1].path, '03_Knowledge/Old Name.md');
+  assert.equal(audit[1].targetPath, '03_Knowledge/New Name.md');
+  assert.equal(audit[1].backupPath, result.backupPath);
+  assert.equal(audit[1].linksUpdated, false);
 });
 
 test('vault write service keeps Rename Light in the same folder and prevents overwrite', () => {

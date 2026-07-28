@@ -5,6 +5,7 @@ const path = require('node:path');
 const { DEFAULT_BLOCKED_DOT_SEGMENTS } = require('../../shared/pathRules');
 const { isMarkdownPath } = require('./vaultReadService');
 const { createVaultContext } = require('./vaultContext');
+const { scanVaultMarkdownDocuments } = require('../indexing/asyncVaultMarkdownScanner');
 
 function createVaultMarkdownSource(options) {
   options = options || {};
@@ -31,6 +32,16 @@ function createVaultMarkdownSource(options) {
 
   function listMarkdownInventory() {
     return collectMarkdownEntries(false);
+  }
+
+  function listMarkdownDocumentsAsync(scanOptions) {
+    if (!vaultRoot) return Promise.resolve(fail('vault_not_open', 'No vault is open.'));
+    return scanVaultMarkdownDocuments(vaultRoot, Object.assign({}, scanOptions || {}, { fs: fileSystem, includeContent: true }));
+  }
+
+  function listMarkdownInventoryAsync(scanOptions) {
+    if (!vaultRoot) return Promise.resolve(fail('vault_not_open', 'No vault is open.'));
+    return scanVaultMarkdownDocuments(vaultRoot, Object.assign({}, scanOptions || {}, { fs: fileSystem, includeContent: false }));
   }
 
   function readMarkdownDocument(relativePath, options) {
@@ -87,7 +98,7 @@ function createVaultMarkdownSource(options) {
     }
   }
 
-  return Object.freeze({ setRoot, listMarkdownDocuments, listMarkdownInventory, readMarkdownDocument });
+  return Object.freeze({ setRoot, listMarkdownDocuments, listMarkdownInventory, listMarkdownDocumentsAsync, listMarkdownInventoryAsync, readMarkdownDocument });
 }
 
 function isBlockedEntry(name) {

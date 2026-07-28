@@ -68,9 +68,9 @@ test('file panel renders root folders after opening a vault', async () => {
 
   global.document = { createElement: createNode };
   global.window = {
-    VitruviosFileNavigator: navigator,
-    VitruviosFileTreeKeyboard: keyboard,
-    VitruviosIconRenderer: {
+    VincariosFileNavigator: navigator,
+    VincariosFileTreeKeyboard: keyboard,
+    VincariosIconRenderer: {
       createIconElement(name, className) {
         const icon = createNode('img');
         icon.iconName = name;
@@ -119,9 +119,9 @@ test('file panel opens Markdown after selecting an image file', async () => {
 
   global.document = { createElement: createNode };
   global.window = {
-    VitruviosFileNavigator: navigator,
-    VitruviosFileTreeKeyboard: keyboard,
-    VitruviosIconRenderer: {
+    VincariosFileNavigator: navigator,
+    VincariosFileTreeKeyboard: keyboard,
+    VincariosIconRenderer: {
       createIconElement(name, className) {
         const icon = createNode('img');
         icon.iconName = name;
@@ -190,9 +190,9 @@ test('file panel opens selected images in the preview controller', async () => {
 
   global.document = { createElement: createNode };
   global.window = {
-    VitruviosFileNavigator: navigator,
-    VitruviosFileTreeKeyboard: keyboard,
-    VitruviosIconRenderer: {
+    VincariosFileNavigator: navigator,
+    VincariosFileTreeKeyboard: keyboard,
+    VincariosIconRenderer: {
       createIconElement(name, className) {
         const icon = createNode('img');
         icon.iconName = name;
@@ -252,9 +252,9 @@ test('file panel reloads the root listing when another vault is opened', async (
 
   global.document = { createElement: createNode };
   global.window = {
-    VitruviosFileNavigator: navigator,
-    VitruviosFileTreeKeyboard: keyboard,
-    VitruviosIconRenderer: {
+    VincariosFileNavigator: navigator,
+    VincariosFileTreeKeyboard: keyboard,
+    VincariosIconRenderer: {
       createIconElement(name, className) {
         const icon = createNode('img');
         icon.iconName = name;
@@ -305,9 +305,9 @@ test('file tree F2 renames the selected Markdown row when a nested tree control 
 
   global.document = { createElement: createNode };
   global.window = {
-    VitruviosFileNavigator: navigator,
-    VitruviosFileTreeKeyboard: keyboard,
-    VitruviosIconRenderer: { createIconElement: () => createNode('img') }
+    VincariosFileNavigator: navigator,
+    VincariosFileTreeKeyboard: keyboard,
+    VincariosIconRenderer: { createIconElement: () => createNode('img') }
   };
 
   try {
@@ -336,6 +336,69 @@ test('file tree F2 renames the selected Markdown row when a nested tree control 
     const label = row.children.find((child) => child.className === 'file-row-label');
     assert.equal(event.prevented, true);
     assert.equal(label.children[0].className, 'file-rename-input');
+  } finally {
+    if (previousWindow === undefined) delete global.window;
+    else global.window = previousWindow;
+    if (previousDocument === undefined) delete global.document;
+    else global.document = previousDocument;
+  }
+});
+test('file panel reports a successfully recorded recent Markdown file', async () => {
+  const previousWindow = global.window;
+  const previousDocument = global.document;
+  const navigator = require('../src/renderer/files/fileNavigator');
+  const keyboard = require('../src/renderer/files/fileTreeKeyboard');
+  const permissions = require('../src/renderer/permissions/permissionState');
+  const { mountFilePanel } = require('../src/renderer/files/mountFilePanel');
+
+  global.document = { createElement: createNode };
+  global.window = {
+    VincariosFileNavigator: navigator,
+    VincariosFileTreeKeyboard: keyboard,
+    VincariosIconRenderer: {
+      createIconElement(name, className) {
+        const icon = createNode('img');
+        icon.iconName = name;
+        icon.className = className || '';
+        return icon;
+      }
+    }
+  };
+
+  try {
+    const root = createRoot();
+    const recorded = [];
+    const api = {
+      vault: {
+        listFolder() {
+          return Promise.resolve({
+            ok: true,
+            entries: [{ name: 'Recent.md', path: '00_Inbox/Recent.md', kind: 'markdown' }]
+          });
+        },
+        readMarkdown(filePath) {
+          return Promise.resolve({ ok: true, path: filePath, content: '# Recent' });
+        },
+        recordRecentFile({ path }) {
+          return Promise.resolve({ ok: true, path });
+        }
+      }
+    };
+    const panel = mountFilePanel({
+      api,
+      root,
+      permissionState: permissions.createPermissionState(),
+      navigator: navigator.createFileNavigator(),
+      keyboard,
+      onRecentFileRecorded(path) {
+        recorded.push(path);
+      }
+    });
+
+    await panel.openRoot();
+    await root.nodes['#file-tree'].children[0].listeners.click();
+
+    assert.deepEqual(recorded, ['00_Inbox/Recent.md']);
   } finally {
     if (previousWindow === undefined) delete global.window;
     else global.window = previousWindow;

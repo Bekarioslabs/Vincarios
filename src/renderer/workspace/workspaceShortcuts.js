@@ -86,5 +86,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosWorkspaceShortcuts = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosWorkspaceShortcuts = Object.freeze(api);
 })();

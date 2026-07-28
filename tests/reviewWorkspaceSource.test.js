@@ -31,7 +31,7 @@ test('Inbox Review always activates Chat before writing its report', () => {
   const shell = read('src/renderer/shell/mountShell.js');
   const cleanup = read('src/renderer/cleanup/mountInboxCleanup.js');
 
-  assert.match(shell, /mountInboxCleanup\(\{ api, app, status: globalStatus, reviewBasket, onOpenChat:/);
+  assert.match(shell, /mountInboxCleanup\(\{ api, app, status: activityStatus, reviewBasket, onOpenChat:/);
   assert.match(cleanup, /onOpenChat/);
   assert.match(cleanup, /onOpenChat\(\)/);
 });

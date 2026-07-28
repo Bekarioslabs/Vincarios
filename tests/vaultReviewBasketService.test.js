@@ -8,7 +8,7 @@ const test = require('node:test');
 const { createVaultReviewBasketService, REVIEW_BASKET_RELATIVE_PATH } = require('../src/main/vault/vaultReviewBasketService');
 
 function createVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-review-basket-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-review-basket-'));
 }
 
 function createProposal(overrides) {

@@ -8,7 +8,7 @@ const test = require('node:test');
 const { createVaultRecentFilesService } = require('../src/main/vault/vaultRecentFilesService');
 
 function createVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-recent-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-recent-'));
 }
 
 function writeMarkdown(root, relativePath) {
@@ -31,7 +31,7 @@ test('recent files stay vault-local, normalized, bounded, and most-recent first'
   const result = service.list();
   assert.equal(result.ok, true);
   assert.deepEqual(result.files.map((entry) => entry.path), ['Notes/One.md', 'Notes/Two.md']);
-  assert.equal(fs.existsSync(path.join(root, '.vitruvios', 'recent-files.json')), true);
+  assert.equal(fs.existsSync(path.join(root, '.vincarios', 'recent-files.json')), true);
 });
 
 test('recent files reject unsafe or missing entries and prune stale files', () => {

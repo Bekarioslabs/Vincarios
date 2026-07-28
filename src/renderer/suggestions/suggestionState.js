@@ -173,5 +173,5 @@
   const api = { createSuggestionState };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosSuggestionState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosSuggestionState = Object.freeze(api);
 })();

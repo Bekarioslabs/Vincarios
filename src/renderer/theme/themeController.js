@@ -115,18 +115,18 @@
   }
 
   function getThemeContract() {
-    if (typeof window !== 'undefined' && window.VitruviosTheme) return window.VitruviosTheme;
+    if (typeof window !== 'undefined' && window.VincariosTheme) return window.VincariosTheme;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/settings/theme');
     return null;
   }
 
   function getThemePackRegistry() {
-    if (typeof window !== 'undefined' && window.VitruviosThemePacks) return window.VitruviosThemePacks;
+    if (typeof window !== 'undefined' && window.VincariosThemePacks) return window.VincariosThemePacks;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/themes/themePacks');
     return null;
   }
 
   const api = { createThemeController };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosThemeController = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosThemeController = Object.freeze(api);
 })();

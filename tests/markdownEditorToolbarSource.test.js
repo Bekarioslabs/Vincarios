@@ -27,7 +27,7 @@ test('editor toolbar is mounted only for source mode and uses the shared formatt
   assert.match(controller, /captureEditorViewport\(\)/);
   assert.match(controller, /restoreEditorViewport\(viewport\)/);
   assert.match(controller, /editorToolbar\.addEventListener\('mousedown'/);
-  assert.match(bootstrap, /VitruviosEditorFormatting/);
-  assert.match(bootstrap, /VitruviosMarkdownLinkPicker/);
+  assert.match(bootstrap, /VincariosEditorFormatting/);
+  assert.match(bootstrap, /VincariosMarkdownLinkPicker/);
   assert.match(index, /editorFormatting\.js[\s\S]*markdownLinkPicker\.js[\s\S]*markdownPreviewController\.js/);
 });

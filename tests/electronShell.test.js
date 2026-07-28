@@ -9,7 +9,7 @@ const { IPC_CHANNELS } = require('../src/shared/ipc/channels');
 const { DEFAULT_THEME_COLORS } = require('../src/shared/ui/themeDefaults');
 
 test('main window options keep the renderer sandboxed', () => {
-  const options = createWindowOptions(path.join('D:', 'Vitruvios_AGENT'));
+  const options = createWindowOptions(path.join('D:', 'Vincarios_AGENT'));
 
   assert.equal(options.show, true);
   assert.equal(options.backgroundColor, DEFAULT_THEME_COLORS.backgroundPrimary);
@@ -53,6 +53,7 @@ test('IPC channels expose app info, provider, chat, and reviewed vault actions',
     'SETTINGS_SET_PROVIDER_URL',
     'SETTINGS_SET_RECENT_VAULTS',
     'SETTINGS_SET_THEME',
+    'TEMPLATE_CREATE_FROM_REVIEW',
     'VAULT_CONTENT_CHANGED',
     'VAULT_CREATE_FOLDER',
     'VAULT_CREATE_NOTE',
@@ -267,8 +268,16 @@ test('Electron bootstrap wires one vault index health boundary for metadata and 
   assert.match(source, /createVaultIndexHealthService/);
   assert.match(source, /const vaultIndexHealthService = options\.vaultIndexHealthService/);
   assert.match(source, /registerVaultIpc\([\s\S]*vaultIndexHealthService\)/);
-  assert.match(vaultIpcSource, /vaultIndexHealthService\.setRoot\(vaultRoot\)/);
+  assert.match(source, /name: 'index-health', service: vaultIndexHealthService/);
+  assert.doesNotMatch(vaultIpcSource, /\.setRoot\(vaultRoot\)/);
   assert.doesNotMatch(vaultIpcSource, /metadataIndexer\.setRoot\(vaultRoot\)/);
+});
+test('Electron bootstrap authorizes renderer root activation from persisted recent vaults', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'app', 'bootstrapElectron.js'), 'utf8');
+
+  assert.match(source, /createRecentVaultAuthorizer/);
+  assert.match(source, /authorizeRoot: createRecentVaultAuthorizer\(settingsService\)/);
+  assert.match(source, /name: 'read', service: vaultReadService/);
 });
 test('Electron bootstrap owns one vault change service for tree updates and index staleness', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'main', 'app', 'bootstrapElectron.js'), 'utf8');
@@ -355,7 +364,7 @@ test('main window blocks direct navigation and popup creation', async () => {
   };
 
   createMainWindow({ BrowserWindow: function BrowserWindow() { return fakeWindow; } }, {
-    projectRoot: path.join('D:', 'Vitruvios_AGENT')
+    projectRoot: path.join('D:', 'Vincarios_AGENT')
   });
 
   let prevented = false;

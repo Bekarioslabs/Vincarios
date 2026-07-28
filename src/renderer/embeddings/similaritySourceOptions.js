@@ -24,5 +24,5 @@
     return SOURCES.slice();
   }
 
-  window.VitruviosSimilaritySourceOptions = Object.freeze({ normalize, options, weightsFor });
+  window.VincariosSimilaritySourceOptions = Object.freeze({ normalize, options, weightsFor });
 })();

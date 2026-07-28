@@ -66,5 +66,5 @@
 
   const api = Object.freeze({ mountModalBehavior, getFocusable });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosModalBehavior = api;
+  if (typeof window !== 'undefined') window.VincariosModalBehavior = api;
 })();

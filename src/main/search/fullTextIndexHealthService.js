@@ -8,15 +8,18 @@ function createFullTextIndexHealthService(options) {
   const indexer = options.indexer || createFullTextIndexer(options);
   const statusService = options.statusService || createFullTextIndexStatusService(options);
   const freshnessService = options.freshnessService || null;
+  const refreshCoordinator = options.refreshCoordinator || null;
   const listeners = new Set();
   let stale = false;
   let refreshing = false;
   let changeRevision = 0;
+  let rootRevision = 0;
 
   function setRoot(vaultRoot) {
     stale = false;
     refreshing = false;
     changeRevision = 0;
+    rootRevision += 1;
     const indexerResult = indexer.setRoot(vaultRoot);
     const statusResult = statusService.setRoot(vaultRoot);
     const result = indexerResult.ok ? statusResult : indexerResult;
@@ -40,7 +43,14 @@ function createFullTextIndexHealthService(options) {
     return result;
   }
 
-  async function refreshIndex(refreshOptions) {
+  function refreshIndex(refreshOptions) {
+    const operation = () => runRefreshIndex(refreshOptions);
+    return refreshCoordinator && typeof refreshCoordinator.run === 'function'
+      ? refreshCoordinator.run('full-text:' + rootRevision, operation)
+      : operation();
+  }
+
+  async function runRefreshIndex(refreshOptions) {
     if (!indexer || typeof indexer.rebuildIndex !== 'function') return fail('full_text_unavailable', 'Full-text indexer unavailable.');
     const status = getBaseStatus();
     if (!status.ok || !status.enabled) return fail('full_text_not_enabled', 'Full-text search is not enabled for this vault.');
@@ -48,7 +58,7 @@ function createFullTextIndexHealthService(options) {
       const freshness = freshnessService.refreshSnapshot();
       if (!freshness.ok) return freshness;
     }
-    return runRefresh(() => indexer.rebuildIndex());
+    return runRefresh(() => indexer.rebuildIndex(refreshOptions || {}));
   }
 
   async function deleteIndex() {

@@ -30,5 +30,5 @@
   });
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosTheme = api;
+  if (typeof window !== 'undefined') window.VincariosTheme = api;
 })();

@@ -13,7 +13,7 @@ test('embedding index schema creates a local vault index manifest', () => {
   const index = createEmptyEmbeddingIndex({ modelId: 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2', dimensions: 384 });
 
   assert.equal(index.version, 1);
-  assert.equal(index.storage, 'vault-vitruvios-index');
+  assert.equal(index.storage, 'vault-vincarios-index');
   assert.equal(index.model.id, 'sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2');
   assert.equal(index.model.dimensions, 384);
   assert.deepEqual(index.documents, {});

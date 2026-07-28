@@ -119,22 +119,22 @@
   }
 
   function getThemePackHelpers() {
-    if (typeof window !== 'undefined' && window.VitruviosThemePacks) return window.VitruviosThemePacks;
+    if (typeof window !== 'undefined' && window.VincariosThemePacks) return window.VincariosThemePacks;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/themes/themePacks');
     return null;
   }
   function getThemeHelpers() {
-    if (typeof window !== 'undefined' && window.VitruviosTheme) return window.VitruviosTheme;
+    if (typeof window !== 'undefined' && window.VincariosTheme) return window.VincariosTheme;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/settings/theme');
     return null;
   }
   function getFolderVisualHelpers() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderVisuals) return window.VitruviosFolderVisuals;
+    if (typeof window !== 'undefined' && window.VincariosFolderVisuals) return window.VincariosFolderVisuals;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/vaultProfile/folderVisuals');
     return null;
   }
 
   const api = { createVaultProfileState };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosVaultProfileState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosVaultProfileState = Object.freeze(api);
 })();

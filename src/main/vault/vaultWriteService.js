@@ -1,9 +1,11 @@
-'use strict';
+﻿'use strict';
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { createVaultAuditService } = require('../audit/vaultAuditService');
 const { createVaultContext } = require('./vaultContext');
 const { createVaultBackupService } = require('./vaultBackupService');
+const { executeAuditedMutation } = require('./vaultWriteTransaction');
 const { DEFAULT_VAULT_PROFILE } = require('../../shared/vaultProfile/defaults');
 const {
   normalizePayloadLimits,
@@ -15,7 +17,11 @@ function createVaultWriteService(options) {
   options = options || {};
   const fileSystem = options.fs || fs;
   const profile = Object.freeze(Object.assign({}, DEFAULT_VAULT_PROFILE, options.profile || {}));
-  const backupService = createVaultBackupService({ fs: fileSystem, now: options.now });
+  const auditService = options.auditService || createVaultAuditService({
+    fs: fileSystem,
+    now: options.now
+  });
+  const backupService = createVaultBackupService({ fs: fileSystem, now: options.now, auditService });
   const settingsStore = options.settingsStore || null;
   let vault = null;
 
@@ -37,6 +43,7 @@ function createVaultWriteService(options) {
     }
 
     vault = createVaultContext(resolvedRoot);
+    auditService.setRoot(resolvedRoot);
     backupService.setRoot(resolvedRoot);
     return ok({ root: vault.root, profile });
   }
@@ -61,22 +68,32 @@ function createVaultWriteService(options) {
       return fail('file_exists', 'Target note already exists.');
     }
 
-    try {
-      fileSystem.mkdirSync(path.dirname(resolved.absolutePath), { recursive: true });
-      fileSystem.writeFileSync(resolved.absolutePath, payload.content, 'utf8');
-      appendAudit(fileSystem, currentVault.vault.root, {
+    const transaction = executeAuditedMutation({
+      auditService,
+      mutate() {
+        fileSystem.mkdirSync(path.dirname(resolved.absolutePath), { recursive: true });
+        fileSystem.writeFileSync(resolved.absolutePath, payload.content, 'utf8');
+      },
+      rollback() {
+        if (fileSystem.existsSync(resolved.absolutePath)) {
+          fileSystem.unlinkSync(resolved.absolutePath);
+        }
+      },
+      auditEntry: {
         action: 'create_note',
         path: resolved.relativePath,
         result: 'created'
-      });
-      return ok({
-        action: 'create_note',
-        path: resolved.relativePath,
-        bytes: Buffer.byteLength(payload.content, 'utf8')
-      });
-    } catch (error) {
-      return fail('write_failed', 'Could not create note.');
-    }
+      },
+      mutationFailureCode: 'write_failed',
+      mutationFailureMessage: 'Could not create note.'
+    });
+    if (!transaction.ok) return transaction;
+
+    return ok({
+      action: 'create_note',
+      path: resolved.relativePath,
+      bytes: Buffer.byteLength(payload.content, 'utf8')
+    });
   }
 
   function createFolder(input) {
@@ -106,20 +123,28 @@ function createVaultWriteService(options) {
       });
     }
 
-    try {
-      fileSystem.mkdirSync(resolved.absolutePath, { recursive: true });
-      appendAudit(fileSystem, currentVault.vault.root, {
+    const transaction = executeAuditedMutation({
+      auditService,
+      mutate() {
+        fileSystem.mkdirSync(resolved.absolutePath, { recursive: true });
+      },
+      rollback() {
+        fileSystem.rmdirSync(resolved.absolutePath);
+      },
+      auditEntry: {
         action: 'create_folder',
         path: resolved.relativePath,
         result: 'created'
-      });
-      return ok({
-        action: 'create_folder',
-        path: resolved.relativePath
-      });
-    } catch (error) {
-      return fail('write_failed', 'Could not create folder.');
-    }
+      },
+      mutationFailureCode: 'write_failed',
+      mutationFailureMessage: 'Could not create folder.'
+    });
+    if (!transaction.ok) return transaction;
+
+    return ok({
+      action: 'create_folder',
+      path: resolved.relativePath
+    });
   }
   function updateNote(input) {
     const currentVault = requireVault();
@@ -156,23 +181,31 @@ function createVaultWriteService(options) {
     const backup = backupService.backupMarkdownNote(resolved.relativePath, { action: 'update_note' });
     if (!backup.ok) return backup;
 
-    try {
-      fileSystem.writeFileSync(resolved.absolutePath, payload.proposedContent, 'utf8');
-      appendAudit(fileSystem, currentVault.vault.root, {
+    const transaction = executeAuditedMutation({
+      auditService,
+      mutate() {
+        fileSystem.writeFileSync(resolved.absolutePath, payload.proposedContent, 'utf8');
+      },
+      rollback() {
+        fileSystem.writeFileSync(resolved.absolutePath, currentDiskContent, 'utf8');
+      },
+      auditEntry: {
         action: 'update_note',
         path: resolved.relativePath,
         backupPath: backup.backupPath,
         result: 'updated'
-      });
-      return ok({
-        action: 'update_note',
-        path: resolved.relativePath,
-        backupPath: backup.backupPath,
-        bytes: Buffer.byteLength(payload.proposedContent, 'utf8')
-      });
-    } catch (error) {
-      return fail('write_failed', 'Could not update note.');
-    }
+      },
+      mutationFailureCode: 'write_failed',
+      mutationFailureMessage: 'Could not update note.'
+    });
+    if (!transaction.ok) return transaction;
+
+    return ok({
+      action: 'update_note',
+      path: resolved.relativePath,
+      backupPath: backup.backupPath,
+      bytes: Buffer.byteLength(payload.proposedContent, 'utf8')
+    });
   }
 
   function renameFile(input) {
@@ -211,25 +244,38 @@ function createVaultWriteService(options) {
       return fail('file_exists', 'Rename target already exists.');
     }
 
-    try {
-      fileSystem.renameSync(source.absolutePath, target.absolutePath);
-      appendAudit(fileSystem, currentVault.vault.root, {
+    const backup = backupService.backupMarkdownNote(source.relativePath, { action: 'rename_file' });
+    if (!backup.ok) return backup;
+
+    const transaction = executeAuditedMutation({
+      auditService,
+      mutate() {
+        fileSystem.renameSync(source.absolutePath, target.absolutePath);
+      },
+      rollback() {
+        fileSystem.renameSync(target.absolutePath, source.absolutePath);
+      },
+      auditEntry: {
         action: 'rename_file',
         path: source.relativePath,
         targetPath: target.relativePath,
+        backupPath: backup.backupPath,
         result: 'renamed',
         linksUpdated: false
-      });
-      return ok({
-        action: 'rename_file',
-        path: source.relativePath,
-        targetPath: target.relativePath,
-        linksUpdated: false,
-        warning: 'Links were not updated in V1 Rename Light.'
-      });
-    } catch (error) {
-      return fail('rename_failed', 'Could not rename file.');
-    }
+      },
+      mutationFailureCode: 'rename_failed',
+      mutationFailureMessage: 'Could not rename file.'
+    });
+    if (!transaction.ok) return transaction;
+
+    return ok({
+      action: 'rename_file',
+      path: source.relativePath,
+      targetPath: target.relativePath,
+      backupPath: backup.backupPath,
+      linksUpdated: false,
+      warning: 'Links were not updated in V1 Rename Light.'
+    });
   }
   function requireVault() {
     if (!vault) return fail('vault_not_open', 'No vault is open.');
@@ -320,15 +366,6 @@ function toMarkdownFileName(title) {
     .replace(/[. ]+$/g, '');
   const base = clean || 'Untitled';
   return base.toLowerCase().endsWith('.md') ? base : base + '.md';
-}
-
-function appendAudit(fileSystem, vaultRoot, entry) {
-  const auditDir = path.join(vaultRoot, '.vitruvios');
-  fileSystem.mkdirSync(auditDir, { recursive: true });
-  const auditEntry = Object.assign({
-    timestamp: new Date().toISOString()
-  }, entry);
-  fileSystem.appendFileSync(path.join(auditDir, 'audit.jsonl'), JSON.stringify(auditEntry) + '\n', 'utf8');
 }
 
 

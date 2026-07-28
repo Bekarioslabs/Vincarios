@@ -59,7 +59,7 @@ test('activity reporter loads before the shell and is wired into file and chat f
 
   assert.equal(reporterIndex > -1, true);
   assert.equal(reporterIndex < shellIndex, true);
-  assert.match(bootstrap, /VitruviosActivityReporter/);
+  assert.match(bootstrap, /VincariosActivityReporter/);
   assert.match(shell, /createActivityReporter\(\{ status: globalStatus, activityState \}\)/);
   assert.match(shell, /activityReporter/);
   assert.match(filePanel, /const activityReporter = options\.activityReporter \|\| null/);
@@ -69,4 +69,17 @@ test('activity reporter loads before the shell and is wired into file and chat f
   assert.match(filePanel, /action: 'Read file'/);
   assert.match(chat, /action: 'Provider response'/);
   assert.match(chat, /action: 'Provider error'/);
+});
+
+test('shell routes direct visible module statuses through the shared activity sink', () => {
+  const root = path.join(__dirname, '..');
+  const shell = fs.readFileSync(path.join(root, 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
+  const reporter = fs.readFileSync(path.join(root, 'src', 'renderer', 'activity', 'activityReporter.js'), 'utf8');
+
+  assert.match(reporter, /function createStatusSink/);
+  assert.match(shell, /const activityStatus = activityReporter\.createStatusSink\(\)/);
+  assert.match(shell, /mountSettingsPanel\(\{ api, app, status: activityStatus/);
+  assert.match(shell, /mountSelectionActions\(\{ api, app, contextState, reviewBasket, status: activityStatus/);
+  assert.match(shell, /const statusBar = activityReporter && typeof activityReporter\.createStatusSink/);
+  assert.match(shell, /createReviewExecutionController\(\{ api, vaultUi, activityReporter \}\)/);
 });

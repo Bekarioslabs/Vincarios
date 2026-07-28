@@ -12,6 +12,7 @@ const {
   isMarkdownPath
 } = require('../../shared/fileTypes');
 
+const MAX_MARKDOWN_PREVIEW_BYTES = 4 * 1024 * 1024;
 const MAX_IMAGE_ASSET_BYTES = 15 * 1024 * 1024;
 
 function createVaultReadService(options) {
@@ -99,6 +100,10 @@ function createVaultReadService(options) {
 
     if (!stat.isFile()) {
       return fail('not_a_file', 'Path is not a file.');
+    }
+
+    if (stat.size > MAX_MARKDOWN_PREVIEW_BYTES) {
+      return fail('markdown_too_large', 'Markdown file is too large for preview.');
     }
 
     const content = fileSystem.readFileSync(resolved.absolutePath, 'utf8');

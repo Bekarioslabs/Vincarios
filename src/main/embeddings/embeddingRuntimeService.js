@@ -13,6 +13,7 @@ function createEmbeddingRuntimeService(options) {
   const loadTransformers = options.loadTransformers || defaultLoadTransformers;
   const maxTextChars = Number.isFinite(options.maxTextChars) ? options.maxTextChars : DEFAULT_MAX_TEXT_CHARS;
   let extractorPromise = null;
+  let modelVerificationPromise = null;
 
   async function embedText(text) {
     const normalizedText = String(text || '').trim();
@@ -30,6 +31,17 @@ function createEmbeddingRuntimeService(options) {
       });
     }
 
+    const integrity = await verifyModelIntegrity(availability);
+    if (!integrity.available || integrity.integrityValid === false) {
+      return Object.assign(
+        fail(integrity.code || 'embedding_model_integrity_check_failed', integrity.message || 'Local embedding model integrity verification failed.'),
+        {
+          missingArtifacts: integrity.missingArtifacts || [],
+          artifact: integrity.artifact || null
+        }
+      );
+    }
+
     try {
       const extractor = await getExtractor(availability.folderPath);
       const output = await extractor(normalizedText, { pooling: 'mean', normalize: true });
@@ -44,6 +56,15 @@ function createEmbeddingRuntimeService(options) {
     }
   }
 
+  function verifyModelIntegrity(availability) {
+    if (typeof modelStore.verifyBundledModelIntegrity !== 'function') {
+      return Promise.resolve(availability);
+    }
+    if (!modelVerificationPromise) {
+      modelVerificationPromise = Promise.resolve(modelStore.verifyBundledModelIntegrity());
+    }
+    return modelVerificationPromise;
+  }
   async function getExtractor(folderPath) {
     if (!extractorPromise) {
       extractorPromise = loadTransformers().then(async ({ pipeline, env }) => {

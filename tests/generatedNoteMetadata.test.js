@@ -21,7 +21,7 @@ test('save assistant response receives deterministic reviewed metadata', () => {
     tags: ['ai-response'],
     type: 'ai-response',
     status: 'draft',
-    source: 'vitruvios',
+    source: 'vincarios',
     created_at: '2026-07-09',
     origin_action: 'save_assistant_response'
   });

@@ -24,9 +24,15 @@
     if (!app) return null;
 
     const panel = createPanel();
+    panel.eventTarget = app;
     panel.vaultProfileState = vaultProfileState;
     panel.themeController = themeController;
     panel.vaultProfileDraft = createVaultProfileDraftState();
+    panel.indexSettings = getIndexSettingsController().createIndexSettingsController({
+      panel,
+      api,
+      rerender: () => renderSettings(panel, api, status, vaultProfileState)
+    });
     app.appendChild(panel.backdrop);
     panel.modalBehavior = getModalBehavior().mountModalBehavior({
       overlay: panel.backdrop,
@@ -36,7 +42,7 @@
     const openButtons = app.querySelectorAll('[data-open-settings]');
     openButtons.forEach((button) => button.addEventListener('click', () => openPanel(panel, api, status, vaultProfileState)));
     panel.closeButtons.forEach((button) => button.addEventListener('click', () => closePanel(panel)));
-    subscribeToVaultIndexHealth(panel, api);
+    panel.indexSettings.subscribe();
 
     return Object.freeze({
       open() { return openPanel(panel, api, status, vaultProfileState); },
@@ -53,7 +59,7 @@
       '  <header class="settings-header">',
       '    <div>',
       '      <div class="settings-kicker">Settings</div>',
-      '      <h2>vitruvios Settings</h2>',
+      '      <h2>vincarios Settings</h2>',
       '    </div>',
       '    <button type="button" class="settings-icon-button" data-settings-close aria-label="Close settings"></button>',
       '  </header>',
@@ -152,7 +158,7 @@
       '          <div><dt>Artifact repo</dt><dd>Xenova/paraphrase-multilingual-MiniLM-L12-v2</dd></div>',
       '          <div><dt>License</dt><dd>Apache-2.0</dd></div>',
       '          <div><dt>Runtime target</dt><dd>Transformers.js / ONNX</dd></div>',
-      '          <div><dt>Index storage</dt><dd>Vault .vitruvios/index by default</dd></div>',
+      '          <div><dt>Index storage</dt><dd>Vault .vincarios/index by default</dd></div>',
       '        </dl>',
       '        <div class="settings-limit-grid" data-settings-embeddings-grid></div>',
       '        <div class="settings-section-actions">',
@@ -169,7 +175,7 @@
       '      <section id="settings-panel-about" class="settings-section settings-category-panel" data-settings-category-panel="about" hidden>',
       '        <div class="settings-section-head">',
       '          <h3>About</h3>',
-      '          <p>vitruvios V1 local-first Markdown vault assistant.</p>',
+      '          <p>vincarios V1 local-first Markdown vault assistant.</p>',
       '        </div>',
       '        <div class="settings-future-note">Version and license details can be expanded here later.</div>',
       '      </section>',
@@ -254,7 +260,7 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
   }
   async function openPanel(panel, api, statusBar, vaultProfileState) {
     panel.backdrop.hidden = false;
@@ -270,7 +276,11 @@
   }
 
   function getModalBehavior() {
-    return window.VitruviosModalBehavior;
+    return window.VincariosModalBehavior;
+  }
+
+  function getIndexSettingsController() {
+    return window.VincariosIndexSettings;
   }
 
   async function renderSettings(panel, api, statusBar, vaultProfileState) {
@@ -291,8 +301,7 @@
     renderActionDefaultSettings(panel, api, statusBar, settings);
     await renderVaultProfileSettings(panel, api, statusBar, vaultProfileState);
     await renderAppearanceSettings(panel, api, statusBar, settings, vaultProfileState);
-    renderEmbeddingSettings(panel, api, statusBar, settings);
-    await renderVaultIndexStatus(panel, api);
+    await panel.indexSettings.render(settings);
     setText(panel.status, 'Ready');
   }
 
@@ -325,7 +334,7 @@
     panel.appearanceGrid.appendChild(vaultThemeField);
     if (panel.vaultThemeHelp) {
       panel.vaultThemeHelp.textContent = vaultAvailable
-        ? 'The vault choice is saved in .vitruvios/profile.json.'
+        ? 'The vault choice is saved in .vincarios/profile.json.'
         : 'Open a vault to set a portable vault theme.';
     }
 
@@ -391,7 +400,7 @@
   }
 
   function getThemePackRegistry() {
-    if (typeof window !== 'undefined' && window.VitruviosThemePacks) return window.VitruviosThemePacks;
+    if (typeof window !== 'undefined' && window.VincariosThemePacks) return window.VincariosThemePacks;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/themes/themePacks');
     return null;
   }
@@ -600,216 +609,6 @@
     };
     return { scope: field('scope', 'current'), maxDepth: field('maxDepth', 3), maxFiles: field('maxFiles', 30), fileType: 'markdown' };
   }
-  function renderEmbeddingSettings(panel, api, statusBar, settings) {
-    const embeddings = settings && settings.embeddings ? settings.embeddings : {};
-    const similarNotes = embeddings.similarNotes || {};
-    if (!panel.embeddingsGrid) return;
-    panel.embeddingsGrid.innerHTML = '';
-
-    panel.embeddingsGrid.appendChild(createEmbeddingModeField(similarNotes.mode || 'mixed'));
-    panel.embeddingsGrid.appendChild(createEmbeddingNumberField('Minimum match %', 'minimumScorePercent', similarNotes.minimumScorePercent || 65, { min: 0, max: 100 }));
-    panel.embeddingsGrid.appendChild(createEmbeddingNumberField('Max results', 'maxResults', similarNotes.maxResults || 8, { min: 1 }));
-
-    if (panel.saveEmbeddingsButton && !panel.saveEmbeddingsButton.dataset.bound) {
-      panel.saveEmbeddingsButton.dataset.bound = 'true';
-      panel.saveEmbeddingsButton.addEventListener('click', async () => {
-        const similarity = getSimilaritySourceOptions().weightsFor(readEmbeddingMode(panel.embeddingsGrid, 'mixed'));
-        const payload = { similarNotes: {
-          mode: similarity.mode,
-          minimumScorePercent: readEmbeddingValue(panel.embeddingsGrid, 'minimumScorePercent', '65'),
-          contentWeight: similarity.contentWeight,
-          metadataWeight: similarity.metadataWeight,
-          maxResults: readEmbeddingValue(panel.embeddingsGrid, 'maxResults', '8')
-        } };
-        setText(panel.status, 'Saving embedding defaults...');
-        const result = await api.settings.setEmbeddings(payload);
-        if (!result || result.ok === false) {
-          setText(panel.status, result && result.message ? result.message : 'Could not save embedding defaults.');
-          return;
-        }
-        setText(panel.status, 'Embedding defaults saved.');
-        app.dispatchEvent(new CustomEvent('vitruvios:embedding-similar-defaults-change'));
-        renderSettings(panel, api, statusBar, result.settings || settings);
-      });
-    }
-  }
-
-  function subscribeToVaultIndexHealth(panel, api) {
-    if (!api || !api.indexes || typeof api.indexes.onHealthChanged !== 'function') return;
-    api.indexes.onHealthChanged((health) => applyVaultIndexStatus(panel, health));
-  }
-
-  async function renderVaultIndexStatus(panel, api) {
-    const statusResult = api && api.indexes && typeof api.indexes.getHealth === 'function'
-      ? await safeCall(() => api.indexes.getHealth())
-      : null;
-    applyVaultIndexStatus(panel, statusResult);
-
-    bindFullTextIndexActions(panel, api);
-
-    if (panel.refreshVaultIndexesButton && !panel.refreshVaultIndexesButton.dataset.bound) {
-      panel.refreshVaultIndexesButton.dataset.bound = 'true';
-      panel.refreshVaultIndexesButton.addEventListener('click', async () => {
-        if (!api || !api.indexes || typeof api.indexes.refresh !== 'function') return;
-        panel.refreshVaultIndexesButton.disabled = true;
-        setText(panel.vaultIndexStatus, 'Refreshing vault indexes...');
-        const result = await safeCall(() => api.indexes.refresh());
-        if (!result || result.ok === false) {
-          setText(panel.vaultIndexStatus, result && result.message ? result.message : 'Could not refresh vault indexes.');
-          panel.refreshVaultIndexesButton.disabled = false;
-          return;
-        }
-        const refreshedStatus = await safeCall(() => api.indexes.getHealth());
-        applyVaultIndexStatus(panel, refreshedStatus);
-      });
-    }
-  }
-
-  function applyVaultIndexStatus(panel, result) {
-    const status = result && result.ok !== false ? result : null;
-    const state = status && status.state ? status.state : 'unavailable';
-    const messages = {
-      no_vault: 'Open a vault to inspect its index.',
-      no_index: 'No index yet.',
-      ready: 'Vault indexes are ready.',
-      stale: 'Index needs refresh after vault changes.',
-      indexing: 'Vault indexes are updating.',
-      rebuild_required: 'Vault indexes require refresh.',
-      unavailable: 'Embedding model unavailable. Metadata index remains available.',
-      invalid: 'Vault indexes could not be read.'
-    };
-    const labels = {
-      no_index: 'Refresh indexes',
-      ready: 'Refresh indexes',
-      stale: 'Refresh indexes',
-      rebuild_required: 'Refresh indexes',
-      invalid: 'Refresh indexes'
-    };
-    if (panel.vaultIndexStatus) panel.vaultIndexStatus.dataset.indexState = state;
-    setText(panel.vaultIndexStatus, messages[state] || 'Vault index status unavailable.');
-    const metadataCount = Number(status && status.metadata && status.metadata.documentCount) || 0;
-    const embeddingDocumentCount = Number(status && status.embeddings && status.embeddings.documentCount) || 0;
-    const chunkCount = Number(status && status.embeddings && status.embeddings.chunkCount) || 0;
-    const counts = [];
-    if (state === 'ready' || state === 'stale' || state === 'rebuild_required') {
-      const indexedNoteCount = Math.max(metadataCount, embeddingDocumentCount);
-      counts.push(indexedNoteCount + ' Markdown notes indexed.');
-      if (status && status.embeddings && status.embeddings.state !== 'unavailable') counts.push(chunkCount + ' Similar Notes text segments.');
-    }
-    setText(panel.vaultIndexCounts, counts.join(' '));
-    applyFullTextIndexStatus(panel, status && status.fullText ? status.fullText : null);
-    if (!panel.refreshVaultIndexesButton) return;
-    panel.refreshVaultIndexesButton.textContent = labels[state] || 'Index unavailable';
-    panel.refreshVaultIndexesButton.disabled = !status || status.canRefresh !== true;
-  }
-
-  function bindFullTextIndexActions(panel, api) {
-    if (panel.fullTextEnabledInput && !panel.fullTextEnabledInput.dataset.bound) {
-      panel.fullTextEnabledInput.dataset.bound = 'true';
-      panel.fullTextEnabledInput.addEventListener('change', async () => {
-        if (!api || !api.indexes || typeof api.indexes.setFullTextEnabled !== 'function') return;
-        panel.fullTextEnabledInput.disabled = true;
-        const result = await safeIndexCall(() => api.indexes.setFullTextEnabled(panel.fullTextEnabledInput.checked));
-        const health = await safeIndexCall(() => api.indexes.getHealth());
-        applyVaultIndexStatus(panel, health);
-        if (!result || result.ok === false) setText(panel.fullTextIndexStatus, result && result.message ? result.message : 'Could not update full-text index setting.');
-      });
-    }
-
-    if (panel.deleteFullTextButton && !panel.deleteFullTextButton.dataset.bound) {
-      panel.deleteFullTextButton.dataset.bound = 'true';
-      panel.deleteFullTextButton.addEventListener('click', async () => {
-        if (!api || !api.indexes || typeof api.indexes.deleteFullText !== 'function') return;
-        panel.deleteFullTextButton.disabled = true;
-        setText(panel.fullTextIndexStatus, 'Removing local full-text index...');
-        const result = await safeIndexCall(() => api.indexes.deleteFullText());
-        const health = await safeIndexCall(() => api.indexes.getHealth());
-        applyVaultIndexStatus(panel, health);
-        if (!result || result.ok === false) setText(panel.fullTextIndexStatus, result && result.message ? result.message : 'Could not remove full-text index.');
-      });
-    }
-  }
-  function applyFullTextIndexStatus(panel, status) {
-    if (!panel.fullTextIndexStatus) return;
-    const state = status && status.state ? status.state : 'no_vault';
-    const messages = {
-      no_vault: 'Open a vault to configure full-text search.',
-      disabled: 'Disabled. Enable it to build an exact-match index.',
-      no_index: 'No local search index yet.',
-      ready: 'Full-text search index is ready.',
-      stale: 'Full-text search index needs refresh.',
-      indexing: 'Full-text search index is updating.',
-      invalid: 'Full-text search index could not be read.'
-    };
-    panel.fullTextIndexStatus.dataset.indexState = state;
-    setText(panel.fullTextIndexStatus, messages[state] || 'Full-text search status unavailable.');
-    setText(panel.fullTextIndexDisclosure, state === 'disabled'
-      ? status && status.cacheExists
-        ? 'Disabled. A retained local cache can be deleted below or reused after enabling.'
-        : 'Enable once to store normalized terms and heading references in .vitruvios/index/search/. Original Markdown content is not copied.'
-      : state === 'no_index'
-        ? 'Search is enabled. Build the local index to make it available.'
-        : 'Local cache: ' + (Number(status && status.documentCount) || 0) + ' notes, ' + (Number(status && status.termCount) || 0) + ' terms.');
-    if (panel.fullTextEnabledInput) {
-      panel.fullTextEnabledInput.checked = status && status.enabled === true;
-      panel.fullTextEnabledInput.disabled = state === 'no_vault' || state === 'indexing';
-    }
-
-    if (panel.deleteFullTextButton) {
-      panel.deleteFullTextButton.hidden = state === 'no_vault' || state === 'no_index' || (state === 'disabled' && !(status && status.cacheExists));
-      panel.deleteFullTextButton.disabled = state === 'indexing';
-    }
-  }
-  function createEmbeddingNumberField(labelText, key, value, options) {
-    options = options || {};
-    const label = document.createElement('label');
-    label.className = 'settings-limit-field';
-    label.innerHTML = '<span></span><input type="number" step="1" data-settings-embedding>';
-    label.querySelector('span').textContent = labelText;
-    const input = label.querySelector('input');
-    input.setAttribute('data-embedding-key', key);
-    if (options.min !== undefined) input.setAttribute('min', String(options.min));
-    if (options.max !== undefined) input.setAttribute('max', String(options.max));
-    input.value = String(value);
-    return label;
-  }
-
-  function createEmbeddingModeField(value) {
-    const fieldset = document.createElement('fieldset');
-    fieldset.className = 'settings-limit-field settings-embedding-source';
-    fieldset.dataset.settingsEmbeddingSource = '';
-    const legend = document.createElement('legend');
-    legend.textContent = 'Search source';
-    fieldset.appendChild(legend);
-    const selected = getSimilaritySourceOptions().normalize(value);
-    getSimilaritySourceOptions().options().forEach((source) => {
-      const label = document.createElement('label');
-      const input = document.createElement('input');
-      input.type = 'radio';
-      input.name = 'settings-embedding-source';
-      input.value = source.value;
-      input.checked = source.value === selected;
-      label.appendChild(input);
-      label.appendChild(document.createTextNode(source.label));
-      fieldset.appendChild(label);
-    });
-    return fieldset;
-  }
-
-  function readEmbeddingMode(root, fallback) {
-    const selected = root.querySelector('[data-settings-embedding-source] input:checked');
-    return getSimilaritySourceOptions().normalize(selected && selected.value ? selected.value : fallback);
-  }
-
-  function getSimilaritySourceOptions() {
-    return window.VitruviosSimilaritySourceOptions;
-  }
-
-  function readEmbeddingValue(root, key, fallback) {
-    const input = root.querySelector('[data-embedding-key="' + key + '"]');
-    return input ? input.value : fallback;
-  }
-
   async function renderVaultProfileSettings(panel, api, statusBar, vaultProfileState) {
     if (!api || !api.vault || typeof api.vault.getProfile !== 'function') {
       panel.vaultRoleList.innerHTML = '<div class="settings-empty">Open a vault to configure its profile.</div>';
@@ -1027,7 +826,7 @@
 
   function appendVisualIcon(target, icon) {
     const renderer = getIconRenderer();
-    const registry = typeof window !== 'undefined' ? window.VitruviosIconRegistry : null;
+    const registry = typeof window !== 'undefined' ? window.VincariosIconRegistry : null;
     const visualRenderer = getVaultProfileVisualIconRenderer();
     if (!renderer || !registry || !registry.resolveFolderVisualIconName) return;
     const visual = { icon: icon || { kind: 'builtin', id: 'folder' } };
@@ -1043,7 +842,7 @@
   }
 
   function getVaultProfileVisualIconRenderer() {
-    return typeof window !== 'undefined' ? window.VitruviosVaultProfileVisualIconRenderer : null;
+    return typeof window !== 'undefined' ? window.VincariosVaultProfileVisualIconRenderer : null;
   }
 
   function applyVisualColor(target, visual) {
@@ -1081,13 +880,13 @@
   }
 
   function createVaultProfileDraftState() {
-    const module = typeof window !== 'undefined' ? window.VitruviosVaultProfileDraftState : null;
+    const module = typeof window !== 'undefined' ? window.VincariosVaultProfileDraftState : null;
     return module && typeof module.createVaultProfileDraftState === 'function'
       ? module.createVaultProfileDraftState({ helpers: getFolderVisualHelpers() })
       : null;
   }
   function getFolderVisualHelpers() {
-    return typeof window !== 'undefined' ? window.VitruviosFolderVisuals : null;
+    return typeof window !== 'undefined' ? window.VincariosFolderVisuals : null;
   }
   function createProviderRow(provider, settings) {
     const row = document.createElement('div');
@@ -1139,8 +938,8 @@
   }
 
   function getDefaultVaultRoles() {
-    const defaults = window.VitruviosVaultProfile && window.VitruviosVaultProfile.DEFAULT_FOLDERS
-      ? window.VitruviosVaultProfile.DEFAULT_FOLDERS
+    const defaults = window.VincariosVaultProfile && window.VincariosVaultProfile.DEFAULT_FOLDERS
+      ? window.VincariosVaultProfile.DEFAULT_FOLDERS
       : { inbox: '00_Inbox', daily: '01_Daily', projects: '02_Projects', knowledge: '03_Knowledge', brain: '90_AI_Brain', archive: '99_Archive' };
     return Object.keys(defaults).map((id) => ({
       id,
@@ -1151,7 +950,7 @@
 
   function notifySettingsUpdated() {
     if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-      window.dispatchEvent(new CustomEvent('vitruvios:settings-updated'));
+      window.dispatchEvent(new CustomEvent('vincarios:settings-updated'));
     }
   }
 
@@ -1163,13 +962,6 @@
     }
   }
 
-  async function safeIndexCall(callback) {
-    try {
-      return await callback();
-    } catch (error) {
-      return { ok: false, code: 'index_request_failed', message: error && error.message ? error.message : 'Index request failed.' };
-    }
-  }
   function setText(node, value) {
     if (node) node.textContent = value || '';
   }
@@ -1179,6 +971,6 @@
   }
 
   if (typeof window !== 'undefined') {
-    window.VitruviosSettingsPanel = Object.freeze({ mountSettingsPanel });
+    window.VincariosSettingsPanel = Object.freeze({ mountSettingsPanel });
   }
 })();

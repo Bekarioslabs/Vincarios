@@ -129,7 +129,7 @@
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
   }
   function formatItemLabel(item) {
     if (item && item.kind === 'folder_snapshot') {
@@ -203,5 +203,5 @@
   const api = { mountContextBasket, formatItemLabel, formatItemTitle, formatItemPathContext, targetIconFor };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosContextBasket = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosContextBasket = Object.freeze(api);
 })();

@@ -8,7 +8,7 @@ Expose the selected vault's local embedding-index state in Settings and provide 
 
 V1 adds index status plus one explicit action in Settings > Embeddings.
 
-- A newly opened vault shows `No index yet` and does not create `.vitruvios/index`.
+- A newly opened vault shows `No index yet` and does not create `.vincarios/index`.
 - `Build index` creates the index only after direct user intent.
 - Once an index exists, `Refresh index` scans Markdown files and re-embeds only changed or new documents. Deleted documents are removed from the next saved document set.
 - The status shows Markdown document count, chunk count, active model identity, and the last successful indexed time.
@@ -19,7 +19,7 @@ V1 adds index status plus one explicit action in Settings > Embeddings.
 - Automatic indexing on vault open.
 - Custom model picker, local model-path selection, downloads, or remote embedding providers.
 - Search UI, Recent Files, Homepage, and metadata-index implementation.
-- Editing vault notes or exposing `.vitruvios` in the file tree.
+- Editing vault notes or exposing `.vincarios` in the file tree.
 
 ## Ownership
 
@@ -68,4 +68,4 @@ Status text is app-owned, concise, and carries no private note content or absolu
 - Indexer test: a failed refresh preserves a previously valid manifest/documents pair.
 - IPC/preload test: renderer receives status/refresh only, never filesystem APIs.
 - Settings source/integration test: index controls use the Embeddings API.
-- Manual: new vault stays free of `.vitruvios/index` until Build; refresh skips unchanged notes; changed/deleted notes update correctly.
+- Manual: new vault stays free of `.vincarios/index` until Build; refresh skips unchanged notes; changed/deleted notes update correctly.

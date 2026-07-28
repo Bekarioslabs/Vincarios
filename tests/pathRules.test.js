@@ -23,7 +23,7 @@ test('normalizes simple vault-relative paths', () => {
 test('rejects absolute, URL, drive-qualified, and traversal paths', () => {
   const cases = [
     'C:\\Users\\beka\\secret.md',
-    'D:/Vitruvios_AGENT/vitruvios/Note.md',
+    'D:/Vincarios_AGENT/vincarios/Note.md',
     '/etc/passwd',
     '\\\\server\\share\\file.md',
     'file:///D:/vault/file.md',
@@ -39,8 +39,8 @@ test('rejects absolute, URL, drive-qualified, and traversal paths', () => {
 test('blocks protected dot folders anywhere in the relative path', () => {
   const cases = [
     '.obsidian/app.json',
-    '90_AI_Brain/.vitruvios/config.json',
-    '00_Inbox/.vitruvios/config.json',
+    '90_AI_Brain/.vincarios/config.json',
+    '00_Inbox/.vincarios/config.json',
     '.git/config'
   ];
 

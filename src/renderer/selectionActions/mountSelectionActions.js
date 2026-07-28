@@ -26,8 +26,8 @@
       similarNotesSessionOptions = null;
       removeOpenActionForms();
     };
-    app.addEventListener('vitruvios:files-collapse-change', onFilesCollapseChanged);
-    app.addEventListener('vitruvios:embedding-similar-defaults-change', onSimilarDefaultsChanged);
+    app.addEventListener('vincarios:files-collapse-change', onFilesCollapseChanged);
+    app.addEventListener('vincarios:embedding-similar-defaults-change', onSimilarDefaultsChanged);
 
     render(contextState.snapshot());
 
@@ -319,65 +319,30 @@
       onRequestPanelExpand();
       removeOpenActionForms();
       const defaults = await loadSimilarNotesDefaults();
-      const form = document.createElement('form');
-      form.className = 'selection-action-form';
-      form.dataset.actionId = 'file.findSimilar';
-      form.innerHTML = [
-        '<label class="selection-action-form-label">Find similar notes</label>',
-        '<div class="selection-action-grid">',
-        '  <fieldset class="selection-action-source" data-similar-source><legend>Search source</legend><label><input type="radio" name="similar-source" value="content">Content</label><label><input type="radio" name="similar-source" value="metadata">Metadata</label><label><input type="radio" name="similar-source" value="mixed">Both</label></fieldset>',
-        '  <fieldset class="selection-action-source" data-similar-scope><legend>Search scope</legend><label title="Search within the active Vault Role, or the current top-level area when no role is assigned."><input type="radio" name="similar-scope" value="same_role">Relevant area</label><label><input type="radio" name="similar-scope" value="whole_vault">Whole vault</label></fieldset>',
-        '  <label><span>Minimum match %</span><input type="number" min="0" max="100" step="1" data-similar-min></label>',
-        '  <label><span>Max results</span><input type="number" min="1" step="1" data-similar-limit></label>',
-        '  <label class="selection-action-check"><input type="checkbox" data-similar-refresh-index><span>Refresh index first</span></label>',
-        '</div>',
-        '<div class="selection-action-form-actions">',
-        '  <button type="submit">Find</button>',
-        '  <button type="button" data-similar-cancel>Cancel</button>',
-        '</div>'
-      ].join('');
-      const values = similarNotesSessionOptions || defaults;
-      form.querySelector('[data-similar-min]').value = String(values.minimumScorePercent);
-      form.querySelector('[data-similar-limit]').value = String(values.maxResults);
-      const sourceOption = form.querySelector('[data-similar-source] input[value="' + getSimilaritySourceOptions().normalize(values.mode) + '"]');
-      if (sourceOption) sourceOption.checked = true;
-      const scopeOption = form.querySelector('[data-similar-scope] input[value="' + (values.scope === 'whole_vault' ? 'whole_vault' : 'same_role') + '"]');
-      if (scopeOption) scopeOption.checked = true;
-      form.querySelector('[data-similar-refresh-index]').checked = values.refreshIndex === true;
-      form.querySelector('[data-similar-cancel]').addEventListener('click', () => form.remove());
-      form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const selectedSource = form.querySelector('[data-similar-source] input:checked');
-        const similarity = getSimilaritySourceOptions().weightsFor(selectedSource && selectedSource.value);
-        const selectedScope = form.querySelector('[data-similar-scope] input:checked');
-        const options = {
-          mode: similarity.mode,
-          minimumScorePercent: form.querySelector('[data-similar-min]').value,
-          contentWeight: similarity.contentWeight,
-          metadataWeight: similarity.metadataWeight,
-          limit: form.querySelector('[data-similar-limit]').value,
-          scope: selectedScope && selectedScope.value,
-          refreshIndex: form.querySelector('[data-similar-refresh-index]').checked
-        };
-        similarNotesSessionOptions = Object.assign({}, options, { maxResults: options.limit });
-        form.remove();
-        findSimilarNotes(snapshot, options);
+      getSimilarNotesForm().mountSimilarNotesForm({
+        host: host || root,
+        initialOptions: similarNotesSessionOptions || defaults,
+        sourceOptions: getSimilaritySourceOptions(),
+        onSubmit: (formOptions) => {
+          similarNotesSessionOptions = Object.assign({}, formOptions, { maxResults: formOptions.limit });
+          findSimilarNotes(snapshot, formOptions);
+        }
       });
-      appendActionForm(host, form);
-      const submit = form.querySelector('button[type="submit"]');
-      if (submit) submit.focus();
-    }
-
-    function appendActionForm(host, form) {
-      const target = host && typeof host.appendChild === 'function' ? host : root;
-      target.appendChild(form);
     }
 
     function removeOpenActionForms() {
       Array.from(root.querySelectorAll('.selection-action-form')).forEach(removeNode);
     }
     function getSimilaritySourceOptions() {
-      return window.VitruviosSimilaritySourceOptions;
+      return window.VincariosSimilaritySourceOptions;
+    }
+
+    function getSimilarNotesForm() {
+      return window.VincariosSimilarNotesForm;
+    }
+
+    function getUpdateInstructionForm() {
+      return window.VincariosUpdateInstructionForm;
     }
 
     async function loadSimilarNotesDefaults() {
@@ -428,60 +393,15 @@
     function renderUpdateInstructionForm(snapshot, host) {
       onRequestPanelExpand();
       removeOpenActionForms();
-
-      const form = document.createElement('form');
-      form.className = 'selection-action-form';
-      form.dataset.actionId = 'file.proposeUpdate';
-
-      const label = document.createElement('label');
-      label.className = 'selection-action-form-label';
-      label.textContent = 'Content update instruction';
-
-      const textarea = document.createElement('textarea');
-      textarea.rows = 4;
-      textarea.placeholder = 'Describe the content change for this note. Rename/move are not part of this action...';
-
-      const actions = document.createElement('div');
-      actions.className = 'selection-action-form-actions';
-
-      const submit = document.createElement('button');
-      submit.type = 'submit';
-      submit.textContent = 'Create proposal';
-
-      const cancel = document.createElement('button');
-      cancel.type = 'button';
-      cancel.textContent = 'Cancel';
-      cancel.addEventListener('click', () => {
-        if (!confirmDiscardActionForm(textarea, 'Discard update instruction?')) return;
-        form.remove();
+      getUpdateInstructionForm().mountUpdateInstructionForm({
+        host: host || root,
+        confirmDiscard: (message) => typeof window !== 'undefined'
+          && typeof window.confirm === 'function'
+          && window.confirm(message),
+        onInvalid: (result) => setText(status, result.message),
+        onSubmit: (instruction) => proposeFileUpdate(snapshot, instruction)
       });
-
-      actions.appendChild(submit);
-      actions.appendChild(cancel);
-      form.appendChild(label);
-      form.appendChild(textarea);
-      form.appendChild(actions);
-      form.addEventListener('submit', (event) => {
-        event.preventDefault();
-        const instruction = textarea.value.trim();
-        if (!instruction) {
-          setText(status, 'Update proposal needs an instruction.');
-          textarea.focus();
-          return;
-        }
-        form.remove();
-        proposeFileUpdate(snapshot, instruction);
-      });
-
-      appendActionForm(host, form);
-      textarea.focus();
       setText(status, 'Describe update for: ' + snapshot.path);
-    }
-
-    function confirmDiscardActionForm(input, message) {
-      if (!input || !String(input.value || '').trim()) return true;
-      if (typeof window === 'undefined' || typeof window.confirm !== 'function') return false;
-      return window.confirm(message || 'Discard unsaved changes?');
     }
 
     async function proposeFileUpdate(snapshot, instruction) {
@@ -769,8 +689,8 @@
       options = options || {};
       const chatLog = app.querySelector('#chat-log');
       if (!chatLog) return;
-      if (typeof window !== 'undefined' && window.VitruviosChat && typeof window.VitruviosChat.appendMessage === 'function') {
-        const message = window.VitruviosChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction, presentation: options.presentation });
+      if (typeof window !== 'undefined' && window.VincariosChat && typeof window.VincariosChat.appendMessage === 'function') {
+        const message = window.VincariosChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction, presentation: options.presentation });
         if (options.pending && message) {
           message.classList.add('chat-message-pending');
           message.setAttribute('aria-busy', 'true');
@@ -785,7 +705,7 @@
       }
       const label = document.createElement('div');
       label.className = 'chat-message-label';
-      label.textContent = 'vitruvios';
+      label.textContent = 'vincarios';
       const body = document.createElement('div');
       body.className = 'chat-message-body';
       body.textContent = content;
@@ -841,7 +761,7 @@
     }
 
     function getPermissionText() {
-      if (typeof window !== 'undefined' && window.VitruviosSelectionActionPermissionText) return window.VitruviosSelectionActionPermissionText;
+      if (typeof window !== 'undefined' && window.VincariosSelectionActionPermissionText) return window.VincariosSelectionActionPermissionText;
       if (typeof require === 'function') return require('./permissionText');
       return {
         missingPermissionMessage(options) {
@@ -856,7 +776,13 @@
     }
 
     function normalizePath(value) {
-      return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
+      return getVaultPathApi().normalizeRelativePath(value);
+    }
+
+    function getVaultPathApi() {
+      if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+      if (typeof require === 'function') return require('../path/vaultPath');
+      throw new Error('Vault path contract unavailable.');
     }
 
     function formatSimilarNotesSummary(targetPath, result, targetContent) {
@@ -929,8 +855,8 @@
       },
       destroy() {
         if (typeof unsubscribe === 'function') unsubscribe();
-        app.removeEventListener('vitruvios:files-collapse-change', onFilesCollapseChanged);
-        app.removeEventListener('vitruvios:embedding-similar-defaults-change', onSimilarDefaultsChanged);
+        app.removeEventListener('vincarios:files-collapse-change', onFilesCollapseChanged);
+        app.removeEventListener('vincarios:embedding-similar-defaults-change', onSimilarDefaultsChanged);
       }
     });
   }
@@ -992,88 +918,88 @@
 
 
   function getTagCandidateAction() {
-    if (typeof window !== 'undefined' && window.VitruviosTagCandidateAction) return window.VitruviosTagCandidateAction;
+    if (typeof window !== 'undefined' && window.VincariosTagCandidateAction) return window.VincariosTagCandidateAction;
     if (typeof module !== 'undefined' && module.exports) return require('./tagCandidateAction');
     return null;
   }
 
   function getSimilarNotesPresentation() {
-    if (typeof window !== 'undefined' && window.VitruviosSimilarNotesPresentation) return window.VitruviosSimilarNotesPresentation;
+    if (typeof window !== 'undefined' && window.VincariosSimilarNotesPresentation) return window.VincariosSimilarNotesPresentation;
     if (typeof module !== 'undefined' && module.exports) return require('./similarNotesPresentation');
     return null;
   }
 
   function getRegistry() {
-    if (typeof window !== 'undefined' && window.VitruviosSelectionActionRegistry) return window.VitruviosSelectionActionRegistry;
+    if (typeof window !== 'undefined' && window.VincariosSelectionActionRegistry) return window.VincariosSelectionActionRegistry;
     if (typeof module !== 'undefined' && module.exports) return require('./actionRegistry');
-    throw new Error('vitruvios selection action registry is not available.');
+    throw new Error('vincarios selection action registry is not available.');
   }
 
   function getCategories() {
-    if (typeof window !== 'undefined' && window.VitruviosSelectionActionCategories) return window.VitruviosSelectionActionCategories;
+    if (typeof window !== 'undefined' && window.VincariosSelectionActionCategories) return window.VincariosSelectionActionCategories;
     if (typeof module !== 'undefined' && module.exports) return require('./actionCategories');
-    throw new Error('vitruvios selection action categories are not available.');
+    throw new Error('vincarios selection action categories are not available.');
   }
 
   function getIconRenderer() {
-    return (typeof window !== 'undefined' && window.VitruviosIconRenderer) ? window.VitruviosIconRenderer : null;
+    return (typeof window !== 'undefined' && window.VincariosIconRenderer) ? window.VincariosIconRenderer : null;
   }
 
   function getSummaryResponsePresentation() {
-    if (typeof window !== 'undefined' && window.VitruviosSummaryResponsePresentation) return window.VitruviosSummaryResponsePresentation;
+    if (typeof window !== 'undefined' && window.VincariosSummaryResponsePresentation) return window.VincariosSummaryResponsePresentation;
     if (typeof module !== 'undefined' && module.exports) return require('./summaryResponsePresentation');
-    throw new Error('vitruvios summary response presentation is not available.');
+    throw new Error('vincarios summary response presentation is not available.');
   }
   function getFileSummaryAction() {
-    if (typeof window !== 'undefined' && window.VitruviosFileSummaryAction) return window.VitruviosFileSummaryAction;
+    if (typeof window !== 'undefined' && window.VincariosFileSummaryAction) return window.VincariosFileSummaryAction;
     if (typeof module !== 'undefined' && module.exports) return require('./fileSummaryAction');
     return null;
   }
 
   function getSelectedUpdateProposalAction() {
-    if (typeof window !== 'undefined' && window.VitruviosSelectedUpdateProposalAction) return window.VitruviosSelectedUpdateProposalAction;
+    if (typeof window !== 'undefined' && window.VincariosSelectedUpdateProposalAction) return window.VincariosSelectedUpdateProposalAction;
     if (typeof module !== 'undefined' && module.exports) return require('../chat/selectedUpdateProposalAction');
     return null;
   }
 
   function getFolderSummaryAction() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderSummaryAction) return window.VitruviosFolderSummaryAction;
+    if (typeof window !== 'undefined' && window.VincariosFolderSummaryAction) return window.VincariosFolderSummaryAction;
     if (typeof module !== 'undefined' && module.exports) return require('./folderSummaryAction');
     return null;
   }
 
   function getFolderInspectAction() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderInspectAction) return window.VitruviosFolderInspectAction;
+    if (typeof window !== 'undefined' && window.VincariosFolderInspectAction) return window.VincariosFolderInspectAction;
     if (typeof module !== 'undefined' && module.exports) return require('./folderInspectAction');
-    throw new Error('vitruvios folder inspection API is not available.');
+    throw new Error('vincarios folder inspection API is not available.');
   }
 
   function getActionDefaults() {
-    if (typeof window !== 'undefined' && window.VitruviosActionDefaults) return window.VitruviosActionDefaults;
+    if (typeof window !== 'undefined' && window.VincariosActionDefaults) return window.VincariosActionDefaults;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/settings/actionDefaults');
-    throw new Error('vitruvios action defaults API is not available.');
+    throw new Error('vincarios action defaults API is not available.');
   }
 
   function getFolderScopeOptions() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderScopeOptions) return window.VitruviosFolderScopeOptions;
+    if (typeof window !== 'undefined' && window.VincariosFolderScopeOptions) return window.VincariosFolderScopeOptions;
     if (typeof module !== 'undefined' && module.exports) return require('./folderScopeOptions');
-    throw new Error('vitruvios folder scope options API is not available.');
+    throw new Error('vincarios folder scope options API is not available.');
   }
 
   function getFolderScopeForm() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderScopeForm) return window.VitruviosFolderScopeForm;
+    if (typeof window !== 'undefined' && window.VincariosFolderScopeForm) return window.VincariosFolderScopeForm;
     if (typeof module !== 'undefined' && module.exports) return require('./folderScopeForm');
-    throw new Error('vitruvios folder scope form API is not available.');
+    throw new Error('vincarios folder scope form API is not available.');
   }
 
   function getFolderContextSnapshotAction() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderContextSnapshotAction) return window.VitruviosFolderContextSnapshotAction;
+    if (typeof window !== 'undefined' && window.VincariosFolderContextSnapshotAction) return window.VincariosFolderContextSnapshotAction;
     if (typeof module !== 'undefined' && module.exports) return require('./folderContextSnapshotAction');
     return null;
   }
 
   function getFolderMarkdownScopeReader() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderMarkdownScopeReader) return window.VitruviosFolderMarkdownScopeReader;
+    if (typeof window !== 'undefined' && window.VincariosFolderMarkdownScopeReader) return window.VincariosFolderMarkdownScopeReader;
     if (typeof module !== 'undefined' && module.exports) return require('./folderMarkdownScopeReader');
     return null;
   }
@@ -1084,7 +1010,7 @@
   }
 
   function getFolderController() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderContextController) return window.VitruviosFolderContextController;
+    if (typeof window !== 'undefined' && window.VincariosFolderContextController) return window.VincariosFolderContextController;
     if (typeof module !== 'undefined' && module.exports) return require('../context/folderContextController');
     return null;
   }
@@ -1096,5 +1022,5 @@
   const api = { mountSelectionActions, formatFolderAnalysis };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosSelectionActions = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosSelectionActions = Object.freeze(api);
 })();

@@ -86,5 +86,5 @@
   const api = { mountSessionLog };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosSessionLog = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosSessionLog = Object.freeze(api);
 })();

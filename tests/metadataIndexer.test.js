@@ -10,19 +10,19 @@ const { createMetadataIndexer } = require('../src/main/metadata/metadataIndexer'
 const { createMetadataIndexStore } = require('../src/main/metadata/metadataIndexStore');
 
 function createVault() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-metadata-indexer-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-metadata-indexer-'));
   fs.mkdirSync(path.join(root, '00_Inbox'), { recursive: true });
   fs.writeFileSync(path.join(root, '00_Inbox', 'Valid.md'), '---\ntags: [inbox]\ntype: note\n---\n# Valid title\n', 'utf8');
   fs.writeFileSync(path.join(root, '00_Inbox', 'Broken.md'), '---\ntags: [broken,\n---\n# Broken title\n', 'utf8');
   return root;
 }
 
-test('metadata indexer records valid and malformed Markdown without indexing protected folders', () => {
+test('metadata indexer records valid and malformed Markdown without indexing protected folders', async () => {
   const root = createVault();
   const indexer = createMetadataIndexer();
   assert.equal(indexer.setRoot(root).ok, true);
 
-  const rebuilt = indexer.rebuildIndex();
+  const rebuilt = await indexer.rebuildIndex();
   assert.equal(rebuilt.ok, true);
   assert.equal(rebuilt.indexedCount, 2);
   assert.equal(rebuilt.malformedCount, 1);
@@ -33,30 +33,30 @@ test('metadata indexer records valid and malformed Markdown without indexing pro
   assert.equal(loaded.documents['00_Inbox/Valid.md'].title, 'Valid title');
   assert.deepEqual(loaded.documents['00_Inbox/Valid.md'].fields.tags, ['inbox']);
   assert.equal(loaded.documents['00_Inbox/Broken.md'].frontmatterState, 'invalid');
-  assert.equal(Object.keys(loaded.documents).some((entry) => entry.startsWith('.vitruvios/')), false);
+  assert.equal(Object.keys(loaded.documents).some((entry) => entry.startsWith('.vincarios/')), false);
 });
 
-test('metadata indexer reuses unchanged records and rebuilds changed source', () => {
+test('metadata indexer reuses unchanged records and rebuilds changed source', async () => {
   const root = createVault();
   const indexer = createMetadataIndexer();
   indexer.setRoot(root);
-  indexer.rebuildIndex();
+  await indexer.rebuildIndex();
 
-  const unchanged = indexer.rebuildIndex();
+  const unchanged = await indexer.rebuildIndex();
   assert.equal(unchanged.indexedCount, 0);
   assert.equal(unchanged.reusedCount, 2);
 
   fs.writeFileSync(path.join(root, '00_Inbox', 'Valid.md'), '# Updated title\n', 'utf8');
-  const changed = indexer.rebuildIndex();
+  const changed = await indexer.rebuildIndex();
   assert.equal(changed.indexedCount, 1);
   assert.equal(changed.reusedCount, 1);
 });
 
-test('metadata indexer updates and removes only changed Markdown paths', () => {
+test('metadata indexer updates and removes only changed Markdown paths', async () => {
   const root = createVault();
   const indexer = createMetadataIndexer();
   indexer.setRoot(root);
-  indexer.rebuildIndex();
+  await indexer.rebuildIndex();
 
   fs.writeFileSync(path.join(root, '00_Inbox', 'Valid.md'), '---\ntags: [updated]\n---\n# Updated title\n', 'utf8');
   const updated = indexer.syncChangedPaths(['00_Inbox/Valid.md']);

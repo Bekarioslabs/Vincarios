@@ -6,17 +6,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 test('file rows are not buttons because they contain permission buttons', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'fileTreeRenderer.js'), 'utf8');
+  const panelSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
   assert.doesNotMatch(source, /const row = document\.createElement\('button'\)/);
   assert.match(source, /const row = document\.createElement\('div'\)/);
   assert.match(source, /row\.setAttribute\('role', 'button'\)/);
-  assert.match(source, /createPermissionButton/);
+  assert.match(panelSource, /createPermissionButton/);
 });
-test('file panel renders permission controls before icon and label', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
-  const controlsIndex = source.indexOf('row.appendChild(createPermissionControls(entry.path));');
-  const iconIndex = source.indexOf('row.appendChild(icon);');
+test('file tree renderer places permission controls before icon and label', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'fileTreeRenderer.js'), 'utf8');
+  const controlsIndex = source.indexOf('row.appendChild(options.createPermissionControls(entry.path));');
+  const iconIndex = source.indexOf('row.appendChild(options.createEntryIcon(entry));');
   const labelIndex = source.indexOf('row.appendChild(label);');
 
   assert.equal(controlsIndex > -1, true);
@@ -48,8 +49,11 @@ test('file panel refresh preserves navigator state instead of reopening root', (
   assert.doesNotMatch(source, /refreshButton\.addEventListener\('click', async \(\) => \{\s*entriesByFolder\.clear\(\);\s*await openRoot\(\);\s*\}\);/);
 });
 
-test('file panel source avoids mojibake-prone inline icon glyphs', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+test('file panel sources avoid mojibake-prone inline icon glyphs', () => {
+  const source = [
+    fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8'),
+    fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'fileTreeRenderer.js'), 'utf8')
+  ].join('\\n');
 
   assert.doesNotMatch(source, new RegExp(String.fromCharCode(65533)));
   assert.doesNotMatch(source, /\u00e2|\u2022/);
@@ -80,11 +84,12 @@ test('file panel passes write permission into selected context details', () => {
   assert.match(source, /function canUsePathAsUpdateTarget/);
   assert.match(source, /permissionState\.resolve\(path\)\.write === true/);
 });
-test('file panel focuses rows before activation so keyboard navigation can continue', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
+test('file tree interaction preserves keyboard focus across activation and rerenders', () => {
+  const treeSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'fileTreeRenderer.js'), 'utf8');
+  const panelSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
-  assert.match(source, /focusTreeRow\(row\);\s*await activateEntry\(entry\)/);
-  assert.match(source, /focusRenderedPath\(entry\.path\)/);
+  assert.match(treeSource, /options\.focusTreeRow\(row\);\s*await options\.activateEntry\(entry\)/);
+  assert.match(panelSource, /focusRenderedPath\(entry\.path\)/);
 });
 test('file panel exposes a shell-owned collapse control and expands for explicit reveal actions', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');

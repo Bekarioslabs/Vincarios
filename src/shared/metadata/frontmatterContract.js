@@ -260,7 +260,7 @@
   }
 
   function getYamlApi() {
-    if (typeof window !== 'undefined' && window.VitruviosYamlRuntime) return window.VitruviosYamlRuntime;
+    if (typeof window !== 'undefined' && window.VincariosYamlRuntime) return window.VincariosYamlRuntime;
     if (typeof module !== 'undefined' && module.exports) return require('yaml');
     throw new Error('YAML runtime unavailable.');
   }
@@ -276,5 +276,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFrontmatterContract = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFrontmatterContract = Object.freeze(api);
 })();

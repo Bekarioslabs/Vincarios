@@ -5,15 +5,18 @@ function createEmbeddingIndexHealthService(options) {
   const statusService = options.statusService;
   const indexer = options.indexer;
   const freshnessService = options.freshnessService || null;
+  const refreshCoordinator = options.refreshCoordinator || null;
   const listeners = new Set();
   let stale = false;
   let refreshing = false;
   let changeRevision = 0;
+  let rootRevision = 0;
 
   function setRoot(vaultRoot) {
     stale = false;
     refreshing = false;
     changeRevision = 0;
+    rootRevision += 1;
     const result = statusService && typeof statusService.setRoot === 'function'
       ? statusService.setRoot(vaultRoot)
       : fail('embedding_index_unavailable', 'Embedding index status service unavailable.');
@@ -36,7 +39,14 @@ function createEmbeddingIndexHealthService(options) {
     return status;
   }
 
-  async function refreshIndex(refreshOptions) {
+  function refreshIndex(refreshOptions) {
+    const operation = () => runRefresh(refreshOptions);
+    return refreshCoordinator && typeof refreshCoordinator.run === 'function'
+      ? refreshCoordinator.run('embeddings:' + rootRevision, operation)
+      : operation();
+  }
+
+  async function runRefresh(refreshOptions) {
     if (!indexer || typeof indexer.rebuildIndex !== 'function') {
       return fail('embeddings_unavailable', 'Embedding indexer unavailable.');
     }
@@ -48,7 +58,7 @@ function createEmbeddingIndexHealthService(options) {
         const freshness = freshnessService.refreshSnapshot();
         if (!freshness.ok) return freshness;
       }
-      const result = await indexer.rebuildIndex();
+      const result = await indexer.rebuildIndex(refreshOptions || {});
       if (result && result.ok && changeRevision === refreshRevision) stale = false;
       return result;
     } finally {

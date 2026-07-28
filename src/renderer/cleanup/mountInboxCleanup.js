@@ -106,11 +106,17 @@
   }
 
   function normalizePath(value) {
-    return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
+    return getVaultPathApi().normalizeRelativePath(value);
+  }
+
+  function getVaultPathApi() {
+    if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+    if (typeof require === 'function') return require('../path/vaultPath');
+    throw new Error('Vault path contract unavailable.');
   }
 
   function getInboxPath() {
-    const profileApi = typeof window !== 'undefined' ? window.VitruviosVaultProfile : null;
+    const profileApi = typeof window !== 'undefined' ? window.VincariosVaultProfile : null;
     if (profileApi && typeof profileApi.getFolderRolePath === 'function' && profileApi.FOLDER_ROLES) {
       try {
         return profileApi.getFolderRolePath(profileApi.DEFAULT_VAULT_PROFILE, profileApi.FOLDER_ROLES.inbox);
@@ -122,11 +128,11 @@
   }
 
   function getReportApi() {
-    return typeof window !== 'undefined' ? window.VitruviosInboxCleanupReport : null;
+    return typeof window !== 'undefined' ? window.VincariosInboxCleanupReport : null;
   }
 
   function appendReportMessage(chatLog, content, options) {
-    const chatApi = typeof window !== 'undefined' ? window.VitruviosChat : null;
+    const chatApi = typeof window !== 'undefined' ? window.VincariosChat : null;
     if (chatApi && typeof chatApi.appendMessage === 'function') {
       return chatApi.appendMessage(chatLog, 'assistant', content, options || {});
     }
@@ -143,5 +149,5 @@
 
   const api = Object.freeze({ mountInboxCleanup, runInboxCleanupReport });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosInboxCleanup = api;
+  if (typeof window !== 'undefined') window.VincariosInboxCleanup = api;
 })();

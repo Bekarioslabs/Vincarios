@@ -15,7 +15,30 @@
       return event;
     }
 
-    return Object.freeze({ report });
+    function createStatusSink(defaults) {
+      const input = defaults && typeof defaults === 'object' ? defaults : {};
+      const sink = {};
+      Object.defineProperty(sink, 'textContent', {
+        enumerable: true,
+        get() {
+          return status ? String(status.textContent || '') : '';
+        },
+        set(value) {
+          const message = String(value || '');
+          if (status) status.textContent = message;
+          if (!message || !activityState || typeof activityState.record !== 'function') return;
+          activityState.record({
+            type: String(input.type || 'info'),
+            action: String(input.action || 'Status'),
+            targetPath: String(input.targetPath || ''),
+            detail: message
+          });
+        }
+      });
+      return Object.freeze(sink);
+    }
+
+    return Object.freeze({ report, createStatusSink });
   }
 
   function normalizeReport(input) {
@@ -40,5 +63,5 @@
   const api = { createActivityReporter, normalizeReport };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosActivityReporter = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosActivityReporter = Object.freeze(api);
 })();

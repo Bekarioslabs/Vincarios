@@ -38,19 +38,19 @@ function createMainWindow(electron, options) {
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
   win.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
-    console.error('vitruvios window failed to load:', errorCode, errorDescription);
+    console.error('vincarios window failed to load:', errorCode, errorDescription);
   });
 
   win.webContents.on('preload-error', (_event, preloadPath, error) => {
-    console.error('vitruvios preload failed:', preloadPath, error);
+    console.error('vincarios preload failed:', preloadPath, error);
   });
 
   win.webContents.on('render-process-gone', (_event, details) => {
-    console.error('vitruvios renderer process gone:', details);
+    console.error('vincarios renderer process gone:', details);
   });
 
   win.loadFile(path.join(projectRoot, 'index.html')).catch((error) => {
-    console.error('vitruvios loadFile failed:', error);
+    console.error('vincarios loadFile failed:', error);
   });
 
   return win;

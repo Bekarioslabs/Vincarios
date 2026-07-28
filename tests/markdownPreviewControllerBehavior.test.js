@@ -65,7 +65,7 @@ function createApp(nodes) {
 
 test('preview controller keeps the toolbar title neutral when no file is selected', () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
     }
   };
@@ -89,7 +89,7 @@ test('preview controller keeps the toolbar title neutral when no file is selecte
 
 test('preview controller delegates rendered Markdown link clicks to onOpenLink', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown() {
         return '<span class="markdown-wikilink" data-link-target="Target">Target</span>';
       }
@@ -130,7 +130,7 @@ test('preview controller delegates rendered Markdown link clicks to onOpenLink',
 
 test('preview controller enables Reveal in Files for loaded notes and delegates current path', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown() { return '<p>Note</p>'; }
     }
   };
@@ -163,7 +163,7 @@ test('preview controller enables Reveal in Files for loaded notes and delegates 
 });
 test('preview controller tracks note history for back and forward navigation', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
     }
   };
@@ -210,7 +210,7 @@ test('preview controller tracks note history for back and forward navigation', a
 });
 test('preview controller shows missing link feedback in the preview status area', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown() {
         return '<span class="markdown-wikilink" data-link-target="Missing_Target">Missing_Target</span>';
       }
@@ -251,7 +251,7 @@ test('preview controller shows missing link feedback in the preview status area'
 });
 test('preview controller turns local source edits into update proposals', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
     }
   };
@@ -307,7 +307,7 @@ test('unsaved navigation dialog identifies the local draft, not the next file', 
 });
 test('preview controller blocks navigation away from unsaved local source when the user stays', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
     }
   };
@@ -351,7 +351,7 @@ test('preview controller blocks navigation away from unsaved local source when t
 
 test('preview controller adds unsaved local source to review before allowing navigation', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
     }
   };
@@ -393,7 +393,7 @@ test('preview controller adds unsaved local source to review before allowing nav
 });
 test('preview controller shows update proposal failures in the preview status area', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
     }
   };
@@ -436,7 +436,7 @@ test('preview controller shows update proposal failures in the preview status ar
 });
 test('preview controller shows local-edit status only after content changes', () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
     }
   };
@@ -478,7 +478,7 @@ test('preview controller shows local-edit status only after content changes', ()
 test('preview controller resolves Markdown image placeholders through the vault API', async () => {
   let imageNode = null;
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown() {
         return '<img class="markdown-image-embed" data-image-target="assets/hero.png" alt="Hero" data-image-state="pending">';
       }
@@ -514,7 +514,7 @@ test('preview controller resolves Markdown image placeholders through the vault 
   });
 
   controller.setSource('![Hero](assets/hero.png)', 'Folder/Note.md');
-  await Promise.resolve();
+  await new Promise((resolve) => setImmediate(resolve));
 
   assert.deepEqual(requests, [{ targetPath: 'assets/hero.png', currentPath: 'Folder/Note.md' }]);
   assert.equal(imageNode.src, 'data:image/png;base64,AAAA');
@@ -525,7 +525,7 @@ test('preview controller resolves Markdown image placeholders through the vault 
 
 test('preview controller displays a standalone selected image through the vault API', async () => {
   global.window = {
-    VitruviosMarkdownRenderer: {
+    VincariosMarkdownRenderer: {
       renderMarkdown(source) { return '<p>' + source + '</p>'; }
     }
   };
@@ -563,7 +563,7 @@ test('preview controller displays a standalone selected image through the vault 
   });
 
   controller.setImageAsset('Images/Hero.png');
-  await Promise.resolve();
+  await new Promise((resolve) => setImmediate(resolve));
 
   assert.equal(title.textContent, 'Images/Hero.png');
   assert.equal(editButton.disabled, true);

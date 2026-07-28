@@ -23,16 +23,16 @@ test('index loads selection action modules before shell', () => {
 test('bootstrap requires selection action renderer modules', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'bootstrap.js'), 'utf8');
 
-  assert.match(source, /VitruviosSelectionActionCategories/);
-  assert.match(source, /VitruviosSelectionActionRegistry/);
-  assert.match(source, /VitruviosSelectionActions/);
-  assert.match(source, /VitruviosFileSummaryAction/);
+  assert.match(source, /VincariosSelectionActionCategories/);
+  assert.match(source, /VincariosSelectionActionRegistry/);
+  assert.match(source, /VincariosSelectionActions/);
+  assert.match(source, /VincariosFileSummaryAction/);
 });
 
 test('shell mounts selection action panel with context state', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /VitruviosSelectionActions\.mountSelectionActions/);
+  assert.match(source, /VincariosSelectionActions\.mountSelectionActions/);
   assert.match(source, /contextState/);
   assert.match(source, /reviewBasket/);
 });
@@ -77,7 +77,7 @@ test('summarize file uses the dedicated summary action module and provider API',
   assert.match(source, /summarizeFile/);
   assert.match(source, /buildFileSummaryMessages/);
   assert.match(source, /api\.chat\.send/);
-  assert.match(source, /VitruviosChat\.appendMessage/);
+  assert.match(source, /VincariosChat\.appendMessage/);
 });
 
 test('provider-backed selection actions use removable pending action messages', () => {
@@ -140,16 +140,18 @@ test('propose update uses the selected update proposal builder from selection ac
   assert.match(source, /reviewBasket\.addProposal\(proposal\.proposal\)/);
 });
 test('propose update uses an inline instruction form instead of browser prompt', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const mountSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');
+  const formSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'updateInstructionForm.js'), 'utf8');
 
-  assert.match(source, /renderUpdateInstructionForm\(snapshot, host\)/);
-  assert.match(source, /selection-action-form/);
-  assert.match(source, /textarea/);
-  assert.match(source, /Create proposal/);
-  assert.doesNotMatch(source, /window\.prompt/);
+  assert.match(mountSource, /renderUpdateInstructionForm\(snapshot, host\)/);
+  assert.match(formSource, /selection-action-form/);
+  assert.match(formSource, /textarea/);
+  assert.match(formSource, /Create proposal/);
+  assert.doesNotMatch(formSource, /window\.prompt/);
 });
-test('selection action update form styles stay in layout stylesheet', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+
+test('selection action update form styles stay in their owned stylesheet', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'selectionActions.css'), 'utf8');
 
   assert.match(source, /\.selection-action-form/);
   assert.match(source, /\.selection-action-form textarea/);
@@ -157,7 +159,7 @@ test('selection action update form styles stay in layout stylesheet', () => {
 });
 
 test('selection action number inputs hide native spinner chrome', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'selectionActions.css'), 'utf8');
 
   assert.match(source, /\.selection-action-form input\[type="number"\]/);
   assert.match(source, /appearance:\s*textfield/);
@@ -176,12 +178,12 @@ test('Markdown highlights use dedicated theme tokens and scoped styles', () => {
 });
 
 test('summary descriptions use a scoped muted presentation rule', () => {
-  const css = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/layout.css'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/chat.css'), 'utf8');
   assert.match(css, /\.chat-message-summary \.chat-message-markdown li > p \+ p/);
   assert.match(css, /color: var\(--text-muted\)/);
 });
 test('Inbox Cleanup group headings use the shared Ember text accent', () => {
-  const css = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/layout.css'), 'utf8');
+  const css = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/chat.css'), 'utf8');
   assert.match(css, /\.chat-message-inbox-cleanup \.chat-message-markdown h3/);
   assert.match(css, /color: var\(--text-accent\)/);
 });

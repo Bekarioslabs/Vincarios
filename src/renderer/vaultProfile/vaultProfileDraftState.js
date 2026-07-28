@@ -178,12 +178,12 @@
   }
 
   function getFolderVisualHelpers() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderVisuals) return window.VitruviosFolderVisuals;
+    if (typeof window !== 'undefined' && window.VincariosFolderVisuals) return window.VincariosFolderVisuals;
     if (typeof module !== 'undefined' && module.exports) return require('../../shared/vaultProfile/folderVisuals');
     return null;
   }
 
   const api = { createVaultProfileDraftState };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosVaultProfileDraftState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosVaultProfileDraftState = Object.freeze(api);
 })();

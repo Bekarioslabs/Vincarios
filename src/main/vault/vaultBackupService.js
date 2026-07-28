@@ -1,15 +1,21 @@
-'use strict';
+﻿'use strict';
 
 const fs = require('node:fs');
 const path = require('node:path');
 
+const { createVaultAuditService } = require('../audit/vaultAuditService');
 const { createVaultContext } = require('./vaultContext');
+const { executeAuditedMutation } = require('./vaultWriteTransaction');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 
 function createVaultBackupService(options) {
   options = options || {};
   const fileSystem = options.fs || fs;
   const now = typeof options.now === 'function' ? options.now : () => new Date();
+  const auditService = options.auditService || createVaultAuditService({
+    fs: fileSystem,
+    now
+  });
   let vault = null;
 
   function setRoot(vaultRoot) {
@@ -30,6 +36,7 @@ function createVaultBackupService(options) {
     }
 
     vault = createVaultContext(resolvedRoot);
+    auditService.setRoot(resolvedRoot);
     return ok({ root: vault.root });
   }
 
@@ -58,23 +65,33 @@ function createVaultBackupService(options) {
     const backupPath = createBackupPath(resolved.relativePath, stamp);
     const backupAbsolutePath = path.join(currentVault.vault.root, ...backupPath.split('/'));
 
-    try {
-      fileSystem.mkdirSync(path.dirname(backupAbsolutePath), { recursive: true });
-      fileSystem.copyFileSync(resolved.absolutePath, backupAbsolutePath);
-      appendAudit(currentVault.vault.root, {
+    const transaction = executeAuditedMutation({
+      auditService,
+      mutate() {
+        fileSystem.mkdirSync(path.dirname(backupAbsolutePath), { recursive: true });
+        fileSystem.copyFileSync(resolved.absolutePath, backupAbsolutePath);
+      },
+      rollback() {
+        if (fileSystem.existsSync(backupAbsolutePath)) {
+          fileSystem.unlinkSync(backupAbsolutePath);
+        }
+      },
+      auditEntry: {
         action: 'backup_note',
         sourcePath: resolved.relativePath,
         backupPath,
         reason: String(options && options.action ? options.action : 'manual_backup')
-      });
-      return ok({
-        action: 'backup_note',
-        sourcePath: resolved.relativePath,
-        backupPath
-      });
-    } catch (error) {
-      return fail('backup_failed', 'Could not create note backup.');
-    }
+      },
+      mutationFailureCode: 'backup_failed',
+      mutationFailureMessage: 'Could not create note backup.'
+    });
+    if (!transaction.ok) return transaction;
+
+    return ok({
+      action: 'backup_note',
+      sourcePath: resolved.relativePath,
+      backupPath
+    });
   }
 
   function requireVault() {
@@ -112,15 +129,6 @@ function createBackupTimestamp(date) {
 }
 
 const createLocalTimestamp = createBackupTimestamp;
-
-function appendAudit(vaultRoot, entry) {
-  const auditDir = path.join(vaultRoot, CURRENT_INTERNAL_NAMESPACE);
-  fs.mkdirSync(auditDir, { recursive: true });
-  const auditEntry = Object.assign({
-    timestamp: new Date().toISOString()
-  }, entry);
-  fs.appendFileSync(path.join(auditDir, 'audit.jsonl'), JSON.stringify(auditEntry) + '\n', 'utf8');
-}
 
 function ok(value) {
   return Object.assign({ ok: true }, value);

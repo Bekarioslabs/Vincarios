@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const { createEmbeddingIndexStore } = require('./embeddingIndexStore');
 const { createVaultMarkdownSource } = require('../vault/vaultMarkdownSource');
 const { createEmbeddingRuntimeService } = require('./embeddingRuntimeService');
+const { yieldToEventLoop } = require('../indexing/asyncVaultMarkdownScanner');
 const { DEFAULT_EMBEDDING_MODEL } = require('./embeddingModelStore');
 const {
   createIndexedDocumentRecord,
@@ -39,8 +40,11 @@ function createEmbeddingIndexer(options) {
     return ok({ root: storeResult.root || sourceResult.root || '' });
   }
 
-  async function rebuildIndex() {
-    const listed = source.listMarkdownDocuments();
+  async function rebuildIndex(rebuildOptions) {
+    rebuildOptions = rebuildOptions || {};
+    const listed = typeof source.listMarkdownDocumentsAsync === 'function'
+      ? await source.listMarkdownDocumentsAsync(rebuildOptions)
+      : source.listMarkdownDocuments();
     if (!listed.ok) return listed;
 
     const loaded = indexStore.loadDocuments();
@@ -55,7 +59,14 @@ function createEmbeddingIndexer(options) {
     let skippedDocuments = 0;
     let chunkCount = 0;
 
+    let processedDocuments = 0;
     for (const document of listed.documents || []) {
+      if (rebuildOptions.signal && rebuildOptions.signal.aborted) return fail('index_canceled', 'Index refresh was canceled.');
+      if (processedDocuments > 0 && processedDocuments % 100 === 0) {
+        if (typeof rebuildOptions.onProgress === 'function') rebuildOptions.onProgress({ processed: processedDocuments, total: listed.documents.length });
+        await yieldToEventLoop();
+      }
+      processedDocuments += 1;
       const state = getDocumentState(document);
       const existing = previousDocuments[state.path];
       const splitIndexMissing = existing && !Array.isArray(existing.bodyVectors);

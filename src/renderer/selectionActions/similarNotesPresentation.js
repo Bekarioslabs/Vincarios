@@ -100,5 +100,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosSimilarNotesPresentation = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosSimilarNotesPresentation = Object.freeze(api);
 })();

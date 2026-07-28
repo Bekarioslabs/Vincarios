@@ -51,5 +51,5 @@ test('application menu exposes workspace navigation and opens the repository ext
   assert.ok(helpMenu);
   const repository = helpMenu.submenu.find((item) => item.label === 'Repository');
   repository.click();
-  assert.deepEqual(links, ['https://github.com/Bekarioslabs/Vitruvios']);
+  assert.deepEqual(links, ['https://github.com/Bekarioslabs/Vincarios']);
 });

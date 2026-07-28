@@ -1,6 +1,6 @@
 {
-  "name": "vitruvios",
-  "version": "0.1.0",
+  "name": "vincarios",
+  "version": "0.1.0-beta.1",
   "private": true,
   "description": "Local-first Markdown assistant with visible, reviewable AI workflows.",
   "main": "src/main/index.js",
@@ -10,8 +10,13 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron .",
-    "build:win": "electron-builder --win portable",
+    "model:provision": "node scripts/provision-embedding-model.js",
+    "model:verify": "node scripts/verify-embedding-model.js",
+    "build:win": "npm run model:verify && electron-builder --win portable",
     "check": "node scripts/check-js.js",
+    "audit:security": "npm audit --omit=dev --audit-level=high && node scripts/audit-dependencies.js",
+    "licenses:generate": "node scripts/check-licenses.js --write",
+    "licenses:check": "node scripts/check-licenses.js",
     "test": "npm run check && node --test tests/*.test.js"
   },
   "keywords": [
@@ -22,10 +27,11 @@
     "assistant"
   ],
   "author": "Bekarios Labs",
-  "license": "UNLICENSED",
+  "license": "GPL-3.0-only",
   "build": {
-    "appId": "com.bekarioslabs.vitruvios",
-    "productName": "vitruvios",
+    "appId": "com.bekarioslabs.vincarios",
+    "productName": "vincarios",
+    "icon": "src/renderer/assets/brand/vincarios-icon.png",
     "asar": true,
     "asarUnpack": [
       "node_modules/onnxruntime-node/**"
@@ -38,15 +44,15 @@
       "index.html",
       "package.json",
       "third_party/**/*",
-      "!**/.vitruvios/**",
+      "!**/.vincarios/**",
       "!dev-vault/**",
       "!docs/**",
       "!tests/**"
     ],
     "extraResources": [
       {
-        "from": ".vitruvios/models/embeddings",
-        "to": "vitruvios-models/embeddings",
+        "from": ".vincarios/models/embeddings",
+        "to": "vincarios-models/embeddings",
         "filter": [
           "**/*"
         ]
@@ -67,7 +73,7 @@
       "target": [
         "portable"
       ],
-      "artifactName": "vitruvios-${version}-portable.${ext}"
+      "artifactName": "vincarios-${version}-portable.${ext}"
     },
     "portable": {
       "requestExecutionLevel": "user"
@@ -75,7 +81,7 @@
   },
   "devDependencies": {
     "electron": "42.4.1",
-    "electron-builder": "26.15.3"
+    "electron-builder": "26.15.7"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.2.0",
@@ -83,6 +89,12 @@
     "yaml": "2.9.0"
   },
   "overrides": {
-    "adm-zip": "0.6.0"
+    "adm-zip": "0.6.0",
+    "sharp": "0.35.3"
+  },
+  "allowScripts": {
+    "electron-winstaller@5.4.0": true,
+    "onnxruntime-node@1.24.3": true,
+    "protobufjs": false
   }
 }

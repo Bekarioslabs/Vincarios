@@ -7,9 +7,11 @@ function createVaultIndexHealthService(options) {
   const embeddingHealthService = options.embeddingHealthService;
   const fullTextHealthService = options.fullTextHealthService || null;
   const freshnessService = options.freshnessService || null;
+  const refreshCoordinator = options.refreshCoordinator || null;
   const listeners = new Set();
   let refreshing = false;
   let metadataStale = false;
+  let rootRevision = 0;
 
   const unsubscribeEmbeddingHealth = embeddingHealthService && typeof embeddingHealthService.subscribe === 'function'
     ? embeddingHealthService.subscribe(notify)
@@ -20,6 +22,7 @@ function createVaultIndexHealthService(options) {
 
   function setRoot(vaultRoot) {
     metadataStale = false;
+    rootRevision += 1;
     const freshnessResult = freshnessService && typeof freshnessService.setRoot === 'function'
       ? freshnessService.setRoot(vaultRoot)
       : { ok: true, skipped: true };
@@ -55,7 +58,14 @@ function createVaultIndexHealthService(options) {
     });
   }
 
-  async function refreshIndexes() {
+  function refreshIndexes(refreshOptions) {
+    const operation = () => runRefreshIndexes(refreshOptions);
+    return refreshCoordinator && typeof refreshCoordinator.run === 'function'
+      ? refreshCoordinator.run('vault-indexes:' + rootRevision, operation)
+      : operation();
+  }
+
+  async function runRefreshIndexes(refreshOptions) {
     if (!metadataIndexer || typeof metadataIndexer.rebuildIndex !== 'function') {
       return fail('metadata_unavailable', 'Metadata indexer unavailable.');
     }
@@ -67,15 +77,15 @@ function createVaultIndexHealthService(options) {
         : { ok: true, skipped: true };
       if (!freshness.ok) return freshness;
 
-      const metadata = metadataIndexer.rebuildIndex();
+      const metadata = await metadataIndexer.rebuildIndex(refreshOptions || {});
       if (!metadata.ok) return metadata;
       metadataStale = false;
 
       const embeddings = shouldRefreshEmbeddings()
-        ? await embeddingHealthService.refreshIndex({ refreshInventory: false })
+        ? await embeddingHealthService.refreshIndex(Object.assign({}, refreshOptions, { refreshInventory: false }))
         : { ok: true, skipped: true };
       const fullText = shouldRefreshFullText()
-        ? await fullTextHealthService.refreshIndex({ refreshInventory: false })
+        ? await fullTextHealthService.refreshIndex(Object.assign({}, refreshOptions, { refreshInventory: false }))
         : { ok: true, skipped: true };
       return ok({ freshness, metadata, embeddings, fullText });
     } finally {

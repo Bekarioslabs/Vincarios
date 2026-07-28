@@ -25,7 +25,7 @@ test('Vault Profile state keeps an ephemeral custom SVG source for renderer disp
     api: { vault: { async getProfile() { return { ok: true, profile: {
       roles: { projects: 'Creative Work' },
       roleVisuals: { projects: {
-        icon: { kind: 'custom', path: '.vitruvios/icons/custom-a1b2c3.svg', src: source },
+        icon: { kind: 'custom', path: '.vincarios/icons/custom-a1b2c3.svg', src: source },
         color: { kind: 'token', id: 'violet-600' }
       } }
     } }; } } }
@@ -34,7 +34,7 @@ test('Vault Profile state keeps an ephemeral custom SVG source for renderer disp
   await state.load();
 
   assert.deepEqual(state.getFolderVisual('Creative Work'), {
-    icon: { kind: 'custom', path: '.vitruvios/icons/custom-a1b2c3.svg', src: source },
+    icon: { kind: 'custom', path: '.vincarios/icons/custom-a1b2c3.svg', src: source },
     color: { kind: 'token', id: 'violet-600' }
   });
 });

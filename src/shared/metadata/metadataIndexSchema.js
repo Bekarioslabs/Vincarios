@@ -3,7 +3,7 @@
 const frontmatter = require('./frontmatterContract');
 
 const METADATA_INDEX_VERSION = 1;
-const METADATA_INDEX_STORAGE = 'vault-vitruvios-metadata-index';
+const METADATA_INDEX_STORAGE = 'vault-vincarios-metadata-index';
 
 function createEmptyMetadataIndex() {
   return {

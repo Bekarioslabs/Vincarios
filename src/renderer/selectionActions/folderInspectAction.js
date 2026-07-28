@@ -64,5 +64,5 @@
   const api = { buildFolderInspectionReport, buildFolderTreeInspectionReport };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFolderInspectAction = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFolderInspectAction = Object.freeze(api);
 })();

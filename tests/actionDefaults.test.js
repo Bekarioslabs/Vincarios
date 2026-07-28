@@ -21,7 +21,7 @@ test('folder action defaults normalize independently for Context and Summary', (
 });
 
 test('folder action defaults persist through the portable settings store', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-action-defaults-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-action-defaults-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
   const result = store.setActionDefaults({ folderContext: { scope: 'subfolders', maxDepth: 4, maxFiles: 25 } });

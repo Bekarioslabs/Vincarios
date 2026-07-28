@@ -44,3 +44,22 @@ test('activity reporter keeps transient status messages out of session activity'
   assert.equal(status.textContent, 'Reading 00_Inbox/Note.md...');
   assert.deepEqual(activityState.snapshot().entries, []);
 });
+test('activity status sink records direct visible status updates without changing module APIs', () => {
+  const status = { textContent: '' };
+  const activityState = createActivityState();
+  const reporter = createActivityReporter({ status, activityState });
+  const sink = reporter.createStatusSink();
+
+  sink.textContent = 'YAML tags could not be updated safely.';
+
+  assert.equal(status.textContent, 'YAML tags could not be updated safely.');
+  assert.deepEqual(activityState.snapshot().entries.map((entry) => ({
+    type: entry.type,
+    action: entry.action,
+    detail: entry.detail
+  })), [{
+    type: 'info',
+    action: 'Status',
+    detail: 'YAML tags could not be updated safely.'
+  }]);
+});

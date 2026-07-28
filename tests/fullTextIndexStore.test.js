@@ -8,13 +8,13 @@ const assert = require('node:assert/strict');
 const { createFullTextIndexStore } = require('../src/main/search/fullTextIndexStore');
 
 function createVault() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-full-text-index-'));
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-full-text-index-'));
 }
 
 function createIndex() {
   return {
     version: 1,
-    storage: 'vault-vitruvios-full-text-index',
+    storage: 'vault-vincarios-full-text-index',
     enabled: true,
     documents: {
       '03_Knowledge/Search.md': { path: '03_Knowledge/Search.md', hash: 'hash', mtimeMs: 1, schemaVersion: 1, headings: [{ level: 1, text: 'Search' }], tokens: ['search'] }

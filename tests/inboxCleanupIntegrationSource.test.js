@@ -11,12 +11,12 @@ const htmlSource = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 test('inbox review is a real navigation workflow, not a disabled placeholder', () => {
   assert.match(shellSource, /data-inbox-review/);
   assert.doesNotMatch(shellSource, /data-future-slot="inbox-review" disabled/);
-  assert.match(shellSource, /VitruviosInboxCleanup\.mountInboxCleanup/);
+  assert.match(shellSource, /VincariosInboxCleanup\.mountInboxCleanup/);
 });
 
 test('inbox cleanup renderer and shared report are loaded before shell bootstrap', () => {
-  assert.match(bootstrapSource, /VitruviosInboxCleanupReport/);
-  assert.match(bootstrapSource, /VitruviosInboxCleanup/);
+  assert.match(bootstrapSource, /VincariosInboxCleanupReport/);
+  assert.match(bootstrapSource, /VincariosInboxCleanup/);
   assert.ok(htmlSource.indexOf('src/shared/cleanup/inboxCleanupReport.js') < htmlSource.indexOf('src/renderer/cleanup/mountInboxCleanup.js'));
   assert.ok(htmlSource.indexOf('src/renderer/cleanup/mountInboxCleanup.js') < htmlSource.indexOf('src/renderer/shell/mountShell.js'));
 });

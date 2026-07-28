@@ -1,10 +1,10 @@
-# Contributing To Vitruvios
+# Contributing To vincarios
 
-Thanks for considering a contribution. Vitruvios is still a V1 rebuild, so the most valuable contributions are small, tested, and aligned with the safety model.
+Thanks for considering a contribution. vincarios is still a V1 rebuild, so the most valuable contributions are small, tested, and aligned with the safety model.
 
 ## Product Boundary
 
-Vitruvios is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian; it is not a second Obsidian, a general agent platform, or a cloud AI client.
+vincarios is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian; it is not a second Obsidian, a general agent platform, or a cloud AI client.
 
 Before proposing a large feature, check:
 
@@ -28,11 +28,12 @@ On Windows, `start.bat` can launch the local Electron app when `npm` is not avai
 Before opening a pull request, run:
 
 ```bash
-npm run check
+npm run audit:security
+npm run licenses:check
 npm test
 ```
 
-The GitHub CI workflow runs the same core checks.
+GitHub CI runs the same policy and test gates, then packages a verified Windows portable smoke artifact.
 
 ## Architecture Rules
 
@@ -43,7 +44,7 @@ The GitHub CI workflow runs the same core checks.
 - Keep behavior in the owning module. Do not add one-off prompt or typo patches.
 - Prefer deterministic app state and Selection Actions over broad language-trigger guessing.
 
-See `AGENTS.md` and `docs/rebuild/VITRUVIOS_V1_ARCHITECTURE.md` before changing architecture.
+See `AGENTS.md` and `docs/rebuild/VINCARIOS_V1_ARCHITECTURE.md` before changing architecture.
 
 ## Pull Request Guidelines
 
@@ -53,6 +54,10 @@ A good PR should:
 - include or update tests for changed behavior
 - update the relevant doc in `docs/rebuild/` when user-visible behavior, safety, providers, permissions, or workflows change
 - avoid private vault data, local paths, API keys, backups, and `.obsidian` content
+
+## Contribution License
+
+By submitting a contribution to this repository, you license that contribution under GPL-3.0-only. You retain your copyright.
 
 ## Commit Style
 

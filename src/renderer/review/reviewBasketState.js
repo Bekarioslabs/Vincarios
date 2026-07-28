@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
   'use strict';
 
   const profileApi = getVaultProfileApi();
@@ -214,7 +214,7 @@
   }
 
   function getGeneratedMetadataApi() {
-    if (typeof window !== 'undefined' && window.VitruviosGeneratedNoteMetadata) return window.VitruviosGeneratedNoteMetadata;
+    if (typeof window !== 'undefined' && window.VincariosGeneratedNoteMetadata) return window.VincariosGeneratedNoteMetadata;
     if (typeof require === 'function') {
       try {
         return require('../../shared/metadata/generatedNoteMetadata');
@@ -234,7 +234,7 @@
   }
 
   function getVaultProfileApi() {
-    if (typeof window !== 'undefined' && window.VitruviosVaultProfile) return window.VitruviosVaultProfile;
+    if (typeof window !== 'undefined' && window.VincariosVaultProfile) return window.VincariosVaultProfile;
     if (typeof require === 'function') {
       try {
         return require('../../shared/vaultProfile/defaults');
@@ -246,7 +246,7 @@
   }
 
   function getActionSchemaApi() {
-    if (typeof window !== 'undefined' && window.VitruviosActionSchema) return window.VitruviosActionSchema;
+    if (typeof window !== 'undefined' && window.VincariosActionSchema) return window.VincariosActionSchema;
     if (typeof require === 'function') {
       try {
         return require('../../shared/actions/actionSchema');
@@ -258,7 +258,7 @@
   }
 
   function getProposalPlanApi() {
-    if (typeof window !== 'undefined' && window.VitruviosProposalPlan) return window.VitruviosProposalPlan;
+    if (typeof window !== 'undefined' && window.VincariosProposalPlan) return window.VincariosProposalPlan;
     if (typeof require === 'function') {
       try {
         return require('../../shared/actions/proposalPlan');
@@ -270,7 +270,7 @@
   }
 
   function getDiffPreviewApi() {
-    if (typeof window !== 'undefined' && window.VitruviosDiffPreview) return window.VitruviosDiffPreview;
+    if (typeof window !== 'undefined' && window.VincariosDiffPreview) return window.VincariosDiffPreview;
     if (typeof require === 'function') {
       try {
         return require('../../shared/actions/diffPreview');
@@ -291,6 +291,14 @@
       currentContent: item.currentContent,
       proposedContent: item.proposedContent
     });
+    if (item.diffPreview && item.diffPreview.ok === false) {
+      item.executable = false;
+      item.selected = false;
+      item.diffUnavailable = true;
+      item.diffError = item.diffPreview.message || 'Safe diff preview unavailable.';
+      item.reason = item.reason || item.diffError;
+      return item;
+    }
     if (item.diffPreview && item.diffPreview.ok && item.diffPreview.changed === false) {
       item.executable = false;
       item.selected = false;
@@ -326,7 +334,7 @@ function deriveTitle(content) {
   }
 
   if (typeof window !== 'undefined') {
-    window.VitruviosReviewBasketState = Object.freeze({
+    window.VincariosReviewBasketState = Object.freeze({
       createReviewBasketState,
       createSaveAssistantResponseProposal
     });

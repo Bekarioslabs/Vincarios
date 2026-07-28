@@ -27,7 +27,7 @@ test('file panel passes Markdown content to the preview controller', () => {
 test('preview controller owns rendered/source mode switching', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'markdown', 'markdownPreviewController.js'), 'utf8');
 
-  assert.match(source, /VitruviosMarkdownRenderer\.renderMarkdown/);
+  assert.match(source, /VincariosMarkdownRenderer\.renderMarkdown/);
   assert.match(source, /preview\.textContent = String\(source \|\| ''\)/);
   assert.match(source, /function setEditModeControl\(sourceMode\)/);
   assert.match(source, /sourceMode \? 'Show rendered Markdown preview' : 'Edit Markdown source'/);
@@ -61,11 +61,13 @@ test('index loads Markdown preview controller before the file panel and shell', 
 });
 test('shell creates status bar before mounting Markdown preview controller', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
-  const statusIndex = source.indexOf("const statusBar = app.querySelector('#status-bar-global');");
-  const previewControllerIndex = source.indexOf('const previewController = window.VitruviosMarkdownPreview');
+    const rawStatusIndex = source.indexOf("const rawStatusBar = app.querySelector('#status-bar-global');");
+  const statusSinkIndex = source.indexOf("const statusBar = activityReporter && typeof activityReporter.createStatusSink === 'function'");
+  const previewControllerIndex = source.indexOf('const previewController = window.VincariosMarkdownPreview');
 
-  assert.equal(statusIndex > -1, true);
-  assert.equal(previewControllerIndex > statusIndex, true);
+  assert.equal(rawStatusIndex > -1, true);
+  assert.equal(statusSinkIndex > rawStatusIndex, true);
+  assert.equal(previewControllerIndex > statusSinkIndex, true);
 });
 test('index loads the bundled Markdown engine and focused extensions before the renderer facade', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
@@ -104,5 +106,5 @@ test('Obsidian Markdown extension wires the formatting compatibility module', ()
 
   assert.match(source, /loadFormattingCompat/);
   assert.match(source, /useMarkdownFormattingCompat\(md\)/);
-  assert.doesNotMatch(source, /vitruvios_safe_mark_html/);
+  assert.doesNotMatch(source, /vincarios_safe_mark_html/);
 });

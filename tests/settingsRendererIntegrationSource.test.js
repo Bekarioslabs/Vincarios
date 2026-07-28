@@ -21,7 +21,7 @@ test('index loads settings styles and renderer module before shell bootstrap', (
 test('renderer bootstrap requires the settings panel module', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'bootstrap.js'), 'utf8');
 
-  assert.match(source, /VitruviosSettingsPanel/);
+  assert.match(source, /VincariosSettingsPanel/);
   assert.match(source, /mountSettingsPanel/);
 });
 
@@ -29,7 +29,7 @@ test('shell opens settings through a dedicated renderer module', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
   assert.match(source, /data-open-settings/);
-  assert.match(source, /VitruviosSettingsPanel\.mountSettingsPanel/);
+  assert.match(source, /VincariosSettingsPanel\.mountSettingsPanel/);
   assert.doesNotMatch(source, /function renderSettingsPanel/);
 });
 
@@ -115,13 +115,14 @@ test('settings modal keeps a stable size and scrolls only active content', () =>
 });
 
 test('settings panel wires similar-note embedding defaults through settings API', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+  const panelSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
+  const controllerSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'indexSettingsController.js'), 'utf8');
 
-  assert.match(source, /data-settings-embeddings-grid/);
-  assert.match(source, /Minimum match %/);
-  assert.match(source, /Mode/);
-  assert.match(source, /api.settings.setEmbeddings/);
-  assert.doesNotMatch(source, /api.embeddings.findSimilarNotes/);
+  assert.match(panelSource, /data-settings-embeddings-grid/);
+  assert.match(controllerSource, /Minimum match %/);
+  assert.match(controllerSource, /Search source/);
+  assert.match(controllerSource, /api.settings.setEmbeddings/);
+  assert.doesNotMatch(controllerSource, /api.embeddings.findSimilarNotes/);
 });
 
 test('settings category buttons use existing semantic icons', () => {
@@ -140,7 +141,7 @@ test('settings category buttons use existing semantic icons', () => {
 test('Vault Profile settings use a renderer-owned draft state for dirty rows and available folders', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'settings', 'mountSettingsPanel.js'), 'utf8');
 
-  assert.match(source, /window\.VitruviosVaultProfileDraftState/);
+  assert.match(source, /window\.VincariosVaultProfileDraftState/);
   assert.match(source, /draft\.isDirty/);
   assert.match(source, /draft\.getAssignedRole/);
   assert.match(source, /draft\.commitRole/);
@@ -163,5 +164,5 @@ test('settings panel exposes app and vault theme selectors through their owning 
 test('shell shares the one theme controller with appearance settings', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
-  assert.match(source, /mountSettingsPanel\(\{ api, app, status: globalStatus, vaultProfileState, themeController \}\)/);
+  assert.match(source, /mountSettingsPanel\(\{ api, app, status: activityStatus, vaultProfileState, themeController \}\)/);
 });

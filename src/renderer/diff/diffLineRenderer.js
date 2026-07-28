@@ -31,5 +31,5 @@
   const api = { renderDiffLines, diffPrefix };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosDiffLineRenderer = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosDiffLineRenderer = Object.freeze(api);
 })();

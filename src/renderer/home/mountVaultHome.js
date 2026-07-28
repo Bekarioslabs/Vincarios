@@ -26,6 +26,12 @@
       return results[0];
     }
 
+    async function refreshRecentFiles() {
+      const response = await safeCall(() => api.vault.listRecentFiles(), { ok: false, message: 'Recent files are unavailable.' });
+      applyRecentFiles(response);
+      if (isHomeActive()) render();
+      return response;
+    }
     function applyRecentFiles(response) {
       if (!response || response.ok === false) {
         state.files = [];
@@ -151,7 +157,7 @@
       reveal.className = 'vault-home-recent-reveal ui-tool-button';
       reveal.title = 'Reveal in Files';
       reveal.setAttribute('aria-label', 'Reveal ' + file.path + ' in Files');
-      const renderer = typeof window !== 'undefined' ? window.VitruviosIconRenderer : null;
+      const renderer = typeof window !== 'undefined' ? window.VincariosIconRenderer : null;
       if (renderer && typeof renderer.createIconElement === 'function') reveal.appendChild(renderer.createIconElement('folder', 'vault-home-recent-reveal-icon'));
       else reveal.textContent = 'Reveal';
       reveal.addEventListener('click', async () => {
@@ -195,7 +201,7 @@
       });
     }
     render();
-    return Object.freeze({ refresh });
+    return Object.freeze({ refresh, refreshRecentFiles });
   }
 
   async function safeCall(action, fallback) {
@@ -216,7 +222,7 @@
       formatCount(inventory.otherFiles, 'other file'),
       formatCount(inventory.folders, 'folder')
     ];
-    return parts.filter((part) => part.indexOf('0 ') !== 0).join(' · ') || 'Empty vault';
+    return parts.filter((part) => part.indexOf('0 ') !== 0).join(' Â· ') || 'Empty vault';
   }
 
   function formatCount(value, label) {
@@ -247,5 +253,5 @@
 
   const api = Object.freeze({ mountVaultHome, basename, formatInventory, getIndexLabel, getIndexTone });
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosVaultHome = api;
+  if (typeof window !== 'undefined') window.VincariosVaultHome = api;
 })();

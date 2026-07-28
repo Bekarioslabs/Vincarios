@@ -70,7 +70,7 @@ test('embedding indexer skips unchanged documents already in the index', async (
       frontmatterChunks: [],
       frontmatterVectors: []
     }
-  }, matchingManifest('test-model'));
+  }, matchingManifest('test-model', 'test-revision'));
   const indexer = createEmbeddingIndexer({
     source: createSource([
       { path: 'Notes/One.md', content: 'same', hash: 'fixed-hash', mtimeMs: 10 }
@@ -78,6 +78,7 @@ test('embedding indexer skips unchanged documents already in the index', async (
     indexStore: store,
     runtime: createRuntime(runtimeCalls),
     modelId: 'test-model',
+    modelRevision: 'test-revision',
     dimensions: 3
   });
 
@@ -90,8 +91,8 @@ test('embedding indexer skips unchanged documents already in the index', async (
   assert.equal(store.savedDocuments['Notes/One.md'].chunks[0].id, 'old');
 });
 
-function matchingManifest(modelId) {
-  return { model: { id: modelId, dimensions: 3 }, fingerprint: { modelId, dimensions: 3, revision: '2c4055b', indexVersion: 1 } };
+function matchingManifest(modelId, revision) {
+  return { model: { id: modelId, dimensions: 3 }, fingerprint: { modelId, dimensions: 3, revision, indexVersion: 1 } };
 }
 
 function createSource(documents) {
@@ -171,9 +172,9 @@ test('embedding indexer stores body and frontmatter vectors separately', async (
 });
 
 test('splitMarkdownSections removes YAML from body text', () => {
-  const result = splitMarkdownSections('---\ntags:\n  - vitruvios\n---\n# Title\nBody');
+  const result = splitMarkdownSections('---\ntags:\n  - vincarios\n---\n# Title\nBody');
 
-  assert.equal(result.frontmatterText, 'tags:\n  - vitruvios');
+  assert.equal(result.frontmatterText, 'tags:\n  - vincarios');
   assert.equal(result.bodyText, '# Title\nBody');
 });
 

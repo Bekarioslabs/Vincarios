@@ -19,10 +19,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "24"
           cache: npm
@@ -30,11 +30,48 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Audit dependencies
-        run: npm audit --audit-level=high
+      - name: Audit runtime and documented build dependencies
+        run: npm run audit:security
+
+      - name: Verify runtime dependency licenses
+        run: npm run licenses:check
 
       - name: Check JavaScript syntax
         run: npm run check
 
       - name: Run tests
         run: node --test tests/*.test.js
+
+  package-windows:
+    name: Windows portable package smoke
+    needs: test
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Provision verified embedding model
+        run: npm run model:provision
+
+      - name: Build portable Windows package
+        run: npm run build:win
+
+      - name: Upload portable smoke artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vincarios-windows-portable-smoke
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 7

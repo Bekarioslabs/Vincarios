@@ -217,15 +217,15 @@
   }
 
 function getIntentApi() {
-    if (typeof window !== 'undefined' && window.VitruviosContextIntent) return window.VitruviosContextIntent;
+    if (typeof window !== 'undefined' && window.VincariosContextIntent) return window.VincariosContextIntent;
     if (typeof module !== 'undefined' && module.exports) return require('./contextIntent');
-    throw new Error('vitruvios context intent API is not available.');
+    throw new Error('vincarios context intent API is not available.');
   }
 
   function getPackageBuilderApi() {
-    if (typeof window !== 'undefined' && window.VitruviosContextPackageBuilder) return window.VitruviosContextPackageBuilder;
+    if (typeof window !== 'undefined' && window.VincariosContextPackageBuilder) return window.VincariosContextPackageBuilder;
     if (typeof module !== 'undefined' && module.exports) return require('./contextPackageBuilder');
-    throw new Error('vitruvios context package builder API is not available.');
+    throw new Error('vincarios context package builder API is not available.');
   }
 
   const api = {
@@ -235,5 +235,5 @@ function getIntentApi() {
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosContextState = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosContextState = Object.freeze(api);
 })();

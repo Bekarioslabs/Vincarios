@@ -3,20 +3,28 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
+const { migrateInternalNamespaceDirectory } = require('./internalNamespaceMigration');
 
 const PORTABLE_DATA_FOLDER = CURRENT_INTERNAL_NAMESPACE;
 const SETTINGS_FILE_NAME = 'settings.json';
 
-function getPortableDataRoot(projectRoot) {
+function getPortableDataRoot(projectRoot, pathApi) {
+  const pathImplementation = pathApi || path;
   const root = String(projectRoot || '').trim();
   if (!root) return '';
-  return path.join(path.resolve(root), PORTABLE_DATA_FOLDER);
+  return pathImplementation.join(pathImplementation.resolve(root), PORTABLE_DATA_FOLDER);
 }
 
 function getPortableSettingsPath(projectRoot, options) {
   const configuredDataRoot = options && String(options.dataRoot || '').trim();
   const dataRoot = configuredDataRoot ? path.resolve(configuredDataRoot) : getPortableDataRoot(projectRoot);
   return dataRoot ? path.join(dataRoot, SETTINGS_FILE_NAME) : '';
+}
+
+function migrateLegacyPortableNamespace(projectRoot, options) {
+  const configuredDataRoot = options && String(options.dataRoot || '').trim();
+  const currentPath = configuredDataRoot ? path.resolve(configuredDataRoot) : getPortableDataRoot(projectRoot);
+  return migrateInternalNamespaceDirectory({ currentPath });
 }
 
 function getLegacyUserDataSettingsPath(app) {
@@ -64,6 +72,7 @@ module.exports = {
   SETTINGS_FILE_NAME,
   getPortableDataRoot,
   getPortableSettingsPath,
+  migrateLegacyPortableNamespace,
   getLegacyUserDataSettingsPath,
   migrateLegacySettingsToPortable
 };

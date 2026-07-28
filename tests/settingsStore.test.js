@@ -49,7 +49,7 @@ test('settings reject invalid provider base URLs', () => {
 });
 
 test('settings store persists provider URL overrides', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -62,7 +62,7 @@ test('settings store persists provider URL overrides', () => {
 });
 
 test('settings store persists active provider and selected model', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -75,7 +75,7 @@ test('settings store persists active provider and selected model', () => {
 });
 
 test('settings store persists limits with normalized positive values', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -108,7 +108,7 @@ test('settings store persists limits with normalized positive values', () => {
 
 
 test('settings store persists similar-note defaults with safe normalization', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -149,7 +149,7 @@ test('settings store persists similar-note defaults with safe normalization', ()
 });
 
 test('settings store persists app-local panel layout preferences', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -163,7 +163,7 @@ test('settings store persists app-local panel layout preferences', () => {
 });
 
 test('settings store keeps a portable two-entry recent vault history', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 
@@ -185,7 +185,7 @@ test('settings store keeps a portable two-entry recent vault history', () => {
 });
 
 test('settings store persists only normalized app theme modes', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitruvios-settings-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-'));
   const filePath = path.join(dir, 'settings.json');
   const store = createSettingsStore({ filePath });
 

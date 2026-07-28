@@ -12,7 +12,7 @@
 
     const scope = getScopeOptions().normalizeFolderScopeOptions(input.scopeOptions || {});
     const limits = getLimitsApi().normalizeContextLimits(input.limits || {});
-    const listed = await listMarkdownFiles({ vaultApi, folderController: input.folderController, path, scope, limits });
+    const listed = await listMarkdownFiles({ vaultApi, folderController: input.folderController, path, scopeOptions: scope, limits });
     if (!listed.ok) return listed;
     if (!listed.files.length) return failure('no_markdown_files', 'No Markdown notes found in the selected folder scope.');
 
@@ -73,7 +73,13 @@
   }
 
   function normalizePath(value) {
-    return String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/').trim();
+    return getVaultPathApi().normalizeRelativePath(value);
+  }
+
+  function getVaultPathApi() {
+    if (typeof window !== 'undefined' && window.VincariosVaultPath) return window.VincariosVaultPath;
+    if (typeof require === 'function') return require('../path/vaultPath');
+    throw new Error('Vault path contract unavailable.');
   }
 
   function failure(code, message) {
@@ -81,29 +87,29 @@
   }
 
   function getScopeOptions() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderScopeOptions) return window.VitruviosFolderScopeOptions;
+    if (typeof window !== 'undefined' && window.VincariosFolderScopeOptions) return window.VincariosFolderScopeOptions;
     if (typeof module !== 'undefined' && module.exports) return require('./folderScopeOptions');
-    throw new Error('vitruvios folder scope options API is not available.');
+    throw new Error('vincarios folder scope options API is not available.');
   }
 
   function getMarkdownScopeReader() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderMarkdownScopeReader) return window.VitruviosFolderMarkdownScopeReader;
+    if (typeof window !== 'undefined' && window.VincariosFolderMarkdownScopeReader) return window.VincariosFolderMarkdownScopeReader;
     if (typeof module !== 'undefined' && module.exports) return require('./folderMarkdownScopeReader');
-    throw new Error('vitruvios folder Markdown scope reader is not available.');
+    throw new Error('vincarios folder Markdown scope reader is not available.');
   }
   function getLimitsApi() {
-    if (typeof window !== 'undefined' && window.VitruviosContextLimits) return window.VitruviosContextLimits;
+    if (typeof window !== 'undefined' && window.VincariosContextLimits) return window.VincariosContextLimits;
     if (typeof module !== 'undefined' && module.exports) return require('../context/contextLimits');
-    throw new Error('vitruvios context limits API is not available.');
+    throw new Error('vincarios context limits API is not available.');
   }
 
   function getFolderController() {
-    if (typeof window !== 'undefined' && window.VitruviosFolderContextController) return window.VitruviosFolderContextController;
+    if (typeof window !== 'undefined' && window.VincariosFolderContextController) return window.VincariosFolderContextController;
     if (typeof module !== 'undefined' && module.exports) return require('../context/folderContextController');
     return null;
   }
 
   const api = { buildFolderContextSnapshot, listMarkdownFiles };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosFolderContextSnapshotAction = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosFolderContextSnapshotAction = Object.freeze(api);
 })();

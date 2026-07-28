@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { createVaultContext } = require('../vault/vaultContext');
+const { createIndexSnapshotCache } = require('../indexing/indexSnapshotCache');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 const { createEmptyMetadataIndex, createMetadataRecord } = require('../../shared/metadata/metadataIndexSchema');
 
@@ -13,6 +14,7 @@ const RECORDS_FILE = 'records.json';
 function createMetadataIndexStore(options) {
   options = options || {};
   const fileSystem = options.fs || fs;
+  const snapshotCache = options.snapshotCache || createIndexSnapshotCache({ fs: fileSystem });
   let vault = null;
 
   function setRoot(vaultRoot) {
@@ -23,6 +25,7 @@ function createMetadataIndexStore(options) {
     } catch (error) {
       return fail('vault_not_found', 'Vault root does not exist.');
     }
+    snapshotCache.invalidate();
     vault = createVaultContext(root);
     return ok({ root: vault.root });
   }
@@ -41,6 +44,10 @@ function createMetadataIndexStore(options) {
   function load() {
     const location = getLocation();
     if (!location.ok) return location;
+    return snapshotCache.read(snapshotKey(), [location.manifestPath, location.recordsPath], () => loadLocation(location));
+  }
+
+  function loadLocation(location) {
     const manifestExists = fileSystem.existsSync(location.manifestPath);
     const recordsExists = fileSystem.existsSync(location.recordsPath);
     if (!manifestExists && !recordsExists) return ok({ exists: false, index: createEmptyMetadataIndex(), documents: {} });
@@ -67,12 +74,19 @@ function createMetadataIndexStore(options) {
       fileSystem.mkdirSync(location.folderPath, { recursive: true });
       fileSystem.writeFileSync(location.manifestPath, JSON.stringify(index, null, 2) + '\n', 'utf8');
       fileSystem.writeFileSync(location.recordsPath, JSON.stringify({ documents: normalized }, null, 2) + '\n', 'utf8');
-      return ok({ index, documents: normalized, location });
+      const result = ok({ index, documents: normalized, location });
+      snapshotCache.store(snapshotKey(), [location.manifestPath, location.recordsPath], ok({ exists: true, index, documents: normalized }));
+      return result;
     } catch (error) {
       restoreFile(location.manifestPath, previousManifest);
       restoreFile(location.recordsPath, previousRecords);
+      snapshotCache.invalidate(snapshotKey());
       return fail('metadata_index_write_failed', 'Metadata index could not be saved.');
     }
+  }
+
+  function snapshotKey() {
+    return vault ? vault.root + ':metadata' : 'no-vault:metadata';
   }
 
   function captureFile(filePath) {

@@ -5,8 +5,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
+function readShellStyles() {
+  return [
+    'layout.css',
+    'chat.css',
+    'selectionActions.css',
+    'startup.css'
+  ].map((name) => fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', name), 'utf8')).join('\n');
+}
 test('collapsible left subactions preserve hidden state despite flex layout', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.left-subactions\s*\{[\s\S]*display:\s*flex;/);
   assert.match(css, /\.left-subactions\[hidden\]\s*\{\s*display:\s*none;\s*\}/);
@@ -28,7 +36,7 @@ test('permission controls sit before file icons in the tree grid', () => {
 });
 test('review basket styles stay in the review stylesheet', () => {
   const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
   const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
 
   assert.match(index, /src\/renderer\/styles\/review\.css/);
@@ -44,13 +52,13 @@ test('create note preview title input is styled in review stylesheet', () => {
   assert.match(reviewCss, /\.review-modal-title-input\s*\{/);
 });
 test('folder scope action buttons use chat message styles', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.chat-message-actions\s*\{/);
   assert.match(css, /\.chat-message-action-button\s*\{/);
 });
 test('assistant chat markdown has compact scoped styles', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.chat-message-markdown\s*\{/);
   assert.match(css, /\.chat-message-markdown h1/);
@@ -94,7 +102,7 @@ test('review destructive clear controls use subtle danger styling only when acti
 });
 test('vault panel uses full-height Files Actions Preview columns', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
 
   assert.match(shell, /class="selection-actions-pane"/);
   assert.match(shell, /data-future-slot="selection-actions"/);
@@ -120,7 +128,7 @@ test('vault panel exposes three vertical resize handles', () => {
   assert.match(tokensCss, /--selection-actions-width:\s*280px;/);
 });
 test('Selection Actions collapses to an accessible icon strip without removing action state', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
   assert.match(css, /\.vault-panel\.is-selection-actions-collapsed\s*\{[\s\S]*var\(--selection-actions-collapsed-width\)/);
@@ -131,12 +139,12 @@ test('Selection Actions collapses to an accessible icon strip without removing a
   assert.match(css, /\.preview-pane\s*\{[\s\S]*grid-column:\s*5;/);
   assert.doesNotMatch(css, /\.pane-resizer\.is-disabled\s*\{/);
   assert.doesNotMatch(shell, /setPanelResizerEnabled/);
-  assert.match(shell, /filesResizer\.addEventListener\('vitruvios:panel-resize-start'/);
-  assert.match(shell, /actionsResizer\.addEventListener\('vitruvios:panel-resize-start'/);
+  assert.match(shell, /filesResizer\.addEventListener\('vincarios:panel-resize-start'/);
+  assert.match(shell, /actionsResizer\.addEventListener\('vincarios:panel-resize-start'/);
 });
 
 test('Files collapses to a compact rail while preserving the Actions and Preview columns', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.vault-panel\.is-files-collapsed\s*\{[\s\S]*var\(--files-collapsed-width\)/);
   assert.doesNotMatch(css, /\.vault-panel\.is-files-collapsed \[data-resize="files"\]\s*\{\s*display:\s*none;/);
@@ -146,13 +154,13 @@ test('Files collapses to a compact rail while preserving the Actions and Preview
   assert.match(css, /\.vault-panel\.is-selection-actions-collapsed \.selection-actions-content\s*\{[\s\S]*min-width:\s*0;/);
 });
 test('chat pending messages expose a lightweight spinner animation', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.chat-message-pending \.chat-message-body::before/);
-  assert.match(css, /@keyframes vitruvios-pending-spin/);
+  assert.match(css, /@keyframes vincarios-pending-spin/);
 });
 test('chat message metadata appears on hover with copy affordance', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.chat-message-meta/);
   assert.match(css, /\.chat-message:hover \.chat-message-meta/);
@@ -161,7 +169,7 @@ test('chat message metadata appears on hover with copy affordance', () => {
 test('file tree uses local SVG icon sizing instead of unicode pseudo icons', () => {
   const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
 
-  assert.match(css, /\.vitruvios-icon/);
+  assert.match(css, /\.vincarios-icon/);
   assert.match(css, /\.file-row-chevron-icon/);
   assert.match(css, /grid-template-columns:\s*auto 30px minmax\(0, 1fr\)/);
   assert.doesNotMatch(css, /file-row-icon::before/);
@@ -206,7 +214,7 @@ test('visual system tokens expose shared semantic scales for themed UI work', ()
   assert.match(tokensCss, /--space-4:/);
 });
 test('text selection uses semantic neutral tokens instead of the amber interaction accent', () => {
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
   const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
 
   assert.match(tokensCss, /--selection-background:\s*rgba\(214,\s*214,\s*214,\s*(?:0?\.\d+|0|1)\);/);
@@ -221,7 +229,7 @@ test('text selection uses semantic neutral tokens instead of the amber interacti
 test('readability tokens activate bundled Inter and avoid ultra-heavy UI weights', () => {
   const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
   const filesCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
 
   assert.match(tokensCss, /--font-interface:\s*'Inter', 'Segoe UI'/);
   assert.match(tokensCss, /--text-muted:\s*#8a8a8a;/);
@@ -230,14 +238,14 @@ test('readability tokens activate bundled Inter and avoid ultra-heavy UI weights
   assert.doesNotMatch(layoutCss, /font-size:\s*9px;/);
 });
 test('chat input uses auto-grow styling instead of manual resize', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.chat-input-shell\s*\{[\s\S]*resize:\s*none;[\s\S]*overflow-y:\s*hidden;/);
   assert.match(css, /\.selection-action-form textarea\s*\{[\s\S]*resize:\s*vertical;/);
 });
 
 test('left navigation keeps settings in a separate bottom group', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.left-nav-actions\s*\{[\s\S]*flex:\s*1 1 auto;/);
   assert.match(css, /\.left-nav-group-settings\s*\{[\s\S]*margin-top:\s*auto;/);
@@ -246,7 +254,7 @@ test('left navigation keeps settings in a separate bottom group', () => {
   assert.match(css, /\.left-button-icon\s*\{[\s\S]*filter:\s*var\(--icon-muted-filter, none\);/);
 });
 test('expanded left navigation uses flat rows with shared UI tokens', () => {
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
   const componentsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'components.css'), 'utf8');
 
   assert.match(componentsCss, /\.ui-flat-row\s*\{[\s\S]*border:\s*0;/);
@@ -258,7 +266,7 @@ test('expanded left navigation uses flat rows with shared UI tokens', () => {
   assert.doesNotMatch(layoutCss, /\.left-button\s*\{[\s\S]*font-size:\s*var\(--font-size-ui-md\);/);
 });
 test('collapsed left navigation becomes an icon rail with quiet group separators', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.app-shell\.is-left-nav-collapsed\s+\.left-nav\s*\{[\s\S]*width:\s*var\(--left-nav-collapsed-width\);/);
   assert.match(css, /\.app-shell\.is-left-nav-collapsed\s+\.left-section-title\s*\{[\s\S]*font-size:\s*0;/);
@@ -266,7 +274,7 @@ test('collapsed left navigation becomes an icon rail with quiet group separators
   assert.match(css, /\.app-shell\.is-left-nav-collapsed\s+\.left-subactions\s*\{[\s\S]*display:\s*none;/);
 });
 test('chat drag-over styling stays scoped to the chat log', () => {
-  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const source = readShellStyles();
 
   assert.match(source, /\.chat-log\.chat-log-drag-over/);
   assert.match(source, /--interactive-accent-rgb/);
@@ -274,7 +282,7 @@ test('chat drag-over styling stays scoped to the chat log', () => {
 
 
 test('similar notes mini form uses selection action form styling', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /.selection-action-grid/);
   assert.match(css, /.selection-action-grid input,/);
@@ -282,7 +290,7 @@ test('similar notes mini form uses selection action form styling', () => {
 });
 
 test('similar notes detail panel uses compact score styling', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.selection-action-results\s*\{/);
   assert.match(css, /\.selection-action-result-item\s*\{/);
@@ -293,7 +301,7 @@ test('similar notes detail panel uses compact score styling', () => {
 });
 
 test('Chat Context Basket and Review workspace scroll locally instead of expanding the workspace', () => {
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
   const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
 
   assert.match(layoutCss, /\.workspace-stack\s*\{[\s\S]*grid-template-rows:\s*minmax\(180px, 1fr\) minmax\(0, min-content\) auto;/);
@@ -303,7 +311,7 @@ test('Chat Context Basket and Review workspace scroll locally instead of expandi
   assert.match(reviewCss, /\.review-workspace-slot\s*\{[\s\S]*display:\s*flex;[\s\S]*flex-direction:\s*column;[\s\S]*max-height:\s*none;/);
 });
 test('soft-disabled selection actions stay neutral while category dots preserve non-color semantics', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
 
   assert.match(css, /\.selection-action-button\.is-soft-disabled,\s*\.selection-action-button\.is-layout-locked\s*\{[\s\S]*border-color:\s*transparent;/);
   assert.match(css, /\.selection-action-button\.is-soft-disabled,\s*\.selection-action-button\.is-layout-locked\s*\{[\s\S]*background:\s*transparent;/);
@@ -326,7 +334,7 @@ test('file permission buttons distinguish direct inherited and off states withou
 });
 
 test('compact empty states use shared icon styling', () => {
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
   const suggestionsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'suggestions.css'), 'utf8');
 
   assert.match(layoutCss, /\.mini-panel-empty-rich\s*\{[\s\S]*display:\s*inline-flex;/);
@@ -336,7 +344,7 @@ test('compact empty states use shared icon styling', () => {
 });
 
 test('provider privacy badge uses provider-mode styling instead of static local-only copy', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
 
   assert.match(shell, /id="provider-privacy-badge"/);
@@ -346,7 +354,7 @@ test('provider privacy badge uses provider-mode styling instead of static local-
 });
 
 test('visual polish uses tokenized transitions and file-row update flash', () => {
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
   const fileCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'files.css'), 'utf8');
   const settingsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'settings.css'), 'utf8');
 
@@ -384,7 +392,7 @@ test('suggestions score rings use shared score tokens', () => {
   assert.match(css, /\.suggestions-score-ring-wrap\.is-score-orange\s*{[\s\S]*color:\s*var\(--score-weak\);/);
 });
 test('Files and Selection Actions use the shared toolbar structure across collapse states', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
   const componentsCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'components.css'), 'utf8');
   const filePanel = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
@@ -412,12 +420,12 @@ test('icon-only tool controls share the compact visual scale', () => {
   assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*width:\s*var\(--control-size-tool\);/);
   assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*border:\s*0;/);
   assert.match(componentsCss, /\.ui-tool-button\s*\{[\s\S]*height:\s*var\(--control-size-tool\);/);
-  assert.match(componentsCss, /\.ui-tool-button \.vitruvios-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
+  assert.match(componentsCss, /\.ui-tool-button \.vincarios-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
   assert.match(markdownCss, /\.markdown-history-icon\s*\{[\s\S]*width:\s*var\(--icon-size-tool\);/);
 });
 test('bottom bar separates global and preview-local status surfaces', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
   const markdownCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'markdown.css'), 'utf8');
 
   assert.match(shell, /id="status-bar-global"/);
@@ -425,7 +433,7 @@ test('bottom bar separates global and preview-local status surfaces', () => {
   assert.equal(shell.indexOf('id="markdown-preview-status"') > shell.indexOf('status.innerHTML = ['), true);
   assert.doesNotMatch(shell, /mountChat\(\{ api, app, status, reviewBasket, contextState \}\)/);
   assert.doesNotMatch(shell, /mountOptional\('[^']+', status,/);
-  assert.match(shell, /mountChat\(\{ api, app, status: globalStatus, activityReporter, reviewBasket, contextState \}\)/);
+  assert.match(shell, /mountChat\(\{ api, app, status: activityStatus, activityReporter, reviewBasket, contextState \}\)/);
   assert.match(layoutCss, /\.status-bar\s*\{[\s\S]*display:\s*grid;/);
   assert.match(layoutCss, /grid-template-columns:\s*var\(--left-nav-width\) minmax\(var\(--min-main-width\), 1fr\) minmax\(var\(--min-vault-width\), var\(--vault-panel-width\)\);/);
   assert.match(layoutCss, /\.status-bar-global\s*\{[\s\S]*grid-column:\s*1 \/ 3;/);
@@ -435,7 +443,7 @@ test('bottom bar separates global and preview-local status surfaces', () => {
   assert.doesNotMatch(markdownCss, /\.markdown-preview-status\s*\{[\s\S]*border-top:/);
 });
 test('panel dividers separate visual boundaries from the full resize hit area', () => {
-  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const css = readShellStyles();
   const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
 
   assert.match(tokensCss, /--panel-divider-width:\s*1px;/);
@@ -446,7 +454,7 @@ test('panel dividers separate visual boundaries from the full resize hit area', 
 });
 test('Chat Context Basket starts collapsed while Review is its own workspace', () => {
   const shell = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'shell', 'mountShell.js'), 'utf8');
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
   const reviewCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'review.css'), 'utf8');
   const contextSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'context', 'mountContextBasket.js'), 'utf8');
 
@@ -487,7 +495,7 @@ test('Vault Profile folder visuals use CSP-safe SVG images and fixed token palet
   const profileCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'vaultProfile.css'), 'utf8');
 
   assert.doesNotMatch(fileCss, /-webkit-mask|folder-visual-mask/);
-  assert.match(profileCss, /\.file-row-icon\.has-folder-visual \.vitruvios-icon/);
+  assert.match(profileCss, /\.file-row-icon\.has-folder-visual \.vincarios-icon/);
   assert.match(profileCss, /\[data-folder-color="violet-400"\]/);
   assert.match(profileCss, /\[data-folder-color\^="amber-"\]/);
 });test('Vault Profile Save buttons stay neutral until a row has local changes', () => {
@@ -500,7 +508,7 @@ test('Vault Profile folder visuals use CSP-safe SVG images and fixed token palet
 
 test('primary controls use shared contrast tokens for text and send icons', () => {
   const tokensCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'tokens.css'), 'utf8');
-  const layoutCss = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', 'layout.css'), 'utf8');
+  const layoutCss = readShellStyles();
 
   assert.match(tokensCss, /--icon-on-primary-filter:\s*var\(--icon-inverse-filter\);/);
   assert.match(tokensCss, /:root\[data-theme="light"\][\s\S]*--interactive-accent:\s*var\(--color-amber-500\);/);

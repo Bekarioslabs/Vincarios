@@ -101,7 +101,7 @@
   }
 
   function getParser() {
-    if (typeof window !== 'undefined' && window.VitruviosModelActionParser) return window.VitruviosModelActionParser;
+    if (typeof window !== 'undefined' && window.VincariosModelActionParser) return window.VincariosModelActionParser;
     if (typeof window !== 'undefined' && typeof require !== 'function') return null;
     if (typeof require === 'function') {
       try {
@@ -129,5 +129,5 @@
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  if (typeof window !== 'undefined') window.VitruviosModelReadActionRunner = Object.freeze(api);
+  if (typeof window !== 'undefined') window.VincariosModelReadActionRunner = Object.freeze(api);
 })();

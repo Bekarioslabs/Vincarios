@@ -4,8 +4,8 @@ const { IPC_CHANNELS } = require('../../shared/ipc/channels');
 
 function registerAppIpc(ipcMain, options) {
   options = options || {};
-  const appName = options.appName || 'vitruvios';
-  const version = options.version || '0.1.0';
+  const appName = options.appName || 'vincarios';
+  const version = options.version || '0.1.0-beta.1';
   const shell = options.shell || null;
 
   ipcMain.handle(IPC_CHANNELS.APP_INFO, () => ({
