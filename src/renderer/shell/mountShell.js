@@ -223,7 +223,7 @@
       mountOptional('context basket', activityStatus, () => window.VincariosContextBasket && window.VincariosContextBasket.mountContextBasket({ app, contextState, onActivate: (item) => revealContextItem(vaultUi, item) }));
       mountOptional('suggestions workspace', activityStatus, () => window.VincariosSuggestionsWorkspace && window.VincariosSuggestionsWorkspace.mountSuggestionsWorkspace({ root: app.querySelector('#suggestions-workspace'), suggestionState, reviewBasket, status: activityStatus, onOpenSuggestion: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPath ? vaultUi.filePanel.openMarkdownPath(path) : { ok: false, message: 'File panel unavailable.' } }));
       mountOptional('search workspace', activityStatus, () => window.VincariosSearchWorkspace && window.VincariosSearchWorkspace.mountSearchWorkspace({ root: app.querySelector('#search-workspace'), api, status: activityStatus, onOpenResult: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onRevealResult: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' } }));
-      vaultUi.vaultHomeController = mountOptional('vault home', activityStatus, () => window.VincariosVaultHome && window.VincariosVaultHome.mountVaultHome({ root: app.querySelector('#vault-home-workspace'), api, workspaceState, onOpen: (path) => vaultUi.filePanel && vaultUi.filePanel.openMarkdownPreview ? vaultUi.filePanel.openMarkdownPreview(path) : { ok: false, message: 'File preview unavailable.' }, onReveal: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' }, onRevealFolder: (path) => vaultUi.filePanel && vaultUi.filePanel.revealFolder ? vaultUi.filePanel.revealFolder(path) : { ok: false, message: 'File panel unavailable.' }, onOpenReviewBasket: () => { if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') workspaceState.setActiveWorkspace('review'); if (reviewBasket && typeof reviewBasket.reveal === 'function') reviewBasket.reveal(); } }));
+      vaultUi.vaultHomeController = mountOptional('vault home', activityStatus, () => window.VincariosVaultHome && window.VincariosVaultHome.mountVaultHome({ root: app.querySelector('#vault-home-workspace'), api, workspaceState, onOpen: (path) => vaultUi.filePanel && vaultUi.filePanel.openVaultEntry ? vaultUi.filePanel.openVaultEntry(path) : { ok: false, message: 'File preview unavailable.' }, onReveal: (path) => vaultUi.filePanel && vaultUi.filePanel.revealPath ? vaultUi.filePanel.revealPath(path) : { ok: false, message: 'File panel unavailable.' }, onRevealFolder: (path) => vaultUi.filePanel && vaultUi.filePanel.revealFolder ? vaultUi.filePanel.revealFolder(path) : { ok: false, message: 'File panel unavailable.' }, onOpenReviewBasket: () => { if (workspaceState && typeof workspaceState.setActiveWorkspace === 'function') workspaceState.setActiveWorkspace('review'); if (reviewBasket && typeof reviewBasket.reveal === 'function') reviewBasket.reveal(); } }));
       mountOptional('session log', activityStatus, () => window.VincariosSessionLog && window.VincariosSessionLog.mountSessionLog({ root: app.querySelector('#session-log-workspace'), activityState }));
       selectionActionsController = mountOptional('selection actions', activityStatus, () => window.VincariosSelectionActions && window.VincariosSelectionActions.mountSelectionActions({ api, app, contextState, reviewBasket, status: activityStatus, suggestionState, onRequestPanelExpand: requestSelectionActionsPanelExpand, isTargetAvailable: () => filesPanelLayout.isCollapsed() !== true, openSourceEditor: (targetPath) => vaultUi.previewController && typeof vaultUi.previewController.openSource === 'function' ? vaultUi.previewController.openSource(targetPath) : false }));
       mountOptional('pane resize', activityStatus, () => window.VincariosPaneResize && window.VincariosPaneResize.mountPaneResize(app));
@@ -685,6 +685,15 @@
         onOpenHistoryPath: (path) => {
           setText(statusBar, 'Preview history: ' + path);
           return { ok: true, path };
+        },
+        onPreviewFeedback: (event) => {
+          if (!activityReporter || typeof activityReporter.record !== 'function') return;
+          activityReporter.record({
+            type: event && event.type,
+            action: event && event.action,
+            targetPath: event && event.targetPath,
+            detail: event && event.message
+          });
         },
         onProposeUpdate: (proposal) => addPreviewUpdateProposal(reviewBasket, statusBar, proposal, contextState, permissionState)
       })

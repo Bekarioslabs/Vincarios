@@ -33,7 +33,10 @@
       additions,
       deletions,
       summary: '+' + additions + ' -' + deletions,
-      hunks: buildContextHunks(lineDiff.lines, DIFF_LIMITS.contextLines)
+      hunks: buildContextHunks(lineDiff.lines, DIFF_LIMITS.contextLines, {
+        current: findFrontmatterRange(currentLines),
+        proposed: findFrontmatterRange(proposedLines)
+      })
     };
   }
 
@@ -143,17 +146,25 @@
     });
   }
 
-  function buildContextHunks(lines, contextLines) {
+  function buildContextHunks(lines, contextLines, frontmatter) {
     const changedIndexes = [];
     lines.forEach((line, index) => {
       if (line.type !== 'context') changedIndexes.push(index);
     });
     if (!changedIndexes.length) return [];
 
+    const frontmatterRange = findFrontmatterOperationRange(lines, frontmatter);
     const ranges = [];
     for (const index of changedIndexes) {
-      const start = Math.max(0, index - contextLines);
-      const end = Math.min(lines.length, index + contextLines + 1);
+      let start = Math.max(0, index - contextLines);
+      let end = Math.min(lines.length, index + contextLines + 1);
+      if (frontmatterRange && index >= frontmatterRange.start && index <= frontmatterRange.end) {
+        start = frontmatterRange.start;
+        end = frontmatterRange.end + 1;
+      } else if (frontmatterRange && start < frontmatterRange.end + 1 && end > frontmatterRange.start) {
+        // Keep the closing delimiter as body-change context, never a partial property tail.
+        start = Math.max(start, frontmatterRange.end);
+      }
       const previous = ranges[ranges.length - 1];
       if (previous && start <= previous.end) {
         previous.end = Math.max(previous.end, end);
@@ -170,6 +181,40 @@
         lines: hunkLines
       };
     });
+  }
+
+  function findFrontmatterRange(lines) {
+    if (!Array.isArray(lines) || lines[0] !== '---') return null;
+    const closingIndex = lines.indexOf('---', 1);
+    if (closingIndex < 1) return null;
+    return { start: 1, end: closingIndex + 1 };
+  }
+
+  function findFrontmatterOperationRange(lines, frontmatter) {
+    const current = frontmatter && frontmatter.current;
+    const proposed = frontmatter && frontmatter.proposed;
+    if (!current && !proposed) return null;
+
+    let start = null;
+    let end = null;
+    lines.forEach((line, index) => {
+      if (!isFrontmatterOperation(line, current, proposed)) return;
+      if (start === null) start = index;
+      end = index;
+    });
+    return start === null ? null : { start, end };
+  }
+
+  function isFrontmatterOperation(line, current, proposed) {
+    return isLineNumberInRange(line && line.oldNumber, current)
+      || isLineNumberInRange(line && line.newNumber, proposed);
+  }
+
+  function isLineNumberInRange(value, range) {
+    return Number.isInteger(value)
+      && range
+      && value >= range.start
+      && value <= range.end;
   }
 
   function firstLineNumber(lines, property) {

@@ -247,7 +247,7 @@ Design rules:
 
 ### Frontmatter Contract
 
-The shared Frontmatter Contract now lives at `src/shared/metadata/frontmatterContract.js`. It is the only parse/validate/preserve/serialize boundary for generated-note metadata, YAML tag proposals, and Preview properties. It uses pinned `yaml@2.9.0` through a browser-first runtime adapter and applies two pre-parse limits: 64 KiB frontmatter and 32 levels of YAML flow nesting. Every parser or conversion error, including `RangeError`, fails soft: Preview retains the original Markdown source and write helpers refuse to rewrite malformed frontmatter.
+The shared Frontmatter Contract now lives at `src/shared/metadata/frontmatterContract.js`. It is the only parse/validate/preserve/serialize boundary for generated-note metadata, YAML tag proposals, and Preview properties. It uses pinned `yaml@2.9.1` through a browser-first runtime adapter and applies two pre-parse limits: 64 KiB frontmatter and 32 levels of YAML flow nesting. Every parser or conversion error, including `RangeError`, fails soft: Preview retains the original Markdown source and write helpers refuse to rewrite malformed frontmatter.
 
 The V1 search surface starts with normalized `tags`, `type`, `status`, and `aliases` alongside the generic preserved property map. The record format must retain unknown fields so Book/Template properties such as `characters`, `manuscript_status`, or user-defined values can later be indexed without a parser replacement.
 ### Combined Index Health

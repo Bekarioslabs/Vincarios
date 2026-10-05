@@ -44,6 +44,32 @@ test('activity reporter keeps transient status messages out of session activity'
   assert.equal(status.textContent, 'Reading 00_Inbox/Note.md...');
   assert.deepEqual(activityState.snapshot().entries, []);
 });
+
+test('activity reporter can record a local panel warning without replacing global status text', () => {
+  const status = { textContent: 'Current global status.' };
+  const activityState = createActivityState();
+  const reporter = createActivityReporter({ status, activityState });
+
+  reporter.record({
+    type: 'warning',
+    action: 'Preview link',
+    targetPath: 'Folder/Current.md',
+    detail: 'Linked note not found: Missing_Target'
+  });
+
+  assert.equal(status.textContent, 'Current global status.');
+  assert.deepEqual(activityState.snapshot().entries.map((entry) => ({
+    type: entry.type,
+    action: entry.action,
+    targetPath: entry.targetPath,
+    detail: entry.detail
+  })), [{
+    type: 'warning',
+    action: 'Preview link',
+    targetPath: 'Folder/Current.md',
+    detail: 'Linked note not found: Missing_Target'
+  }]);
+});
 test('activity status sink records direct visible status updates without changing module APIs', () => {
   const status = { textContent: '' };
   const activityState = createActivityState();

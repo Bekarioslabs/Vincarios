@@ -132,7 +132,7 @@ Initial research cohort:
 
 ## Current Renderer Architecture
 
-Phase 7.6 uses pinned `markdown-it` 14.3.0 under an isolated renderer boundary:
+Phase 7.6 uses pinned `markdown-it` 14.3.2 under an isolated renderer boundary:
 
 - `markdownEngine.js` owns CommonMark/GFM engine configuration.
 - `obsidianMarkdownExtension.js` owns only Obsidian-specific inline syntax and safe link/task rendering, and wires the formatting compatibility module into the Markdown engine.
@@ -151,4 +151,3 @@ Raw HTML remains disabled. The copied-formatting compatibility layer lives insid
 4. Add local asset resolution only through validated vault APIs.
 5. Add the plugin fallback registry after core fenced-code handling is stable.
 6. Record intentional V1 differences and manual test expectations.
-

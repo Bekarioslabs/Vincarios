@@ -9,9 +9,13 @@
     function report(input) {
       const event = normalizeReport(input);
       if (status) status.textContent = event.message;
-      if (event.activity && activityState && typeof activityState.record === 'function') {
-        activityState.record(event.activity);
-      }
+      record(event.activity);
+      return event;
+    }
+
+    function record(activity) {
+      const event = normalizeActivity(activity);
+      if (event && activityState && typeof activityState.record === 'function') activityState.record(event);
       return event;
     }
 
@@ -38,7 +42,7 @@
       return Object.freeze(sink);
     }
 
-    return Object.freeze({ report, createStatusSink });
+    return Object.freeze({ report, record, createStatusSink });
   }
 
   function normalizeReport(input) {

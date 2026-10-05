@@ -32,10 +32,12 @@ test('Windows release verifies the pinned embedding model before packaging', () 
   assert.equal(packageJson.scripts['build:win'], 'npm run model:verify && electron-builder --win portable');
 });
 test('CI keeps portable tests and adds a verified Windows packaging smoke job', () => {
+  assert.match(ciWorkflow, /actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1/g);
+  assert.match(ciWorkflow, /actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7\.0\.0/g);
   assert.match(ciWorkflow, /run: npm run audit:security/);
   assert.match(ciWorkflow, /run: npm run licenses:check/);
   assert.match(ciWorkflow, /package-windows:[\s\S]*runs-on: windows-latest/);
   assert.match(ciWorkflow, /package-windows:[\s\S]*run: npm run model:provision/);
   assert.match(ciWorkflow, /package-windows:[\s\S]*run: npm run build:win/);
-  assert.match(ciWorkflow, /actions\/upload-artifact@[0-9a-f]{40}/);
+  assert.match(ciWorkflow, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7\.0\.1/);
 });

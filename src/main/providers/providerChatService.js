@@ -44,14 +44,14 @@ function createProviderChatService(options) {
       return createErrorResult(provider, payloadValidation.message);
     }
     if (typeof fetchImpl !== 'function') {
-      return createErrorResult(provider, 'Provider request unavailable.');
+      return createErrorResult(provider, 'Provider request unavailable.', 'provider_request_unavailable');
     }
 
     try {
       const requestTimeoutMs = getProviderTimeoutMs(settingsStore, timeoutMs);
       const model = await resolveChatModel(provider, fetchImpl, requestTimeoutMs, signal);
       if (!model) {
-        return createErrorResult(provider, 'No provider model available.');
+        return createErrorResult(provider, 'No provider model available.', 'provider_no_model');
       }
 
       const response = await fetchWithTimeout(fetchImpl, buildChatUrl(provider), {
@@ -80,9 +80,9 @@ function createProviderChatService(options) {
         }
       };
     } catch (error) {
-      if (isTimeoutError(error)) return createErrorResult(provider, 'Provider timed out.');
+      if (isTimeoutError(error)) return createErrorResult(provider, 'Provider timed out.', 'provider_timed_out');
       if (isAbortError(error) || (signal && signal.aborted)) return createCanceledResult(provider);
-      return createErrorResult(provider, 'Provider unavailable.');
+      return createErrorResult(provider, 'Provider unavailable.', 'provider_unavailable');
     }
   }
 

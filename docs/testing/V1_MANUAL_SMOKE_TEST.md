@@ -30,6 +30,7 @@ Only use the fixture folder for write, rename, context, and metadata tests. Exis
 3. [Indexes, Search, Suggestions, and Home](v1-smoke/03_INDEXES_SEARCH.md)
 4. [Actions, Context, Chat, and Providers](v1-smoke/04_ACTIONS_PROVIDER.md)
 5. [Review, Persistence, Safety, and Portable Build](v1-smoke/05_REVIEW_PORTABLE.md)
+6. [Large Vault Performance](v1-smoke/06_LARGE_VAULT.md)
 
 ## Pass Rule
 
@@ -53,5 +54,6 @@ Record the exact module, step, selected path, permission state, provider, and vi
 | Indexes / Search | | |
 | Actions / Provider | | |
 | Review / Portable | | |
+| Large Vault | | |
 
 **Release-candidate verdict:** PASS / FAIL / BLOCKED

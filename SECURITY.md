@@ -30,12 +30,10 @@ See `docs/rebuild/VINCARIOS_V1_SAFETY_RULES.md` for the active safety design.
 ## Supply-Chain Controls
 
 - `npm ci` installs only the committed lockfile and denies package install scripts by default.
-- `npm run audit:security` requires a clean runtime audit and permits only the documented Electron Builder build-time advisory `GHSA-mh99-v99m-4gvg`. Any other advisory fails.
+- `npm run audit:security` evaluates the complete dependency tree and fails on every known vulnerability. There are no advisory exceptions.
 - `npm run licenses:check` verifies the committed runtime license inventory and rejects missing or unreviewed license expressions.
 - The bundled embedding model is pinned to one source revision and six SHA256 checksums. It is verified before first load and before packaging.
 - CI pins official GitHub actions to commit SHAs and builds a Windows portable smoke artifact after the test job passes.
-
-The remaining brace-expansion advisory is confined to the development packaging toolchain and is not part of the application runtime. It stays visible and release-blocking if its advisory identity or dependency path changes; it must be removed when a compatible upstream Electron Builder chain becomes available.
 
 ## Beta Trust Guidance
 

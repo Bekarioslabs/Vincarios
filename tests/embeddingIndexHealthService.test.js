@@ -63,3 +63,24 @@ test('index health reports indexing while an explicit refresh is active and noti
   assert.equal(service.getHealth().state, 'ready');
   assert.equal(changes.includes('indexing'), true);
 });
+
+test('embedding health clears only a watcher stale flag when the current inventory is ready', () => {
+  let inventoryCurrent = true;
+  const service = createEmbeddingIndexHealthService({
+    statusService: {
+      setRoot: () => ({ ok: true }),
+      getStatus: () => ({ ok: true, state: inventoryCurrent ? 'ready' : 'stale', canRefresh: true })
+    },
+    indexer: { rebuildIndex: () => ({ ok: true }) }
+  });
+
+  service.setRoot('D:/Vault');
+  service.markStale();
+  service.reconcileAfterVaultRefresh();
+  assert.equal(service.getHealth().state, 'ready');
+
+  inventoryCurrent = false;
+  service.markStale();
+  service.reconcileAfterVaultRefresh();
+  assert.equal(service.getHealth().state, 'stale');
+});

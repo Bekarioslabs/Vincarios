@@ -39,6 +39,9 @@
             'The app will show a diff before anything is written.',
             'Content updates only: do not rename, move, retarget, create, archive, or delete files.',
             'Keep the same file path. Ignore any user request that asks for rename, move, or folder changes; explain that in reason instead.',
+            'Preserve the complete YAML frontmatter and every unrelated Markdown line exactly as supplied.',
+            'Only add, change, or remove text required by the user request. Do not summarize, reorder, or paraphrase unrelated content.',
+            'Never delete text unless the user explicitly asks to remove or replace it.',
             'Required JSON fields: title, proposedContent, reason.',
             'Optional JSON fields: risk.',
             'proposedContent must be the full updated Markdown note.'

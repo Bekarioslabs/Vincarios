@@ -85,3 +85,17 @@ test('selected update prompt forbids rename move and retarget operations', () =>
   assert.match(ready.messages[0].content, /Content updates only/i);
   assert.match(ready.messages[1].content, /Not allowed: rename, move, retarget/i);
 });
+
+test('selected update prompt requires unrelated Markdown and frontmatter to be preserved', () => {
+  const ready = buildSelectedFileUpdateMessages({
+    kind: 'file',
+    path: '03_Knowledge/Test.md',
+    readAllowed: true,
+    writeAllowed: true,
+    content: '---\ntags:\n  - test\n---\n\n# Test\n\nExisting paragraph.'
+  }, 'Add one short fact.');
+
+  assert.equal(ready.ok, true);
+  assert.match(ready.messages[0].content, /Preserve the complete YAML frontmatter/i);
+  assert.match(ready.messages[0].content, /Never delete text unless the user explicitly asks/i);
+});

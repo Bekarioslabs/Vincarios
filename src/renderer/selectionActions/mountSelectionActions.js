@@ -265,7 +265,7 @@
           return;
         }
         removeNode(pending);
-        appendActionMessage('File summary failed: ' + ((result && result.error) || 'No response.'));
+        appendActionMessage('File summary failed: ' + formatUserFeedback(result, 'No response.'));
         setText(status, 'File summary failed.');
       } catch (error) {
         removeNode(pending);
@@ -416,13 +416,18 @@
         setText(status, 'Update proposal failed.');
         return;
       }
-      if (!reviewBasket || typeof reviewBasket.addProposal !== 'function') {
+      if (!reviewBasket || typeof reviewBasket.getOpenUpdateDraft !== 'function' || typeof reviewBasket.upsertOpenUpdateProposal !== 'function') {
         appendActionMessage('Update proposal failed: Review Basket unavailable.');
         setText(status, 'Update proposal failed.');
         return;
       }
 
-      const request = updater.buildSelectedFileUpdateMessages(snapshot, instruction);
+      const draftKey = 'content_update';
+      const openDraft = reviewBasket.getOpenUpdateDraft(snapshot.path, draftKey);
+      const proposalSelection = openDraft
+        ? Object.assign({}, snapshot, { content: openDraft.proposedContent })
+        : snapshot;
+      const request = updater.buildSelectedFileUpdateMessages(proposalSelection, instruction);
       if (!request.ok) {
         appendActionMessage('Update proposal unavailable: ' + (request.message || 'Unsupported selection.'));
         setText(status, 'Update proposal unavailable.');
@@ -442,7 +447,7 @@
 
         const proposal = updater.parseSelectedFileUpdateProposal(result.message.content, {
           path: request.path,
-          currentContent: request.currentContent
+          currentContent: openDraft ? openDraft.currentContent : request.currentContent
         });
         if (!proposal.ok) {
           appendActionMessage(formatUpdateProposalDiagnostics(request, 'parser', (proposal.message || 'Invalid proposal.') + ' [' + (proposal.code || 'unknown') + ']'));
@@ -451,14 +456,17 @@
         }
 
         try {
-          reviewBasket.addProposal(proposal.proposal);
+          const reviewItem = reviewBasket.upsertOpenUpdateProposal(proposal.proposal, draftKey);
+          const message = reviewItem && reviewItem.replaced === true
+            ? 'Update proposal refreshed in Review Basket.'
+            : 'Update proposal added to Review Basket.';
+          appendActionMessage(message);
+          setText(status, message);
         } catch (basketError) {
           appendActionMessage(formatUpdateProposalDiagnostics(request, 'review_basket', (basketError && basketError.message) || 'Could not add proposal to Review Basket.'));
           setText(status, 'Update proposal failed: Review Basket.');
           return;
         }
-        appendActionMessage('Update proposal added to Review Basket.');
-        setText(status, 'Update proposal added to Review Basket.');
       } catch (error) {
         removeNode(pending);
         appendActionMessage(formatUpdateProposalDiagnostics(request, 'provider_exception', classifyThrownProviderError(error)));
@@ -545,7 +553,7 @@
           setText(status, 'Folder Markdown summarized: ' + snapshot.path);
           return;
         }
-        appendActionMessage('Folder Markdown summary failed: ' + ((result && result.error) || 'No response.'));
+        appendActionMessage('Folder Markdown summary failed: ' + formatUserFeedback(result, 'No response.'));
         setText(status, 'Folder Markdown summary failed.');
       } catch (error) {
         removeNode(pending);
@@ -737,8 +745,15 @@
     function classifyProviderFailure(result) {
       if (!result) return 'Provider returned no result.';
       if (result.canceled === true || /cancell?ed/i.test(String(result.error || ''))) return 'Provider canceled the request.';
-      if (result.ok !== true) return 'Provider failed: ' + String(result.error || 'Unknown provider error.');
+      if (result.ok !== true) return formatUserFeedback(result, 'Unknown provider error.');
       return 'Provider returned an empty response.';
+    }
+
+    function formatUserFeedback(result, fallback) {
+      const formatter = typeof window !== 'undefined' ? window.VincariosUserFeedbackMessages : null;
+      return formatter && typeof formatter.formatUserFeedback === 'function'
+        ? formatter.formatUserFeedback(result, fallback)
+        : String(result && (result.message || result.error) || fallback || 'Something went wrong.');
     }
 
     function classifyThrownProviderError(error) {

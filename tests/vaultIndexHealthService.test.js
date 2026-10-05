@@ -70,6 +70,33 @@ test('vault index health includes enabled full-text search and refreshes it thro
   assert.equal(fullTextRuns, 1);
 });
 
+test('vault index health reconciles watcher state against a final inventory snapshot after refresh', async () => {
+  let snapshots = 0;
+  let embeddingReconciles = 0;
+  let fullTextReconciles = 0;
+  const service = createVaultIndexHealthService({
+    metadataIndexer: { rebuildIndex: () => ({ ok: true }) },
+    metadataStatusService: { getStatus: () => ({ ok: true, state: 'ready', canRefresh: true }) },
+    embeddingHealthService: {
+      getHealth: () => ({ ok: true, state: 'ready', canRefresh: true }),
+      refreshIndex: async () => ({ ok: true }),
+      reconcileAfterVaultRefresh: () => { embeddingReconciles += 1; return { ok: true, state: 'ready' }; }
+    },
+    fullTextHealthService: {
+      getHealth: () => ({ ok: true, state: 'ready', enabled: true, canRefresh: true }),
+      refreshIndex: async () => ({ ok: true }),
+      reconcileAfterVaultRefresh: () => { fullTextReconciles += 1; return { ok: true, state: 'ready' }; },
+      subscribe: () => () => {}
+    },
+    freshnessService: { refreshSnapshot: () => { snapshots += 1; return { ok: true }; } }
+  });
+
+  assert.equal((await service.refreshIndexes()).ok, true);
+  assert.equal(snapshots, 2);
+  assert.equal(embeddingReconciles, 1);
+  assert.equal(fullTextReconciles, 1);
+});
+
 test('vault index health ignores disabled full-text search in aggregate status and refresh', async () => {
   let fullTextRuns = 0;
   const service = createVaultIndexHealthService({

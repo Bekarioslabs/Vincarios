@@ -25,6 +25,7 @@
     const onOpenHistoryPath = typeof options.onOpenHistoryPath === 'function' ? options.onOpenHistoryPath : null;
     const onProposeUpdate = typeof options.onProposeUpdate === 'function' ? options.onProposeUpdate : null;
     const onResolveUnsavedNavigation = typeof options.onResolveUnsavedNavigation === 'function' ? options.onResolveUnsavedNavigation : null;
+    const onPreviewFeedback = typeof options.onPreviewFeedback === 'function' ? options.onPreviewFeedback : null;
     let currentSource = '';
     let loadedSource = '';
     let currentPath = '';
@@ -136,7 +137,7 @@
       }
       if (!onOpenLink) return;
       const result = await onOpenLink({ target, currentPath });
-      if (result && result.ok === false) showLinkFeedback(result.message || 'Linked note not found.');
+      if (result && result.ok === false) showLinkFeedback(getUserFeedback(result, 'Linked note not found.'));
     }
 
     function showExternalLinkDialog(url) {
@@ -166,7 +167,7 @@
         const result = api && typeof api.openExternal === 'function'
           ? await api.openExternal(normalizedUrl)
           : { ok: false, message: 'External browser service unavailable.' };
-        if (!result || result.ok === false) showPreviewStatus((result && result.message) || 'Could not open external link.');
+        if (!result || result.ok === false) showPreviewStatus((result && result.message) || 'Could not open external link.', { type: 'error', action: 'External link' });
         closeExternalDialog(dialog);
       });
       const copy = createExternalLinkButton('Copy link', async () => {
@@ -192,7 +193,7 @@
       button.textContent = label;
       button.addEventListener('click', (event) => {
         event.preventDefault();
-        Promise.resolve(onClick()).catch(() => showPreviewStatus('External link action failed.'));
+        Promise.resolve(onClick()).catch(() => showPreviewStatus('External link action failed.', { type: 'error', action: 'External link' }));
       });
       return button;
     }
@@ -355,7 +356,7 @@
     function addLocalUpdateProposal() {
       if (!currentPath || !hasLocalChanges()) return { ok: false, message: 'No local Markdown changes to review.' };
       if (!onProposeUpdate) {
-        showPreviewStatus('Review Basket unavailable.');
+        showPreviewStatus('Review Basket unavailable.', { type: 'error', action: 'Review Basket' });
         return { ok: false, message: 'Review Basket unavailable.' };
       }
       clearLinkFeedback();
@@ -370,7 +371,7 @@
         updateMode: 'whole_note'
       });
       if (result && result.ok === false) {
-        showPreviewStatus(result.message || 'Could not add update proposal.');
+        showPreviewStatus(result.message || 'Could not add update proposal.', { type: 'error', action: 'Review Basket' });
         return result;
       }
       return { ok: true };
@@ -492,7 +493,14 @@
 
     function showLinkFeedback(message) {
       const nextMessage = message || 'Linked note not found.';
-      showPreviewStatus(nextMessage);
+      showPreviewStatus(nextMessage, { type: 'warning', action: 'Preview link' });
+    }
+
+    function getUserFeedback(result, fallback) {
+      const formatter = typeof window !== 'undefined' ? window.VincariosUserFeedbackMessages : null;
+      return formatter && typeof formatter.formatUserFeedback === 'function'
+        ? formatter.formatUserFeedback(result, fallback)
+        : String(result && (result.message || result.error) || fallback || 'Something went wrong.');
     }
 
     function clearLinkFeedback() {
@@ -563,12 +571,20 @@
       editButton.setAttribute('title', label);
     }
 
-    function showPreviewStatus(message) {
+    function showPreviewStatus(message, activity) {
       if (!previewStatus) return;
       const hasMessage = Boolean(message);
       previewStatus.textContent = String(message || '');
       if (previewStatus.removeAttribute) previewStatus.removeAttribute('hidden');
       if (previewStatus.classList) previewStatus.classList.toggle('is-empty', !hasMessage);
+      if (hasMessage && activity && onPreviewFeedback) {
+        onPreviewFeedback({
+          message: String(message),
+          targetPath: currentPath,
+          type: String(activity.type || 'info'),
+          action: String(activity.action || 'Preview')
+        });
+      }
     }
 
     function clearPreviewStatus() {

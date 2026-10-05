@@ -50,6 +50,13 @@ function createFullTextIndexHealthService(options) {
       : operation();
   }
 
+  function reconcileAfterVaultRefresh() {
+    const status = getBaseStatus();
+    if (status.ok && status.state === 'ready') stale = false;
+    notify();
+    return status;
+  }
+
   async function runRefreshIndex(refreshOptions) {
     if (!indexer || typeof indexer.rebuildIndex !== 'function') return fail('full_text_unavailable', 'Full-text indexer unavailable.');
     const status = getBaseStatus();
@@ -108,7 +115,7 @@ function createFullTextIndexHealthService(options) {
     listeners.forEach((listener) => listener(health));
   }
 
-  return Object.freeze({ setRoot, getHealth, setEnabled, refreshIndex, deleteIndex, markStale, subscribe });
+  return Object.freeze({ setRoot, getHealth, setEnabled, refreshIndex, deleteIndex, markStale, reconcileAfterVaultRefresh, subscribe });
 }
 
 function fail(code, message) { return { ok: false, code, message, state: 'unavailable', enabled: false, canRefresh: false }; }

@@ -26,8 +26,17 @@
     }
 
     function upsertOpenManualUpdateProposal(proposal) {
-      const item = normalizeProposal(proposal, nextId);
-      const existing = findOpenManualUpdate(item);
+      return upsertOpenUpdateProposal(proposal, 'source_editor');
+    }
+
+    function upsertOpenUpdateProposal(proposal, updateDraftKey) {
+      const key = normalizeUpdateDraftKey(updateDraftKey || (proposal && proposal.updateDraftKey));
+      if (!key) return addProposal(proposal);
+
+      const candidate = Object.assign({}, proposal, { updateDraftKey: key });
+      const existing = findOpenUpdateDraft(candidate, key);
+      if (existing) candidate.currentContent = existing.currentContent;
+      const item = normalizeProposal(candidate, nextId);
       if (!existing) {
         nextId += 1;
         items.push(item);
@@ -93,11 +102,22 @@
       return items.find((item) => item.status === 'open' && item.fingerprint === candidate.fingerprint) || null;
     }
 
-    function findOpenManualUpdate(candidate) {
+    function getOpenUpdateDraft(targetPath, updateDraftKey) {
+      const key = normalizeUpdateDraftKey(updateDraftKey);
+      if (!key) return null;
+      const item = findOpenUpdateDraft({ targetPath }, key);
+      return item ? Object.assign({}, item) : null;
+    }
+
+    function findOpenUpdateDraft(candidate, updateDraftKey) {
       return items.find((item) => item.status === 'open'
         && item.type === 'update_note'
         && item.targetPath === candidate.targetPath
-        && item.reason === 'Manual Markdown source edit from preview editor.') || null;
+        && item.updateDraftKey === updateDraftKey) || null;
+    }
+
+    function normalizeUpdateDraftKey(value) {
+      return String(value || '').trim();
     }
 
 
@@ -178,6 +198,8 @@
     return Object.freeze({
       addProposal,
       upsertOpenManualUpdateProposal,
+      upsertOpenUpdateProposal,
+      getOpenUpdateDraft,
       addProposalPlan,
       restoreSnapshot,
       setSelected,

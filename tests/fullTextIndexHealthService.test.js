@@ -71,3 +71,25 @@ test('full-text health toggles the persistent opt-in without forcing a rebuild',
   assert.deepEqual(await service.setEnabled(false), { ok: true, enabled: false });
   assert.equal(service.getHealth().state, 'disabled');
 });
+
+test('full-text health clears only a watcher stale flag when the current inventory is ready', () => {
+  let inventoryCurrent = true;
+  const service = createFullTextIndexHealthService({
+    indexer: { setRoot: () => ({ ok: true }) },
+    statusService: {
+      setRoot: () => ({ ok: true }),
+      getStatus: () => ({ ok: true, state: inventoryCurrent ? 'ready' : 'stale', enabled: true, canRefresh: true })
+    }
+  });
+
+  service.setRoot('D:/Vault');
+  service.markStale();
+  assert.equal(service.getHealth().state, 'stale');
+  service.reconcileAfterVaultRefresh();
+  assert.equal(service.getHealth().state, 'ready');
+
+  inventoryCurrent = false;
+  service.markStale();
+  service.reconcileAfterVaultRefresh();
+  assert.equal(service.getHealth().state, 'stale');
+});

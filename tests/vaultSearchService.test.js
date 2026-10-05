@@ -73,3 +73,26 @@ test('vault search fails clearly when the metadata index does not exist', () => 
     message: 'Build vault indexes before searching.'
   });
 });
+
+test('vault search reports when the visible result list is capped', () => {
+  const documents = Object.fromEntries(Array.from({ length: 101 }, (_value, index) => {
+    const note = String(index + 1).padStart(3, '0');
+    const documentPath = '03_Knowledge/Fixture-' + note + '.md';
+    return [documentPath, {
+      path: documentPath,
+      title: 'Fixture ' + note,
+      fields: { tags: ['large-vault-fixture'], type: '', status: '', aliases: [] }
+    }];
+  }));
+  const service = createVaultSearchService({
+    metadataStore: createStore({ ok: true, exists: true, documents }),
+    fullTextStore: createStore({ ok: true, exists: false, enabled: false, index: { terms: {} } })
+  });
+
+  service.setRoot('D:/vault');
+  const result = service.search({ query: 'large-vault-fixture', scope: 'metadata' });
+
+  assert.equal(result.results.length, 100);
+  assert.equal(result.totalResults, 101);
+  assert.equal(result.truncated, true);
+});

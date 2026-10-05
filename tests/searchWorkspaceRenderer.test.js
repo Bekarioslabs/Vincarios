@@ -15,3 +15,10 @@ test('search workspace uses a themed app clear control instead of the native sea
   assert.match(styles, /::-webkit-search-cancel-button/);
   assert.match(styles, /\.search-clear:hover,[\s\S]*?color: var\(--text-accent\)/);
 });
+
+test('search workspace explains when a large result set is visibly capped', () => {
+  const workspace = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'search', 'mountSearchWorkspace.js'), 'utf8');
+
+  assert.match(workspace, /totalResults/);
+  assert.match(workspace, /Showing first .* results\. Refine your query to narrow them\./);
+});

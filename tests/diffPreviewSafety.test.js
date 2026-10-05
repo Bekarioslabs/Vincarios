@@ -56,3 +56,107 @@ test('review basket blocks updates when a safe diff preview cannot be produced',
   assert.equal(item.diffUnavailable, true);
   assert.equal(basket.getSelectedOpenItems().length, 0);
 });
+
+test('multi-line YAML tag changes remain complete in the review diff', () => {
+  const diff = buildMarkdownDiffPreview({
+    currentContent: [
+      '---',
+      'tags:',
+      '  - yaml-test',
+      'status: active',
+      '---',
+      '# Note'
+    ].join('\n'),
+    proposedContent: [
+      '---',
+      'tags:',
+      '  - marvel',
+      '  - iron-man',
+      '  - tony-stark',
+      'status: active',
+      '---',
+      '# Note'
+    ].join('\n')
+  });
+
+  const changedLines = diff.hunks.flatMap((hunk) => hunk.lines.map((line) => line.text));
+  assert.equal(diff.ok, true);
+  assert.equal(diff.additions, 3);
+  assert.equal(diff.deletions, 1);
+  assert.equal(changedLines.includes('  - marvel'), true);
+  assert.equal(changedLines.includes('  - iron-man'), true);
+  assert.equal(changedLines.includes('  - tony-stark'), true);
+  assert.equal(changedLines.includes('  - yaml-test'), true);
+});
+
+test('frontmatter changes include the complete YAML block for review', () => {
+  const diff = buildMarkdownDiffPreview({
+    currentContent: [
+      '---',
+      'categories: Places',
+      'type: Landmarks',
+      'rating: 5',
+      'address: Av. Gustave Eiffel',
+      'coordinates: 48.85837, 2.294481',
+      'architect: Gustave Eiffel',
+      'color: red',
+      'icon: landmark',
+      'tags:',
+      '  - tower',
+      '---',
+      '# Eiffel Tower'
+    ].join('\n'),
+    proposedContent: [
+      '---',
+      'categories: Places',
+      'type: Landmarks',
+      'rating: 5',
+      'address: Av. Gustave Eiffel',
+      'coordinates: 48.85837, 2.294481',
+      'architect: Gustave Eiffel',
+      'color: red',
+      'icon: landmark',
+      'tags:',
+      '  - eiffel',
+      '---',
+      '# Eiffel Tower'
+    ].join('\n')
+  });
+
+  const lines = diff.hunks.flatMap((hunk) => hunk.lines.map((line) => line.text));
+  assert.equal(lines.includes('categories: Places'), true);
+  assert.equal(lines.includes('type: Landmarks'), true);
+  assert.equal(lines.includes('rating: 5'), true);
+  assert.equal(lines.includes('address: Av. Gustave Eiffel'), true);
+  assert.equal(lines.includes('coordinates: 48.85837, 2.294481'), true);
+  assert.equal(lines.includes('architect: Gustave Eiffel'), true);
+  assert.equal(lines.includes('color: red'), true);
+  assert.equal(lines.includes('icon: landmark'), true);
+});
+
+test('body changes do not show isolated tail lines from untouched YAML frontmatter', () => {
+  const currentContent = [
+    '---',
+    'categories: Places',
+    'type: Landmarks',
+    'rating: 5',
+    'address: Av. Gustave Eiffel',
+    'coordinates: 48.85837, 2.294481',
+    'architect: Gustave Eiffel',
+    'color: red',
+    'icon: landmark',
+    '---',
+    '# Eiffel Tower',
+    '',
+    'An iron landmark.'
+  ].join('\n');
+  const diff = buildMarkdownDiffPreview({
+    currentContent,
+    proposedContent: currentContent.replace('# Eiffel Tower', '# Eiffel Tower Landmark')
+  });
+
+  const lines = diff.hunks.flatMap((hunk) => hunk.lines.map((line) => line.text));
+  assert.equal(lines.includes('icon: landmark'), false);
+  assert.equal(lines.includes('# Eiffel Tower'), true);
+  assert.equal(lines.includes('# Eiffel Tower Landmark'), true);
+});

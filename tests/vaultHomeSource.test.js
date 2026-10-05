@@ -50,11 +50,22 @@ test('vault home presents local inventory, index health, and existing workspace 
   const source = read('src/renderer/home/mountVaultHome.js');
 
   assert.match(source, /api\.vault\.getInventory/);
+  assert.match(source, /api\.vault\.listFolder\('\'\)/);
   assert.match(source, /api\.indexes\.getHealth/);
   assert.match(source, /Vault Health/);
+  assert.match(source, /Unassigned root items/);
+  assert.match(source, /entry\.kind === 'markdown' \|\| entry\.kind === 'image'/);
   assert.match(source, /Search Vault/);
   assert.match(source, /Open Review Basket/);
   assert.match(source, /Open Chat/);
+});
+test('vault home opens root items through the file panel entry boundary', () => {
+  const shell = read('src/renderer/shell/mountShell.js');
+  const panel = read('src/renderer/files/mountFilePanel.js');
+
+  assert.match(shell, /filePanel\.openVaultEntry/);
+  assert.match(panel, /async function openVaultEntry/);
+  assert.match(panel, /isImagePath\(normalizedPath\)/);
 });
 test('vault home subscribes to live index health and exposes Review Basket navigation', () => {
   const source = read('src/renderer/home/mountVaultHome.js');

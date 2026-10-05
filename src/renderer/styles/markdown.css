@@ -122,6 +122,10 @@
   font: 11px/1.4 var(--font-interface);
 }
 
+.markdown-link-picker-message[data-tone="error"] {
+  color: var(--status-error);
+}
+
 .markdown-link-picker-result {
   width: 100%;
   display: grid;

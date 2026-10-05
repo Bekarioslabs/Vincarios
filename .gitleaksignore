@@ -1,0 +1,4 @@
+# Pinned SHA256 values for bundled embedding-model artifacts, not credentials.
+a4fccdc9b1a51e296fa70110279e45285ddb1143:src/main/embeddings/embeddingModelStore.js:generic-api-key:12
+a4fccdc9b1a51e296fa70110279e45285ddb1143:src/main/embeddings/embeddingModelStore.js:generic-api-key:13
+a4fccdc9b1a51e296fa70110279e45285ddb1143:src/main/embeddings/embeddingModelStore.js:generic-api-key:14

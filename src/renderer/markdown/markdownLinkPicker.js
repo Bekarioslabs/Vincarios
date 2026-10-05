@@ -25,6 +25,7 @@
       requestId: 0,
       results: [],
       message: 'Type a note name or path.',
+      messageTone: 'neutral',
       query: '',
       visible: false
     };
@@ -37,6 +38,7 @@
       state.requestId += 1;
       state.results = [];
       state.message = 'Type a note name or path.';
+      state.messageTone = 'neutral';
       state.query = '';
       root.hidden = false;
       render(true);
@@ -58,26 +60,31 @@
       if (!value) {
         state.results = [];
         state.message = 'Type a note name or path.';
+        state.messageTone = 'neutral';
         render(true);
         return;
       }
 
       state.results = [];
       state.message = 'Searching local note names and paths...';
+      state.messageTone = 'neutral';
       render(true);
       try {
         const response = await api.search.query({ query: value, scope: 'files' });
         if (requestId !== state.requestId || !state.visible) return;
         if (!response || response.ok === false) {
-          state.message = (response && response.message) || 'Build Vault Indexes in Settings to find link targets.';
+          state.message = getUserFeedback(response, 'Build Vault Indexes in Settings to find link targets.');
+          state.messageTone = getUserFeedbackTone(response);
         } else {
           state.results = normalizeLinkResults(response.results);
           state.message = state.results.length ? '' : 'No matching Markdown note found.';
+          state.messageTone = 'neutral';
         }
       } catch (_error) {
         if (requestId !== state.requestId || !state.visible) return;
         state.results = [];
         state.message = 'Build Vault Indexes in Settings to find link targets.';
+        state.messageTone = 'error';
       }
       render(true);
     }
@@ -118,6 +125,7 @@
       if (state.message) {
         const message = document.createElement('div');
         message.className = 'markdown-link-picker-message';
+        message.dataset.tone = state.messageTone;
         message.textContent = state.message;
         results.appendChild(message);
       } else {
@@ -160,6 +168,20 @@
 
   function basenameWithoutExtension(value) {
     return String(value || '').split('/').pop().replace(/\.md$/i, '');
+  }
+
+  function getUserFeedback(result, fallback) {
+    const formatter = typeof window !== 'undefined' ? window.VincariosUserFeedbackMessages : null;
+    return formatter && typeof formatter.formatUserFeedback === 'function'
+      ? formatter.formatUserFeedback(result, fallback)
+      : String(result && (result.message || result.error) || fallback || 'Something went wrong.');
+  }
+
+  function getUserFeedbackTone(result) {
+    const formatter = typeof window !== 'undefined' ? window.VincariosUserFeedbackMessages : null;
+    return formatter && typeof formatter.getUserFeedbackTone === 'function'
+      ? formatter.getUserFeedbackTone(result)
+      : 'neutral';
   }
 
   const api = Object.freeze({ MAX_RESULTS, normalizeLinkResults, mountMarkdownLinkPicker });

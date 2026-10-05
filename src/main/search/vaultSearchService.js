@@ -54,10 +54,13 @@ function createVaultSearchService(options) {
       });
     }
 
+    const sortedResults = sortResults(Array.from(resultsByPath.values()));
     return ok({
       query,
       scope,
-      results: sortResults(Array.from(resultsByPath.values())).slice(0, MAX_RESULTS),
+      results: sortedResults.slice(0, MAX_RESULTS),
+      totalResults: sortedResults.length,
+      truncated: sortedResults.length > MAX_RESULTS,
       fullText: { enabled: fullText.enabled, available: fullText.available }
     });
   }

@@ -146,6 +146,37 @@ test('review basket replaces one open manual source update with its latest local
   assert.equal(basket.getSnapshot().items.length, 1);
   assert.equal(basket.getSnapshot().items[0].proposedContent, '# Original\n\nFirst local link.\n\nSecond local link.');
 });
+
+test('review basket keeps one open AI content-update draft per note and preserves its original disk baseline', () => {
+  const basket = createReviewBasketState();
+  const first = basket.upsertOpenUpdateProposal({
+    type: 'update_note',
+    title: 'Add first fact',
+    targetPath: '03_Knowledge/Note.md',
+    currentContent: '# Original\n\nExisting paragraph.',
+    proposedContent: '# Original\n\nExisting paragraph.\n\nFirst fact.',
+    reason: 'Add the first requested fact.',
+    risk: 'medium',
+    updateMode: 'whole_note'
+  }, 'content_update');
+  const second = basket.upsertOpenUpdateProposal({
+    type: 'update_note',
+    title: 'Add second fact',
+    targetPath: '03_Knowledge/Note.md',
+    currentContent: '# Original\n\nExisting paragraph.\n\nFirst fact.',
+    proposedContent: '# Original\n\nExisting paragraph.\n\nFirst fact.\n\nSecond fact.',
+    reason: 'Add the second requested fact.',
+    risk: 'medium',
+    updateMode: 'whole_note'
+  }, 'content_update');
+
+  const items = basket.getSnapshot().items;
+  assert.equal(second.id, first.id);
+  assert.equal(second.replaced, true);
+  assert.equal(items.length, 1);
+  assert.equal(items[0].currentContent, '# Original\n\nExisting paragraph.');
+  assert.equal(items[0].proposedContent, '# Original\n\nExisting paragraph.\n\nFirst fact.\n\nSecond fact.');
+});
 test('review basket allows proposals with different content or target folders', () => {
   const basket = createReviewBasketState();
 

@@ -24,6 +24,7 @@
     { name: 'VincariosSuggestionConverters', globalName: 'VincariosSuggestionConverters', methods: ['isConvertibleSuggestion', 'convertSuggestionToReviewProposal', 'getConvertibleCheckedSuggestions', 'buildSuggestionDiffPreview'] },
     { name: 'VincariosWorkspaceShortcuts', globalName: 'VincariosWorkspaceShortcuts', methods: ['mountWorkspaceShortcuts'] },
     { name: 'VincariosActivityReporter', globalName: 'VincariosActivityReporter', methods: ['createActivityReporter'] },
+    { name: 'VincariosUserFeedbackMessages', globalName: 'VincariosUserFeedbackMessages', methods: ['formatUserFeedback', 'getUserFeedbackTone'] },
     { name: 'VincariosSearchWorkspace', globalName: 'VincariosSearchWorkspace', methods: ['mountSearchWorkspace'] },
     { name: 'VincariosVaultHome', globalName: 'VincariosVaultHome', methods: ['mountVaultHome'] },
     { name: 'VincariosInboxCleanupReport', globalName: 'VincariosInboxCleanupReport', methods: ['buildInboxCleanupReport', 'formatInboxCleanupReportMarkdown'] },

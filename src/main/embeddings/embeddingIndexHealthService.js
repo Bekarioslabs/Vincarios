@@ -46,6 +46,13 @@ function createEmbeddingIndexHealthService(options) {
       : operation();
   }
 
+  function reconcileAfterVaultRefresh() {
+    const status = getBaseStatus();
+    if (status.ok && status.state === 'ready') stale = false;
+    notify();
+    return status;
+  }
+
   async function runRefresh(refreshOptions) {
     if (!indexer || typeof indexer.rebuildIndex !== 'function') {
       return fail('embeddings_unavailable', 'Embedding indexer unavailable.');
@@ -85,7 +92,7 @@ function createEmbeddingIndexHealthService(options) {
     return statusService.getStatus();
   }
 
-  return Object.freeze({ setRoot, markStale, getHealth, refreshIndex, subscribe });
+  return Object.freeze({ setRoot, markStale, getHealth, refreshIndex, reconcileAfterVaultRefresh, subscribe });
 }
 
 function fail(code, message) {

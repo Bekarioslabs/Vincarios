@@ -14,7 +14,9 @@ test('markdown-it browser engine and MIT license are bundled locally', () => {
 
   assert.equal(fs.existsSync(browserAsset), true);
   assert.equal(fs.existsSync(license), true);
+  const browserAssetText = fs.readFileSync(browserAsset, 'utf8');
   const licenseText = fs.readFileSync(license, 'utf8');
+  assert.match(browserAssetText, /markdown-it 14\.3\.2/);
   assert.match(licenseText, /Copyright \(c\) 2014 Vitaly Puzrin, Alex Kocharin/);
   assert.match(licenseText, /Permission is hereby granted, free of charge/);
   assert.match(index, /\.\/third_party\/markdown-it\/markdown-it\.min\.js/);

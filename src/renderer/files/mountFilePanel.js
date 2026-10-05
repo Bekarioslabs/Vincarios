@@ -506,7 +506,7 @@
         }
       }
 
-      return { ok: false, message: 'Linked note not found: ' + target };
+      return { ok: false, code: 'file_not_found', message: 'Linked note not found: ' + target };
     }
 
     async function revealPath(path) {
@@ -530,6 +530,16 @@
       const revealed = await revealPath(path);
       if (!revealed.ok) return revealed;
       return openMarkdownPreview(revealed.path, { updateSelection: true, skipNavigationGuard: true, statusPrefix: 'Opened in preview: ' });
+    }
+
+    async function openVaultEntry(path) {
+      const normalizedPath = window.VincariosFileNavigator.normalizePath(path || '');
+      if (!normalizedPath) return { ok: false, message: 'No supported vault item selected.' };
+      const kind = isImagePath(normalizedPath) ? 'image' : (isMarkdownPath(normalizedPath) ? 'markdown' : 'file');
+      if (kind === 'file') return { ok: false, message: 'This vault item cannot be opened in Preview yet.' };
+      const revealed = await revealPath(normalizedPath);
+      if (!revealed.ok) return revealed;
+      return activateEntry({ path: revealed.path, kind });
     }
 
     async function openMarkdownPreview(path, behavior) {
@@ -638,6 +648,10 @@
 
     function isMarkdownPath(path) {
       return /\.m(?:d|arkdown)$/i.test(String(path || ''));
+    }
+
+    function isImagePath(path) {
+      return /\.(?:png|jpe?g|webp|gif|svg|bmp|ico)$/i.test(String(path || ''));
     }
     function createFileSelectionDetails(path) {
       return {
@@ -893,6 +907,7 @@
       openLinkedMarkdown,
       openMarkdownPath,
       openMarkdownPreview,
+      openVaultEntry,
       revealPath,
       revealFolder,
       navigator

@@ -294,6 +294,13 @@ test('review basket shows failed execution errors on the item', () => {
   assert.match(source, /Failed: /);
 });
 
+test('review basket keeps stale-content conflicts distinct from ordinary execution failures', () => {
+  const { getExecutionFailureStatus } = require('../src/renderer/review/mountReviewBasket');
+
+  assert.equal(getExecutionFailureStatus({ code: 'stale_content' }), 'stale');
+  assert.equal(getExecutionFailureStatus({ code: 'write_failed' }), 'failed');
+});
+
 test('template preset edit modal shows folders and files in the read-only plan preview', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'review', 'mountReviewBasket.js'), 'utf8');
 

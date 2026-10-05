@@ -87,7 +87,12 @@ function createVaultIndexHealthService(options) {
       const fullText = shouldRefreshFullText()
         ? await fullTextHealthService.refreshIndex(Object.assign({}, refreshOptions, { refreshInventory: false }))
         : { ok: true, skipped: true };
-      return ok({ freshness, metadata, embeddings, fullText });
+      const finalFreshness = freshnessService && typeof freshnessService.refreshSnapshot === 'function'
+        ? freshnessService.refreshSnapshot()
+        : { ok: true, skipped: true };
+      if (!finalFreshness.ok) return finalFreshness;
+      reconcileAfterVaultRefresh();
+      return ok({ freshness, finalFreshness, metadata, embeddings, fullText });
     } finally {
       refreshing = false;
       notify();
@@ -192,6 +197,19 @@ function createVaultIndexHealthService(options) {
     return fullTextHealthService && typeof fullTextHealthService.getHealth === 'function'
       ? fullTextHealthService.getHealth()
       : { ok: true, state: 'disabled', enabled: false, canRefresh: false };
+  }
+
+  function reconcileAfterVaultRefresh() {
+    const metadata = metadataStatusService && typeof metadataStatusService.getStatus === 'function'
+      ? metadataStatusService.getStatus()
+      : null;
+    if (metadata && metadata.ok && metadata.state === 'ready') metadataStale = false;
+    if (embeddingHealthService && typeof embeddingHealthService.reconcileAfterVaultRefresh === 'function') {
+      embeddingHealthService.reconcileAfterVaultRefresh();
+    }
+    if (fullTextHealthService && typeof fullTextHealthService.reconcileAfterVaultRefresh === 'function') {
+      fullTextHealthService.reconcileAfterVaultRefresh();
+    }
   }
 
   return Object.freeze({

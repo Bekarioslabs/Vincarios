@@ -17,23 +17,29 @@
     const onRevealResult = typeof options.onRevealResult === 'function' ? options.onRevealResult : null;
     if (!root || !api || !api.search || typeof api.search.query !== 'function') return null;
 
-    const state = { query: '', scope: 'all', results: [], fullText: { enabled: false, available: false }, message: '' };
+    const state = { query: '', scope: 'all', results: [], totalResults: 0, truncated: false, fullText: { enabled: false, available: false }, message: '' };
     render();
 
     async function runSearch() {
       const response = await api.search.query({ query: state.query, scope: state.scope });
       if (!response || !response.ok) {
         state.results = [];
+        state.totalResults = 0;
+        state.truncated = false;
         state.fullText = { enabled: false, available: false };
         state.message = response && response.message || 'Search could not run.';
       } else {
         state.query = response.query || state.query;
         state.results = Array.isArray(response.results) ? response.results : [];
+        state.totalResults = Number(response.totalResults) || state.results.length;
+        state.truncated = response.truncated === true;
         state.fullText = response.fullText || { enabled: false, available: false };
         state.message = state.query ? '' : 'Enter a filename, path, tag, or indexed word.';
       }
       render();
-      if (status && state.query) status.textContent = response && response.ok ? 'Search completed: ' + state.results.length + ' result(s).' : state.message;
+      if (status && state.query) status.textContent = response && response.ok
+        ? searchStatusMessage(state)
+        : state.message;
     }
 
     function render() {
@@ -74,6 +80,8 @@
       clear.addEventListener('click', () => {
         state.query = '';
         state.results = [];
+        state.totalResults = 0;
+        state.truncated = false;
         state.message = '';
         render();
       });
@@ -179,11 +187,23 @@
   }
 
   function getNotice(state) {
+    const details = [];
     if (state.scope === 'content' && !state.fullText.available) {
-      return state.fullText.enabled ? 'Full-text cache needs a refresh before content can be searched.' : 'Enable Full-text Search in Settings to search note bodies.';
+      details.push(state.fullText.enabled ? 'Full-text cache needs a refresh before content can be searched.' : 'Enable Full-text Search in Settings to search note bodies.');
+    } else if (state.scope === 'all' && !state.fullText.available) {
+      details.push('Searching names, paths, titles, and YAML metadata. Full-text content is unavailable.');
+    } else {
+      details.push('Search stays local. Provider access and R permission are not required.');
     }
-    if (state.scope === 'all' && !state.fullText.available) return 'Searching names, paths, titles, and YAML metadata. Full-text content is unavailable.';
-    return 'Search stays local. Provider access and R permission are not required.';
+    if (state.query && !state.message && state.truncated) {
+      details.push('Showing first ' + state.results.length + ' of ' + state.totalResults + ' results. Refine your query to narrow them.');
+    }
+    return details.join(' ');
+  }
+
+  function searchStatusMessage(state) {
+    if (state.truncated) return 'Search completed: ' + state.results.length + ' of ' + state.totalResults + ' results shown.';
+    return 'Search completed: ' + state.totalResults + ' result(s).';
   }
 
   const api = { SEARCH_SCOPES, mountSearchWorkspace };

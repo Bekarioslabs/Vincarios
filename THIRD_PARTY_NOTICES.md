@@ -2,7 +2,7 @@
 
 This file summarizes the main third-party components bundled with vincarios. The complete lockfile-derived runtime package inventory is stored in [licenses/npm-runtime-licenses.json](licenses/npm-runtime-licenses.json) and is verified by `npm run licenses:check`.
 
-## Electron 42.4.1
+## Electron 42.11.10
 
 - Package: [electron/electron](https://github.com/electron/electron)
 - License: MIT; Chromium and bundled components retain their own notices.
@@ -23,21 +23,21 @@ This file summarizes the main third-party components bundled with vincarios. The
 - Use: Bundled local SVG icons.
 - Full text: [third_party/lucide/LICENSE](third_party/lucide/LICENSE)
 
-## markdown-it 14.3.0
+## markdown-it 14.3.2
 
 - Package: [markdown-it/markdown-it](https://github.com/markdown-it/markdown-it)
 - License: MIT
 - Use: Bundled Markdown rendering engine.
 - Full text: [third_party/markdown-it/LICENSE](third_party/markdown-it/LICENSE)
 
-## yaml 2.9.0
+## yaml 2.9.1
 
 - Package: [eemeli/yaml](https://github.com/eemeli/yaml)
 - License: ISC
 - Use: Central Frontmatter Contract for bounded YAML parsing and serialization.
 - Full text: [licenses/yaml-ISC.txt](licenses/yaml-ISC.txt)
 
-## @huggingface/transformers 4.2.0
+## @huggingface/transformers 4.3.0
 
 - Package: [huggingface/transformers.js](https://github.com/huggingface/transformers.js)
 - License: Apache-2.0

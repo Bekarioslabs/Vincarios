@@ -182,7 +182,7 @@
 
     const renderer = getIconRenderer();
     if (renderer && typeof renderer.createIconElement === 'function') {
-      const iconName = status === 'done' ? 'check' : status === 'failed' ? 'warning' : '';
+      const iconName = status === 'done' ? 'check' : (status === 'failed' || status === 'stale') ? 'warning' : '';
       if (iconName) {
         badge.appendChild(renderer.createIconElement(iconName, 'review-status-icon'));
         return badge;
@@ -198,6 +198,7 @@
   function formatStatusLabel(status) {
     if (status === 'done') return 'Done';
     if (status === 'failed') return 'Failed';
+    if (status === 'stale') return 'Stale';
     if (status === 'running') return 'Running';
     return 'Pending';
   }
@@ -435,10 +436,10 @@
   }
 
   function renderErrorSummary(item) {
-    if (!item || item.status !== 'failed' || !item.error) return null;
+    if (!item || (item.status !== 'failed' && item.status !== 'stale') || !item.error) return null;
     const summary = document.createElement('div');
     summary.className = 'review-basket-error-summary';
-    summary.textContent = 'Failed: ' + item.error;
+    summary.textContent = (item.status === 'stale' ? 'Stale: ' : 'Failed: ') + item.error;
     return summary;
   }
 
@@ -474,13 +475,17 @@
       if (result && result.ok) {
         state.updateStatus(item.id, 'done', { path: result.path });
       } else {
-        state.updateStatus(item.id, 'failed', {
+        state.updateStatus(item.id, getExecutionFailureStatus(result), {
           error: result && (result.message || result.code) ? (result.message || result.code) : 'Action failed.'
         });
       }
     }
 
     setButtonBusy(executeButton, false);
+  }
+
+  function getExecutionFailureStatus(result) {
+    return result && result.code === 'stale_content' ? 'stale' : 'failed';
   }
 
   function confirmReviewAction(item) {
@@ -591,7 +596,7 @@
   }
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { mountReviewBasket, renderReviewBasket };
+    module.exports = { mountReviewBasket, renderReviewBasket, getExecutionFailureStatus };
   }
 
   if (typeof window !== 'undefined') {

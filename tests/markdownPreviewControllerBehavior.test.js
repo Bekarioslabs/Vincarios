@@ -220,6 +220,7 @@ test('preview controller shows missing link feedback in the preview status area'
   const { mountMarkdownPreview } = require('../src/renderer/markdown/markdownPreviewController');
   const preview = createNode();
   const feedback = createNode();
+  const activity = [];
   const nodes = {
     '#markdown-preview': preview,
     '#markdown-source-editor': createNode(),
@@ -230,6 +231,9 @@ test('preview controller shows missing link feedback in the preview status area'
   };
   const controller = mountMarkdownPreview({
     app: createApp(nodes),
+    onPreviewFeedback(event) {
+      activity.push(event);
+    },
     onOpenLink() {
       return { ok: false, message: 'Linked note not found: Missing_Target' };
     }
@@ -247,6 +251,12 @@ test('preview controller shows missing link feedback in the preview status area'
   assert.equal(feedback.hidden, false);
   assert.equal(feedback.classList.contains('is-empty'), false);
   assert.equal(feedback.textContent, 'Linked note not found: Missing_Target');
+  assert.deepEqual(activity, [{
+    message: 'Linked note not found: Missing_Target',
+    targetPath: 'Folder/Current.md',
+    type: 'warning',
+    action: 'Preview link'
+  }]);
   delete global.window;
 });
 test('preview controller turns local source edits into update proposals', async () => {

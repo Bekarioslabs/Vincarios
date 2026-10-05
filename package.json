@@ -14,7 +14,7 @@
     "model:verify": "node scripts/verify-embedding-model.js",
     "build:win": "npm run model:verify && electron-builder --win portable",
     "check": "node scripts/check-js.js",
-    "audit:security": "npm audit --omit=dev --audit-level=high && node scripts/audit-dependencies.js",
+    "audit:security": "npm audit --json | node scripts/audit-dependencies.js",
     "licenses:generate": "node scripts/check-licenses.js --write",
     "licenses:check": "node scripts/check-licenses.js",
     "test": "npm run check && node --test tests/*.test.js"
@@ -80,21 +80,42 @@
     }
   },
   "devDependencies": {
-    "electron": "42.4.1",
-    "electron-builder": "26.15.7"
+    "electron": "42.11.10",
+    "electron-builder": "26.17.0"
   },
   "dependencies": {
-    "@huggingface/transformers": "^4.2.0",
-    "markdown-it": "14.3.0",
-    "yaml": "2.9.0"
+    "@huggingface/transformers": "^4.3.0",
+    "markdown-it": "14.3.2",
+    "yaml": "2.9.1"
   },
   "overrides": {
-    "adm-zip": "0.6.0",
-    "sharp": "0.35.3"
+    "@xmldom/xmldom": "0.8.15",
+    "adm-zip": "0.6.1",
+    "sharp": "0.35.4",
+    "fast-uri": "3.1.8",
+    "http-cache-semantics": "4.3.0",
+    "js-yaml": "4.3.2",
+    "electron": {
+      "@electron/get": {
+        "undici": "7.29.1"
+      }
+    },
+    "minimatch@3": {
+      "brace-expansion": "1.1.21"
+    },
+    "minimatch@5": {
+      "brace-expansion": "2.1.7"
+    },
+    "minimatch@9": {
+      "brace-expansion": "2.1.7"
+    },
+    "minimatch@10": {
+      "brace-expansion": "5.0.12"
+    }
   },
   "allowScripts": {
     "electron-winstaller@5.4.0": true,
-    "onnxruntime-node@1.24.3": true,
+    "onnxruntime-node@1.30.0": true,
     "protobufjs": false
   }
 }

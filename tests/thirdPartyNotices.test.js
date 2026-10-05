@@ -11,11 +11,11 @@ const notices = fs.readFileSync(path.join(root, 'THIRD_PARTY_NOTICES.md'), 'utf8
 for (const requiredNotice of [
   'Inter Variable',
   'Lucide',
-  'Electron',
-  '@huggingface/transformers',
+  'Electron 42.11.10',
+  '@huggingface/transformers 4.3.0',
   'paraphrase-multilingual-MiniLM-L12-v2',
-  'markdown-it 14.3.0',
-  'yaml 2.9.0',
+  'markdown-it 14.3.2',
+  'yaml 2.9.1',
   'sharp / libvips',
   'licenses/npm-runtime-licenses.json',
 ]) {

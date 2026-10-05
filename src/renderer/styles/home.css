@@ -42,6 +42,32 @@
   font: 12px/1.5 var(--font-interface);
 }
 
+.vault-home-root-items {
+  margin-top: 7px;
+}
+
+.vault-home-root-items-toggle {
+  padding: 0;
+  border: 0;
+  color: var(--text-accent);
+  background: transparent;
+  font: var(--font-weight-ui-medium) 12px/1.4 var(--font-interface);
+  text-align: left;
+}
+
+.vault-home-root-items-toggle:hover,
+.vault-home-root-items-toggle:focus-visible {
+  outline: none;
+  text-decoration: underline;
+}
+
+.vault-home-root-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 5px;
+}
+
 .vault-home-index-status {
   display: inline-flex;
   align-items: center;
@@ -96,14 +122,16 @@
   gap: 4px;
 }
 
-.vault-home-recent-row {
+.vault-home-recent-row,
+.vault-home-root-item-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) var(--control-size-tool);
   gap: 6px;
   align-items: center;
 }
 
-.vault-home-recent-open {
+.vault-home-recent-open,
+.vault-home-root-item-open {
   min-width: 0;
   display: grid;
   gap: 2px;
@@ -116,13 +144,17 @@
 }
 
 .vault-home-recent-open:hover,
-.vault-home-recent-open:focus-visible {
+.vault-home-recent-open:focus-visible,
+.vault-home-root-item-open:hover,
+.vault-home-root-item-open:focus-visible {
   outline: none;
   background: var(--background-subtle-strong);
 }
 
 .vault-home-recent-title,
-.vault-home-recent-path {
+.vault-home-recent-path,
+.vault-home-root-item-title,
+.vault-home-root-item-path {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -132,7 +164,29 @@
   font: var(--font-weight-ui-semibold) 12px/1.3 var(--font-interface);
 }
 
+.vault-home-file-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+}
+
+.vault-home-file-type-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+.vault-home-root-item-title {
+  font: var(--font-weight-ui-medium) 12px/1.3 var(--font-interface);
+}
+
 .vault-home-recent-path {
+  color: var(--text-muted);
+  font: 10px/1.3 var(--font-monospace);
+}
+
+.vault-home-root-item-path {
   color: var(--text-muted);
   font: 10px/1.3 var(--font-monospace);
 }

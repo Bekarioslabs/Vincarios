@@ -116,6 +116,7 @@ test('provider chat service returns a safe error result when provider request fa
 
   assert.equal(result.ok, false);
   assert.equal(result.provider.id, 'lm-studio');
+  assert.equal(result.code, 'provider_unavailable');
   assert.match(result.error, /unavailable/i);
 });
 
@@ -396,6 +397,7 @@ test('provider chat service reports internal timeout separately from user cancel
 
   assert.equal(result.ok, false);
   assert.equal(result.canceled, undefined);
+  assert.equal(result.code, 'provider_timed_out');
   assert.match(result.error, /timed out/i);
 });
 

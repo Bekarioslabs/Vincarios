@@ -61,13 +61,19 @@ test('settings expose explicit local full-text opt-in and cache-only removal con
   assert.match(source, /data-settings-full-text-enabled/);
   assert.match(source, /data-settings-delete-full-text/);
   assert.match(source, /Refresh enabled indexes/);
-  assert.match(source, /Refresh enabled indexes also updates Full-text Search/);
+  assert.match(source, /Refresh enabled indexes updates the Vault Index, Similar Notes, and Full-text Search when it is enabled/);
   assert.match(controllerSource, /Markdown notes indexed/);
   assert.match(controllerSource, /Similar Notes text segments/);
-  assert.match(source, /Note metadata keeps paths, titles, tags, and YAML properties/);
+  assert.match(source, /Names, paths, titles, tags, and other YAML properties are always searchable/);
   assert.doesNotMatch(source, /metadata records/);
   assert.doesNotMatch(source, /data-settings-refresh-full-text/);
   assert.match(controllerSource, /api\.indexes\.setFullTextEnabled/);
   assert.match(controllerSource, /api\.indexes\.deleteFullText/);
   assert.match(controllerSource, /Original Markdown content is not copied/);
+});
+
+test('settings explain which search fields work with each local index', () => {
+  assert.match(source, /Names, paths, titles, tags, and other YAML properties are always searchable/);
+  assert.match(source, /Full-text Search adds exact note-body search after an explicit local opt-in/);
+  assert.match(source, /Refresh enabled indexes updates the Vault Index, Similar Notes, and Full-text Search when it is enabled/);
 });

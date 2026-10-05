@@ -165,7 +165,9 @@ test('propose update uses the selected update proposal builder from selection ac
   assert.match(source, /proposeFileUpdate\(snapshot, instruction\)/);
   assert.match(source, /buildSelectedFileUpdateMessages/);
   assert.match(source, /parseSelectedFileUpdateProposal/);
-  assert.match(source, /reviewBasket\.addProposal\(proposal\.proposal\)/);
+  assert.match(source, /reviewBasket\.getOpenUpdateDraft/);
+  assert.match(source, /reviewBasket\.upsertOpenUpdateProposal/);
+  assert.match(source, /'content_update'/);
 });
 test('propose update uses an inline instruction form instead of browser prompt', () => {
   const mountSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'selectionActions', 'mountSelectionActions.js'), 'utf8');

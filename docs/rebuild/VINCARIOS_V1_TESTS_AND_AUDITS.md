@@ -44,17 +44,21 @@ If the model is intentionally absent from a clean source checkout, run `npm run 
 
 ## Current Supply-Chain Baseline
 
-### npm dependencies - 2026-07-26
+### npm dependencies - 2026-10-05
 
-- Runtime audit (`npm audit --omit=dev --audit-level=high`): no known vulnerabilities.
-- Patched transitive versions are pinned or overridden: `adm-zip@0.6.0`, `protobufjs@7.6.5`, `fast-uri@3.1.4`, `sharp@0.35.3`, and `tar@7.5.22`.
-- Full audit has one documented build-only advisory chain: `GHSA-mh99-v99m-4gvg` in Electron Builder tooling through `brace-expansion`.
-- `scripts/audit-dependencies.js` accepts only that exact advisory through the reviewed build-package chain. Any new advisory or runtime package fails the gate.
+- Full dependency audit (`npm audit --audit-level=moderate`): no known vulnerabilities.
+- Patched direct and transitive versions are pinned or overridden: `electron@42.11.10`, `electron-builder@26.17.0`, `@huggingface/transformers@4.3.0`, `onnxruntime-node@1.30.0`, `adm-zip@0.6.1`, `protobufjs@7.6.6`, `fast-uri@3.1.8`, `js-yaml@4.3.2`, `undici@6.29.0/7.29.1`, `brace-expansion@1.1.21/2.1.7/5.0.12`, `sharp@0.35.4`, `markdown-it@14.3.2`, `yaml@2.9.1`, `http-cache-semantics@4.3.0`, and `@xmldom/xmldom@0.8.15`.
+- `scripts/audit-dependencies.js` evaluates the full JSON report and fails for every unreviewed advisory. There is no current advisory exception.
 - Do not use `npm audit fix --force`; its suggested dependency downgrade is not an accepted repair.
 
-### Licenses - 2026-07-26
+### Secret scanning - 2026-10-05
 
-- `licenses/npm-runtime-licenses.json` is generated from every non-development package resolution in `package-lock.json` and currently contains 84 unique package/version/license entries, including optional platform variants.
+- `gitleaks detect --source . --redact --no-banner` is a release gate.
+- `.gitleaksignore` contains only three commit-specific fingerprints for public SHA256 integrity values of bundled embedding-model artifacts. It does not suppress paths, rules, or future findings.
+
+### Licenses - 2026-10-05
+
+- `licenses/npm-runtime-licenses.json` is generated from every non-development package resolution in `package-lock.json` and currently contains 77 unique package/version/license entries, including optional platform variants.
 - `npm run licenses:check` rejects missing or unreviewed license expressions and fails if the committed inventory is stale.
 - `THIRD_PARTY_NOTICES.md` covers the bundled UI assets, Electron, direct runtime libraries, embedding model, and Sharp/libvips binary notices.
 - No AGPL, SSPL, Commons Clause, non-commercial, proprietary, or unknown runtime license metadata is present in the current lockfile.
@@ -82,7 +86,7 @@ The repeatable, fixture-backed release checklist is [V1 Manual Smoke Test](../te
 - note/project template creation failure after a later artifact: no partial project remains
 - malformed and deeply nested YAML: fail-soft preview/search and no unsafe metadata proposal
 - provider offline: visible recovery state and no stuck request
-- generated large-vault fixture: record index/search duration and observed UI responsiveness
+- generated large-vault fixture: create the ignored 3,000-note fixture with `scripts/create-large-vault-fixture.js`, then record File Tree, index, and Search duration plus observed UI responsiveness
 - portable Windows candidate launched from a separate folder/profile with app-local state, model, indexes, Review persistence, and notices available
 
 ## Release Artifact Rules

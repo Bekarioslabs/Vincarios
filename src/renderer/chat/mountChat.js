@@ -245,8 +245,9 @@
       }
       reportStatus(options, 'Response received.', { type: 'success', action: 'Provider response', targetPath: '', detail: '' });
     } else {
-      appendMessage(options.chatLog, 'assistant', 'Provider error: ' + ((result && result.error) || 'No response.'), { allowSave: false });
-      reportStatus(options, 'Provider error.', { type: 'error', action: 'Provider error', targetPath: '', detail: (result && result.error) || 'No response.' });
+      const feedback = getUserFeedback(result, 'No response.');
+      appendMessage(options.chatLog, 'assistant', 'Provider error: ' + feedback, { allowSave: false });
+      reportStatus(options, 'Provider error.', { type: 'error', action: 'Provider error', targetPath: '', detail: feedback });
     }
   }
   function reportStatus(options, message, activity) {
@@ -260,6 +261,13 @@
 
   function buildOutboundMessages(messages, userText, contextState) {
     return buildOutboundRequest(messages, userText, contextState).messages;
+  }
+
+  function getUserFeedback(result, fallback) {
+    const formatter = typeof window !== 'undefined' ? window.VincariosUserFeedbackMessages : null;
+    return formatter && typeof formatter.formatUserFeedback === 'function'
+      ? formatter.formatUserFeedback(result, fallback)
+      : String(result && (result.message || result.error) || fallback || 'Something went wrong.');
   }
 
   function buildOutboundRequest(messages, userText, contextState) {
