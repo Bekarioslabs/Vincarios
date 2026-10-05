@@ -29,7 +29,7 @@ Thumbs.db
 dist/
 build/
 out/
-release/
+/release/
 release-candidate/
 portable-smoke/
 

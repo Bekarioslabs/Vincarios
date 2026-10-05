@@ -58,7 +58,7 @@ If `npm` is unavailable in the shell:
 ```bash
 npm test                    # full test suite - run before every commit
 npm run check               # JavaScript source check
-npm run audit:security      # runtime audit plus documented build-only exception policy
+npm run audit:security      # complete dependency audit; no advisory exceptions
 npm run licenses:check      # lockfile-derived runtime license policy
 npm run model:provision     # download and verify the pinned embedding artifacts
 npm run model:verify        # verify all local embedding artifact hashes

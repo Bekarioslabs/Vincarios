@@ -43,7 +43,7 @@ vincarios is local-first and intentionally uses a small dependency surface, but 
 
 Please report security issues privately instead of opening a public issue.
 
-Use GitHub Security Advisories if available for this repository, or contact Bekarios Labs through the project owner account.
+Email [dev@bekarioslabs.de](mailto:dev@bekarioslabs.de), or use the repository's private vulnerability reporting flow when available. Do not include private vault content unless it is essential to reproduce the issue; use a minimal synthetic example whenever possible.
 
 A useful report includes:
 

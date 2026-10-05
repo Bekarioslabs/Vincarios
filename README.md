@@ -91,6 +91,12 @@ The output is written to `release/`. V1 is Windows-only and unsigned; private te
 
 Copyright (C) 2026 Bekarios Labs. vincarios is licensed under the GNU General Public License v3.0 only. See [LICENSE](LICENSE).
 
+Commercial use and redistribution are permitted under the GPL's terms; distributing a derived work carries the corresponding license and source-code obligations. No separate commercial license is currently offered for vincarios.
+
+## Contact
+
+Contact Bekarios Labs at [dev@bekarioslabs.de](mailto:dev@bekarioslabs.de). Report product issues through [GitHub Issues](https://github.com/Bekarioslabs/Vincarios/issues); report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
 ## Documentation
 
 - [Product Brief](docs/rebuild/VINCARIOS_V1_PRODUCT_BRIEF.md)

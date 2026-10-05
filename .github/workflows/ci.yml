@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Audit runtime and documented build dependencies
+      - name: Audit all dependencies
         run: npm run audit:security
 
       - name: Verify runtime dependency licenses
@@ -45,7 +45,7 @@ jobs:
   package-windows:
     name: Windows portable package smoke
     needs: test
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/codex/')
     runs-on: windows-latest
     timeout-minutes: 30
 
