@@ -16,7 +16,13 @@
     if (!normalized.ok) return normalized;
 
     const currentContent = normalized.content;
-    const truncatedContent = truncateContent(currentContent, options.maxChars);
+    const limit = normalizeMaxChars(options.maxChars);
+    if (currentContent.length > limit) {
+      return fail(
+        'note_too_large_for_whole_note_update',
+        'This note is too long for a whole-note AI update (' + currentContent.length + ' of ' + limit + ' characters). Edit it manually or split it.'
+      );
+    }
     return {
       ok: true,
       path: normalized.path,
@@ -26,8 +32,8 @@
         path: normalized.path,
         instructionChars: String(userText || '').trim().length,
         currentContentChars: currentContent.length,
-        sentContentChars: truncatedContent.length,
-        truncated: truncatedContent.length !== currentContent.length
+        sentContentChars: currentContent.length,
+        truncated: false
       },
       messages: [
         {
@@ -62,7 +68,7 @@
             '',
             'Current Markdown:',
             '```md',
-            truncatedContent,
+            currentContent,
             '```'
           ].join('\n')
         }
@@ -74,8 +80,9 @@
     const parsed = parseJsonObject(modelText);
     if (!parsed.ok) return parsed;
     const value = parsed.value;
-    const proposedContent = String(value.proposedContent || value.afterContent || '').trim();
-    if (!proposedContent) return fail('missing_proposed_content', 'Update proposal did not include proposedContent.');
+    const proposedContent = String(value.proposedContent || value.afterContent || '');
+    if (!proposedContent.trim()) return fail('missing_proposed_content', 'Update proposal did not include proposedContent.');
+    const currentContent = String(context && context.currentContent || '');
 
     return {
       ok: true,
@@ -83,8 +90,8 @@
         type: 'update_note',
         title: String(value.title || 'Update selected note'),
         targetPath: String(context && context.path || ''),
-        currentContent: String(context && context.currentContent || ''),
-        proposedContent,
+        currentContent,
+        proposedContent: preserveTrailingNewlines(proposedContent, currentContent),
         reason: String(value.reason || 'User requested an update to the selected note.'),
         risk: normalizeRisk(value.risk),
         updateMode: 'whole_note'
@@ -118,10 +125,9 @@
     return match ? match[1].trim() : text;
   }
 
-  function truncateContent(content, maxChars) {
-    const limit = normalizeMaxChars(maxChars);
-    const value = String(content || '');
-    return value.length > limit ? value.slice(0, limit) + '\n\n[...truncated for update proposal context...]' : value;
+  function preserveTrailingNewlines(proposedContent, currentContent) {
+    const ending = currentContent.match(/[\r\n]+$/);
+    return proposedContent.replace(/[\r\n]+$/, '') + (ending ? ending[0] : '');
   }
 
   function normalizeMaxChars(value) {

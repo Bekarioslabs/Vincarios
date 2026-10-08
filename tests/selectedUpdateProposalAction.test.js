@@ -54,20 +54,59 @@ test('selected update proposal parser creates a reviewed whole-note update propo
   assert.equal(parsed.proposal.proposedContent, '# Test\n\nNew body.');
   assert.equal(parsed.proposal.updateMode, 'whole_note');
 });
-test('selected update diagnostics report truncated context', () => {
-  const longContent = 'a'.repeat(5000);
-  const ready = buildSelectedFileUpdateMessages({
-    kind: 'file',
-    path: '03_Knowledge/Long.md',
-    readAllowed: true,
-    writeAllowed: true,
-    content: longContent
-  }, 'Append one sentence.', { maxChars: 4000 });
+for (const { length, options, accepted } of [
+  { length: 20000, options: {}, accepted: true },
+  { length: 20001, options: {}, accepted: false },
+  { length: 28812, options: {}, accepted: false },
+  { length: 4000, options: { maxChars: 4000 }, accepted: true },
+  { length: 4001, options: { maxChars: 4000 }, accepted: false },
+  { length: 6000, options: { maxChars: 6000 }, accepted: true },
+  { length: 6001, options: { maxChars: 6000 }, accepted: false }
+]) {
+  test('whole-note update ' + (accepted ? 'includes' : 'rejects') + ' ' + length + ' characters at limit ' + (options.maxChars || 20000), () => {
+    const content = '\u00e4'.repeat(length);
+    const result = buildSelectedFileUpdateMessages({
+      kind: 'file', path: '03_Knowledge/Long.md', readAllowed: true, writeAllowed: true, content
+    }, 'Append one sentence.', options);
 
-  assert.equal(ready.ok, true);
-  assert.equal(ready.diagnostics.currentContentChars, 5000);
-  assert.equal(ready.diagnostics.sentContentChars < ready.diagnostics.currentContentChars, true);
-  assert.equal(ready.diagnostics.truncated, true);
+    assert.equal(result.ok, accepted);
+    if (accepted) {
+      assert.equal(result.currentContent, content);
+      assert.equal(result.diagnostics.sentContentChars, length);
+      assert.equal(result.diagnostics.truncated, false);
+      assert.equal(result.messages[1].content.includes('```md\n' + content + '\n```'), true);
+    } else {
+      assert.equal(result.code, 'note_too_large_for_whole_note_update');
+      assert.equal(result.messages, undefined);
+      assert.match(result.message, /Edit it manually or split it/);
+    }
+  });
+}
+
+for (const { baseline, proposed, expected } of [
+  { baseline: '# Old\n', proposed: '# New', expected: '# New\n' },
+  { baseline: '# Old', proposed: '# New\n', expected: '# New' },
+  { baseline: '# Old\n\n', proposed: '# New\n', expected: '# New\n\n' },
+  { baseline: '# Old\r\n', proposed: '# New\n', expected: '# New\r\n' },
+  { baseline: '    old code\n', proposed: '    new code  \n', expected: '    new code  \n' },
+  { baseline: '\n# Old\n', proposed: '\n# New\n', expected: '\n# New\n' }
+]) {
+  test('update parser preserves content whitespace and baseline newline suffix ' + JSON.stringify({ baseline, proposed }), () => {
+    const result = parseSelectedFileUpdateProposal(JSON.stringify({ proposedContent: proposed }), {
+      path: '03_Knowledge/Test.md', currentContent: baseline
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.proposal.currentContent, baseline);
+    assert.equal(result.proposal.proposedContent, expected);
+  });
+}
+
+test('update parser rejects whitespace-only content without treating whitespace as an update', () => {
+  const result = parseSelectedFileUpdateProposal(JSON.stringify({ proposedContent: ' \r\n\t ' }), {
+    path: '03_Knowledge/Test.md', currentContent: '# Original\n'
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'missing_proposed_content');
 });
 
 
