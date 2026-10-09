@@ -1,3 +1,5 @@
+> Historical document since 2026-10-09. Kept for reference only; not maintained.
+
 # vincarios V1 Audit Triage
 
 Source: external audit file `Audit 01.md` from June 25, 2026, compared against the current vincarios V1 rebuild state.

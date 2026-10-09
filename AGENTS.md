@@ -1,5 +1,7 @@
 # AGENTS.md — vincarios V1
 
+Current status: STATUS.md (private planning file, German).
+
 > **Quick Reference**
 > vincarios is a local-first Markdown vault assistant. Safety first. All vault writes are explicit, reviewable, and backed up. Providers generate text only — they never touch files.
 
@@ -88,7 +90,7 @@ When adding behavior, identify the owner first. If unclear, update `docs/rebuild
 | `src/main/vault/` | Validated vault read/write/list services |
 | `src/main/providers/` | Provider health, model listing, chat/embedding calls only |
 | `src/main/safety/` | Path validation, dot-folder blocking |
-| `src/main/backup/` | Backup before existing-file changes |
+| `src/main/vault/vaultBackupService.js` | Backup before existing-file changes |
 | `src/main/audit/` | Audit log entries |
 | `src/main/settings/` | Settings persistence and IPC |
 | `src/shared/actions/` | Action schema, proposal parsing, diff helpers |
@@ -151,8 +153,6 @@ For ordinary implementation work unless Beka asks for a larger batch:
 6. Ask Beka to test visible UI behavior before moving to the next UI step.
 7. Run the full test suite before committing or before safety-sensitive claims.
 
-If a small task starts requiring many files or repeated fixes, stop and reframe it as an architecture step.
-
 ### Stop Conditions
 
 Pause and reassess when any of these is true:
@@ -177,7 +177,7 @@ Treat suggestions from Claude, ChatGPT, audits, or other tools as design input o
 ### Context Loading — One-Doc Rule
 
 For a change touching one module, load exactly one doc.
-Load `FINAL_BRIEFING.md` only for cross-cutting changes spanning two or more doc areas.
+Load `docs/rebuild/VINCARIOS_V1_FINAL_BRIEFING.md` only for cross-cutting changes spanning two or more doc areas.
 
 **Canonical source per area:**
 
@@ -286,5 +286,16 @@ Docs should be short, active, and decision-oriented. Archive historical material
 ---
 
 ## 8. Environment
+
+### Where to find what
+
+| Need | Location |
+|---|---|
+| Current work, next step, and open decisions | `STATUS.md` (private, German) |
+| Area-specific product and architecture contracts | Canonical source table in Section 5 |
+| Release gates and future scope | `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`, `docs/rebuild/VINCARIOS_POST_V1_BACKLOG.md` |
+| Manual testing and release draft | `docs/testing/V1_MANUAL_SMOKE_TEST.md`, `docs/release/v0.1.0-beta.1.md` |
+| Audit records | `docs/audits/` (current external inputs remain local) |
+| New exchanges with web AIs | `korrespondenz/claude/`, `korrespondenz/chatgpt/`, `korrespondenz/gemini/` (private) |
 
 See `docs/CODEX_SETUP.md` for tool friction, Windows/sandbox workarounds, and environment-specific commands.

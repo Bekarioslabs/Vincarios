@@ -1,3 +1,5 @@
+> Historical document since 2026-10-09. Kept for reference only; not maintained.
+
 # vincarios V1 Search And Metadata Plan
 
 ## Purpose
