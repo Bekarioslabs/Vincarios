@@ -16,7 +16,7 @@ vincarios is a compact local work tool, not a card-heavy dashboard. Its visual c
 - App chrome and navigation use softly raised neutral surfaces. Chat and Markdown Preview remain the darker reading/focus surfaces.
 - Prefer subtle surface contrast and restrained inset/shadow depth over decorative borders. Do not add gradients, glow decoration, or heavy neumorphism.
 - Dividers are structural only: keep them for real region boundaries, not between adjacent utility buttons or as decoration.
-- Dark and future light themes must change shared semantic tokens, never require a component-by-component recolor.
+- Dark, Light, and built-in theme packs must change shared semantic tokens, never require a component-by-component recolor.
 - Reference images and `docs/Design_index.html` guide hierarchy, compactness, and surface depth. They are not markup or layout templates to copy.
 
 ## Shared Scale And Variants

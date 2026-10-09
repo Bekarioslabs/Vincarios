@@ -292,6 +292,7 @@ Docs should be short, active, and decision-oriented. Archive historical material
 | Need | Location |
 |---|---|
 | Current work, next step, and open decisions | `STATUS.md` (private, German) |
+| Design (colors, typography, CSS rules) | `DESIGN.md` |
 | Area-specific product and architecture contracts | Canonical source table in Section 5 |
 | Release gates and future scope | `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`, `docs/rebuild/VINCARIOS_POST_V1_BACKLOG.md` |
 | Manual testing and release draft | `docs/testing/V1_MANUAL_SMOKE_TEST.md`, `docs/release/v0.1.0-beta.1.md` |
