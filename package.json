@@ -85,7 +85,7 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.0",
-    "markdown-it": "14.3.2",
+    "markdown-it": "14.3.3",
     "yaml": "2.9.1"
   },
   "overrides": {
