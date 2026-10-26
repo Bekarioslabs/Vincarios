@@ -35,6 +35,7 @@ portable-smoke/
 
 # local development vault
 dev-vault/
+/manual-test-vaults/
 docs/superpowers/
 
 # private planning notes
