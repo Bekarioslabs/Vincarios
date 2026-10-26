@@ -22,6 +22,16 @@ test('main window options keep the renderer sandboxed', () => {
   assert.match(options.webPreferences.preload, /src[\\/]preload[\\/]index\.js$/);
 });
 
+test('main window uses the packaged Vincarios Windows icon', () => {
+  const root = path.resolve(__dirname, '..');
+  const options = createWindowOptions(root);
+  const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+
+  assert.equal(options.icon, path.join(root, 'src', 'renderer', 'assets', 'brand', 'vincarios-icon.ico'));
+  assert.equal(options.icon, path.resolve(root, packageJson.build.icon));
+  assert.equal(fs.existsSync(options.icon), true);
+});
+
 test('IPC channels expose app info, provider, chat, and reviewed vault actions', () => {
   assert.deepEqual(Object.keys(IPC_CHANNELS).sort(), [
     'APP_INFO',

@@ -92,6 +92,7 @@ The repeatable, fixture-backed release checklist is [V1 Manual Smoke Test](../te
 ## Release Artifact Rules
 
 - Build from a clean checkout after all gates pass.
+- Window and Windows package use the same bundled `vincarios-icon.ico`, generated from the dark brand SVG with `node scripts/generate-app-icon.js`; verify it in the final portable smoke test.
 - Publish source revision and SHA256 checksum for every downloadable artifact.
 - State clearly that the V1 build is Windows-only and unsigned until code signing exists.
 - Keep SmartScreen and build-from-source instructions in release guidance.

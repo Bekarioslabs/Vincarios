@@ -12,6 +12,7 @@ function createWindowOptions(projectRoot) {
     minWidth: 980,
     minHeight: 640,
     show: true,
+    icon: path.join(projectRoot, 'src', 'renderer', 'assets', 'brand', 'vincarios-icon.ico'),
     backgroundColor: DEFAULT_THEME_COLORS.backgroundPrimary,
     webPreferences: {
       preload: path.join(projectRoot, 'src', 'preload', 'index.js'),

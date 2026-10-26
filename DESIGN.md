@@ -71,6 +71,8 @@ YAML is a snapshot, not a runtime theme. Interaction: UI Component Rules; constr
 
 Lowercase wordmark: `vinca` uses `--text-accent`, `rios` uses `--text-strong`. Dark/light SVG selection follows `data-theme`; assets: `src/renderer/assets/brand/`; markup: `src/renderer/shell/mountShell.js`.
 
+Windows window/package icon: `vincarios-icon.ico`, generated from the dark SVG with `node scripts/generate-app-icon.js`. Regenerate after replacing that SVG; existing EXEs require rebuilding.
+
 ## Colors
 
 YAML lists all 36 primitive colors. `ember` = `--color-amber-500`; `ember-interactive` = `--color-amber-600`. Shade families support folder visuals; components consume semantic roles.

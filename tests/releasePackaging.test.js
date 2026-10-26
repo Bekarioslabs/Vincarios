@@ -26,6 +26,35 @@ test('Windows release build is a portable, versioned candidate with bundled loca
 test('release package keeps native ONNX runtime outside ASAR', () => {
   assert.deepEqual(packageJson.build.asarUnpack, ['node_modules/onnxruntime-node/**']);
 });
+
+test('Windows application icon contains PNG frames for small and high-DPI displays', () => {
+  assert.equal(packageJson.build.icon, 'src/renderer/assets/brand/vincarios-icon.ico');
+  const icon = fs.readFileSync(path.join(__dirname, '..', packageJson.build.icon));
+  const sizes = [16, 24, 32, 48, 64, 128, 256];
+  assert.equal(icon.readUInt16LE(0), 0);
+  assert.equal(icon.readUInt16LE(2), 1);
+  assert.equal(icon.readUInt16LE(4), sizes.length);
+  let offset = 6 + sizes.length * 16;
+
+  sizes.forEach((size, index) => {
+    const entry = 6 + index * 16;
+    assert.equal(icon[entry] || 256, size);
+    assert.equal(icon[entry + 1] || 256, size);
+    assert.equal(icon.readUInt16LE(entry + 4), 1);
+    assert.equal(icon.readUInt16LE(entry + 6), 32);
+    assert.equal(icon.readUInt32LE(entry + 12), offset);
+    const length = icon.readUInt32LE(entry + 8);
+    const png = icon.subarray(offset, offset + length);
+    assert.deepEqual(png.subarray(0, 8), Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+    assert.equal(png.toString('ascii', 12, 16), 'IHDR');
+    assert.equal(png.readUInt32BE(16), size);
+    assert.equal(png.readUInt32BE(20), size);
+    assert.equal(png[24], 8);
+    assert.equal(png[25], 6);
+    offset += length;
+  });
+  assert.equal(offset, icon.length);
+});
 test('Windows release verifies the pinned embedding model before packaging', () => {
   assert.equal(packageJson.scripts['model:verify'], 'node scripts/verify-embedding-model.js');
   assert.equal(packageJson.scripts['model:provision'], 'node scripts/provision-embedding-model.js');

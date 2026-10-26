@@ -31,7 +31,7 @@
   "build": {
     "appId": "com.bekarioslabs.vincarios",
     "productName": "vincarios",
-    "icon": "src/renderer/assets/brand/vincarios-icon.png",
+    "icon": "src/renderer/assets/brand/vincarios-icon.ico",
     "asar": true,
     "asarUnpack": [
       "node_modules/onnxruntime-node/**"
