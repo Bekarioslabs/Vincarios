@@ -70,9 +70,8 @@
 
     const selection = options.selection || null;
     const contextItems = selection && Array.isArray(selection.contextItems) ? selection.contextItems : [];
-    const hasFolderTarget = Boolean(selection && selection.kind === 'folder')
-      || contextItems.some((item) => item && item.kind === 'folder');
-    if (!hasFolderTarget) return null;
+    if (contextItems.length > 0) return null;
+    if (!selection || selection.kind !== 'folder') return null;
 
     return {
       handled: true,
