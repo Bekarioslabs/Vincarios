@@ -21,13 +21,12 @@
 ## Phase A Write And Startup Checks
 
 - [ ] Use a disposable fixture note: execute two small reviewed updates and confirm two different backups retain the two earlier versions. Equal-clock collisions are additionally covered by automated injected-clock tests.
-
 - [ ] Propose a small addition. Apply Update Preview focuses Cancel and has no extra acknowledgement checkbox.
 - [ ] On a disposable note, propose a much shorter replacement or remove its YAML block. The basket warns about a large replacement; Apply is disabled until the labelled acknowledgement is checked and becomes disabled again if unchecked.
 - [ ] Cancel the large replacement, reopen its confirmation and verify that acknowledgement is unchecked again. Cancel does not change the note.
 - [ ] An empty replacement remains non-executable; a deliberately large but valid rewrite can still be applied after review and acknowledgement.
-
 - [ ] Close any old source-launched instance, start the updated app, minimize it and launch the same app again. The first window is restored/focused; no second window or second vault session is created. Repeat with the final portable build at A11; source tests alone do not certify portable lock identity.
+- [ ] On a disposable vault copy only, a real watcher failure reports that automatic file updates stopped; manually refreshing Files remains available, and reopening the vault restarts watching. A late warning from the old session must not appear in the new vault. Error injection and callback isolation are covered automatically; native failure behavior remains a manual gate.
 
 ## Review Persistence
 

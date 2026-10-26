@@ -89,6 +89,8 @@ docs/
 - Context control and permission state are their own modules, not hidden inside chat or file-tree rendering.
 - The bootstrap entry should initialize modules only; it must not become a large orchestration file.
 
+Vault watching is session-scoped. Startup or runtime watcher failure closes the failed watcher, cancels its debounce and emits one `vault_watch_unavailable` invalidation for the active root. Index health becomes stale and Files reports how to reopen the vault; late callbacks/errors from an earlier watcher are ignored. Reopening the vault creates a new watcher; there is no background retry loop.
+
 
 ## Vault Profile And Folder Roles
 

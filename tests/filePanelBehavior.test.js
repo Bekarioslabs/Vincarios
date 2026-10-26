@@ -68,8 +68,8 @@ function createVaultApi() {
         }
       }
     },
-    async emitChange() {
-      await onChanged();
+    async emitChange(change) {
+      await onChanged(change);
     }
   };
 }
@@ -94,6 +94,54 @@ test('mounted file panel reloads expanded folders for manual and external vault 
 
     assert.deepEqual(vault.calls, ['', '', 'Folder', '', 'Folder']);
     assert.equal(panel.navigator.isExpanded('Folder'), true);
+  } finally {
+    global.window = previousWindow;
+  }
+});
+
+test('mounted file panel reports watcher failure after refreshing the visible tree', async () => {
+  const previousWindow = global.window;
+  global.window = { VincariosFileNavigator: fileNavigator };
+  try {
+    const { root } = createPanelRoot();
+    const vault = createVaultApi();
+    const reports = [];
+    const panel = mountFilePanel({ root, api: vault.api, activityReporter: { report: (entry) => reports.push(entry) } });
+    await panel.openRoot();
+
+    await vault.emitChange({ watcherUnavailable: true, code: 'vault_watch_unavailable' });
+
+    assert.deepEqual(vault.calls, ['', '']);
+    assert.equal(reports.length, 1);
+    assert.match(reports[0].message, /Reopen the vault/);
+    assert.equal(reports[0].activity.type, 'warning');
+    await vault.emitChange({ affectsMarkdownIndex: true });
+    assert.equal(reports.length, 1);
+  } finally {
+    global.window = previousWindow;
+  }
+});
+
+test('watcher warning cannot outlive its active vault session or apply to another root', async () => {
+  const previousWindow = global.window;
+  global.window = { VincariosFileNavigator: fileNavigator };
+  try {
+    const { root } = createPanelRoot();
+    const vault = createVaultApi();
+    const reports = [];
+    const panel = mountFilePanel({ root, api: vault.api, activityReporter: { report: (entry) => reports.push(entry) } });
+    await panel.openRoot('D:/First');
+    let release;
+    vault.api.vault.listFolder = () => new Promise((resolve) => { release = () => resolve({ ok: true, entries: [] }); });
+    const pending = vault.emitChange({ root: 'D:/First', watcherUnavailable: true });
+    await panel.openRoot('D:/Second');
+    release();
+    await pending;
+    assert.deepEqual(reports, []);
+
+    vault.api.vault.listFolder = async () => ({ ok: true, entries: [] });
+    await vault.emitChange({ root: 'D:/First', watcherUnavailable: true });
+    assert.deepEqual(reports, []);
   } finally {
     global.window = previousWindow;
   }

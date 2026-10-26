@@ -196,7 +196,7 @@ test('file panel initializes one guarded refresh path for manual and vault-chang
   assert.match(source, /let treeRefreshInFlight = false/);
   assert.equal(subscriptionIndex > -1, true);
   assert.equal(subscriptionIndex < healthLoadIndex, true);
-  assert.match(source, /api\.vault\.onChanged\(\(\) => refreshTree\(\)\)/);
+  assert.match(source, /api\.vault\.onChanged\(async \(change\) => \{/);
 });
 test('file panel waits for preview navigation approval before changing selected Markdown or image entries', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');

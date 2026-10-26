@@ -25,6 +25,7 @@
     let activeRename = null;
     let treeRefreshInFlight = false;
     let treeRefreshPending = false;
+    let activeVault = { root: '' };
 
     if (!root) return null;
 
@@ -110,14 +111,26 @@
 
     function subscribeToVaultChanges() {
       if (!api || !api.vault || typeof api.vault.onChanged !== 'function') return;
-      api.vault.onChanged(() => refreshTree());
+      api.vault.onChanged(async (change) => {
+        const session = activeVault;
+        if (change && change.root && session.root && change.root !== session.root) return;
+        await refreshTree();
+        if (session === activeVault && change && change.watcherUnavailable) {
+          setStatus('Automatic file updates stopped. Reopen the vault to resume watching; use Refresh Files meanwhile.', {
+            type: 'warning',
+            action: 'File watcher stopped',
+            detail: 'Reopen the vault to resume automatic updates.'
+          });
+        }
+      });
     }
 
     function setVaultName(name) {
       setText(vaultName, name || 'Vault');
     }
 
-    async function openRoot() {
+    async function openRoot(vaultRoot) {
+      activeVault = { root: String(vaultRoot || '') };
       refreshButton.disabled = false;
       entriesByFolder.clear();
       navigator.openFolder('');

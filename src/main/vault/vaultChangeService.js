@@ -14,6 +14,7 @@ function createVaultChangeService(options) {
   const listeners = new Set();
   let vaultRoot = '';
   let watcher = null;
+  let watcherRevision = 0;
   let timer = null;
   let pendingMarkdownChange = false;
   let pendingMetadataRebuild = false;
@@ -24,11 +25,15 @@ function createVaultChangeService(options) {
     vaultRoot = nextRoot || '';
     clearPendingChange();
     if (!vaultRoot) return { ok: true, root: vaultRoot };
+    const revision = watcherRevision;
     try {
-      watcher = watch(vaultRoot, { recursive: true }, (eventType, filename) => onFileSystemChange(eventType, filename));
+      watcher = watch(vaultRoot, { recursive: true }, (eventType, filename) => {
+        if (revision === watcherRevision && watcher) onFileSystemChange(eventType, filename);
+      });
+      if (typeof watcher.on === 'function') watcher.on('error', () => onWatcherError(revision));
       return { ok: true, root: vaultRoot };
     } catch (error) {
-      watcher = null;
+      onWatcherError(revision);
       return { ok: false, code: 'vault_watch_unavailable', message: 'Vault change watcher unavailable.', root: vaultRoot };
     }
   }
@@ -53,7 +58,25 @@ function createVaultChangeService(options) {
     pendingMetadataRebuild = pendingMetadataRebuild || change.requiresMetadataRebuild;
     if (change.markdownPath) pendingMarkdownPaths.add(change.markdownPath);
     if (timer) return;
-    timer = schedule(flush, debounceMs);
+    const revision = watcherRevision;
+    timer = schedule(() => {
+      if (revision === watcherRevision && watcher) flush();
+    }, debounceMs);
+  }
+
+  function onWatcherError(revision) {
+    if (revision !== watcherRevision) return;
+    closeWatcher();
+    clearPendingChange();
+    const event = Object.freeze({
+      root: vaultRoot,
+      affectsMarkdownIndex: true,
+      requiresMetadataRebuild: true,
+      markdownPaths: [],
+      watcherUnavailable: true,
+      code: 'vault_watch_unavailable'
+    });
+    listeners.forEach((listener) => listener(event));
   }
 
   function flush() {
@@ -75,10 +98,12 @@ function createVaultChangeService(options) {
   }
 
   function closeWatcher() {
+    watcherRevision += 1;
     if (timer) cancel(timer);
     timer = null;
-    if (watcher && typeof watcher.close === 'function') watcher.close();
+    const previousWatcher = watcher;
     watcher = null;
+    if (previousWatcher && typeof previousWatcher.close === 'function') previousWatcher.close();
   }
 
   return Object.freeze({ setRoot, subscribe, close });

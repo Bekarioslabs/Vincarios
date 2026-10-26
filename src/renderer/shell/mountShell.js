@@ -744,7 +744,7 @@
       }
       app.classList.remove('is-start');
       filePanel.setVaultName(vaultName || 'Vault');
-      await filePanel.openRoot();
+      await filePanel.openRoot(root);
       if (reviewBasket && typeof reviewBasket.restore === 'function') await reviewBasket.restore();
       refreshVaultThemeOverride(vaultUi);
       if (startupScreen && typeof startupScreen.recordRecentVault === 'function') {
