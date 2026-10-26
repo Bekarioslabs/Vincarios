@@ -389,6 +389,31 @@ test('second instance quits before migration, settings, services or IPC initiali
   assert.deepEqual(calls, ['lock', 'quit']);
 });
 
+test('native unload confirmation defaults to Stay and only explicit discard allows unloading', () => {
+  const listeners = new Map();
+  let choice = 0;
+  const prompts = [];
+  const fakeWindow = {
+    webContents: { on: (type, callback) => listeners.set(type, callback), setWindowOpenHandler() {} },
+    loadFile: () => Promise.resolve()
+  };
+  createMainWindow({
+    BrowserWindow: function BrowserWindow() { return fakeWindow; },
+    dialog: { showMessageBoxSync(parent, options) { prompts.push({ parent, options }); return choice; } }
+  }, { projectRoot: path.resolve(__dirname, '..') });
+  const handler = listeners.get('will-prevent-unload');
+  assert.equal(typeof handler, 'function');
+  for (choice of [0, -1, undefined, 1]) {
+    let allowed = false;
+    handler({ preventDefault() { allowed = true; } });
+    assert.equal(allowed, choice === 1);
+  }
+  assert.equal(prompts[0].parent, fakeWindow);
+  assert.deepEqual(prompts[0].options.buttons, ['Stay', 'Discard changes']);
+  assert.equal(prompts[0].options.defaultId, 0);
+  assert.equal(prompts[0].options.cancelId, 0);
+});
+
 test('second-instance event restores and focuses the live primary window', () => {
   const os = require('node:os');
   const { createSettingsStore } = require('../src/main/settings/settingsStore');

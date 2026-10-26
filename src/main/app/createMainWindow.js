@@ -37,6 +37,26 @@ function createMainWindow(electron, options) {
   win.webContents.on('will-navigate', (event) => event.preventDefault());
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
+  win.webContents.on('will-prevent-unload', (event) => {
+    if (!electron.dialog || typeof electron.dialog.showMessageBoxSync !== 'function') return;
+    try {
+      const choice = electron.dialog.showMessageBoxSync(win, {
+        type: 'warning',
+        title: 'Unsaved local changes',
+        message: 'Your current note has local changes that are not saved to the vault.',
+        detail: 'Stay to keep editing or add the changes to Review Basket. Discard changes closes or reloads the window without saving the local editor draft.',
+        buttons: ['Stay', 'Discard changes'],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true
+      });
+      // Electron reverses the usual meaning: preventDefault allows this unload.
+      if (choice === 1) event.preventDefault();
+    } catch (_error) {
+      console.error('Could not confirm window unload; local changes remain protected.');
+    }
+  });
+
   win.webContents.on('did-fail-load', (_event, errorCode, errorDescription) => {
     console.error('vincarios window failed to load:', errorCode, errorDescription);
   });

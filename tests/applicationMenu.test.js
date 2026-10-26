@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createApplicationMenu } = require('../src/main/app/createApplicationMenu');
+const { createApplicationMenu, installApplicationMenu } = require('../src/main/app/createApplicationMenu');
 
 test('application menu exposes explicit Windows zoom controls through one callback', () => {
   const calls = [];
@@ -52,4 +52,18 @@ test('application menu exposes workspace navigation and opens the repository ext
   const repository = helpMenu.submenu.find((item) => item.label === 'Repository');
   repository.click();
   assert.deepEqual(links, ['https://github.com/Bekarioslabs/Vincarios']);
+});
+
+test('packaged menu omits reload shortcuts but development keeps them', () => {
+  for (const isPackaged of [false, true]) {
+    let template;
+    installApplicationMenu({
+      app: { isPackaged },
+      Menu: { buildFromTemplate(value) { template = value; return value; }, setApplicationMenu() {} }
+    });
+    const view = template.find((item) => item.label === 'View');
+    assert.equal(view.submenu.some((item) => item.role === 'reload'), !isPackaged);
+    assert.equal(view.submenu.some((item) => item.role === 'forceReload'), !isPackaged);
+    assert.equal(view.submenu.filter((item) => item.zoomCommand).length, 3);
+  }
 });

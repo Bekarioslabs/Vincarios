@@ -65,6 +65,14 @@
     if (editor) editor.addEventListener('input', handleEditorInput);
     if (editorToolbar) editorToolbar.addEventListener('mousedown', preserveEditorSelection);
     if (editorToolbar) editorToolbar.addEventListener('click', handleEditorToolbarClick);
+    if (typeof window.addEventListener === 'function') {
+      window.addEventListener('beforeunload', (event) => {
+        if (!hasLocalChanges()) return;
+        event.preventDefault();
+        event.returnValue = '';
+      });
+    }
+
     editButton.addEventListener('click', () => {
       if (!currentSource) return;
       if (mode === 'preview') showEditor();

@@ -17,8 +17,7 @@ function createApplicationMenu(options) {
     {
       label: 'View',
       submenu: [
-        { role: 'reload' },
-        { role: 'forceReload' },
+        ...(options.isPackaged === true ? [] : [{ role: 'reload' }, { role: 'forceReload' }]),
         { role: 'toggleDevTools' },
         { type: 'separator' },
         createZoomMenuItem('Reset Zoom', 'CommandOrControl+0', 'reset', onZoom),
@@ -90,6 +89,7 @@ function installApplicationMenu(electron) {
     electron.shell.openExternal(url);
   };
   electron.Menu.setApplicationMenu(electron.Menu.buildFromTemplate(createApplicationMenu({
+    isPackaged: electron.app && electron.app.isPackaged === true,
     onZoom: applyWindowZoom,
     onNavigate,
     onOpenExternal

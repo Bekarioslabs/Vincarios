@@ -37,7 +37,11 @@
 ## Close, Reload And Line Endings (A07)
 
 - [ ] Open a Windows CRLF fixture note, enter and leave Source without editing: Update remains disabled and neither navigation nor closing reports an unsaved edit.
+- [ ] Edit a disposable note, close the window and select Stay (or close the confirmation). The app and exact local draft remain open. Discard changes closes without writing the draft to the vault.
+- [ ] In the development app, repeat with View > Reload, View > Force Reload, Ctrl+R and Ctrl+Shift+R while the app is foreground. Stay preserves the draft; Discard reloads. Repeat after returning to Preview with local edits.
 - [ ] On a copy, execute a small reviewed edit to a CRLF note. The saved file retains CRLF, the backup retains the exact original and reopening Source does not show phantom changes. LF notes retain LF. Removing a final newline deliberately remains a real edit.
+- [ ] In the final portable build, View has no Reload/Force Reload items. Window close still offers Stay/Discard for unsaved local edits.
+- [ ] Optional developer probe: `node scripts/probe-editor-unload.js` runs hidden real Electron windows with synthetic notes and an isolated temporary profile. It verifies native reload/menu/close paths and cleans up its owned fixture; foreground keyboard accelerators still require the manual check above.
 
 ## Malformed Frontmatter
 
