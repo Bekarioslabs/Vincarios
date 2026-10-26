@@ -27,6 +27,9 @@ function enforceCanonicalContainment(resolved, options) {
     if (relation && (relation.startsWith('..') || path.isAbsolute(relation))) {
       return fail('outside_vault', 'Canonical path escapes the vault.');
     }
+    const canonicalTarget = path.resolve(canonicalAncestor, path.relative(existingAncestor, resolved.absolutePath));
+    const canonicalValidation = normalizeVaultRelativePath(path.relative(canonicalRoot, canonicalTarget), options);
+    if (!canonicalValidation.ok) return canonicalValidation;
     return Object.assign({}, resolved, { canonicalRoot });
   } catch (_error) {
     return fail('path_unavailable', 'Vault path could not be resolved safely.');

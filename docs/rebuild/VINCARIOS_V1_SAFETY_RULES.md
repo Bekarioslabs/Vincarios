@@ -13,6 +13,10 @@
 9. Remote providers receive no private vault context by default.
 10. Prompt instructions can guide the model, but code enforces safety.
 
+## Canonical Vault Paths
+
+Normal note access validates protected path segments both before and after resolving filesystem links. An in-vault junction into `.obsidian`, `.vincarios`, or `.git` returns `protected_path`, including new descendants below an existing linked ancestor. The canonical check reuses the shared relative-path rules and their blocked-segment options; it does not inspect the absolute vault root name as a note segment. Ordinary links within the vault remain allowed, while links outside it remain blocked. App-owned index/configuration storage retains its separate internal paths and is not authorized through normal note access.
+
 ## Permission Model
 
 - Local File Tree navigation, Markdown Preview, deterministic local Search, and local index building do not require Read permission. They remain inside the selected vault and never send note content to a provider by themselves.
