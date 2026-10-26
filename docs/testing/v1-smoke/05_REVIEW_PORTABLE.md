@@ -27,6 +27,8 @@
 - [ ] Cancel the large replacement, reopen its confirmation and verify that acknowledgement is unchecked again. Cancel does not change the note.
 - [ ] An empty replacement remains non-executable; a deliberately large but valid rewrite can still be applied after review and acknowledgement.
 
+- [ ] Close any old source-launched instance, start the updated app, minimize it and launch the same app again. The first window is restored/focused; no second window or second vault session is created. Repeat with the final portable build at A11; source tests alone do not certify portable lock identity.
+
 ## Review Persistence
 
 - [ ] Leave at least one open and one executed Review item.

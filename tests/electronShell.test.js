@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const { createWindowOptions, createMainWindow } = require('../src/main/app/createMainWindow');
 const { IPC_CHANNELS } = require('../src/shared/ipc/channels');
 const { DEFAULT_THEME_COLORS } = require('../src/shared/ui/themeDefaults');
+const { bootstrapElectron } = require('../src/main/app/bootstrapElectron');
 
 test('main window options keep the renderer sandboxed', () => {
   const options = createWindowOptions(path.join('D:', 'Vincarios_AGENT'));
@@ -372,4 +373,66 @@ test('main window blocks direct navigation and popup creation', async () => {
 
   assert.equal(prevented, true);
   assert.deepEqual(windowOpenHandler({ url: 'https://example.com' }), { action: 'deny' });
+});
+
+test('second instance quits before migration, settings, services or IPC initialization', () => {
+  const calls = [];
+  const app = {
+    requestSingleInstanceLock() { calls.push('lock'); return false; },
+    quit() { calls.push('quit'); }
+  };
+  const options = new Proxy({}, {
+    get() { throw new Error('Startup work ran before acquiring the lock'); }
+  });
+
+  assert.doesNotThrow(() => bootstrapElectron({ app }, options));
+  assert.deepEqual(calls, ['lock', 'quit']);
+});
+
+test('second-instance event restores and focuses the live primary window', () => {
+  const os = require('node:os');
+  const { createSettingsStore } = require('../src/main/settings/settingsStore');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-bootstrap-'));
+  const listeners = new Map();
+  const calls = [];
+  const windows = [{
+    isDestroyed: () => false,
+    isMinimized: () => true,
+    restore: () => calls.push('restore'),
+    show: () => calls.push('show'),
+    focus: () => calls.push('focus')
+  }];
+  const electron = {
+    app: {
+      requestSingleInstanceLock() { calls.push('lock'); return true; },
+      on(event, handler) { listeners.set(event, handler); },
+      whenReady: () => ({ then() {} }),
+      getVersion: () => 'test'
+    },
+    ipcMain: { handle() { calls.push('ipc'); } },
+    BrowserWindow: { getAllWindows: () => windows }
+  };
+  const options = { projectRoot: root, settingsFilePath: path.join(root, 'settings.json'), settingsStore: createSettingsStore() };
+  const service = {
+    subscribe: () => () => {},
+    sendChat() {},
+    getStatus() {},
+    getSettings: () => options.settingsStore.getSettings()
+  };
+  ['vaultReadService', 'vaultWriteService', 'reviewedTemplateService', 'vaultProfileService',
+    'vaultRecentFilesService', 'vaultInventoryService', 'vaultReviewBasketService', 'settingsService',
+    'providerStatusService', 'providerModelService', 'chatService', 'vaultIndexFreshnessService',
+    'embeddingIndexer', 'embeddingSearchService', 'embeddingIndexStatusService', 'embeddingIndexHealthService',
+    'metadataIndexer', 'metadataIndexStatusService', 'fullTextIndexer', 'fullTextIndexStatusService',
+    'fullTextIndexHealthService', 'vaultIndexHealthService', 'vaultChangeService', 'vaultSearchService',
+    'vaultSessionCoordinator'].forEach((name) => { options[name] = service; });
+
+  bootstrapElectron(electron, options);
+  assert.equal(calls[0], 'lock');
+  assert.equal(typeof listeners.get('second-instance'), 'function');
+  calls.length = 0;
+  listeners.get('second-instance')();
+  assert.deepEqual(calls, ['restore', 'show', 'focus']);
+  windows.length = 0;
+  assert.doesNotThrow(() => listeners.get('second-instance')());
 });

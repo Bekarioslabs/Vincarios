@@ -49,6 +49,17 @@ const { createRuntimePaths } = require('./runtimePaths');
 function bootstrapElectron(electron, options) {
   options = options || {};
   const { app, ipcMain, dialog, BrowserWindow } = electron;
+  if (!app.requestSingleInstanceLock()) {
+    app.quit();
+    return;
+  }
+  app.on('second-instance', () => {
+    const window = BrowserWindow.getAllWindows().find((candidate) => !candidate.isDestroyed());
+    if (!window) return;
+    if (window.isMinimized()) window.restore();
+    window.show();
+    window.focus();
+  });
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
   const runtimePaths = options.runtimePaths || createRuntimePaths({
     projectRoot,

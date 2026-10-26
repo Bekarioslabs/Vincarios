@@ -19,6 +19,8 @@ Normal note access validates protected path segments both before and after resol
 
 ## Permission Model
 
+Startup acquires Electron's single-instance lock before namespace migration, settings loading or IPC registration. A denied lock quits without starting those services; the primary instance restores and focuses its live window on a second launch. Portable executable lock identity still requires the final Windows runtime smoke test.
+
 - Local File Tree navigation, Markdown Preview, deterministic local Search, and local index building do not require Read permission. They remain inside the selected vault and never send note content to a provider by themselves.
 - Read permission allows a selected file or folder snapshot to become provider-bound AI context.
 - Write permission allows proposals to be considered.
