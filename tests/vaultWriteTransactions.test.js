@@ -112,26 +112,6 @@ test('backup service uses its injected filesystem and removes unaudited backup c
   )), false);
 });
 
-function createAuditFailingFileSystem(failingAction) {
-  return new Proxy(fs, {
-    get(target, property) {
-      if (property !== 'appendFileSync') {
-        const value = target[property];
-        return typeof value === 'function' ? value.bind(target) : value;
-      }
-      return function appendFileSync(filePath, content, encoding) {
-        if (String(filePath).endsWith(path.join('.vincarios', 'audit.jsonl'))) {
-          const entry = JSON.parse(String(content).trim());
-          if (entry.action === failingAction) {
-            throw new Error('Injected audit failure');
-          }
-        }
-        return target.appendFileSync(filePath, content, encoding);
-      };
-    }
-  });
-}
-
 test('failed backup audit after a collision removes only the newly created copy', () => {
   const root = createTempVault();
   const note = path.join(root, 'Topic.md');
@@ -154,6 +134,112 @@ test('failed backup audit after a collision removes only the newly created copy'
   assert.deepEqual(fs.readdirSync(path.dirname(path.join(root, first.backupPath))), [path.basename(first.backupPath)]);
 });
 
+test('create note preserves a competing file created immediately before exclusive open', () => {
+  const root = createTempVault();
+  const note = path.join(root, 'Racing.md');
+  let injected = false;
+  const fileSystem = new Proxy(fs, {
+    get(target, property) {
+      if (property !== 'openSync' && property !== 'writeFileSync') return target[property];
+      return (filePath, ...args) => {
+        if (filePath === note && !injected) {
+          injected = true;
+          fs.writeFileSync(note, 'written by another application');
+        }
+        return target[property](filePath, ...args);
+      };
+    }
+  });
+  const service = createVaultWriteService({ fs: fileSystem });
+  service.setRoot(root);
+
+  const result = service.createNote({ title: 'Racing', content: 'our proposal' });
+
+  assert.equal(injected, true);
+  assert.equal(result.code, 'file_exists');
+  assert.equal(fs.readFileSync(note, 'utf8'), 'written by another application');
+  assert.equal(fs.readFileSync(path.join(root, '.vincarios', 'audit.jsonl'), 'utf8'), '');
+});
+
+test('create note never deletes a foreign file when directory preparation fails', () => {
+  const root = createTempVault();
+  const note = path.join(root, 'Untouched.md');
+  const service = createVaultWriteService({ fs: new Proxy(fs, {
+    get(target, property) {
+      if (property !== 'mkdirSync') return target[property];
+      return (folder, ...args) => {
+        if (folder === root) {
+          fs.writeFileSync(note, 'foreign data');
+          throw Object.assign(new Error('Access denied'), { code: 'EACCES' });
+        }
+        return target.mkdirSync(folder, ...args);
+      };
+    }
+  }) });
+  service.setRoot(root);
+
+  const result = service.createNote({ title: 'Untouched', content: 'our proposal' });
+
+  assert.equal(result.code, 'write_failed');
+  assert.equal(fs.readFileSync(note, 'utf8'), 'foreign data');
+});
+
+test('create note removes its own partial output and closes its descriptor after a write failure', () => {
+  const root = createTempVault();
+  const note = path.join(root, 'Partial.md');
+  let opened;
+  let closed = false;
+  const service = createVaultWriteService({ fs: new Proxy(fs, {
+    get(target, property) {
+      if (property === 'openSync') return (filePath, ...args) => {
+        const descriptor = target.openSync(filePath, ...args);
+        if (filePath === note) opened = descriptor;
+        return descriptor;
+      };
+      if (property === 'writeFileSync') return (filePath, content, ...args) => {
+        if (filePath === opened || filePath === note) {
+          fs.writeFileSync(filePath, String(content).slice(0, 3), ...args);
+          throw Object.assign(new Error('Disk full'), { code: 'ENOSPC' });
+        }
+        return target.writeFileSync(filePath, content, ...args);
+      };
+      if (property === 'closeSync') return (descriptor) => {
+        target.closeSync(descriptor);
+        if (descriptor === opened) closed = true;
+      };
+      return target[property];
+    }
+  }) });
+  service.setRoot(root);
+
+  const result = service.createNote({ title: 'Partial', content: 'our proposal' });
+
+  assert.equal(result.code, 'write_failed');
+  assert.equal(result.rolledBack, true);
+  assert.equal(typeof opened, 'number');
+  assert.equal(closed, true);
+  assert.equal(fs.existsSync(note), false);
+});
+
+function createAuditFailingFileSystem(failingAction) {
+  return new Proxy(fs, {
+    get(target, property) {
+      if (property !== 'appendFileSync') {
+        const value = target[property];
+        return typeof value === 'function' ? value.bind(target) : value;
+      }
+      return function appendFileSync(filePath, content, encoding) {
+        if (String(filePath).endsWith(path.join('.vincarios', 'audit.jsonl'))) {
+          const entry = JSON.parse(String(content).trim());
+          if (entry.action === failingAction) {
+            throw new Error('Injected audit failure');
+          }
+        }
+        return target.appendFileSync(filePath, content, encoding);
+      };
+    }
+  });
+}
 
 function createTempVault() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-write-transaction-'));

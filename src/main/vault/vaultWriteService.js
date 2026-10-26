@@ -68,14 +68,28 @@ function createVaultWriteService(options) {
       return fail('file_exists', 'Target note already exists.');
     }
 
+    let created = false;
+    let createConflict = false;
     const transaction = executeAuditedMutation({
       auditService,
       mutate() {
         fileSystem.mkdirSync(path.dirname(resolved.absolutePath), { recursive: true });
-        fileSystem.writeFileSync(resolved.absolutePath, payload.content, 'utf8');
+        let descriptor;
+        try {
+          descriptor = fileSystem.openSync(resolved.absolutePath, 'wx');
+        } catch (error) {
+          createConflict = error.code === 'EEXIST';
+          throw error;
+        }
+        created = true;
+        try {
+          fileSystem.writeFileSync(descriptor, payload.content, 'utf8');
+        } finally {
+          fileSystem.closeSync(descriptor);
+        }
       },
       rollback() {
-        if (fileSystem.existsSync(resolved.absolutePath)) {
+        if (created && fileSystem.existsSync(resolved.absolutePath)) {
           fileSystem.unlinkSync(resolved.absolutePath);
         }
       },
@@ -87,6 +101,9 @@ function createVaultWriteService(options) {
       mutationFailureCode: 'write_failed',
       mutationFailureMessage: 'Could not create note.'
     });
+    if (!transaction.ok && transaction.code === 'write_failed' && createConflict) {
+      return fail('file_exists', 'Target note already exists.');
+    }
     if (!transaction.ok) return transaction;
 
     return ok({

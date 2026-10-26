@@ -37,6 +37,8 @@ Example categories:
 
 ## Review Module
 
+New notes are opened with exclusive creation (`wx`) before writing. A competing file appearing after validation returns `file_exists` and remains untouched. Rollback only removes a note after this operation successfully acquired its new file descriptor; partial owned writes and audit failures still remove the app-created output.
+
 Each proposal item should show:
 
 - category
