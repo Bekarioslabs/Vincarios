@@ -8,6 +8,8 @@ const { createVaultContext } = require('./vaultContext');
 const { executeAuditedMutation } = require('./vaultWriteTransaction');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
 
+const MAX_BACKUP_ATTEMPTS = 100;
+
 function createVaultBackupService(options) {
   options = options || {};
   const fileSystem = options.fs || fs;
@@ -62,26 +64,40 @@ function createVaultBackupService(options) {
     if (!stat.isFile()) return fail('not_file', 'Backup target must be a file.');
 
     const stamp = createBackupTimestamp(now());
-    const backupPath = createBackupPath(resolved.relativePath, stamp);
-    const backupAbsolutePath = path.join(currentVault.vault.root, ...backupPath.split('/'));
+    let backupPath = createBackupPath(resolved.relativePath, stamp);
+    let backupAbsolutePath = path.join(currentVault.vault.root, ...backupPath.split('/'));
+    let created = false;
+    const auditEntry = {
+      action: 'backup_note',
+      sourcePath: resolved.relativePath,
+      backupPath,
+      reason: String(options && options.action ? options.action : 'manual_backup')
+    };
 
     const transaction = executeAuditedMutation({
       auditService,
       mutate() {
         fileSystem.mkdirSync(path.dirname(backupAbsolutePath), { recursive: true });
-        fileSystem.copyFileSync(resolved.absolutePath, backupAbsolutePath);
+        for (let attempt = 0; attempt < MAX_BACKUP_ATTEMPTS; attempt += 1) {
+          backupPath = createBackupPath(resolved.relativePath, stamp, attempt);
+          backupAbsolutePath = path.join(currentVault.vault.root, ...backupPath.split('/'));
+          try {
+            fileSystem.copyFileSync(resolved.absolutePath, backupAbsolutePath, fileSystem.constants.COPYFILE_EXCL);
+            created = true;
+            auditEntry.backupPath = backupPath;
+            return;
+          } catch (error) {
+            if (error.code !== 'EEXIST') throw error;
+          }
+        }
+        throw new Error('Backup name collision limit reached.');
       },
       rollback() {
-        if (fileSystem.existsSync(backupAbsolutePath)) {
+        if (created && fileSystem.existsSync(backupAbsolutePath)) {
           fileSystem.unlinkSync(backupAbsolutePath);
         }
       },
-      auditEntry: {
-        action: 'backup_note',
-        sourcePath: resolved.relativePath,
-        backupPath,
-        reason: String(options && options.action ? options.action : 'manual_backup')
-      },
+      auditEntry,
       mutationFailureCode: 'backup_failed',
       mutationFailureMessage: 'Could not create note backup.'
     });
@@ -105,10 +121,10 @@ function createVaultBackupService(options) {
   });
 }
 
-function createBackupPath(relativePath, stamp) {
+function createBackupPath(relativePath, stamp, attempt = 0) {
   const parsed = path.posix.parse(relativePath.replace(/\\/g, '/'));
   const datedFolder = stamp.slice(0, 10);
-  const backupName = parsed.name + '.' + stamp + parsed.ext;
+  const backupName = parsed.name + '.' + stamp + (attempt ? '-' + attempt : '') + parsed.ext;
   return [CURRENT_INTERNAL_NAMESPACE, 'backups', datedFolder, parsed.dir, backupName]
     .filter(Boolean)
     .join('/');

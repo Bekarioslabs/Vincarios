@@ -18,6 +18,10 @@
 - [ ] Execute the imported note and create-note proposals. Existing filenames are never silently overwritten.
 - [ ] Execute the project proposal. Either every planned folder/file appears or none remains after a forced collision/failure.
 
+## Phase A Write And Startup Checks
+
+- [ ] Use a disposable fixture note: execute two small reviewed updates and confirm two different backups retain the two earlier versions. Equal-clock collisions are additionally covered by automated injected-clock tests.
+
 ## Review Persistence
 
 - [ ] Leave at least one open and one executed Review item.

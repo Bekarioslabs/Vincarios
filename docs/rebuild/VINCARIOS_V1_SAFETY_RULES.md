@@ -29,6 +29,8 @@ The permission boundary is intentional: `R` means **AI/context permission**, not
 
 ## Backup Model
 
+Backup copies use exclusive creation: an existing backup is never overwritten. Equal timestamps receive a numeric suffix, with at most 100 copy attempts; only name collisions are retried. Audit failure removes only the new backup created by that attempt, never a pre-existing copy. Other copy failures and exhausted collisions stop the note operation with `backup_failed`.
+
 Backup before:
 
 - update

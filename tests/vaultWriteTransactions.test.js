@@ -132,6 +132,29 @@ function createAuditFailingFileSystem(failingAction) {
   });
 }
 
+test('failed backup audit after a collision removes only the newly created copy', () => {
+  const root = createTempVault();
+  const note = path.join(root, 'Topic.md');
+  fs.writeFileSync(note, 'first version');
+  const now = () => new Date('2026-07-23T10:00:00.000Z');
+  const firstService = createVaultBackupService({ now });
+  firstService.setRoot(root);
+  const first = firstService.backupMarkdownNote('Topic.md');
+  assert.equal(first.ok, true);
+  fs.writeFileSync(note, 'second version');
+  const failingService = createVaultBackupService({ fs: createAuditFailingFileSystem('backup_note'), now });
+  failingService.setRoot(root);
+
+  const result = failingService.backupMarkdownNote('Topic.md');
+
+  assert.equal(result.code, 'audit_failed');
+  assert.equal(result.rolledBack, true);
+  assert.equal(fs.readFileSync(path.join(root, first.backupPath), 'utf8'), 'first version');
+  assert.equal(fs.readFileSync(note, 'utf8'), 'second version');
+  assert.deepEqual(fs.readdirSync(path.dirname(path.join(root, first.backupPath))), [path.basename(first.backupPath)]);
+});
+
+
 function createTempVault() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-write-transaction-'));
 }
