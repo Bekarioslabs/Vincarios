@@ -10,6 +10,7 @@ const BROWSER_SHARED_SCRIPTS = [
   'src/shared/vaultProfile/folderVisuals.js',
   'src/shared/themes/themePacks.js',
   'src/shared/security/payloadLimits.js',
+  'src/shared/text/lineEndings.js',
   'src/shared/actions/actionSchema.js',
   'src/shared/actions/modelActionParser.js',
   'src/shared/actions/proposalPlan.js',
@@ -44,6 +45,22 @@ test('index loads all isolated shared scripts before renderer script modules', (
     assert.equal(scriptIndex > -1, true, htmlPath);
     assert.equal(scriptIndex < firstRendererScript, true, htmlPath);
   });
+});
+
+test('line-ending helpers load before their editor and review consumers and are startup-validated', () => {
+  const vm = require('node:vm');
+  const relativePath = 'src/shared/text/lineEndings.js';
+  const browser = { window: {} };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8'), browser);
+  assert.equal(browser.window.VincariosLineEndings.normalizeLineEndings('A\r\nB'), 'A\nB');
+  assert.equal(browser.window.VincariosLineEndings.preserveLineEndings('New\n', 'Old\r\n'), 'New\r\n');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const dependency = html.indexOf('./' + relativePath);
+  for (const consumer of ['review/reviewBasketState.js', 'markdown/markdownPreviewController.js']) {
+    assert.ok(dependency >= 0 && dependency < html.indexOf('./src/renderer/' + consumer));
+  }
+  const bootstrap = fs.readFileSync(path.join(__dirname, '..', 'src/renderer/bootstrap.js'), 'utf8');
+  assert.match(bootstrap, /globalName: 'VincariosLineEndings', methods: \['normalizeLineEndings', 'preserveLineEndings'\]/);
 });
 test('Vault Profile visual icon renderer loads before its consumer modules', () => {
   const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');

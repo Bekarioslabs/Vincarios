@@ -63,6 +63,47 @@ function createApp(nodes) {
   };
 }
 
+test('opening a CRLF note in the LF-normalizing editor does not create phantom edits', async () => {
+  const previousWindow = global.window;
+  global.window = { VincariosMarkdownRenderer: { renderMarkdown: (source) => source } };
+  try {
+    const { mountMarkdownPreview } = require('../src/renderer/markdown/markdownPreviewController');
+    const editor = createNode();
+    const toggle = createNode();
+    const propose = createNode();
+    const previewStatus = createNode();
+    let value = '';
+    Object.defineProperty(editor, 'value', { get: () => value, set: (next) => { value = String(next).replace(/\r\n?/g, '\n'); } });
+    let navigationRequests = 0;
+    let proposal;
+    const controller = mountMarkdownPreview({
+      app: createApp({ '#markdown-preview': createNode(), '#markdown-source-editor': editor, '#markdown-edit-toggle': toggle, '#markdown-propose-update': propose, '#markdown-preview-status': previewStatus }),
+      onResolveUnsavedNavigation: () => { navigationRequests += 1; return 'stay'; },
+      onProposeUpdate: (item) => { proposal = item; return { ok: true }; }
+    });
+    const current = '# Note\r\n\r\nOriginal body.\r\n';
+    controller.setSource(current, 'Note.md');
+    toggle.listeners.click();
+    editor.listeners.input();
+    assert.equal(propose.disabled, true);
+    assert.equal((await controller.requestNavigation('Other.md')).ok, true);
+    assert.equal(navigationRequests, 0);
+    editor.value += 'New line.\n';
+    editor.listeners.input();
+    propose.listeners.click();
+    assert.equal(proposal.currentContent, current);
+    assert.equal(proposal.proposedContent, current + 'New line.\r\n');
+    toggle.listeners.click();
+    assert.equal(propose.disabled, false);
+    controller.setSource(proposal.proposedContent, 'Note.md');
+    toggle.listeners.click();
+    editor.listeners.input();
+    assert.equal(propose.disabled, true);
+    assert.equal((await controller.requestNavigation('Other.md')).ok, true);
+    assert.equal(navigationRequests, 0);
+  } finally { global.window = previousWindow; }
+});
+
 test('preview controller keeps the toolbar title neutral when no file is selected', () => {
   global.window = {
     VincariosMarkdownRenderer: {

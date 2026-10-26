@@ -7,6 +7,7 @@ const { createVaultContext } = require('./vaultContext');
 const { createVaultBackupService } = require('./vaultBackupService');
 const { executeAuditedMutation } = require('./vaultWriteTransaction');
 const { DEFAULT_VAULT_PROFILE } = require('../../shared/vaultProfile/defaults');
+const { preserveLineEndings } = require('../../shared/text/lineEndings');
 const {
   normalizePayloadLimits,
   validateCreateNotePayload,
@@ -170,7 +171,8 @@ function createVaultWriteService(options) {
     const payload = normalizeUpdateNoteInput(input);
     if (!payload.ok) return payload;
 
-    const contentValidation = validateUpdateNotePayload(payload.proposedContent, getPayloadLimits(settingsStore, options.payloadLimits));
+    const payloadLimits = getPayloadLimits(settingsStore, options.payloadLimits);
+    const contentValidation = validateUpdateNotePayload(payload.proposedContent, payloadLimits);
     if (!contentValidation.ok) return contentValidation;
 
     const resolved = currentVault.vault.resolve(payload.targetPath, { allowRoot: false });
@@ -191,7 +193,10 @@ function createVaultWriteService(options) {
     if (currentDiskContent !== payload.currentContent) {
       return fail('stale_content', 'Current note content changed before update.');
     }
-    if (payload.currentContent === payload.proposedContent) {
+    const proposedContent = preserveLineEndings(payload.proposedContent, currentDiskContent);
+    const writeValidation = validateUpdateNotePayload(proposedContent, payloadLimits);
+    if (!writeValidation.ok) return writeValidation;
+    if (currentDiskContent === proposedContent) {
       return fail('no_changes', 'Update proposal contains no changes.');
     }
 
@@ -201,7 +206,7 @@ function createVaultWriteService(options) {
     const transaction = executeAuditedMutation({
       auditService,
       mutate() {
-        fileSystem.writeFileSync(resolved.absolutePath, payload.proposedContent, 'utf8');
+        fileSystem.writeFileSync(resolved.absolutePath, proposedContent, 'utf8');
       },
       rollback() {
         fileSystem.writeFileSync(resolved.absolutePath, currentDiskContent, 'utf8');
@@ -221,7 +226,7 @@ function createVaultWriteService(options) {
       action: 'update_note',
       path: resolved.relativePath,
       backupPath: backup.backupPath,
-      bytes: Buffer.byteLength(payload.proposedContent, 'utf8')
+      bytes: Buffer.byteLength(proposedContent, 'utf8')
     });
   }
 

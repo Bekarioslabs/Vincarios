@@ -8,6 +8,7 @@
     const status = options.status || null;
     const resourcePolicy = getPreviewResourcePolicy(options.previewResourcePolicy);
     if (!app || !resourcePolicy) return null;
+    const lineEndings = getLineEndingsApi();
 
     const preview = app.querySelector('#markdown-preview');
     const editor = app.querySelector('#markdown-source-editor');
@@ -64,7 +65,6 @@
     if (editor) editor.addEventListener('input', handleEditorInput);
     if (editorToolbar) editorToolbar.addEventListener('mousedown', preserveEditorSelection);
     if (editorToolbar) editorToolbar.addEventListener('click', handleEditorToolbarClick);
-
     editButton.addEventListener('click', () => {
       if (!currentSource) return;
       if (mode === 'preview') showEditor();
@@ -237,7 +237,7 @@
     }
 
     function showPreviewFromEditor() {
-      const changed = String(editor.value || '') !== loadedSource;
+      const changed = hasLocalChanges();
       mode = 'preview';
       currentSource = editor.value;
       updateCurrentHistorySource(currentSource);
@@ -365,7 +365,7 @@
         title: 'Manual source edit',
         targetPath: currentPath,
         currentContent: loadedSource,
-        proposedContent: getEditorSource(),
+        proposedContent: lineEndings.preserveLineEndings(getEditorSource(), loadedSource),
         reason: 'Manual Markdown source edit from preview editor.',
         risk: 'medium',
         updateMode: 'whole_note'
@@ -450,7 +450,7 @@
     }
 
     function hasLocalChanges() {
-      return Boolean(currentPath && getEditorSource() !== loadedSource);
+      return Boolean(currentPath && lineEndings.normalizeLineEndings(getEditorSource()) !== lineEndings.normalizeLineEndings(loadedSource));
     }
 
     function getEditorSource() {
@@ -613,6 +613,12 @@
       getCurrentSource: () => currentSource,
       requestNavigation
     };
+  }
+
+  function getLineEndingsApi() {
+    if (typeof window !== 'undefined' && window.VincariosLineEndings) return window.VincariosLineEndings;
+    if (typeof require === 'function') return require('../../shared/text/lineEndings');
+    throw new Error('Line endings API unavailable.');
   }
 
   function getPreviewResourcePolicy(override) {

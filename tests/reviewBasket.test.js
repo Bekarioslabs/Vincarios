@@ -361,3 +361,15 @@ test('review basket updates open create proposals before execution', () => {
   assert.equal(updated.content, '# New Title\n\nBody.');
   assert.equal(basket.getSelectedOpenItems()[0].title, 'New Title');
 });
+
+test('review update diff and persisted proposal use the disk line-ending style', () => {
+  const basket = createReviewBasketState();
+  const current = '# Note\r\nBody\r\n';
+  const item = basket.addProposal({ type: 'update_note', targetPath: 'Note.md', currentContent: current, proposedContent: '# Note\nBody\nNew\n' });
+  assert.equal(item.currentContent, current);
+  assert.equal(item.proposedContent, '# Note\r\nBody\r\nNew\r\n');
+  basket.restoreSnapshot({ items: [item] });
+  assert.equal(basket.getSnapshot().items[0].proposedContent, item.proposedContent);
+  const updated = basket.updateProposal(item.id, { proposedContent: '# Note\nBody\nChanged\n' });
+  assert.equal(updated.proposedContent, '# Note\r\nBody\r\nChanged\r\n');
+});

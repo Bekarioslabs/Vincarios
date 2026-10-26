@@ -200,6 +200,60 @@ test('vault write service updates YAML frontmatter content with backup', () => {
   assert.equal(fs.readFileSync(path.join(root, result.backupPath), 'utf8'), current);
 });
 
+test('reviewed updates preserve dominant disk line endings and the proposed final newline', () => {
+  const cases = [
+    { current: '# Note\r\nBody\r\n', proposed: '# Note\nChanged\n', expected: '# Note\r\nChanged\r\n' },
+    { current: '# Note\nBody\n', proposed: '# Note\r\nChanged\r\n', expected: '# Note\nChanged\n' },
+    { current: 'A\r\nB\nC\r\n', proposed: 'A\nB\nChanged', expected: 'A\r\nB\r\nChanged' },
+    { current: 'A\nB\r\n', proposed: 'A\r\nChanged\r\n', expected: 'A\nChanged\n' }
+  ];
+  for (const fixture of cases) {
+    const root = createTempVault();
+    const target = path.join(root, 'Note.md');
+    fs.writeFileSync(target, fixture.current);
+    const service = createVaultWriteService();
+    service.setRoot(root);
+    const result = service.updateNote({ targetPath: 'Note.md', currentContent: fixture.current, proposedContent: fixture.proposed });
+    assert.equal(result.ok, true);
+    assert.equal(fs.readFileSync(target, 'utf8'), fixture.expected);
+    assert.equal(fs.readFileSync(path.join(root, result.backupPath), 'utf8'), fixture.current);
+    assert.equal(result.bytes, Buffer.byteLength(fixture.expected, 'utf8'));
+  }
+});
+
+test('a line-ending-only editor change neither rewrites mixed source nor creates a backup', () => {
+  const root = createTempVault();
+  const current = 'A\r\nB\nC\r\n';
+  fs.writeFileSync(path.join(root, 'Note.md'), current);
+  const service = createVaultWriteService();
+  service.setRoot(root);
+  const result = service.updateNote({ targetPath: 'Note.md', currentContent: current, proposedContent: 'A\nB\nC\n' });
+  assert.equal(result.code, 'no_changes');
+  assert.equal(fs.readFileSync(path.join(root, 'Note.md'), 'utf8'), current);
+  assert.equal(fs.existsSync(path.join(root, '.vincarios', 'backups')), false);
+});
+
+test('normalizing editor equality never weakens the exact stale-content baseline', () => {
+  const root = createTempVault();
+  fs.writeFileSync(path.join(root, 'Note.md'), 'A\r\nB\r\n');
+  const service = createVaultWriteService();
+  service.setRoot(root);
+  assert.equal(service.updateNote({ targetPath: 'Note.md', currentContent: 'A\nB\n', proposedContent: 'Changed\n' }).code, 'stale_content');
+  assert.equal(fs.readFileSync(path.join(root, 'Note.md'), 'utf8'), 'A\r\nB\r\n');
+});
+
+test('line-ending expansion is checked against the write payload limit before backup', () => {
+  const root = createTempVault();
+  const current = 'A\r\nB\r\nC';
+  fs.writeFileSync(path.join(root, 'Note.md'), current);
+  const service = createVaultWriteService({ payloadLimits: { maxUpdateNoteChars: 8 } });
+  service.setRoot(root);
+  const result = service.updateNote({ targetPath: 'Note.md', currentContent: current, proposedContent: 'A\nX\nB\nC' });
+  assert.equal(result.code, 'payload_too_large');
+  assert.equal(fs.readFileSync(path.join(root, 'Note.md'), 'utf8'), current);
+  assert.equal(fs.existsSync(path.join(root, '.vincarios', 'backups')), false);
+});
+
 test('vault write service renames one Markdown file in place and appends audit entry', () => {
   const root = createTempVault();
   fs.mkdirSync(path.join(root, '03_Knowledge'), { recursive: true });

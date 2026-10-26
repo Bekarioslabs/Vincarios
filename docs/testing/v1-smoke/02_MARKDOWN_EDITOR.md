@@ -34,6 +34,11 @@
 - [ ] Send the edit to Review Basket. Continue editing the same source and send again. The existing open proposal updates instead of leaving an obsolete duplicate.
 - [ ] Update is blocked with clear R/W guidance when permissions are missing and becomes available when both are enabled.
 
+## Close, Reload And Line Endings (A07)
+
+- [ ] Open a Windows CRLF fixture note, enter and leave Source without editing: Update remains disabled and neither navigation nor closing reports an unsaved edit.
+- [ ] On a copy, execute a small reviewed edit to a CRLF note. The saved file retains CRLF, the backup retains the exact original and reopening Source does not show phantom changes. LF notes retain LF. Removing a final newline deliberately remains a real edit.
+
 ## Malformed Frontmatter
 
 - [ ] Open `09 Malformed Frontmatter.md`. Its Markdown body remains readable and malformed YAML remains visible.

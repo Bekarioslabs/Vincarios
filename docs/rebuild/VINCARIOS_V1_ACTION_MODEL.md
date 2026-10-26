@@ -81,6 +81,8 @@ Proposal parsing uses whitespace trimming only to reject empty content. Leading 
 
 Manual source edits from the Markdown preview use the same reviewed update path. The editor keeps the originally loaded source as `currentContent`, uses the local edited source as `proposedContent`, and adds an `update_note` proposal to the Review Basket. The preview editor never writes directly to the vault.
 
+`src/shared/text/lineEndings.js` owns editor comparison and write-style preservation. Dirty checks normalize CRLF/CR/LF only; spaces, blank lines and final newline changes remain meaningful. The original `currentContent` stays byte-for-byte unchanged for the Main-process stale check. Reviewed replacements use the dominant disk line ending (first occurrence breaks ties; LF is the default without an existing ending), and Main validates the final expanded payload before backup/write. Normalized-identical text returns the untouched original, including mixed endings, and is not written as a no-op. Proposed final newline presence/count is preserved. The Review Basket uses the same helper on ingestion/restore/edits; committed notes are read back through the normal preview refresh so the editor does not remain spuriously dirty.
+
 If `R` or `W` is missing, the app blocks proposal generation before any provider call and presents an app-level permission message. Permission-blocked Selection Actions are soft-disabled: visually muted, still clickable, and routed to the same retryable guidance path. Selection Action permission wording is centralized so later write actions such as rename/move can reuse the same R/W guidance. The model must not generate generic filesystem-access explanations for these cases.
 
 Required gates before proposal generation:

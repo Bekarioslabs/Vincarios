@@ -12,6 +12,7 @@
     { name: 'VincariosModelActionParser', globalName: 'VincariosModelActionParser', methods: ['parseModelActionCalls', 'stripModelActionCalls', 'normalizePathLike'] },
     { name: 'VincariosProposalPlan', globalName: 'VincariosProposalPlan' },
     { name: 'VincariosDiffPreview', globalName: 'VincariosDiffPreview' },
+    { name: 'VincariosLineEndings', globalName: 'VincariosLineEndings', methods: ['normalizeLineEndings', 'preserveLineEndings'] },
     { name: 'VincariosVaultPath', globalName: 'VincariosVaultPath', methods: ['normalizeRelativePath'] },
     { name: 'VincariosContextIntent', globalName: 'VincariosContextIntent' },
     { name: 'VincariosContextLimits', globalName: 'VincariosContextLimits', methods: ['normalizeContextLimits'] },

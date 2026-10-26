@@ -5,6 +5,7 @@
   const actionSchemaApi = getActionSchemaApi();
   const proposalPlanApi = getProposalPlanApi();
   const diffPreviewApi = getDiffPreviewApi();
+  const lineEndingsApi = getLineEndingsApi();
   const generatedMetadataApi = getGeneratedMetadataApi();
   const DEFAULT_AI_RESPONSE_SUBFOLDER = 'AI Responses';
 
@@ -293,6 +294,12 @@
     throw new Error('Proposal plan API unavailable.');
   }
 
+  function getLineEndingsApi() {
+    if (typeof window !== 'undefined' && window.VincariosLineEndings) return window.VincariosLineEndings;
+    if (typeof require === 'function') return require('../../shared/text/lineEndings');
+    throw new Error('Line endings API unavailable.');
+  }
+
   function getDiffPreviewApi() {
     if (typeof window !== 'undefined' && window.VincariosDiffPreview) return window.VincariosDiffPreview;
     if (typeof require === 'function') {
@@ -311,6 +318,9 @@
       const proposed = Object.hasOwn(proposal, 'proposedContent') ? proposal.proposedContent : proposal.afterContent;
       item.currentContent = typeof current === 'string' ? current : null;
       item.proposedContent = typeof proposed === 'string' ? proposed : null;
+      if (typeof current === 'string' && typeof proposed === 'string') {
+        item.proposedContent = lineEndingsApi.preserveLineEndings(proposed, current);
+      }
     }
     return attachDiffPreview(item);
   }
