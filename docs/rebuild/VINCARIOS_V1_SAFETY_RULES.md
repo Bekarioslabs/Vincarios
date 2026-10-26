@@ -64,7 +64,7 @@ Minimum fields:
 
 If a write changes an existing Markdown file, show the user what changes before applying.
 
-Large or suspicious diffs must be blocked or escalated to a stronger review mode.
+The shared diff module derives update risk from complete source text, independently of provider-supplied risk. Empty or unsafe-to-compare replacements are non-executable. High-risk updates require a fresh labelled acknowledgement before Apply becomes available; Cancel receives initial focus for both normal and high-risk updates. Reopening the dialog never restores a previous acknowledgement. Thresholds live in `UPDATE_RISK_LIMITS` in `src/shared/actions/diffPreview.js`: at least 10 removed/replaced lines and 30% of the original lines, replacement length below 60% of the original, or removal of the complete YAML frontmatter block. Deliberate large rewrites remain possible after review; thresholds warn rather than silently reject them.
 
 ## Cloud Rule
 

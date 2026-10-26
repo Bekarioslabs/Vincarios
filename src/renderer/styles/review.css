@@ -188,6 +188,46 @@
   background: rgba(var(--text-accent-rgb), .12);
   color: var(--text-accent);
 }
+
+.review-modal-actions .review-modal-confirm:disabled {
+  border-color: var(--background-modifier-border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.review-basket-risk-summary,
+.review-update-risk-warning {
+  color: var(--status-warning);
+  font-family: var(--font-interface);
+  font-size: var(--font-size-ui-sm);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.review-basket-risk-summary[data-update-risk="blocked"] {
+  color: var(--status-danger);
+}
+
+.review-update-risk-warning {
+  margin: 0 0 var(--space-2);
+}
+
+.review-risk-acknowledgement {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  color: var(--text-normal);
+  font-family: var(--font-interface);
+  font-size: var(--font-size-ui-sm);
+  white-space: normal;
+}
+
+.review-risk-acknowledgement input {
+  flex-shrink: 0;
+  accent-color: var(--interactive-accent);
+}
 .review-diff-button {
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-md);

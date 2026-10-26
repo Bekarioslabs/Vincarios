@@ -22,6 +22,11 @@
 
 - [ ] Use a disposable fixture note: execute two small reviewed updates and confirm two different backups retain the two earlier versions. Equal-clock collisions are additionally covered by automated injected-clock tests.
 
+- [ ] Propose a small addition. Apply Update Preview focuses Cancel and has no extra acknowledgement checkbox.
+- [ ] On a disposable note, propose a much shorter replacement or remove its YAML block. The basket warns about a large replacement; Apply is disabled until the labelled acknowledgement is checked and becomes disabled again if unchecked.
+- [ ] Cancel the large replacement, reopen its confirmation and verify that acknowledgement is unchecked again. Cancel does not change the note.
+- [ ] An empty replacement remains non-executable; a deliberately large but valid rewrite can still be applied after review and acknowledgement.
+
 ## Review Persistence
 
 - [ ] Leave at least one open and one executed Review item.

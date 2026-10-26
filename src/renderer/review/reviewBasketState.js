@@ -138,7 +138,9 @@
     function updateProposal(id, patch) {
       const item = findById(id);
       if (!item || item.status !== 'open') return null;
-      Object.assign(item, patch || {});
+      const updated = normalizeProposal(Object.assign({}, item, patch || {}), getProposalNumber(item.id));
+      Object.keys(item).forEach((key) => delete item[key]);
+      Object.assign(item, updated);
       item.fingerprint = createProposalFingerprint(item);
       emitChange();
       return Object.assign({}, item);
@@ -304,20 +306,34 @@
   }
   function normalizeProposal(proposal, id) {
     const item = actionSchemaApi.normalizeActionProposal(proposal, { id: 'proposal-' + id });
+    if (item.type === 'update_note') {
+      const current = Object.hasOwn(proposal, 'currentContent') ? proposal.currentContent : proposal.beforeContent;
+      const proposed = Object.hasOwn(proposal, 'proposedContent') ? proposal.proposedContent : proposal.afterContent;
+      item.currentContent = typeof current === 'string' ? current : null;
+      item.proposedContent = typeof proposed === 'string' ? proposed : null;
+    }
     return attachDiffPreview(item);
   }
 
   function attachDiffPreview(item) {
-    if (!item || !item.requiresDiff || !item.currentContent || !item.proposedContent) return item;
+    if (!item || item.type !== 'update_note') return item;
+    delete item.diffUnavailable;
+    delete item.diffError;
+    delete item.noChange;
     item.diffPreview = diffPreviewApi.buildMarkdownDiffPreview({
       currentContent: item.currentContent,
       proposedContent: item.proposedContent
     });
-    if (item.diffPreview && item.diffPreview.ok === false) {
+    item.updateRisk = diffPreviewApi.assessUpdateRisk({
+      currentContent: item.currentContent,
+      proposedContent: item.proposedContent,
+      diffPreview: item.diffPreview
+    });
+    if (item.updateRisk.level === 'blocked') {
       item.executable = false;
       item.selected = false;
       item.diffUnavailable = true;
-      item.diffError = item.diffPreview.message || 'Safe diff preview unavailable.';
+      item.diffError = item.updateRisk.reasons.join(' ');
       item.reason = item.reason || item.diffError;
       return item;
     }

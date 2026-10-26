@@ -39,6 +39,8 @@ Example categories:
 
 New notes are opened with exclusive creation (`wx`) before writing. A competing file appearing after validation returns `file_exists` and remains untouched. Rollback only removes a note after this operation successfully acquired its new file descriptor; partial owned writes and audit failures still remove the app-created output.
 
+Every `update_note` receives derived `updateRisk` (`normal`, `high`, or `blocked`) from the existing shared diff API when added, restored or edited. Supplied risk/diff fields cannot override that derivation. A blocked update cannot be selected or executed. High-risk items display a warning and require a fresh acknowledgement in the Apply Update Preview; Apply stays disabled until checked. All update confirmation dialogs focus Cancel initially. The thresholds and distinction between a warning and a hard block are defined in SAFETY_RULES; provider risk remains a hint, not execution authority.
+
 Each proposal item should show:
 
 - category

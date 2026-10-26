@@ -122,6 +122,7 @@
       row.className = 'review-basket-item';
       row.dataset.status = item.status;
       row.dataset.type = item.type || 'unknown';
+      if (item.updateRisk) row.dataset.updateRisk = item.updateRisk.level;
 
       const check = document.createElement('input');
       check.type = 'checkbox';
@@ -137,6 +138,16 @@
       const text = document.createElement('div');
       text.className = 'review-basket-item-text';
       text.textContent = item.title + ' -> ' + getItemTargetLabel(item);
+      if (item.updateRisk && item.updateRisk.level !== 'normal') {
+        const warning = document.createElement('div');
+        warning.className = 'review-basket-risk-summary';
+        warning.dataset.updateRisk = item.updateRisk.level;
+        warning.textContent = item.updateRisk.level === 'high'
+          ? 'Large replacement: extra confirmation required.'
+          : 'Update blocked: ' + item.diffError;
+        warning.title = item.updateRisk.reasons.join(' ');
+        text.appendChild(warning);
+      }
       const diffSummary = renderDiffSummary(item);
       if (diffSummary) text.appendChild(diffSummary);
       const errorSummary = renderErrorSummary(item);
@@ -519,6 +530,7 @@
   }
 
   function confirmUpdateNote(item) {
+    if (!item.updateRisk || item.updateRisk.level === 'blocked') return Promise.resolve(false);
     return new Promise((resolve) => {
       const overlay = document.createElement('div');
       overlay.className = 'review-modal-overlay';
@@ -539,7 +551,6 @@
 
       const body = document.createElement('div');
       body.className = 'review-diff-body';
-      renderDiffLines(body, item.diffPreview);
 
       const actions = document.createElement('div');
       actions.className = 'review-modal-actions';
@@ -553,7 +564,33 @@
       confirm.type = 'button';
       confirm.className = 'review-modal-confirm';
       confirm.textContent = 'Apply update';
-      confirm.addEventListener('click', () => close({ ok: true, patch: {} }));
+      confirm.addEventListener('click', () => {
+        if (!confirm.disabled) close({ ok: true, patch: {} });
+      });
+
+      if (item.updateRisk.level === 'high') {
+        const warning = document.createElement('p');
+        warning.id = title.id + '-risk';
+        warning.className = 'review-update-risk-warning';
+        warning.setAttribute('role', 'alert');
+        warning.textContent = 'Large replacement. ' + item.updateRisk.reasons.join(' ');
+        dialog.setAttribute('aria-describedby', warning.id);
+        body.appendChild(warning);
+
+        const label = document.createElement('label');
+        label.className = 'review-risk-acknowledgement';
+        const acknowledgement = document.createElement('input');
+        acknowledgement.type = 'checkbox';
+        acknowledgement.setAttribute('aria-label', 'I have reviewed this large replacement.');
+        acknowledgement.addEventListener('change', () => { confirm.disabled = !acknowledgement.checked; });
+        const caption = document.createElement('span');
+        caption.textContent = 'I have reviewed this large replacement.';
+        label.appendChild(acknowledgement);
+        label.appendChild(caption);
+        body.appendChild(label);
+        confirm.disabled = true;
+      }
+      renderDiffLines(body, item.diffPreview);
 
       function close(value) {
         overlay.remove();
@@ -568,7 +605,7 @@
       dialog.appendChild(actions);
       overlay.appendChild(dialog);
       document.body.appendChild(overlay);
-      getModalBehavior().mountModalBehavior({ overlay, dialog, initialFocus: confirm }).focusInitial();
+      getModalBehavior().mountModalBehavior({ overlay, dialog, initialFocus: cancel }).focusInitial();
     });
   }
   function setText(node, value) {

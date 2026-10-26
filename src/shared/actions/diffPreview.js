@@ -8,6 +8,49 @@
     contextLines: 3
   });
 
+  const UPDATE_RISK_LIMITS = Object.freeze({
+    minimumRemovedLines: 10,
+    removedLineRatio: 0.3,
+    minimumRetainedLengthRatio: 0.6
+  });
+
+  function getFrontmatterApi() {
+    if (typeof window !== 'undefined' && window.VincariosFrontmatterContract) return window.VincariosFrontmatterContract;
+    if (typeof require === 'function') return require('../metadata/frontmatterContract');
+    throw new Error('Frontmatter contract API unavailable.');
+  }
+
+  function assessUpdateRisk(input) {
+    const current = input && input.currentContent;
+    const proposed = input && input.proposedContent;
+    if (typeof current !== 'string' || typeof proposed !== 'string' || !proposed.trim()) {
+      return { level: 'blocked', reasons: ['A complete, non-empty update is required.'] };
+    }
+    const diff = input.diffPreview || buildMarkdownDiffPreview(input);
+    if (!diff.ok || !Number.isFinite(diff.deletions) || diff.deletions < 0) {
+      return { level: 'blocked', reasons: [diff.message || 'Safe diff preview unavailable.'] };
+    }
+    const reasons = [];
+    const currentLines = splitLines(current);
+    const lineCount = currentLines.length - (currentLines.at(-1) === '' ? 1 : 0);
+    const removesFinalTerminator = currentLines.at(-1) === '' && Array.isArray(diff.hunks)
+      && diff.hunks.some((hunk) => hunk.lines.some((line) => line.type === 'remove'
+        && line.oldNumber === currentLines.length && line.text === ''));
+    const removedLines = diff.deletions - (removesFinalTerminator ? 1 : 0);
+    if (removedLines >= UPDATE_RISK_LIMITS.minimumRemovedLines
+      && removedLines >= lineCount * UPDATE_RISK_LIMITS.removedLineRatio) {
+      reasons.push('Removes or replaces at least ' + UPDATE_RISK_LIMITS.minimumRemovedLines
+        + ' lines and ' + Math.round(UPDATE_RISK_LIMITS.removedLineRatio * 100) + '% of the original lines.');
+    }
+    if (proposed.length < current.length * UPDATE_RISK_LIMITS.minimumRetainedLengthRatio) {
+      reasons.push('The replacement is shorter than ' + Math.round(UPDATE_RISK_LIMITS.minimumRetainedLengthRatio * 100) + '% of the original text.');
+    }
+    if (findFrontmatterRange(currentLines) && !findFrontmatterRange(splitLines(proposed))) {
+      reasons.push('Removes the YAML frontmatter block.');
+    }
+    return { level: reasons.length ? 'high' : 'normal', reasons };
+  }
+
   function buildMarkdownDiffPreview(input) {
     const currentContent = String(input && input.currentContent || '');
     const proposedContent = String(input && input.proposedContent || '');
@@ -184,10 +227,12 @@
   }
 
   function findFrontmatterRange(lines) {
-    if (!Array.isArray(lines) || lines[0] !== '---') return null;
-    const closingIndex = lines.indexOf('---', 1);
-    if (closingIndex < 1) return null;
-    return { start: 1, end: closingIndex + 1 };
+    if (!Array.isArray(lines)) return null;
+    const source = lines.join('\n');
+    const block = getFrontmatterApi().extractFrontmatterBlock(source);
+    if (!block) return null;
+    const header = source.slice(0, source.length - block.body.length).replace(/\n$/, '');
+    return { start: 1, end: header.split('\n').length };
   }
 
   function findFrontmatterOperationRange(lines, frontmatter) {
@@ -253,7 +298,9 @@
 
   const api = {
     DIFF_LIMITS,
-    buildMarkdownDiffPreview
+    UPDATE_RISK_LIMITS,
+    buildMarkdownDiffPreview,
+    assessUpdateRisk
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

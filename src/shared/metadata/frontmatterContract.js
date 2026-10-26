@@ -268,6 +268,7 @@
   const api = {
     MAX_FLOW_NESTING,
     MAX_FRONTMATTER_CHARS,
+    extractFrontmatterBlock,
     applyTags,
     getTags,
     getSearchFields,
