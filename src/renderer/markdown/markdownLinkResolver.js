@@ -33,6 +33,52 @@
     return candidates;
   }
 
+  async function resolveMarkdownLink(target, currentPath, api) {
+    const candidates = createMarkdownLinkCandidates(target, currentPath);
+    if (!candidates.length) return linkedNoteNotFound(target);
+    for (const candidate of candidates) {
+      const read = await api.vault.readMarkdown(candidate);
+      if (read.ok || read.code !== 'file_not_found') return read;
+    }
+
+    const clean = cleanTarget(target);
+    if (clean.includes('/')) return linkedNoteNotFound(target);
+    if (!api.search || typeof api.search.query !== 'function') {
+      return { ok: false, code: 'metadata_index_unavailable', message: 'Refresh vault indexes in Settings before resolving note names across folders.' };
+    }
+
+    const hasExtension = /\.m(?:d|arkdown)$/i.test(clean);
+    const lookup = await api.search.query({ query: clean.replace(/\.m(?:d|arkdown)$/i, ''), scope: 'files' });
+    if (!lookup.ok) return lookup;
+    const indexed = (lookup.results || []).filter((entry) => {
+      const path = String(entry.path || '').replace(/\\/g, '/');
+      return /\.m(?:d|arkdown)$/i.test(path)
+        && !path.split('/').some((segment) => !segment || segment.startsWith('.'));
+    });
+    const name = normalizeLinkName(clean);
+    const fileMatches = indexed.filter((entry) => {
+      const filename = String(entry.path).replace(/\\/g, '/').split('/').pop();
+      return normalizeLinkName(hasExtension ? filename : filename.replace(/\.m(?:d|arkdown)$/i, '')) === name;
+    });
+    const matches = fileMatches.length || hasExtension
+      ? fileMatches
+      : indexed.filter((entry) => normalizeLinkName(entry.title) === name);
+    const paths = Array.from(new Set(matches.map((entry) => entry.path)));
+    if (lookup.truncated || paths.length > 1) {
+      return { ok: false, code: 'ambiguous_link', message: 'Linked note is ambiguous. Use its full vault-relative path in the link.' };
+    }
+    if (!paths.length) return linkedNoteNotFound(target);
+    return api.vault.readMarkdown(paths[0]);
+  }
+
+  function normalizeLinkName(value) {
+    return String(value || '').normalize('NFKC').trim().toLocaleLowerCase();
+  }
+
+  function linkedNoteNotFound(target) {
+    return { ok: false, code: 'linked_note_not_found', message: 'Linked note could not be resolved: ' + target + '. Check the link path or refresh vault indexes in Settings.' };
+  }
+
   function cleanTarget(target) {
     return decodeURIComponentSafe(String(target || ''))
       .replace(/\\/g, '/')
@@ -78,7 +124,8 @@
 
   const api = {
     isInternalMarkdownTarget,
-    createMarkdownLinkCandidates
+    createMarkdownLinkCandidates,
+    resolveMarkdownLink
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

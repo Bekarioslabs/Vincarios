@@ -497,29 +497,21 @@
     }
     async function openLinkedMarkdown(target, currentPath) {
       const resolver = window.VincariosMarkdownLinkResolver;
-      if (!resolver || !resolver.createMarkdownLinkCandidates) {
+      if (!resolver || !resolver.resolveMarkdownLink) {
         return { ok: false, message: 'Markdown link resolver unavailable.' };
       }
 
-      const candidates = resolver.createMarkdownLinkCandidates(target, currentPath);
-      if (!candidates.length) return { ok: false, message: 'Linked target is not an internal Markdown note.' };
-
-      for (const candidate of candidates) {
-        const read = await api.vault.readMarkdown(candidate);
-        if (read.ok) {
-          const navigation = await requestPreviewNavigation(read.path);
-          if (!navigation.ok) return navigation;
-          navigator.selectFile(read.path);
-          setPreviewSource(read.content, read.path);
-          await recordRecentMarkdown(read.path);
-          if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
-          else setText(context, 'Selection file: ' + read.path);
-          setStatus('Opened linked note: ' + read.path);
-          return { ok: true, path: read.path };
-        }
-      }
-
-      return { ok: false, code: 'file_not_found', message: 'Linked note not found: ' + target };
+      const read = await resolver.resolveMarkdownLink(target, currentPath, api);
+      if (!read.ok) return read;
+      const navigation = await requestPreviewNavigation(read.path);
+      if (!navigation.ok) return navigation;
+      navigator.selectFile(read.path);
+      setPreviewSource(read.content, read.path);
+      await recordRecentMarkdown(read.path);
+      if (contextState) contextState.setFile(read.path, createContextDetails(read.path, read.content));
+      else setText(context, 'Selection file: ' + read.path);
+      setStatus('Opened linked note: ' + read.path);
+      return { ok: true, path: read.path };
     }
 
     async function revealPath(path) {

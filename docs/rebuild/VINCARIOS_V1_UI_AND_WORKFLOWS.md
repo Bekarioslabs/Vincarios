@@ -292,6 +292,7 @@ Markdown rendering and Markdown navigation are separate blocks.
 - V1 link navigation supports internal Markdown files only. External URLs, images, attachments, and raw HTML interaction remain out of scope for this block.
 - Preview back/forward history is available in the preview toolbar. It changes the preview history only and does not auto-expand the file tree.
 - Link resolution prefers folder-relative candidates before broader vault-root candidates.
+- If those direct paths do not exist, a bare note name may use the existing Metadata index (`files` search scope, no Full-text/embedding/provider lookup). Resolution requires an exact filename match, or an exact indexed title match when no filename matches; filenames take precedence. Hidden-folder records are excluded. Ambiguous or truncated results do not open an arbitrary note; use the full vault-relative path instead. Explicit paths are never broadened to an unrelated note. Missing metadata reports the existing index guidance, while an unresolved link is not described as a deleted file. Direct paths still work without an index, and normal navigation/unsaved-edit decisions remain in effect.
 
 This keeps Markdown rendering, vault path resolution, preview history, and file-tree reveal as separate modules instead of coupling them inside the renderer.
 

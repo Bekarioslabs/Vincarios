@@ -42,7 +42,7 @@ test('file panel opens linked notes without auto-revealing the file tree', () =>
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'files', 'mountFilePanel.js'), 'utf8');
 
   assert.match(source, /async function openLinkedMarkdown/);
-  assert.match(source, /createMarkdownLinkCandidates/);
+  assert.match(source, /resolver\.resolveMarkdownLink\(target, currentPath, api\)/);
   assert.match(source, /setPreviewSource\(read\.content, read\.path\)/);
   assert.match(source, /async function revealPath/);
   assert.match(source, /openLinkedMarkdown,/);
