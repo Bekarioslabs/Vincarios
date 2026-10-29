@@ -9,6 +9,13 @@ function registerChatIpc(ipcMain, chatService) {
 
   const pendingRequests = new Map();
 
+  ipcMain.handle(IPC_CHANNELS.CHAT_CHECK_UPDATE_BUDGET, (_event, payload) => {
+    if (typeof chatService.checkUpdateBudget !== 'function') {
+      return { ok: false, code: 'update_budget_unknown', error: 'Context check unavailable. Restart Vincarios.', budget: { state: 'unknown' } };
+    }
+    return chatService.checkUpdateBudget(payload);
+  });
+
   ipcMain.handle(IPC_CHANNELS.CHAT_SEND, async (event, payload) => {
     payload = payload || {};
     const requestId = normalizeRequestId(payload.requestId);

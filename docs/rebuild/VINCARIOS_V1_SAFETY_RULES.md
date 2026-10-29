@@ -37,6 +37,10 @@ Unexpected synchronous exceptions and asynchronous handler rejections return `ip
 
 The policy follows [Electron's sender-validation guidance](https://www.electronjs.org/docs/latest/tutorial/security#17-validate-the-sender-of-all-ipc-messages), with stricter app-owned window/frame identity checks. The optional `node scripts/probe-ipc-boundary.js` exercises real sandboxed Electron frames/windows using synthetic files and a temporary profile; it never opens a user vault. Its adversarial iframe fixture enables a narrow preload bridge in subframes only for the test, not in the app.
 
+## Whole-Note Update Context Budget
+
+`chat:check-update-budget` uses the trusted sender boundary. This metadata-only preflight sends only model/status GETs to a local provider, never note text or a generation request. A successful preflight is not reusable authorization: `chat:send` with `purpose: whole_note_update` rechecks allocation and caps output. Unsupported/external providers and unknown allocations fail closed for this action. Conservative estimation never authorizes source truncation or context enlargement and does not replace existing write safeguards.
+
 ## Permission Model
 
 Startup acquires Electron's single-instance lock before namespace migration, settings loading or IPC registration. A denied lock quits without starting those services; the primary instance restores and focuses its live window on a second launch. Portable executable lock identity still requires the final Windows runtime smoke test.

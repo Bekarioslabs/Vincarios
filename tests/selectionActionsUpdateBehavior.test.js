@@ -43,6 +43,7 @@ async function submitUpdate({ content, draftContent, responseContent = '# Revise
   const before = reviewBasket.getSnapshot();
   const requests = [];
   const sandbox = vm.createContext({
+    setTimeout, clearTimeout,
     document: { createElement },
     window: {
       VincariosSelectionActionRegistry: require('../src/renderer/selectionActions/actionRegistry'),
@@ -63,9 +64,11 @@ async function submitUpdate({ content, draftContent, responseContent = '# Revise
     reviewBasket, status,
     api: {
       chat: {
+        async checkUpdateBudget() { return { ok: true, budget: { state: 'fits' } }; },
         async send(request) {
           requests.push(request);
-          return { ok: true, message: { content: JSON.stringify({ proposedContent: responseContent }) } };
+          return { ok: true, provider: { id: 'lm-studio', selectedModel: 'auto' }, model: 'google/gemma-4-12b-qat',
+            message: { content: JSON.stringify({ proposedContent: responseContent }) } };
         }
       }
     }
@@ -97,6 +100,7 @@ for (const useDraft of [false, true]) {
 test('Selection Action sends the complete open draft and retains the disk baseline after refresh', async () => {
   const result = await submitUpdate({ content: '# Original\n', draftContent: '# Draft\n' });
   assert.equal(result.requests.length, 1);
+  assert.equal(result.requests[0].purpose, 'whole_note_update');
   assert.equal(result.requests[0].messages[1].content.includes('```md\n# Draft\n\n```'), true);
   assert.equal(result.after.items.length, 1);
   assert.equal(result.after.items[0].id, result.before.items[0].id);

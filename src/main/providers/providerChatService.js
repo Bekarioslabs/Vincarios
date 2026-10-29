@@ -1,6 +1,7 @@
 'use strict';
 
 const { createProviderSettingsState } = require('./providerRegistry');
+const { budgetMetadataPath, assessUpdateBudget, unknownUpdateBudget } = require('./providerUpdateBudget');
 const {
   normalizePayloadLimits,
   validateProviderMessagesPayload
@@ -54,10 +55,14 @@ function createProviderChatService(options) {
         return createErrorResult(provider, 'No provider model available.', 'provider_no_model');
       }
 
+      const update = payload && payload.purpose === 'whole_note_update';
+      const assessment = update ? await readUpdateBudget(provider, model, messages, requestTimeoutMs, signal) : null;
+      if (signal && signal.aborted) return createCanceledResult(provider);
+      if (assessment && !assessment.ok) return { ...assessment, provider: publicProvider(provider) };
       const response = await fetchWithTimeout(fetchImpl, buildChatUrl(provider), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(buildChatRequestBody(provider, model, messages, temperature))
+        body: JSON.stringify(buildChatRequestBody(provider, assessment ? assessment.model : model, messages, temperature, assessment && assessment.budget))
       }, requestTimeoutMs, signal);
 
       if (!response || response.ok !== true) {
@@ -66,6 +71,11 @@ function createProviderChatService(options) {
       }
 
       const data = await response.json();
+      const finishReason = provider.kind === 'ollama-native'
+        ? data && data.done_reason : data && data.choices && data.choices[0] && data.choices[0].finish_reason;
+      if (update && finishReason === 'length') {
+        return createErrorResult(provider, 'The provider stopped at its response limit. No update proposal was created. Use the Source editor or configure more context in your provider.', 'update_response_truncated');
+      }
       const content = extractAssistantContent(provider, data);
       if (!content) {
         return createErrorResult(provider, 'Provider returned no assistant message.');
@@ -86,7 +96,41 @@ function createProviderChatService(options) {
     }
   }
 
-  return Object.freeze({ sendChat });
+  async function readUpdateBudget(provider, model, messages, requestTimeoutMs, signal) {
+    const endpoint = budgetMetadataPath(provider);
+    if (!endpoint) return unknownUpdateBudget();
+    try {
+      const response = await fetchWithTimeout(fetchImpl, String(provider.baseUrl).replace(/\/+$/g, '') + endpoint,
+        { method: 'GET', headers: { accept: 'application/json' } }, requestTimeoutMs, signal);
+      if (!response || response.ok !== true) return unknownUpdateBudget();
+      return assessUpdateBudget(provider, model, messages, await response.json());
+    } catch (error) {
+      if (isAbortError(error) || (signal && signal.aborted)) throw error;
+      return unknownUpdateBudget();
+    }
+  }
+
+  async function checkUpdateBudget(payload, requestOptions) {
+    const provider = settingsState.getActiveProvider();
+    const signal = requestOptions && requestOptions.signal;
+    if (signal && signal.aborted) return createCanceledResult(provider);
+    const messages = normalizeMessages(payload && payload.messages);
+    const validation = validateProviderMessagesPayload(messages, getPayloadLimits(settingsStore, options.payloadLimits));
+    if (!messages.length || !validation.ok) return createErrorResult(provider, validation.message || 'Message is required.');
+    if (requiresExternalContextApproval(provider, payload) || !budgetMetadataPath(provider)) return unknownUpdateBudget();
+    try {
+      const timeout = getProviderTimeoutMs(settingsStore, timeoutMs);
+      const model = await resolveChatModel(provider, fetchImpl, timeout, signal);
+      const assessment = model ? await readUpdateBudget(provider, model, messages, timeout, signal) : unknownUpdateBudget();
+      if (signal && signal.aborted) return createCanceledResult(provider);
+      return { ...assessment, provider: publicProvider(provider) };
+    } catch (error) {
+      if (isAbortError(error) || (signal && signal.aborted)) return createCanceledResult(provider);
+      return unknownUpdateBudget();
+    }
+  }
+
+  return Object.freeze({ sendChat, checkUpdateBudget });
 }
 
 function getPayloadLimits(settingsStore, fallback) {

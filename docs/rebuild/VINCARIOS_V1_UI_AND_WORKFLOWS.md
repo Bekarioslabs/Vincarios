@@ -9,6 +9,8 @@
 
 ## Main Layout
 
+Content Update has a compact native disclosure: `Context: likely fits`, `Context: too large for loaded model`, or `Context: size unknown`. Details distinguish observed allocation from estimated input, response allowance and headroom. Text accompanies semantic colors, not an exact utilization percentage. Checks run on opening, debounced instruction changes and submission, with an independent Main recheck before generation. Failures retain the instruction, including late budget rejection and response truncation. Only successful Review Basket addition closes the form. During generation the instruction is read-only and Cancel is disabled: discarding text cannot cancel a sent request. No polling, new setting or automatic model loading is added.
+
 V1 should stay simple:
 
 ```text

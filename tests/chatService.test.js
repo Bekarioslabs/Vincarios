@@ -169,7 +169,8 @@ test('chat IPC exposes chat sending through a chat-specific channel', async () =
 
   registerChatIpc(ipcMain, chatService);
 
-  assert.equal(handlers.size, 2);
+  assert.equal(handlers.size, 3);
+  assert.equal(handlers.has(IPC_CHANNELS.CHAT_CHECK_UPDATE_BUDGET), true);
   assert.equal(handlers.has(IPC_CHANNELS.CHAT_SEND), true);
   assert.equal(handlers.has(IPC_CHANNELS.CHAT_CANCEL), true);
   assert.deepEqual(await handlers.get(IPC_CHANNELS.CHAT_SEND)(null, { messages: [] }), {

@@ -245,6 +245,39 @@
   border-color: rgba(var(--interactive-accent-rgb), .55);
 }
 
+.selection-action-budget {
+  min-width: 0;
+  font-size: var(--font-size-ui-sm);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.selection-action-budget summary {
+  cursor: pointer;
+}
+
+.selection-action-budget summary:focus-visible {
+  outline: 1px solid var(--text-accent);
+  outline-offset: var(--space-1);
+}
+
+.selection-action-budget > div {
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+}
+
+.selection-action-budget[data-state="fits"] summary {
+  color: var(--status-success-soft);
+}
+
+.selection-action-budget[data-state="unknown"] summary {
+  color: var(--status-warning);
+}
+
+.selection-action-budget[data-state="too_large"] summary {
+  color: var(--status-danger-soft);
+}
+
 
 .selection-action-grid {
   display: grid;

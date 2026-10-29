@@ -36,20 +36,23 @@ function firstModelId(provider, data) {
   return models.length > 0 ? models[0].id : '';
 }
 
-function buildChatRequestBody(provider, model, messages, temperature) {
+function buildChatRequestBody(provider, model, messages, temperature, updateBudget) {
   if (isOllamaProvider(provider)) {
     return {
       model,
       messages,
       stream: false,
-      options: { temperature }
+      options: updateBudget
+        ? { temperature, num_ctx: updateBudget.contextTokens, num_predict: updateBudget.responseReserveTokens }
+        : { temperature }
     };
   }
   return {
     model,
     messages,
     temperature,
-    stream: false
+    stream: false,
+    ...(updateBudget ? { max_tokens: updateBudget.responseReserveTokens } : {})
   };
 }
 

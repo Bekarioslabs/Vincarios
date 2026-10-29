@@ -5,6 +5,7 @@ const IPC_CHANNELS = Object.freeze({
   APP_OPEN_EXTERNAL: 'app:open-external',
   APP_MENU_NAVIGATE: 'app:menu-navigate',
   CHAT_SEND: 'chat:send',
+  CHAT_CHECK_UPDATE_BUDGET: 'chat:check-update-budget',
   CHAT_CANCEL: 'chat:cancel',
   PROVIDER_STATUS: 'provider:status',
   PROVIDER_MODELS: 'provider:models',

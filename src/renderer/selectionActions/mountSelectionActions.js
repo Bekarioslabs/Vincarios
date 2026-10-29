@@ -398,10 +398,28 @@
         confirmDiscard: (message) => typeof window !== 'undefined'
           && typeof window.confirm === 'function'
           && window.confirm(message),
-        onInvalid: (result) => setText(status, result.message),
+        checkBudget: (instruction) => {
+          const prepared = prepareFileUpdateRequest(snapshot, instruction).request;
+          if (!prepared.ok) return Promise.resolve(prepared);
+          if (!api.chat || typeof api.chat.checkUpdateBudget !== 'function') {
+            return Promise.resolve({ ok: false, error: 'Context check unavailable. Restart Vincarios.' });
+          }
+          return api.chat.checkUpdateBudget({ messages: prepared.messages });
+        },
+        onInvalid: (result) => {
+          setText(status, result.message);
+          appendActionMessage('Update proposal unavailable: ' + result.message);
+        },
         onSubmit: (instruction) => proposeFileUpdate(snapshot, instruction)
       });
       setText(status, 'Describe update for: ' + snapshot.path);
+    }
+
+    function prepareFileUpdateRequest(snapshot, instruction) {
+      const openDraft = reviewBasket && typeof reviewBasket.getOpenUpdateDraft === 'function'
+        ? reviewBasket.getOpenUpdateDraft(snapshot.path, 'content_update') : null;
+      const selection = openDraft ? Object.assign({}, snapshot, { content: openDraft.proposedContent }) : snapshot;
+      return { openDraft, request: getSelectedUpdateProposalAction().buildSelectedFileUpdateMessages(selection, instruction) };
     }
 
     async function proposeFileUpdate(snapshot, instruction) {
@@ -423,11 +441,7 @@
       }
 
       const draftKey = 'content_update';
-      const openDraft = reviewBasket.getOpenUpdateDraft(snapshot.path, draftKey);
-      const proposalSelection = openDraft
-        ? Object.assign({}, snapshot, { content: openDraft.proposedContent })
-        : snapshot;
-      const request = updater.buildSelectedFileUpdateMessages(proposalSelection, instruction);
+      const { openDraft, request } = prepareFileUpdateRequest(snapshot, instruction);
       if (!request.ok) {
         appendActionMessage('Update proposal unavailable: ' + (request.message || 'Unsupported selection.'));
         setText(status, 'Update proposal unavailable.');
@@ -437,12 +451,12 @@
       setText(status, 'Preparing update proposal: ' + request.path);
       const pending = appendActionMessage('Preparing update proposal: ' + request.path, [], { pending: true });
       try {
-        const result = await api.chat.send({ messages: request.messages });
+        const result = await api.chat.send({ purpose: 'whole_note_update', messages: request.messages });
         removeNode(pending);
         if (!result || !result.ok || !result.message || !result.message.content) {
           appendActionMessage(formatUpdateProposalDiagnostics(request, 'provider', classifyProviderFailure(result)));
           setText(status, 'Update proposal failed: provider.');
-          return;
+          return result;
         }
 
         const proposal = updater.parseSelectedFileUpdateProposal(result.message.content, {
@@ -462,6 +476,7 @@
             : 'Update proposal added to Review Basket.';
           appendActionMessage(message);
           setText(status, message);
+          return { ok: true };
         } catch (basketError) {
           appendActionMessage(formatUpdateProposalDiagnostics(request, 'review_basket', (basketError && basketError.message) || 'Could not add proposal to Review Basket.'));
           setText(status, 'Update proposal failed: Review Basket.');
