@@ -182,7 +182,7 @@ Section labels often use uppercase/`.08em`; titlebar/navigation also `.12em`. Re
 |---|---|
 | titlebar-height / statusbar-height | `39px` / `24px` |
 | left-nav-width / left-nav-collapsed-width | `168px` / `48px` |
-| vault-panel-width | `44vw` |
+| vault-panel-width | `clamp(var(--min-vault-width), 68vw, calc(100vw - var(--left-nav-width) - var(--min-main-width) - var(--panel-divider-width)))` |
 | file-tree-width / selection-actions-width | `260px` / `280px` |
 | min-main-width / min-vault-width | `400px` / `392px` |
 | min-file-tree-width / max-file-tree-width | `170px` / `340px` |
@@ -193,6 +193,8 @@ Section labels often use uppercase/`.08em`; titlebar/navigation also `.12em`. Re
 | panel-divider-width / panel-resize-hit-area | `1px` / `7px` |
 
 CSS defaults; runtime resize/collapse: `src/renderer/layout/panelLayoutState.js`. Files/Actions rails alias `panel-rail-width`. Grid animation: `--transition-fast` (`.15s ease-in-out`), disabled during drag. Regions scroll internally; shell allows horizontal overflow.
+
+Preferred startup window: `1920 x 1080` Electron logical pixels, capped to the primary display's usable work area; minimum remains `980 x 640`. The wider default Vault leaves more room for Preview while retaining Chat's minimum and the existing Files/Actions widths. At a 1920px content width, Chat is about 445px and Preview 764px. Smaller windows may still let Preview yield under the existing minimum-width policy. Dragged sizes are not persisted; no new setting is introduced.
 
 Spacing: `4/8/12/16px`; local `10px` gaps/`14px` padding also remain. Shell minimum `980px`, reduced to `900px` at `max-width: 1100px` in startup.css. Settings breakpoint: `max-width: 960px`. Desktop, not a mobile layout.
 
@@ -246,6 +248,8 @@ Recorded inconsistencies, not silently resolved:
 - Near colors remain separate roles: text versus interactive accent, metadata, subtle opacities.
 
 ### In Code
+
+Content Update budget: native `details`/`summary` inside the instruction form, not a new card/global meter. Reuse `--font-size-ui-sm`, `--space-1`, `--text-muted`, `--status-success-soft`, `--status-warning`, `--status-danger-soft` and the existing focus accent. Always name the state in text; estimates are not exact utilization. Sources: `selectionActions/updateInstructionForm.js`, `styles/selectionActions.css`. No new palette, radius or type scale.
 
 Shared values: `tokens.css`; semantic color/size/radius roles. Reuse `components.css`; area styles own geometry. Naming/inline-style rules: `AGENTS.md`. Prefer existing colors.
 

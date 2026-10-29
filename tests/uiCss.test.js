@@ -13,6 +13,13 @@ function readShellStyles() {
     'startup.css'
   ].map((name) => fs.readFileSync(path.join(__dirname, '..', 'src', 'renderer', 'styles', name), 'utf8')).join('\n');
 }
+
+test('default vault allocation favors Preview while reserving Chat and navigation minimums', () => {
+  const tokens = fs.readFileSync(path.join(__dirname, '..', 'src/renderer/styles/tokens.css'), 'utf8');
+  assert.match(tokens, /--vault-panel-width:\s*clamp\(var\(--min-vault-width\),\s*68vw,\s*calc\(100vw - var\(--left-nav-width\) - var\(--min-main-width\) - var\(--panel-divider-width\)\)\);/);
+  assert.match(tokens, /--file-tree-width:\s*260px;/);
+  assert.match(tokens, /--selection-actions-width:\s*280px;/);
+});
 test('collapsible left subactions preserve hidden state despite flex layout', () => {
   const css = readShellStyles();
 

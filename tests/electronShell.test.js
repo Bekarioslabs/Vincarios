@@ -22,6 +22,22 @@ test('main window options keep the renderer sandboxed', () => {
   assert.match(options.webPreferences.preload, /src[\\/]preload[\\/]index\.js$/);
 });
 
+test('main window starts at Full HD when the display work area permits it', () => {
+  const options = createWindowOptions(path.resolve(__dirname, '..'));
+  assert.equal(options.width, 1920);
+  assert.equal(options.height, 1080);
+  assert.equal(options.minWidth, 980);
+  assert.equal(options.minHeight, 640);
+});
+
+test('startup window fits smaller supported work areas without changing minimum sizes', () => {
+  const options = createWindowOptions(path.resolve(__dirname, '..'), { width: 1366, height: 728 });
+  assert.equal(options.width, 1366);
+  assert.equal(options.height, 728);
+  assert.equal(options.minWidth, 980);
+  assert.equal(options.minHeight, 640);
+});
+
 test('main window uses the packaged Vincarios Windows icon', () => {
   const root = path.resolve(__dirname, '..');
   const options = createWindowOptions(root);

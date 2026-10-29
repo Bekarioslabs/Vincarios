@@ -175,7 +175,7 @@
   --statusbar-height: 24px;
   --left-nav-width: 168px;
   --left-nav-collapsed-width: 48px;
-  --vault-panel-width: 44vw;
+  --vault-panel-width: clamp(var(--min-vault-width), 68vw, calc(100vw - var(--left-nav-width) - var(--min-main-width) - var(--panel-divider-width)));
   --file-tree-width: 260px;
   --files-collapsed-width: var(--panel-rail-width);
   --selection-actions-width: 280px;

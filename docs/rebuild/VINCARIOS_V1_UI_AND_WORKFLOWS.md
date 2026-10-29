@@ -13,6 +13,8 @@ Content Update has a compact native disclosure: `Context: likely fits`, `Context
 
 V1 should stay simple:
 
+The native startup window prefers 1920 x 1080 logical pixels, limited by the primary display work area so a taskbar/scaling or smaller supported display does not start it oversized. Existing 980 x 640 minimums remain. Default Vault allocation is 68vw, bounded by the existing navigation/Chat minimums; Files and Actions stay 260px/280px, leaving the additional width to Preview. Resizing/collapse behavior and the absence of persisted dragged sizes are unchanged.
+
 ```text
 Left: app navigation and actions
 Middle: workspaces for Home, Chat, Search, Suggestions, and Review; Chat owns Context Basket and input, while Session Activity opens from the bottom status surface

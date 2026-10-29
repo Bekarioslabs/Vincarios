@@ -5,10 +5,11 @@ const { DEFAULT_THEME_COLORS } = require('../../shared/ui/themeDefaults');
 const { installApplicationMenu } = require('./createApplicationMenu');
 const { wireWindowZoomShortcuts } = require('./windowZoom');
 
-function createWindowOptions(projectRoot) {
+function createWindowOptions(projectRoot, workAreaSize) {
+  workAreaSize = workAreaSize || {};
   return {
-    width: 1280,
-    height: 820,
+    width: Math.min(1920, workAreaSize.width || 1920),
+    height: Math.min(1080, workAreaSize.height || 1080),
     minWidth: 980,
     minHeight: 640,
     show: true,
@@ -31,7 +32,8 @@ function createMainWindow(electron, options) {
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
 
   installApplicationMenu(electron);
-  const win = new BrowserWindow(createWindowOptions(projectRoot));
+  const workAreaSize = electron.screen && electron.screen.getPrimaryDisplay().workAreaSize;
+  const win = new BrowserWindow(createWindowOptions(projectRoot, workAreaSize));
   wireWindowZoomShortcuts(win);
 
   // The only renderer is the packaged local shell; links use the explicit IPC browser flow.
