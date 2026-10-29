@@ -8,6 +8,8 @@ const { createVaultBackupService } = require('./vaultBackupService');
 const { executeAuditedMutation } = require('./vaultWriteTransaction');
 const { DEFAULT_VAULT_PROFILE } = require('../../shared/vaultProfile/defaults');
 const { preserveLineEndings } = require('../../shared/text/lineEndings');
+const { isMarkdownPath } = require('../../shared/fileTypes');
+const { validateNewName } = require('../../shared/pathRules/newNames');
 const {
   normalizePayloadLimits,
   validateCreateNotePayload,
@@ -64,6 +66,8 @@ function createVaultWriteService(options) {
       : payload.fileName;
     const resolved = currentVault.vault.resolve(targetPath, { allowRoot: false });
     if (!resolved.ok) return resolved;
+    const parentNames = validateNewParentNames(payload.targetFolder);
+    if (!parentNames.ok) return parentNames;
 
     if (fileSystem.existsSync(resolved.absolutePath)) {
       return fail('file_exists', 'Target note already exists.');
@@ -123,6 +127,10 @@ function createVaultWriteService(options) {
 
     const resolved = currentVault.vault.resolve(payload.targetFolder, { allowRoot: false });
     if (!resolved.ok) return resolved;
+    const folderName = validateNewName(payload.targetFolder.split('/').pop());
+    if (!folderName.ok) return folderName;
+    const parentNames = validateNewParentNames(payload.targetFolder);
+    if (!parentNames.ok) return parentNames;
 
     if (fileSystem.existsSync(resolved.absolutePath)) {
       let stat;
@@ -177,7 +185,7 @@ function createVaultWriteService(options) {
 
     const resolved = currentVault.vault.resolve(payload.targetPath, { allowRoot: false });
     if (!resolved.ok) return resolved;
-    if (!resolved.relativePath.toLowerCase().endsWith('.md')) {
+    if (!isMarkdownPath(resolved.relativePath)) {
       return fail('not_markdown', 'Only Markdown notes can be updated.');
     }
     if (!fileSystem.existsSync(resolved.absolutePath)) {
@@ -239,7 +247,7 @@ function createVaultWriteService(options) {
 
     const source = currentVault.vault.resolve(payload.sourcePath, { allowRoot: false });
     if (!source.ok) return source;
-    if (!source.relativePath.toLowerCase().endsWith('.md')) {
+    if (!isMarkdownPath(source.relativePath)) {
       return fail('not_markdown', 'Only Markdown files can be renamed in V1 Rename Light.');
     }
     if (!fileSystem.existsSync(source.absolutePath)) {
@@ -304,6 +312,19 @@ function createVaultWriteService(options) {
     return { ok: true, vault };
   }
 
+  function validateNewParentNames(relativePath) {
+    const segments = relativePath ? relativePath.split('/') : [];
+    for (let index = 0; index < segments.length; index += 1) {
+      const prefix = vault.resolve(segments.slice(0, index + 1).join('/'), { allowRoot: false });
+      if (!prefix.ok) return prefix;
+      if (!fileSystem.existsSync(prefix.absolutePath)) {
+        const validation = validateNewName(segments[index]);
+        if (!validation.ok) return validation;
+      }
+    }
+    return { ok: true };
+  }
+
   return Object.freeze({
     setRoot,
     createFolder,
@@ -319,11 +340,15 @@ function getPayloadLimits(settingsStore, fallback) {
 }
 
 function normalizeCreateNoteInput(input) {
-  const title = String(input && input.title ? input.title : '').trim();
+  const title = String(input && input.title ? input.title : '');
   if (!title) return fail('invalid_title', 'Note title is required.');
+  const titleValidation = validateNewName(title);
+  if (!titleValidation.ok) return titleValidation;
 
-  const targetFolder = String(input && input.targetFolder ? input.targetFolder : '').trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+  const targetFolder = String(input && input.targetFolder ? input.targetFolder : '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
   const fileName = toMarkdownFileName(title);
+  const nameValidation = validateNewName(fileName);
+  if (!nameValidation.ok) return nameValidation;
   return ok({
     targetFolder,
     fileName,
@@ -332,7 +357,7 @@ function normalizeCreateNoteInput(input) {
 }
 
 function normalizeCreateFolderInput(input) {
-  const targetFolder = String(input && input.targetFolder ? input.targetFolder : '').trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+  const targetFolder = String(input && input.targetFolder ? input.targetFolder : '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
   if (!targetFolder) return fail('invalid_target_folder', 'Target folder is required.');
   return ok({ targetFolder });
 }
@@ -340,7 +365,7 @@ function normalizeCreateFolderInput(input) {
 function normalizeUpdateNoteInput(input) {
   const targetPath = String(input && input.targetPath ? input.targetPath : '').trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
   if (!targetPath) return fail('invalid_target_path', 'Target path is required.');
-  if (!targetPath.toLowerCase().endsWith('.md')) return fail('not_markdown', 'Only Markdown notes can be updated.');
+  if (!isMarkdownPath(targetPath)) return fail('not_markdown', 'Only Markdown notes can be updated.');
   if (!input || typeof input.currentContent !== 'string') {
     return fail('missing_current_content', 'Current content is required for reviewed updates.');
   }
@@ -358,36 +383,30 @@ function normalizeUpdateNoteInput(input) {
 function normalizeRenameFileInput(input) {
   const sourcePath = String(input && input.sourcePath ? input.sourcePath : '').trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
   if (!sourcePath) return fail('invalid_source_path', 'Source path is required.');
-  if (!sourcePath.toLowerCase().endsWith('.md')) return fail('not_markdown', 'Only Markdown files can be renamed in V1 Rename Light.');
+  if (!isMarkdownPath(sourcePath)) return fail('not_markdown', 'Only Markdown files can be renamed in V1 Rename Light.');
 
-  const rawName = String(input && input.newName ? input.newName : '').trim();
+  const rawName = String(input && input.newName ? input.newName : '');
   if (!rawName) return fail('invalid_name', 'New file name is required.');
   if (/[\\/]/.test(rawName)) return fail('path_not_allowed', 'Rename Light only changes the file name, not the folder.');
+  const rawValidation = validateNewName(rawName);
+  if (!rawValidation.ok) return rawValidation;
+  const fileName = toRenameFileName(rawName, sourcePath);
+  const nameValidation = validateNewName(fileName);
+  if (!nameValidation.ok) return nameValidation;
 
   return ok({
     sourcePath,
-    fileName: toRenameFileName(rawName)
+    fileName
   });
 }
 
-function toRenameFileName(name) {
-  const clean = String(name || '')
-    .replace(/[/:*?"<>|]/g, '-')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/[. ]+$/g, '');
-  const base = clean || 'Untitled';
-  return base.toLowerCase().endsWith('.md') ? base : base + '.md';
+function toRenameFileName(name, sourcePath) {
+  const base = String(name || '');
+  return isMarkdownPath(base) ? base : base + path.extname(sourcePath);
 }
 function toMarkdownFileName(title) {
-  const clean = String(title || '')
-    .replace(/\\/g, '-')
-    .replace(/[/:*?"<>|]/g, '-')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/[. ]+$/g, '');
-  const base = clean || 'Untitled';
-  return base.toLowerCase().endsWith('.md') ? base : base + '.md';
+  const base = String(title || '');
+  return isMarkdownPath(base) ? base : base + '.md';
 }
 
 

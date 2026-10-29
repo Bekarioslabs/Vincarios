@@ -13,7 +13,7 @@ test('note create plans convert to one create note proposal', () => {
   assert.equal(proposals.length, 1);
   assert.equal(proposals[0].type, 'create_note');
   assert.equal(proposals[0].targetFolder, '00_Inbox');
-  assert.equal(proposals[0].title, 'Star Lu');
+  assert.equal(proposals[0].title, 'Star Lu.md');
   assert.equal(proposals[0].fileRole, 'note');
   assert.equal(proposals[0].metadata.type, 'note');
   assert.equal(proposals[0].metadata.origin_action, 'create_from_preset');

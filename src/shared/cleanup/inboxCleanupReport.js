@@ -1,6 +1,8 @@
 (function() {
   'use strict';
 
+  const fileTypes = getFileTypesApi();
+
   function buildInboxCleanupReport(options) {
     const input = options || {};
     const directEntries = Array.isArray(input.entries) ? input.entries.map(normalizeEntry).filter(Boolean) : [];
@@ -113,7 +115,7 @@
   }
 
   function isMarkdownEntry(entry) {
-    return entry && entry.kind === 'file' && /\.md$/i.test(entry.name || entry.path || '');
+    return entry && entry.kind === 'file' && fileTypes.isMarkdownPath(entry.name || entry.path);
   }
 
   function isSummaryEntry(entry) {
@@ -133,6 +135,12 @@
   function baseName(value) {
     const normalized = normalizePath(value);
     return normalized.split('/').pop() || normalized;
+  }
+
+  function getFileTypesApi() {
+    if (typeof window !== 'undefined' && window.VincariosFileTypes) return window.VincariosFileTypes;
+    if (typeof require === 'function') return require('../fileTypes');
+    throw new Error('File types API unavailable.');
   }
 
   const api = Object.freeze({

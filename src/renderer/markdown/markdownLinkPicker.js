@@ -2,10 +2,11 @@
   'use strict';
 
   const MAX_RESULTS = 8;
+  const fileTypes = getFileTypesApi();
 
   function normalizeLinkResults(results) {
     return (Array.isArray(results) ? results : [])
-      .filter((result) => /\.md$/i.test(String(result && result.path || '')))
+      .filter((result) => fileTypes.isMarkdownPath(result && result.path))
       .slice(0, MAX_RESULTS)
       .map((result) => ({
         path: String(result.path),
@@ -167,7 +168,7 @@
   }
 
   function basenameWithoutExtension(value) {
-    return String(value || '').split('/').pop().replace(/\.md$/i, '');
+    return fileTypes.stripMarkdownExtension(String(value || '').split('/').pop());
   }
 
   function getUserFeedback(result, fallback) {
@@ -182,6 +183,12 @@
     return formatter && typeof formatter.getUserFeedbackTone === 'function'
       ? formatter.getUserFeedbackTone(result)
       : 'neutral';
+  }
+
+  function getFileTypesApi() {
+    if (typeof window !== 'undefined' && window.VincariosFileTypes) return window.VincariosFileTypes;
+    if (typeof require === 'function') return require('../../shared/fileTypes');
+    throw new Error('File types API unavailable.');
   }
 
   const api = Object.freeze({ MAX_RESULTS, normalizeLinkResults, mountMarkdownLinkPicker });

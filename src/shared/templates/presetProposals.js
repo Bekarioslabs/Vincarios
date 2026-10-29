@@ -35,12 +35,11 @@
     const pathParts = splitPath(file.path);
     const fileName = pathParts.pop() || 'Untitled.md';
     const targetFolder = pathParts.join('/');
-    const title = stripMarkdownExtension(fileName);
     const enriched = enrichPresetFile(file);
     return {
       type: 'create_note',
       category: 'create',
-      title,
+      title: fileName,
       targetFolder,
       content: enriched.content,
       metadata: enriched.metadata,
@@ -82,10 +81,6 @@
   function basename(value) {
     const parts = splitPath(value);
     return parts.pop() || 'Template';
-  }
-
-  function stripMarkdownExtension(fileName) {
-    return String(fileName || 'Untitled.md').replace(/\.md$/i, '');
   }
 
   const api = {

@@ -13,6 +13,8 @@
     { name: 'VincariosProposalPlan', globalName: 'VincariosProposalPlan' },
     { name: 'VincariosDiffPreview', globalName: 'VincariosDiffPreview' },
     { name: 'VincariosLineEndings', globalName: 'VincariosLineEndings', methods: ['normalizeLineEndings', 'preserveLineEndings'] },
+    { name: 'VincariosFileTypes', globalName: 'VincariosFileTypes', methods: ['isMarkdownPath', 'stripMarkdownExtension'] },
+    { name: 'VincariosNewNames', globalName: 'VincariosNewNames', methods: ['validateNewName'] },
     { name: 'VincariosVaultPath', globalName: 'VincariosVaultPath', methods: ['normalizeRelativePath'] },
     { name: 'VincariosContextIntent', globalName: 'VincariosContextIntent' },
     { name: 'VincariosContextLimits', globalName: 'VincariosContextLimits', methods: ['normalizeContextLimits'] },

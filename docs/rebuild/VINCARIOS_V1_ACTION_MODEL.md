@@ -35,6 +35,27 @@ Example categories:
 
 "add tags/properties" is reserved for the V1.1 Properties/YAML editor. V1 does not expose a separate direct Add Tag action; any persisted property change will continue to use the reviewed update flow.
 
+## Supported Markdown Extensions
+
+`src/shared/fileTypes.js` owns `.md` and `.markdown` recognition, case-insensitively, in Main and the renderer. Its browser API is loaded before consumers and validated at startup. Selection Actions, context badges, summaries, tag filename hints, link picker and title evidence use the same contract as reviewed updates, backups, watcher classification and incremental metadata/freshness updates. File-type recognition does not grant provider context or write permission; the existing Main path, stale-content, diff, backup and audit gates remain in force.
+
+Rename Light preserves an explicitly supplied supported extension. If the new name omits it, the source extension, including its case, is retained; renaming a `.markdown` note never silently adds `.md`. Direct `create_note` requests also retain a supported suffix; otherwise new notes default to `.md`. Note presets likewise retain an explicitly supplied Markdown suffix instead of appending a second one; project presets retain their declared artifact filenames. Preview, proposal and actual created path must agree, including suffix case. Existing notes are not renamed or rewritten by classification.
+
+Extensionless internal links try `.md`, then `.markdown`, within each existing folder-relative/root candidate location. Folder-relative candidates still precede vault-root candidates; explicit extensions remain exact. Only supported Markdown candidates are read; an unreadable extensionless intermediate candidate must not prevent the later vault-root lookup. Indexed fallback still refuses ambiguous or truncated results. Link-picker insertions keep the non-default `.markdown` suffix to distinguish a selected note from its `.md` sibling; the usual `.md` omission is unchanged. Rename Light still does not repair existing links.
+
+## New Write Names
+
+`src/shared/pathRules/newNames.js` owns new-name validation for Main writes and browser template previews. It is explicitly loaded and startup-validated. New notes, F2 rename destinations, newly created folder segments and all reviewed-template artifacts reject unsafe names before mutation; rejected input is not silently cleaned up, truncated or renamed to a different target. Existing parent folders are not newly created names, so an existing folder containing `#` can still receive a safely named new note. Read/list/update paths do not acquire this new-name restriction.
+
+- A name is required. Valid Unicode, punctuation such as `!` and `&`, and repeated internal spaces are retained exactly.
+- Reject leading/trailing whitespace, trailing periods, ASCII control characters (including DEL), Windows-reserved filename characters (`< > : " / \\ | ? *`), and the link delimiters `[ ] # ^`.
+- Reject Windows device stems case-insensitively even before multiple extensions: CON, PRN, AUX, NUL, COM1-COM9 and LPT1-LPT9, including the Windows superscript 1/2/3 forms. A space before the extension cannot disguise the reserved stem.
+- Limit each final new component to 255 UTF-16 code units, including any automatically added extension. Validate the original name as well as the final filename; adding `.md` must not hide an invalid trailing dot or space. This is a component limit, not a guarantee that every volume or complete path is supported.
+- An invalid creation-dialog name leaves the dialog open with an error; nothing is added to Review. Main independently enforces the same rules. Failed F2 validation keeps the original file and name. Existing unusual names remain discoverable, readable and editable; no migration or batch renaming occurs.
+- Note-preset proposals retain the complete planned filename as their title so the write target cannot change when a name contains another Markdown-looking suffix, dots or spaces before the final extension. Review's Edit Note/Project dialog also validates without sanitizing; invalid changes keep the original proposal and dialog open with an accessible inline error.
+
+Windows compatibility basis: [Naming Files, Paths, and Namespaces](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file) and [Maximum Path Length Limitation](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation). The link-delimiter restriction and leading-whitespace rejection are Vincarios write policies, not claims that Windows forbids those characters.
+
 ## Review Module
 
 New notes are opened with exclusive creation (`wx`) before writing. A competing file appearing after validation returns `file_exists` and remains untouched. Rollback only removes a note after this operation successfully acquired its new file descriptor; partial owned writes and audit failures still remove the app-created output.

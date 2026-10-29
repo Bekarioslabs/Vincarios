@@ -2,6 +2,7 @@
   'use strict';
 
   const DEFAULT_MAX_CHARS = 12000;
+  const fileTypes = getFileTypesApi();
 
   function buildFileSummaryMessages(selection, options) {
     options = options || {};
@@ -51,7 +52,7 @@
       return { ok: false, code: 'not_file', message: 'Select a Markdown file first.' };
     }
     const path = String(selection.path || '');
-    if (!/\.md$/i.test(path)) {
+    if (!fileTypes.isMarkdownPath(path)) {
       return { ok: false, code: 'not_markdown', message: 'Summarize file supports Markdown files only.' };
     }
     if (selection.readAllowed !== true) {
@@ -72,6 +73,12 @@
     const parsed = Number(value);
     if (Number.isFinite(parsed) && parsed >= 1000) return Math.floor(parsed);
     return DEFAULT_MAX_CHARS;
+  }
+
+  function getFileTypesApi() {
+    if (typeof window !== 'undefined' && window.VincariosFileTypes) return window.VincariosFileTypes;
+    if (typeof require === 'function') return require('../../shared/fileTypes');
+    throw new Error('File types API unavailable.');
   }
 
   const api = { buildFileSummaryMessages, normalizeSummarySelection, DEFAULT_MAX_CHARS };

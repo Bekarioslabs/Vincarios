@@ -5,6 +5,7 @@ const path = require('node:path');
 const { createVaultAuditService } = require('../audit/vaultAuditService');
 const { createVaultContext } = require('../vault/vaultContext');
 const { executeAuditedMutation } = require('../vault/vaultWriteTransaction');
+const { validateNewName } = require('../../shared/pathRules/newNames');
 const {
   normalizePayloadLimits,
   validateCreateNotePayload
@@ -110,6 +111,8 @@ function createReviewedTemplateService(options) {
 
     const root = vault.resolve(targetPath, { allowRoot: false });
     if (!root.ok) return root;
+    const rootName = validateNewName(targetPath.split('/').pop());
+    if (!rootName.ok) return rootName;
     const rootParent = path.dirname(root.absolutePath);
     try {
       if (!fileSystem.statSync(rootParent).isDirectory()) {
@@ -128,6 +131,8 @@ function createReviewedTemplateService(options) {
     for (const folderPath of folderPaths.paths) {
       const resolved = vault.resolve(folderPath, { allowRoot: false });
       if (!resolved.ok) return resolved;
+      const folderNames = validateArtifactNames(folderPath, targetPath);
+      if (!folderNames.ok) return folderNames;
       if (fileSystem.existsSync(resolved.absolutePath)) {
         return fail('template_target_exists', 'Template folder already exists: ' + resolved.relativePath);
       }
@@ -143,6 +148,8 @@ function createReviewedTemplateService(options) {
       if (!isWithinRoot(filePath, targetPath)) {
         return fail('template_path_outside_root', 'Template files must stay inside the reviewed project root.');
       }
+      const fileNames = validateArtifactNames(filePath, targetPath);
+      if (!fileNames.ok) return fileNames;
       if (!filePath.toLowerCase().endsWith('.md')) {
         return fail('not_markdown', 'Reviewed templates may create Markdown files only.');
       }
@@ -209,10 +216,18 @@ function pathDepth(value) {
 
 function normalizeRelativePath(value) {
   return String(value || '')
-    .trim()
     .replace(/\\/g, '/')
     .replace(/^\/+|\/+$/g, '')
     .replace(/\/+/g, '/');
+}
+
+function validateArtifactNames(value, targetPath) {
+  const parentDepth = targetPath.split('/').length - 1;
+  for (const name of value.split('/').slice(parentDepth)) {
+    const validation = validateNewName(name);
+    if (!validation.ok) return validation;
+  }
+  return { ok: true };
 }
 
 function getPayloadLimits(settingsStore, fallback) {

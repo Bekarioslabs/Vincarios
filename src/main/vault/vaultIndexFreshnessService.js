@@ -1,6 +1,7 @@
 'use strict';
 
 const { createVaultMarkdownSource } = require('./vaultMarkdownSource');
+const { isMarkdownPath } = require('../../shared/fileTypes');
 
 function createVaultIndexFreshnessService(options) {
   options = options || {};
@@ -106,7 +107,7 @@ function normalizePaths(paths) {
   const seen = new Set();
   return (Array.isArray(paths) ? paths : []).reduce((items, value) => {
     const normalizedPath = normalizePath(value);
-    if (!normalizedPath || !/\.md$/i.test(normalizedPath) || seen.has(normalizedPath)) return items;
+    if (!normalizedPath || !isMarkdownPath(normalizedPath) || seen.has(normalizedPath)) return items;
     seen.add(normalizedPath);
     items.push(normalizedPath);
     return items;

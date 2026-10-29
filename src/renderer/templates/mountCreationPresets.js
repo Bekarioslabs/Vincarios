@@ -97,8 +97,13 @@
         preview.textContent = 'Assign the ' + preset.targetRole + ' role in Settings before creating from this preset.';
         return;
       }
-      addPresetToReviewBasket(context, preset, input.value, activeProfile);
-      closeDialog(overlay);
+      try {
+        addPresetToReviewBasket(context, preset, input.value, activeProfile);
+        closeDialog(overlay);
+      } catch (error) {
+        preview.textContent = 'Preset preview failed: ' + error.message;
+        input.focus();
+      }
     });
     modalBehavior.focusInitial();
     input.select();

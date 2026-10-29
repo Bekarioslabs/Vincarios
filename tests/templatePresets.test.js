@@ -39,16 +39,16 @@ test('materialize project preset resolves target role and renders files', () => 
 
   assert.equal(plan.type, PRESET_TYPES.project);
   assert.equal(plan.targetRole, 'projects');
-  assert.equal(plan.rootPath, 'Custom Projects/Star Lu');
-  assert.deepEqual(plan.folders, ['Custom Projects/Star Lu/Knowledge']);
+  assert.equal(plan.rootPath, 'Custom Projects/Star Lu!');
+  assert.deepEqual(plan.folders, ['Custom Projects/Star Lu!/Knowledge']);
   assert.deepEqual(plan.files.map((file) => file.path), [
-    'Custom Projects/Star Lu/Star Lu.md',
-    'Custom Projects/Star Lu/Instructions.md',
-    'Custom Projects/Star Lu/References.md',
-    'Custom Projects/Star Lu/Brainstorm.md',
-    'Custom Projects/Star Lu/Tasks.md',
-    'Custom Projects/Star Lu/Decisions.md',
-    'Custom Projects/Star Lu/Log.md'
+    'Custom Projects/Star Lu!/Star Lu!.md',
+    'Custom Projects/Star Lu!/Instructions.md',
+    'Custom Projects/Star Lu!/References.md',
+    'Custom Projects/Star Lu!/Brainstorm.md',
+    'Custom Projects/Star Lu!/Tasks.md',
+    'Custom Projects/Star Lu!/Decisions.md',
+    'Custom Projects/Star Lu!/Log.md'
   ]);
   assert.match(plan.files[0].content, /# Star Lu/);
   assert.deepEqual(plan.files.map((file) => file.role), [
@@ -78,10 +78,6 @@ test('materialize note preset creates one Markdown file under the selected role'
   assert.equal(plan.files[0].metadata.type, 'task-list');
 });
 
-test('materialize preset sanitizes path segment input', () => {
-  const plan = materializePreset('project.default', { projectName: '../Bad:name' });
-
-  assert.equal(plan.rootPath, '02_Projects/Bad name');
-  assert.ok(plan.files.every((file) => !file.path.includes('..')));
-  assert.ok(plan.folders.every((folder) => !folder.includes('..')));
+test('materialize preset rejects unsafe path segment input without retargeting', () => {
+  assert.throws(() => materializePreset('project.default', { projectName: '../Bad:name' }), /Names must not contain/);
 });

@@ -1,6 +1,8 @@
 (function() {
   'use strict';
 
+  const fileTypes = getFileTypesApi();
+
   function mountContextBasket(options) {
     options = options || {};
     const app = options.app;
@@ -162,7 +164,7 @@
   function targetIconFor(item) {
     if (item && (item.kind === 'folder' || item.kind === 'folder_snapshot')) return 'folder';
     const path = String((item && item.path) || '').toLowerCase();
-    if (/\.md$/.test(path)) return 'markdownFile';
+    if (fileTypes.isMarkdownPath(path)) return 'markdownFile';
     if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(path)) return 'image';
     return 'file';
   }
@@ -170,7 +172,7 @@
   function targetIconFallbackLabel(item) {
     if (item && (item.kind === 'folder' || item.kind === 'folder_snapshot')) return 'DIR';
     const path = String((item && item.path) || '').toLowerCase();
-    if (/\.md$/.test(path)) return 'MD';
+    if (fileTypes.isMarkdownPath(path)) return 'MD';
     if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(path)) return 'IMG';
     return 'FILE';
   }
@@ -195,9 +197,15 @@
   }
   function fileTypeLabel(path) {
     const value = String(path || '').toLowerCase();
-    if (/\.md$/.test(value)) return 'Markdown';
+    if (fileTypes.isMarkdownPath(value)) return 'Markdown';
     if (/\.(png|jpe?g|gif|webp|bmp|svg)$/.test(value)) return 'Image';
     return 'File';
+  }
+
+  function getFileTypesApi() {
+    if (typeof window !== 'undefined' && window.VincariosFileTypes) return window.VincariosFileTypes;
+    if (typeof require === 'function') return require('../../shared/fileTypes');
+    throw new Error('File types API unavailable.');
   }
 
   const api = { mountContextBasket, formatItemLabel, formatItemTitle, formatItemPathContext, targetIconFor };

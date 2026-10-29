@@ -1,13 +1,13 @@
 (function() {
   'use strict';
 
-  const MARKDOWN_RE = /\.md$/i;
+  const fileTypes = getFileTypesApi();
   const permissionText = getPermissionText();
 
   function getTargetKind(selection) {
     if (!selection || selection.kind === 'none') return 'none';
     if (selection.kind === 'folder') return 'folder';
-    if (selection.kind === 'file' && MARKDOWN_RE.test(String(selection.path || ''))) return 'markdown';
+    if (selection.kind === 'file' && fileTypes.isMarkdownPath(selection.path)) return 'markdown';
     if (selection.kind === 'file') return 'file';
     return 'none';
   }
@@ -20,7 +20,7 @@
   }
 
   function markdownActions(selection) {
-    const isMarkdownFile = selection && selection.kind === 'file' && MARKDOWN_RE.test(String(selection.path || ''));
+    const isMarkdownFile = selection && selection.kind === 'file' && fileTypes.isMarkdownPath(selection.path);
     const canUseAsContext = selection
       && selection.readAllowed === true
       && typeof selection.content === 'string'
@@ -62,6 +62,12 @@
       requiredPermission: config.requiredPermission || '',
       softDisabled: config.softDisabled === true
     });
+  }
+
+  function getFileTypesApi() {
+    if (typeof window !== 'undefined' && window.VincariosFileTypes) return window.VincariosFileTypes;
+    if (typeof require === 'function') return require('../../shared/fileTypes');
+    throw new Error('File types API unavailable.');
   }
 
   function getPermissionText() {

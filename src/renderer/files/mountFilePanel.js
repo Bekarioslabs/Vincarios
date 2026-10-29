@@ -282,7 +282,7 @@
       async function commit() {
         if (finished) return;
         finished = true;
-        const nextName = input.value.trim();
+        const nextName = input.value;
         row.classList.remove('is-renaming');
         activeRename = null;
         if (!nextName || nextName === entry.name) {

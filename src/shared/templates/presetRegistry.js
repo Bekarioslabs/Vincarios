@@ -114,7 +114,11 @@
 
   function materializeNotePreset(preset, values, profile) {
     const targetRoot = vaultProfile.getFolderRolePath(profile, preset.targetRole);
-    const fileName = renderTemplate(preset.fileName, values);
+    const fileTypes = typeof window !== 'undefined' && window.VincariosFileTypes
+      ? window.VincariosFileTypes
+      : typeof require === 'function' ? require('../fileTypes') : null;
+    if (!fileTypes) throw new Error('File type helpers unavailable.');
+    const fileName = requireValidName(fileTypes.isMarkdownPath(values.title) ? values.title : renderTemplate(preset.fileName, values));
     const filePath = joinPath(targetRoot, fileName);
     return Object.freeze({
       id: preset.id,
@@ -134,10 +138,10 @@
 
   function materializeProjectPreset(preset, values, profile) {
     const targetRoot = vaultProfile.getFolderRolePath(profile, preset.targetRole);
-    const rootPath = joinPath(targetRoot, renderTemplate(preset.rootFolder, values));
-    const folders = Object.freeze((preset.folders || []).map((folder) => joinPath(rootPath, sanitizePathSegment(folder))));
+    const rootPath = joinPath(targetRoot, requireValidName(renderTemplate(preset.rootFolder, values)));
+    const folders = Object.freeze((preset.folders || []).map((folder) => joinPath(rootPath, requireValidName(folder))));
     const files = Object.freeze((preset.files || []).map((file) => Object.freeze({
-      path: joinPath(rootPath, renderTemplate(file.name, values)),
+      path: joinPath(rootPath, requireValidName(renderTemplate(file.name, values))),
       role: String(file.role || 'project-note'),
       content: renderTemplate(file.content, values),
       metadata: mergePresetMetadata(preset.metadata, file.metadata)
@@ -174,8 +178,8 @@
   }
 
   function createTemplateValues(input, preset) {
-    const title = sanitizePathSegment(input.title || input.noteTitle || 'Untitled');
-    const projectName = sanitizePathSegment(input.projectName || input.title || 'Untitled Project');
+    const title = requireValidName(input.title ?? input.noteTitle ?? 'Untitled');
+    const projectName = requireValidName(input.projectName ?? input.title ?? 'Untitled Project');
     return Object.freeze({
       title,
       noteTitle: title,
@@ -190,19 +194,15 @@
     ));
   }
 
-  function sanitizePathSegment(value) {
-    const normalized = String(value || '')
-      .replace(/\\/g, '/')
-      .split('/')
-      .filter(Boolean)
-      .pop() || 'Untitled';
-
-    return normalized
-      .replace(/[<>:"|?*\x00-\x1f]/g, ' ')
-      .replace(/[!]+/g, '')
-      .replace(/\s+/g, ' ')
-      .replace(/[. ]+$/g, '')
-      .trim() || 'Untitled';
+  function requireValidName(value) {
+    const names = typeof window !== 'undefined' && window.VincariosNewNames
+      ? window.VincariosNewNames
+      : typeof require === 'function' ? require('../pathRules/newNames') : null;
+    if (!names) throw new Error('Write-name validation unavailable.');
+    const name = String(value);
+    const validation = names.validateNewName(name);
+    if (!validation.ok) throw new Error(validation.message);
+    return name;
   }
 
   function joinPath() {

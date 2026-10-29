@@ -20,12 +20,14 @@ test('creates relative Markdown link candidates from the current file folder', (
   assert.deepEqual(candidates, ['90_AI_Brain/Core/Rules.md']);
 });
 
-test('creates wikilink candidates with md extension near the current file and vault root', () => {
+test('creates both Markdown extension candidates with folder-relative precedence', () => {
   const candidates = createMarkdownLinkCandidates('Preferences', '90_AI_Brain/Core/Agent_Bootstrap.md');
 
   assert.deepEqual(candidates, [
     '90_AI_Brain/Core/Preferences.md',
-    'Preferences.md'
+    '90_AI_Brain/Core/Preferences.markdown',
+    'Preferences.md',
+    'Preferences.markdown'
   ]);
 });
 

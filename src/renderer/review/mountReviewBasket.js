@@ -282,6 +282,13 @@
     contentInput.value = item.type === 'create_from_template' ? formatTemplatePlanPreview(item) : (item.content || '');
     contentInput.readOnly = item.type === 'create_from_template';
 
+    const nameError = document.createElement('p');
+    nameError.className = 'review-basket-error-summary';
+    nameError.id = title.id + '-name-error';
+    nameError.setAttribute('role', 'alert');
+    nameError.hidden = true;
+    titleInput.setAttribute('aria-describedby', nameError.id);
+
     const actions = document.createElement('div');
     actions.className = 'review-modal-actions';
 
@@ -295,8 +302,18 @@
     save.className = 'review-modal-confirm';
     save.textContent = 'Save changes';
     save.addEventListener('click', () => {
-      const nextTitle = titleInput.value.trim();
-      if (!nextTitle) return;
+      const nextTitle = titleInput.value;
+      const names = typeof window !== 'undefined' && window.VincariosNewNames
+        ? window.VincariosNewNames
+        : typeof require === 'function' ? require('../../shared/pathRules/newNames') : null;
+      const validation = names ? names.validateNewName(nextTitle) : { ok: false, message: 'Write-name validation unavailable.' };
+      if (!validation.ok) {
+        nameError.textContent = validation.message;
+        nameError.hidden = false;
+        titleInput.setAttribute('aria-invalid', 'true');
+        titleInput.focus();
+        return;
+      }
       if (state && typeof state.updateProposal === 'function') {
         state.updateProposal(item.id, buildCreateEditPatch(item, nextTitle, contentInput.value));
       }
@@ -304,10 +321,13 @@
     });
 
     titleInput.addEventListener('input', () => {
-      save.disabled = titleInput.value.trim().length === 0;
+      save.disabled = titleInput.value.length === 0;
+      nameError.hidden = true;
+      titleInput.setAttribute('aria-invalid', 'false');
     });
 
     titleField.appendChild(titleInput);
+    titleField.appendChild(nameError);
     contentField.appendChild(contentInput);
     actions.appendChild(cancel);
     actions.appendChild(save);
@@ -331,7 +351,7 @@
   function renameTemplatePlan(item, nextTitle) {
     const oldRoot = item.templatePlanRootPath || item.targetPath || '';
     const parent = oldRoot.split('/').slice(0, -1).join('/');
-    const newRoot = parent ? parent + '/' + sanitizePathSegment(nextTitle) : sanitizePathSegment(nextTitle);
+    const newRoot = parent ? parent + '/' + nextTitle : nextTitle;
     const renamedFiles = (item.files || []).map((file) => ({
       path: replacePathPrefix(file.path, oldRoot, newRoot),
       content: String(file.content || '').replace(new RegExp(escapeRegExp(item.title), 'g'), nextTitle)
@@ -360,19 +380,6 @@
     if (!oldRoot || path === oldRoot) return newRoot;
     if (path.indexOf(oldRoot + '/') === 0) return newRoot + path.slice(oldRoot.length);
     return path;
-  }
-
-  function sanitizePathSegment(value) {
-    return String(value || 'Untitled')
-      .replace(/\\/g, '/')
-      .split('/')
-      .filter(Boolean)
-      .pop()
-      .replace(/[<>:"|?*\x00-\x1f]/g, ' ')
-      .replace(/[!]+/g, '')
-      .replace(/\s+/g, ' ')
-      .replace(/[. ]+$/g, '')
-      .trim() || 'Untitled';
   }
 
   function escapeRegExp(value) {

@@ -6,6 +6,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const BROWSER_SHARED_SCRIPTS = [
+  'src/shared/fileTypes.js',
+  'src/shared/pathRules/newNames.js',
   'src/shared/vaultProfile/defaults.js',
   'src/shared/vaultProfile/folderVisuals.js',
   'src/shared/themes/themePacks.js',
@@ -32,6 +34,20 @@ test('browser-loaded shared scripts are isolated in IIFEs', () => {
     const source = fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8').trimStart();
     assert.equal(source.startsWith('(function() {'), true, relativePath);
   });
+});
+
+test('write-name validation loads before presets and rejects unsafe names in a browser without require', () => {
+  const vm = require('node:vm');
+  const browser = { window: {} };
+  for (const script of ['src/shared/pathRules/newNames.js', 'src/shared/fileTypes.js', 'src/shared/vaultProfile/defaults.js', 'src/shared/templates/presetRegistry.js']) {
+    vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', script), 'utf8'), browser);
+  }
+  assert.throws(() => browser.window.VincariosTemplatePresets.materializePreset('note.default', { title: 'CON' }), /reserved by Windows/);
+  assert.equal(browser.window.VincariosTemplatePresets.materializePreset('note.default', { title: 'Aurora!' }).files[0].path, '00_Inbox/Aurora!.md');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.ok(html.indexOf('./src/shared/pathRules/newNames.js') < html.indexOf('./src/shared/templates/presetRegistry.js'));
+  const bootstrap = fs.readFileSync(path.join(__dirname, '..', 'src/renderer/bootstrap.js'), 'utf8');
+  assert.match(bootstrap, /globalName: 'VincariosNewNames', methods: \['validateNewName'\]/);
 });
 
 test('index loads all isolated shared scripts before renderer script modules', () => {
@@ -61,6 +77,29 @@ test('line-ending helpers load before their editor and review consumers and are 
   }
   const bootstrap = fs.readFileSync(path.join(__dirname, '..', 'src/renderer/bootstrap.js'), 'utf8');
   assert.match(bootstrap, /globalName: 'VincariosLineEndings', methods: \['normalizeLineEndings', 'preserveLineEndings'\]/);
+});
+
+test('shared file types load before browser consumers and are startup-validated', () => {
+  const vm = require('node:vm');
+  const browser = { window: {} };
+  const shared = 'src/shared/fileTypes.js';
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', shared), 'utf8'), browser);
+  for (const consumer of [
+    'src/shared/cleanup/inboxCleanupReport.js',
+    'src/renderer/selectionActions/actionRegistry.js',
+    'src/renderer/selectionActions/fileSummaryAction.js',
+    'src/renderer/selectionActions/tagCandidateAction.js',
+    'src/renderer/context/mountContextBasket.js',
+    'src/renderer/markdown/markdownLinkPicker.js',
+    'src/renderer/markdown/markdownLinkResolver.js',
+    'src/renderer/markdown/editorFormatting.js'
+  ]) vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', consumer), 'utf8'), browser);
+  assert.equal(browser.window.VincariosSelectionActionRegistry.getTargetKind({ kind: 'file', path: 'Note.markdown' }), 'markdown');
+  assert.equal(browser.window.VincariosMarkdownLinkPicker.normalizeLinkResults([{ path: 'Note.MARKDOWN' }])[0].title, 'Note');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  assert.ok(html.indexOf('./' + shared) < html.indexOf('./src/shared/cleanup/inboxCleanupReport.js'));
+  const bootstrap = fs.readFileSync(path.join(__dirname, '..', 'src/renderer/bootstrap.js'), 'utf8');
+  assert.match(bootstrap, /globalName: 'VincariosFileTypes', methods: \['isMarkdownPath', 'stripMarkdownExtension'\]/);
 });
 test('Vault Profile visual icon renderer loads before its consumer modules', () => {
   const index = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');

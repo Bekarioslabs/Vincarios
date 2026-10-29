@@ -1,5 +1,7 @@
 'use strict';
 
+const { stripMarkdownExtension } = require('../../shared/fileTypes');
+
 const SEMANTIC_WEIGHT = 0.70;
 const TITLE_WEIGHT = 0.18;
 const PATH_WEIGHT = 0.12;
@@ -37,7 +39,7 @@ function scoreCandidate(input) {
 
 function titleTokens(relativePath) {
   const fileName = normalizePath(relativePath).split('/').pop() || '';
-  const name = fileName.replace(/\.md$/i, '');
+  const name = stripMarkdownExtension(fileName);
   return new Set((name.match(/[\p{L}\p{N}]+/gu) || [])
     .map((token) => token.toLocaleLowerCase())
     .filter((token) => token.length >= 3 && !/^\d+$/.test(token)));

@@ -1,5 +1,7 @@
 'use strict';
 
+const { isMarkdownPath } = require('../../shared/fileTypes');
+
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -125,7 +127,7 @@ function classifyMarkdownChange(filename) {
   }
   const normalized = normalizeFilename(filename);
   const extension = path.extname(normalized).toLowerCase();
-  if (extension === '.md') {
+  if (isMarkdownPath(normalized)) {
     return { affectsMarkdownIndex: true, markdownPath: normalized, requiresMetadataRebuild: false };
   }
   if (extension === '') {

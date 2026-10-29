@@ -25,6 +25,7 @@ class Element {
   appendChild(child) { this.children.push(child); child.parent = this; return child; }
   remove() { this.parent.children = this.parent.children.filter((child) => child !== this); }
   focus() { document.activeElement = this; }
+  select() {}
   fire(type) { return this.listeners.get(type)?.({ target: this, preventDefault() {} }); }
 }
 
@@ -106,3 +107,27 @@ test('blocked empty replacement cannot open confirmation or reach execution', as
   assert.equal(document.body.children.length, 0);
   assert.equal(fixture.executions.length, 0);
 });
+
+for (const type of ['create_note', 'create_from_template']) {
+  test('Review edit preserves names and rejects unsafe replacements: ' + type, (t) => {
+    const fixture = mount(t, { type, title: 'Original', targetPath: 'Projects/Original', templatePlanRootPath: 'Projects/Original',
+      folders: [], files: [{ path: 'Projects/Original/Overview.md', content: '# Original\n' }], content: '# Original\n' });
+    find(fixture.nodes['#review-basket-items'], (node) => node.textContent === 'Edit').fire('click');
+    const input = find(document.body, (node) => node.className === 'review-modal-title-input');
+    const save = find(document.body, (node) => node.textContent === 'Save changes');
+    for (const name of ['Bad:name', 'CON', 'Trailing ', 'Bad#Name']) {
+      input.value = name;
+      save.fire('click');
+      assert.equal(document.body.children.length, 1, JSON.stringify(name));
+      assert.equal(fixture.basket.getSnapshot().items[0].title, 'Original');
+      const error = find(document.body, (node) => node.attributes.role === 'alert');
+      assert.ok(error && error.textContent);
+    }
+    input.value = 'Aurora  Lab!';
+    save.fire('click');
+    const item = fixture.basket.getSnapshot().items[0];
+    assert.equal(item.title, 'Aurora  Lab!');
+    if (type === 'create_from_template') assert.equal(item.targetPath, 'Projects/Aurora  Lab!');
+    assert.equal(document.body.children.length, 0);
+  });
+}

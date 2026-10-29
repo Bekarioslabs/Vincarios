@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const { isMarkdownPath } = require('../../shared/fileTypes');
 const { createVaultMarkdownSource } = require('../vault/vaultMarkdownSource');
 const { yieldToEventLoop } = require('../indexing/asyncVaultMarkdownScanner');
 const { createMetadataIndexStore } = require('./metadataIndexStore');
@@ -112,7 +113,7 @@ function normalizePaths(paths) {
   const seen = new Set();
   return (Array.isArray(paths) ? paths : []).reduce((items, value) => {
     const path = String(value || '').replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
-    if (!path || !/\.md$/i.test(path) || seen.has(path)) return items;
+    if (!path || !isMarkdownPath(path) || seen.has(path)) return items;
     seen.add(path);
     items.push(path);
     return items;

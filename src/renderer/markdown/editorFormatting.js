@@ -1,6 +1,8 @@
 (function() {
   'use strict';
 
+  const fileTypes = getFileTypesApi();
+
   const INLINE_FORMATS = Object.freeze({
     bold: Object.freeze({ open: '**', close: '**' }),
     italic: Object.freeze({ open: '*', close: '*' }),
@@ -52,11 +54,13 @@
   }
 
   function normalizeWikilinkTarget(value) {
-    return String(value || '')
+    const target = String(value || '')
       .trim()
       .replace(/\\/g, '/')
-      .replace(/\.md$/i, '')
       .replace(/[\[\]]/g, '');
+    return target.toLowerCase().endsWith(fileTypes.MARKDOWN_EXTENSIONS[0])
+      ? fileTypes.stripMarkdownExtension(target)
+      : target;
   }
   function insertLink(source, selection) {
     const selected = source.slice(selection.start, selection.end) || 'text';
@@ -137,6 +141,12 @@
   function clamp(value, min, max) {
     const number = Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : min;
     return Math.max(min, Math.min(max, number));
+  }
+
+  function getFileTypesApi() {
+    if (typeof window !== 'undefined' && window.VincariosFileTypes) return window.VincariosFileTypes;
+    if (typeof require === 'function') return require('../../shared/fileTypes');
+    throw new Error('File types API unavailable.');
   }
 
   const api = Object.freeze({ applyEditorFormat, insertInternalWikilink });

@@ -1,6 +1,8 @@
 (function() {
   'use strict';
 
+  const fileTypes = getFileTypesApi();
+
   const STANDARD_FILE_ROLE_TAGS = Object.freeze({
     references: 'references',
     tasks: 'tasks',
@@ -68,7 +70,7 @@
     const existing = new Set((existingTags || []).map(normalizeTag).filter(Boolean));
     const tags = [];
     const parts = normalizePath(path).split('/').filter(Boolean);
-    const fileName = parts.length ? parts[parts.length - 1].replace(/\.md$/i, '') : '';
+    const fileName = parts.length ? fileTypes.stripMarkdownExtension(parts[parts.length - 1]) : '';
     const context = buildPathContext(parts, vaultProfile);
 
     addTag(tags, existing, context.projectName);
@@ -188,7 +190,7 @@
   }
 
   function normalizeComparableTitle(value) {
-    return normalizeTag(String(value || '').replace(/\\.md$/i, ''));
+    return normalizeTag(fileTypes.stripMarkdownExtension(value));
   }
 
   function getFirstMeaningfulLine(content) {
@@ -259,7 +261,7 @@
   }
 
   function tokenizeTagSource(value) {
-    const raw = String(value || '').replace(/\.md$/i, '');
+    const raw = fileTypes.stripMarkdownExtension(value);
     const cleanedSource = raw.replace(/^\d+[_\-\s.]+/, '');
     const tokens = cleanedSource.split(/[^A-Za-z0-9\u00c0-\u024f]+/).map(normalizeTag).filter(isUsableTag);
     return tokens.filter((tag, index) => tokens.indexOf(tag) === index);
@@ -330,6 +332,12 @@
       }
     }
     return null;
+  }
+
+  function getFileTypesApi() {
+    if (typeof window !== 'undefined' && window.VincariosFileTypes) return window.VincariosFileTypes;
+    if (typeof require === 'function') return require('../../shared/fileTypes');
+    throw new Error('File types API unavailable.');
   }
 
   const api = { buildTagCandidates, suggestTags, extractTags, applyTagsToMarkdown };

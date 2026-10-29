@@ -7,6 +7,7 @@ const { createVaultAuditService } = require('../audit/vaultAuditService');
 const { createVaultContext } = require('./vaultContext');
 const { executeAuditedMutation } = require('./vaultWriteTransaction');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
+const { isMarkdownPath } = require('../../shared/fileTypes');
 
 const MAX_BACKUP_ATTEMPTS = 100;
 
@@ -48,7 +49,7 @@ function createVaultBackupService(options) {
 
     const resolved = currentVault.vault.resolve(relativePath, { allowRoot: false });
     if (!resolved.ok) return resolved;
-    if (!resolved.relativePath.toLowerCase().endsWith('.md')) {
+    if (!isMarkdownPath(resolved.relativePath)) {
       return fail('not_markdown', 'Only Markdown notes can be backed up by this service.');
     }
     if (!fileSystem.existsSync(resolved.absolutePath)) {

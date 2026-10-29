@@ -1,6 +1,8 @@
 (function() {
   'use strict';
 
+  const fileTypes = getFileTypesApi();
+
   function isInternalMarkdownTarget(target) {
     const clean = cleanTarget(target);
     if (!clean) return false;
@@ -16,9 +18,8 @@
 
     const currentFolder = parentFolder(currentPath);
     const rawCandidates = [];
-    const hasSlash = clean.includes('/');
     const isDotRelative = clean === '.' || clean === '..' || clean.startsWith('./') || clean.startsWith('../');
-    const hasMarkdownExtension = /\.m(?:d|arkdown)$/i.test(clean);
+    const hasMarkdownExtension = fileTypes.isMarkdownPath(clean);
 
     if (currentFolder) rawCandidates.push(joinPath(currentFolder, clean));
     if (!isDotRelative) rawCandidates.push(clean);
@@ -26,8 +27,7 @@
     const candidates = [];
     rawCandidates.forEach((candidate) => {
       if (hasMarkdownExtension) addUnique(candidates, normalizePath(candidate));
-      else addUnique(candidates, normalizePath(candidate + '.md'));
-      if (!hasMarkdownExtension && hasSlash && !isDotRelative) addUnique(candidates, normalizePath(candidate));
+      else fileTypes.MARKDOWN_EXTENSIONS.forEach((extension) => addUnique(candidates, normalizePath(candidate + extension)));
     });
 
     return candidates;
@@ -47,18 +47,18 @@
       return { ok: false, code: 'metadata_index_unavailable', message: 'Refresh vault indexes in Settings before resolving note names across folders.' };
     }
 
-    const hasExtension = /\.m(?:d|arkdown)$/i.test(clean);
-    const lookup = await api.search.query({ query: clean.replace(/\.m(?:d|arkdown)$/i, ''), scope: 'files' });
+    const hasExtension = fileTypes.isMarkdownPath(clean);
+    const lookup = await api.search.query({ query: fileTypes.stripMarkdownExtension(clean), scope: 'files' });
     if (!lookup.ok) return lookup;
     const indexed = (lookup.results || []).filter((entry) => {
       const path = String(entry.path || '').replace(/\\/g, '/');
-      return /\.m(?:d|arkdown)$/i.test(path)
+      return fileTypes.isMarkdownPath(path)
         && !path.split('/').some((segment) => !segment || segment.startsWith('.'));
     });
     const name = normalizeLinkName(clean);
     const fileMatches = indexed.filter((entry) => {
       const filename = String(entry.path).replace(/\\/g, '/').split('/').pop();
-      return normalizeLinkName(hasExtension ? filename : filename.replace(/\.m(?:d|arkdown)$/i, '')) === name;
+      return normalizeLinkName(hasExtension ? filename : fileTypes.stripMarkdownExtension(filename)) === name;
     });
     const matches = fileMatches.length || hasExtension
       ? fileMatches
@@ -120,6 +120,12 @@
 
   function addUnique(list, value) {
     if (value && !list.includes(value)) list.push(value);
+  }
+
+  function getFileTypesApi() {
+    if (typeof window !== 'undefined' && window.VincariosFileTypes) return window.VincariosFileTypes;
+    if (typeof require === 'function') return require('../../shared/fileTypes');
+    throw new Error('File types API unavailable.');
   }
 
   const api = {
