@@ -1,10 +1,12 @@
 ---
 name: Workflow idea
-about: Suggest a focused Markdown or vault workflow improvement
+about: Historical template for independent forks; upstream does not accept ideas
 title: "[Idea]: "
 labels: enhancement
 assignees: ''
 ---
+
+> Historical template for independent forks. vincarios does not accept issues or feature requests; there is no active upstream roadmap.
 
 ## Problem or workflow
 
@@ -22,7 +24,7 @@ Describe the result you would expect from vincarios. Avoid prescribing a technic
 
 - [ ] This idea fits a local-first Markdown or vault workflow.
 - [ ] This report contains no private note content, absolute local paths, API keys, tokens, or unredacted provider logs.
-- [ ] This is not a security report. Security issues must be reported privately through `SECURITY.md`.
+- [ ] This is not a security report. I will follow the maintained fork's security policy and will not attach private data here.
 
 ## Optional context
 

@@ -6,7 +6,7 @@ vincarios is a local-first Markdown and project workspace for safely analyzing, 
 
 ## Status
 
-**Discontinued project; source-only archive preparation.** Feature development has ended. Final closure checks are in progress; the repository has not yet been publicly archived. No future feature releases, bug fixes, compatibility/security updates or technical support are planned after closure.
+**Discontinued project; source-only archive preparation.** vincarios is provided as-is. Active development has ended; no future updates, bug fixes, compatibility/security updates or technical support will be provided. Issues and pull requests are not accepted, and security reports will not be processed or answered. Final closure checks are in progress; the repository has not yet been publicly archived.
 
 The publication target is the GPL-3.0-only source code and a source ZIP, not a downloadable EXE or installer. The final snapshot retains the tested `0.1.0-beta.1` package identifier; it is not a stable 1.0 release or an announcement of a continuing beta program. Independent forks are welcome under the license; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -58,7 +58,7 @@ npm ci
 npm start
 ```
 
-`start.bat` is an alternative launcher. It keeps Electron user data and disk cache inside the project-local `.vincarios/` folder. If no local Electron runtime exists yet, run `npm ci` first.
+Run `npm start` once after `npm ci`; Electron downloads its desktop runtime on first launch if it is not already installed. After that initial launch, `start.bat` is an alternative launcher. It keeps Electron user data and disk cache inside the project-local `.vincarios/` folder.
 
 The local embedding model is required only for embedding-backed features and packaging. A clean checkout can provision the six hash-pinned artifacts from their pinned Hugging Face revision:
 
@@ -109,7 +109,17 @@ Commercial use and redistribution are permitted under the GPL's terms; distribut
 
 ## Contact
 
-Contact Bekarios Labs at [dev@bekarioslabs.de](mailto:dev@bekarioslabs.de). This is not a technical-support service. Upstream issue triage, pull-request review and security fixes are not promised. Security information should be shared privately and without vault contents; see [SECURITY.md](SECURITY.md).
+General creator contact: [dev@bekarioslabs.de](mailto:dev@bekarioslabs.de). This is not a technical-support or security-reporting service. No issue triage, pull-request reviews, merges or replies to security reports are provided. Do not send private vault contents. See [SECURITY.md](SECURITY.md) for the unmaintained-source policy.
+
+## Support The Creator
+
+vincarios is free. To say thanks, you can leave a [voluntary tip](https://buy.stripe.com/cNicN7b8KejV4Z39WtbjW00). It is not needed to download or use the source, and nothing is given in return: no products, services, updates or support.
+
+## Bekarios Labs
+
+[bekarioslabs.de](https://bekarioslabs.de) |
+[Legal notice (Impressum)](https://bekarioslabs.de/impressum) |
+[Privacy policy (Datenschutz)](https://bekarioslabs.de/datenschutz)
 
 ## Documentation
 

@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Security issue
+  - name: Unmaintained project policy
     url: https://github.com/Bekarioslabs/Vincarios/blob/main/SECURITY.md
-    about: Follow the Security Policy to report privately by email or private vulnerability reporting. Do not use public issues.
+    about: No support, issue or security-report handling is provided. Read the unmaintained-source policy before using or forking this project.

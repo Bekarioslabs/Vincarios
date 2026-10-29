@@ -36,9 +36,9 @@ The entries below record earlier preparation and their stated dates, not fresh r
 - [x] V1 feature scope frozen and core workflows manually smoke-tested.
 - [x] GPL-3.0-only project license, third-party notices, and contribution terms prepared.
 - [x] Dependency, license, model-integrity, and CI policy gates implemented.
-- [x] Privacy-safe GitHub issue templates and private vulnerability reporting prepared.
+- [x] Privacy-safe historical GitHub issue templates retained for independent forks; upstream no longer accepts issues or security reports.
 - [x] Public-beta README, release-note draft, and Provider Compatibility matrix prepared.
-- [x] Confirmed private security contact: `dev@bekarioslabs.de`. Git commits retain the GitHub noreply identity.
+- [x] Confirmed general creator contact: `dev@bekarioslabs.de`, not a support or security-reporting channel. Git commits retain the GitHub noreply identity.
 - [x] GitHub Actions requires full commit-SHA pins; current CI actions use reviewed SHA references.
 - [x] Dependabot PRs #12/#13 closed as superseded by patched dependencies; major-upgrade PRs #4/#6 deferred beyond the tested beta baseline. Open security alerts: zero on 2026-10-05.
 
@@ -52,11 +52,12 @@ The entries below record earlier preparation and their stated dates, not fresh r
 - [ ] Complete the independent portable smoke test in a separate folder/profile.
 - [ ] Record the observed provider/model configurations in `docs/testing/PROVIDER_COMPATIBILITY.md`.
 - [ ] Build the internal Windows candidate from the final source revision, verify its fuses/native runtime and retain its checksum locally; publish no binary.
-- [ ] Confirm README, SECURITY and CONTRIBUTING contain no maintenance promise; former beta drafts and roadmap ideas are clearly historical.
+- [x] README, SECURITY and CONTRIBUTING explicitly provide no updates, support, issue/PR processing or security-report responses; historical beta templates and roadmap ideas do not invite active upstream submissions.
 - [ ] Verify the selected source ZIP contains required code, lockfile and licenses, but no private working data, model cache, audit material or executables.
 - [ ] Review existing GitHub Actions artifacts and Release assets before changing visibility; removing a future upload step does not remove old binaries.
 - [ ] Obtain separate approvals for remote operations, then verify public source/license access and actual archival. Do not label the repository archived before it is.
-- [ ] Decide final version/tag and optional website/funding links explicitly; do not adopt `v1.0.0`, payment links or legal-page URLs from an external checklist without confirmation. Resolve old dependency PRs and repository settings only with approval. Retained Issue Templates/ruleset files do not themselves promise maintenance.
+- [x] Final snapshot version remains `0.1.0-beta.1`. On 2026-10-29, Beka approved the same voluntary, no-return Stripe tip link and Bekarios Labs website/legal/privacy links as Tessarios. Funding is not payment for products, services, updates or support. GPL-3.0-only and source-only distribution remain unchanged.
+- [ ] Resolve old dependency PRs and repository settings only with approval. Disable Issues and any active private vulnerability-reporting invitation to match the no-intake policy; retained historical templates and ruleset files are not an active support channel.
 
 ## Release Commands
 
@@ -83,9 +84,9 @@ The build command above is an internal verification gate or self-build option, n
 - Activate the template only after public visibility is explicitly approved: `gh api --method POST repos/Bekarioslabs/Vincarios/rulesets --input .github/rulesets/main.json`. Inspect existing rulesets first to avoid duplicates; verify the active rules after applying it.
 - Review Dependabot PRs against the patched lockfile. Superseded patches can be closed; major upgrades need a separate compatibility test and are not mandatory when the current version has no known vulnerability.
 - No history rewrite is required for the current model-checksum false positives. `.gitleaksignore` contains exact commit/path/rule/line fingerprints only. After any future rewrite, scan the complete history and recreate exceptions only for verified public model checksums; never suppress a whole path or rule.
-- Keep the working security email in `SECURITY.md`, README, and release notes. The GitHub profile and Git commit identity retain the noreply address.
+- Keep `dev@bekarioslabs.de` only as a general creator contact, not a technical-support or security-reporting service. Upstream does not process or answer security reports. Disable Issues and any private reporting invitation before archival; the GitHub profile and Git commit identity retain the noreply address.
 
 ## After Closure
 
-- No upstream feature releases, bug fixes, compatibility/security updates, support or contribution review are planned.
+- No upstream feature releases, bug fixes, compatibility/security updates, technical support, issue/PR processing or security-report responses are provided.
 - [Historical ideas](VINCARIOS_POST_V1_BACKLOG.md) remain available for independent forks; they are not a delivery commitment.

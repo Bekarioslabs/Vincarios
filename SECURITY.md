@@ -9,7 +9,7 @@ vincarios is a local-first Markdown vault assistant. Its security model is built
 | Current source / main branch | No ongoing maintenance |
 | Historical versions or self-built applications | No |
 
-Feature development has ended; final source-archive preparation is still in progress. No security updates, vulnerability-response deadlines or technical support are promised after closure. The repository is not yet publicly archived. No official executable will be distributed with the source archive.
+Feature development has ended; final source-archive preparation is still in progress. No security updates, fixes, technical support or security-report handling are provided. Reports will not be processed or answered. The repository is not yet publicly archived. No official executable will be distributed with the source archive.
 
 ## Security Model
 
@@ -43,22 +43,13 @@ See `docs/rebuild/VINCARIOS_V1_SAFETY_RULES.md` for the active safety design.
 
 Use a disposable vault or a backed-up copy when evaluating a self-build. The application parses Markdown/YAML and uses Electron and native inference dependencies; do not assume that archiving or building from source makes it safe for untrusted content. Final closure checks include dependency/license/model verification, a history secret scan and internal candidate tests. Their dated results must not be presented as continuous monitoring or a guarantee that no vulnerability exists.
 
-## Reporting A Vulnerability
+## Security Reports And Independent Forks
 
-Please report security issues privately instead of opening a public issue.
+This project does not accept, process or answer security reports. There is no monitored security inbox, report-review service, response deadline or patch program. The general Bekarios Labs contact is not a security-reporting channel.
 
-Email [dev@bekarioslabs.de](mailto:dev@bekarioslabs.de), or use the repository's private vulnerability reporting flow when available. Do not include private vault content unless it is essential to reproduce the issue; use a minimal synthetic example whenever possible.
+Do not post private vault contents, local paths, credentials or unredacted logs on GitHub or send them to the creator. Retained historical issue templates are reference material for forks, not an active upstream intake process.
 
-The contact may receive information but does not imply monitored intake, a response deadline or a promised patch. GitHub reporting features may change when the repository is archived. Maintainers of independent forks need their own security contact and supported-version policy.
-
-A useful report includes:
-
-- affected version or commit
-- operating system
-- exact steps to reproduce
-- expected result
-- actual result
-- whether private vault data could be exposed, modified, or deleted
+If you need a maintained version or a fix, maintain an independent fork or choose a maintained application. Fork maintainers must establish their own security contact, supported-version policy and reporting process; reports about a fork belong with that fork's maintainer.
 
 ## Out Of Scope
 

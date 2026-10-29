@@ -1,12 +1,12 @@
 # Contributing To vincarios
 
-Feature development has ended. Final closure checks are in progress before publication as an unmaintained source archive; the repository is not yet publicly archived. Upstream does not promise issue triage, pull-request review, merges, releases or technical support. Do not wait for an upstream response before deciding whether to maintain an independent fork.
+Feature development has ended. Final closure checks are in progress before publication as an unmaintained source archive; the repository is not yet publicly archived. There will be no further development, updates, technical support, issue triage, pull-request reviews or merges. Issues and pull requests are not accepted; security reports will not be processed or answered. Continue the project in an independent fork rather than waiting for an upstream response.
 
 ## Product Boundary
 
 vincarios is a local-first Markdown and project workspace with Obsidian-style vault compatibility. It is not a second Obsidian, a general agent platform, or a cloud AI client. The following guidance is retained for people studying or maintaining a fork, not as an invitation to an active upstream roadmap.
 
-Before proposing a large feature, check:
+Before adding a large feature in a fork, check:
 
 - Does it improve Markdown/vault organization?
 - Does it work through visible, reviewable actions?
@@ -21,7 +21,7 @@ npm run check
 npm test
 ```
 
-On Windows, `start.bat` is an alternative launcher after dependency installation. See README for model provisioning and Windows self-build instructions. Upstream publishes source, not a ready-to-run EXE.
+On Windows, run `npm start` once after dependency installation so Electron can download its desktop runtime if needed. `start.bat` is an alternative launcher after that initial launch. See README for model provisioning and Windows self-build instructions. Upstream publishes source, not a ready-to-run EXE.
 
 ## Required Checks
 
