@@ -41,6 +41,12 @@ The policy follows [Electron's sender-validation guidance](https://www.electronj
 
 `chat:check-update-budget` uses the trusted sender boundary. This metadata-only preflight sends only model/status GETs to a local provider, never note text or a generation request. A successful preflight is not reusable authorization: `chat:send` with `purpose: whole_note_update` rechecks allocation and caps output. Unsupported/external providers and unknown allocations fail closed for this action. Conservative estimation never authorizes source truncation or context enlargement and does not replace existing write safeguards.
 
+## Application Permissions And Packaged Runtime
+
+`main/app/applicationGuards.js` is installed after the single-instance lock and before any app WebContents is created. Every new WebContents blocks renderer-driven top-level/frame navigation, popups and webview attachment; existing per-window restrictions remain. Each encountered session receives both permission-check and permission-request handlers. Only clipboard read, sanitized write and the legacy synchronous paste permission can be granted, and only to the live current main window, its main frame and the exact packaged shell URL. Missing details, child/foreign frames, replaced windows and every other browser permission are denied. Clipboard read is needed by the app's explicit Paste workflow; this is not a defense against malicious code already executing in the trusted shell. These browser permissions are separate from vault R/W permissions.
+
+The build configuration disables RunAsNode, Node-options environment overrides and CLI inspection; it enables embedded ASAR integrity and ASAR-only application loading. These installed-builder options are configuration-tested. Verification of the actual inner packaged executable, native inference/YAML inside ASAR and the final checksum remains a separate release gate; no newly hardened portable artifact is claimed before that build/test. File-protocol extra privileges are unchanged. Fuses are not code signing and do not make an unsigned executable untamperable.
+
 ## Permission Model
 
 Startup acquires Electron's single-instance lock before namespace migration, settings loading or IPC registration. A denied lock quits without starting those services; the primary instance restores and focuses its live window on a second launch. Portable executable lock identity still requires the final Windows runtime smoke test.

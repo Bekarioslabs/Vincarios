@@ -70,3 +70,13 @@ test('CI keeps portable tests and adds a verified Windows packaging smoke job', 
   assert.match(ciWorkflow, /package-windows:[\s\S]*run: npm run build:win/);
   assert.match(ciWorkflow, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7\.0\.1/);
 });
+
+test('packaged runtime disables Node entry overrides and requires the integrity-checked ASAR', () => {
+  assert.deepEqual(packageJson.build.electronFuses, {
+    runAsNode: false,
+    enableNodeOptionsEnvironmentVariable: false,
+    enableNodeCliInspectArguments: false,
+    enableEmbeddedAsarIntegrityValidation: true,
+    onlyLoadAppFromAsar: true
+  });
+});

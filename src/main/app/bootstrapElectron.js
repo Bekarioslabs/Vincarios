@@ -2,6 +2,7 @@
 
 const path = require('node:path');
 const { createMainWindow } = require('./createMainWindow');
+const { installApplicationGuards } = require('./applicationGuards');
 const { createSafeIpcMain, createTrustedSender } = require('../ipc/safeHandle');
 const { registerAppIpc } = require('../ipc/registerAppIpc');
 const { registerChatIpc } = require('../ipc/registerChatIpc');
@@ -63,6 +64,7 @@ function bootstrapElectron(electron, options) {
   });
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
   let mainWindow = null;
+  installApplicationGuards(electron, { appFilePath: path.join(projectRoot, 'index.html'), getWindow: () => mainWindow });
   const safeIpcMain = createSafeIpcMain(ipcMain, { isTrustedSender: createTrustedSender({
     getWindow: () => mainWindow,
     appFilePath: path.join(projectRoot, 'index.html')
