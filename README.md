@@ -10,6 +10,10 @@ vincarios is a local-first Markdown and project workspace for safely analyzing, 
 
 The publication target is the GPL-3.0-only source code and a source ZIP, not a downloadable EXE or installer. The final snapshot retains the tested `0.1.0-beta.1` package identifier; it is not a stable 1.0 release or an announcement of a continuing beta program. Independent forks are welcome under the license; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
+![vincarios overview: local Markdown vaults, local AI and reviewed note changes](gestaltung/quellen/social-preview.png)
+
+The graphic illustrates the note-review workflow. App settings and local cache writes are separate from reviewed note-content changes.
+
 ## Development Approach
 
 vincarios was developed with AI assistance and human oversight. Closure changes are reviewed against its safety architecture, covered by automated checks where practical, and validated through manual smoke tests. This is not a certification of security or suitability for valuable data. Start with a test vault or a backed-up copy.
