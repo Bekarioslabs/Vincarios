@@ -2,6 +2,7 @@
 
 const path = require('node:path');
 const { createMainWindow } = require('./createMainWindow');
+const { createSafeIpcMain, createTrustedSender } = require('../ipc/safeHandle');
 const { registerAppIpc } = require('../ipc/registerAppIpc');
 const { registerChatIpc } = require('../ipc/registerChatIpc');
 const { registerVaultIpc } = require('../ipc/registerVaultIpc');
@@ -61,6 +62,11 @@ function bootstrapElectron(electron, options) {
     window.focus();
   });
   const projectRoot = options.projectRoot || path.resolve(__dirname, '..', '..', '..');
+  let mainWindow = null;
+  const safeIpcMain = createSafeIpcMain(ipcMain, { isTrustedSender: createTrustedSender({
+    getWindow: () => mainWindow,
+    appFilePath: path.join(projectRoot, 'index.html')
+  }) });
   const runtimePaths = options.runtimePaths || createRuntimePaths({
     projectRoot,
     isPackaged: app.isPackaged === true,
@@ -123,8 +129,8 @@ function bootstrapElectron(electron, options) {
     refreshCoordinator: indexRefreshCoordinator
   });
 
-  registerChatIpc(ipcMain, chatService);
-  registerAppIpc(ipcMain, {
+  registerChatIpc(safeIpcMain, chatService);
+  registerAppIpc(safeIpcMain, {
     appName: 'vincarios',
     version: app.getVersion ? app.getVersion() : '0.1.0',
     shell: electron.shell
@@ -165,13 +171,13 @@ function bootstrapElectron(electron, options) {
       { name: 'review-basket', service: vaultReviewBasketService }
     ]
   });
-  registerVaultIpc(ipcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService, vaultSessionCoordinator);
-  registerProviderIpc(ipcMain, providerStatusService, providerModelService);
-  registerSettingsIpc(ipcMain, settingsService);
-  registerEmbeddingIpc(ipcMain, embeddingSearchService, embeddingIndexHealthService);
-  registerVaultIndexIpc(ipcMain, vaultIndexHealthService);
-  registerVaultSearchIpc(ipcMain, vaultSearchService);
-  registerTemplateIpc(ipcMain, reviewedTemplateService);
+  registerVaultIpc(safeIpcMain, dialog, BrowserWindow, vaultReadService, vaultWriteService, embeddingSearchService, vaultProfileService, vaultIndexHealthService, vaultChangeService, vaultSearchService, vaultRecentFilesService, vaultInventoryService, vaultReviewBasketService, vaultSessionCoordinator);
+  registerProviderIpc(safeIpcMain, providerStatusService, providerModelService);
+  registerSettingsIpc(safeIpcMain, settingsService);
+  registerEmbeddingIpc(safeIpcMain, embeddingSearchService, embeddingIndexHealthService);
+  registerVaultIndexIpc(safeIpcMain, vaultIndexHealthService);
+  registerVaultSearchIpc(safeIpcMain, vaultSearchService);
+  registerTemplateIpc(safeIpcMain, reviewedTemplateService);
   embeddingIndexHealthService.subscribe((health) => {
     BrowserWindow.getAllWindows().forEach((window) => {
       if (window && window.webContents) window.webContents.send(IPC_CHANNELS.EMBEDDINGS_INDEX_HEALTH_CHANGED, health);
@@ -201,6 +207,7 @@ function bootstrapElectron(electron, options) {
 
   app.whenReady().then(() => {
     const window = createMainWindow(electron, { projectRoot });
+    mainWindow = window;
     const warning = typeof settingsStore.takeLoadWarning === 'function' ? settingsStore.takeLoadWarning() : null;
     if (warning) {
       try {
@@ -210,10 +217,9 @@ function bootstrapElectron(electron, options) {
       }
     }
 
-
     app.on('activate', () => {
       if (electron.BrowserWindow.getAllWindows().length === 0) {
-        createMainWindow(electron, { projectRoot });
+        mainWindow = createMainWindow(electron, { projectRoot });
       }
     });
   });

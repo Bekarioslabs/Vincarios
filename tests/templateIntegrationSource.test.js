@@ -11,7 +11,7 @@ test('reviewed template service is session-scoped and exposed through one preloa
 
   assert.match(bootstrap, /createReviewedTemplateService/);
   assert.match(bootstrap, /\{ name: 'reviewed-templates', service: reviewedTemplateService \}/);
-  assert.match(bootstrap, /registerTemplateIpc\(ipcMain, reviewedTemplateService\)/);
+  assert.match(bootstrap, /registerTemplateIpc\(safeIpcMain, reviewedTemplateService\)/);
   assert.match(preload, /templates: Object\.freeze/);
   assert.match(preload, /createFromReview\(payload\)/);
   assert.match(preload, /IPC_CHANNELS\.TEMPLATE_CREATE_FROM_REVIEW/);

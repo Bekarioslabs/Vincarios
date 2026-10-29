@@ -29,6 +29,14 @@ Malformed JSON or a non-object JSON root is recoverable only after the exact sou
 
 Bootstrap displays one native warning per settings-store startup after creating the main window. The warning distinguishes successful recovery from blocked read/recovery, names the retained copy when available and gives a next action; raw filesystem errors and absolute paths are not sent to the renderer. Valid or genuinely missing settings produce no recovery warning. This is settings-load recovery, not a claim of crash-durable or transactional ordinary settings saves.
 
+## IPC Sender And Error Boundary
+
+Bootstrap passes one Main-only safe registration facade to every existing IPC registration module. `main/ipc/safeHandle.js` owns this boundary; services, channel names, payloads and expected return values remain unchanged. A request must originate from the current live main window's exact WebContents, its main frame, and the exact app `index.html` file URL. Missing frames, child frames (even at the same origin), other windows/documents and destroyed or replaced windows are denied before invoking a service. Sender-check failures deny access; they never become approval.
+
+Unexpected synchronous exceptions and asynchronous handler rejections return `ipc_request_failed` with a short recovery message. Reports contain only the static channel and error code, not request payloads, note content, raw exception text, stacks or absolute paths. Expected service failures such as cancellation, stale content and unavailable indexes pass through unchanged. This boundary does not replace path validation, R/W context rules, Review, backups or vault-session isolation; it does not claim to prevent compromised code already executing inside the trusted main frame.
+
+The policy follows [Electron's sender-validation guidance](https://www.electronjs.org/docs/latest/tutorial/security#17-validate-the-sender-of-all-ipc-messages), with stricter app-owned window/frame identity checks. The optional `node scripts/probe-ipc-boundary.js` exercises real sandboxed Electron frames/windows using synthetic files and a temporary profile; it never opens a user vault. Its adversarial iframe fixture enables a narrow preload bridge in subframes only for the test, not in the app.
+
 ## Permission Model
 
 Startup acquires Electron's single-instance lock before namespace migration, settings loading or IPC registration. A denied lock quits without starting those services; the primary instance restores and focuses its live window on a second launch. Portable executable lock identity still requires the final Windows runtime smoke test.
