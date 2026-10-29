@@ -6,7 +6,7 @@
 
 Use GitHub's automatically generated `Source code (zip)` / `Source code (tar.gz)` for the approved release tag; do not upload a redundant custom source ZIP. Record the exact source commit. GitHub can regenerate archive compression, so do not promise an indefinitely identical ZIP checksum. Verify extracted contents and a clean setup instead. See [GitHub's archive documentation](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives).
 
-Feature development has ended. Remaining work is bounded to verified closure blockers and accurate documentation, not a new release program. Historical `0.1.0-beta.1` package/build identifiers remain unchanged unless separately approved; they are not a promise of beta updates. The post-V1 backlog is historical reference for independent forks.
+Feature development has ended. Remaining work is bounded to verified closure blockers and accurate documentation, not a new release program. Beka confirmed retaining `0.1.0-beta.1` for the final snapshot on 2026-10-29; this is neither a stable 1.0 claim nor a promise of beta updates. The post-V1 backlog is historical reference for independent forks.
 
 ## Closure Order
 
@@ -48,7 +48,7 @@ The entries below record earlier preparation and their stated dates, not fresh r
 - [ ] Activate the prepared default-branch ruleset after making the repository public, then verify deletion/force-push protection and the two required CI checks.
 - [ ] Review public-facing repository files and confirm no private vault data, local paths, secrets, or obsolete brand text are tracked.
 - [ ] Run the full release command set from the final release commit using a clean checkout.
-- [x] On 2026-10-29, pin Electron 44.10.0 after approval and verify upstream support as well as npm audit. This replaces EOL 42.11.18; version 44 is currently scheduled to remain supported until 2027-03-02. Native source-runtime tests passed; real-app handtest and the final-revision packaged build remain separate gates. Recheck support before actual publication, rather than treating this dated check as permanent. See the [official schedule](https://releases.electronjs.org/schedule).
+- [x] On 2026-10-29, pin Electron 44.10.0 after approval and verify upstream support as well as npm audit. This replaces EOL 42.11.18; version 44 is currently scheduled to remain supported until 2027-03-02. Native source-runtime tests and Beka's real-app handtest passed; the final-revision packaged build remains a separate gate. Recheck support before actual publication, rather than treating this dated check as permanent. See the [official schedule](https://releases.electronjs.org/schedule).
 - [ ] Complete the independent portable smoke test in a separate folder/profile.
 - [ ] Record the observed provider/model configurations in `docs/testing/PROVIDER_COMPATIBILITY.md`.
 - [ ] Build the internal Windows candidate from the final source revision, verify its fuses/native runtime and retain its checksum locally; publish no binary.

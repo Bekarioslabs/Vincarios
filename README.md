@@ -8,7 +8,7 @@ vincarios is a local-first Markdown and project workspace for safely analyzing, 
 
 **Discontinued project; source-only archive preparation.** Feature development has ended. Final closure checks are in progress; the repository has not yet been publicly archived. No future feature releases, bug fixes, compatibility/security updates or technical support are planned after closure.
 
-The publication target is the GPL-3.0-only source code and a source ZIP, not a downloadable EXE or installer. The existing `0.1.0-beta.1` package identifier is a development baseline, not an announcement of a continuing beta program. Independent forks are welcome under the license; see [CONTRIBUTING.md](CONTRIBUTING.md).
+The publication target is the GPL-3.0-only source code and a source ZIP, not a downloadable EXE or installer. The final snapshot retains the tested `0.1.0-beta.1` package identifier; it is not a stable 1.0 release or an announcement of a continuing beta program. Independent forks are welcome under the license; see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Development Approach
 
@@ -97,7 +97,8 @@ The output is written to `release/`. This is a self-build option, not an officia
 - No plugin system, full Obsidian-plugin compatibility, vision workflows, PDF/audio/video handling, mobile app, or multi-window workflow.
 - Theme Editor/shareable theme packages, advanced YAML editing, link repair, drag-and-drop move, and batch internal-link insertion are not implemented. The [historical backlog](docs/rebuild/VINCARIOS_POST_V1_BACKLOG.md) is reference material for independent forks, not a release commitment.
 - Folder-context packets are bounded snapshots, not live folders. Replace a packet explicitly to capture later note changes.
-- Remaining closure findings include index handling of Markdown in third-party hidden backup folders and an unresolved preview-error report involving a map note. Final verification and disposition are still pending; this preparation state is not a completed release candidate.
+- Indexing excludes hidden notes and dot-prefixed folders, including third-party history/backup folders. Refresh enabled indexes once to remove entries from an older cache; notes and backups are not deleted.
+- A reported preview error involving a map note remains unresolved because the reproducing note is unavailable. Obsidian plugin-specific map rendering is not supported. Final closure verification is still pending; this preparation state is not a completed release candidate.
 - Pinned dependencies and checksums do not provide ongoing security updates. Review dependencies yourself before building or maintaining a fork.
 
 ## License
