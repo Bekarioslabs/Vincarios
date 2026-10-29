@@ -1,0 +1,3 @@
+third_party/markdown-it/markdown-it.min.js text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

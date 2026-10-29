@@ -2,7 +2,7 @@
 
 This file summarizes the main third-party components bundled with vincarios. The complete lockfile-derived runtime package inventory is stored in [licenses/npm-runtime-licenses.json](licenses/npm-runtime-licenses.json) and is verified by `npm run licenses:check`.
 
-## Electron 42.11.10
+## Electron 44.10.0
 
 - Package: [electron/electron](https://github.com/electron/electron)
 - License: MIT; Chromium and bundled components retain their own notices.
@@ -23,7 +23,7 @@ This file summarizes the main third-party components bundled with vincarios. The
 - Use: Bundled local SVG icons.
 - Full text: [third_party/lucide/LICENSE](third_party/lucide/LICENSE)
 
-## markdown-it 14.3.2
+## markdown-it 14.3.3
 
 - Package: [markdown-it/markdown-it](https://github.com/markdown-it/markdown-it)
 - License: MIT

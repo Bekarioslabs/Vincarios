@@ -17,6 +17,10 @@
 
 Normal note access validates protected path segments both before and after resolving filesystem links. An in-vault junction into `.obsidian`, `.vincarios`, or `.git` returns `protected_path`, including new descendants below an existing linked ancestor. The canonical check reuses the shared relative-path rules and their blocked-segment options; it does not inspect the absolute vault root name as a note segment. Ordinary links within the vault remain allowed, while links outside it remain blocked. App-owned index/configuration storage retains its separate internal paths and is not authorized through normal note access.
 
+## Runtime Baseline
+
+The source now pins Electron 44.10.0, replacing the unsupported 42 branch after explicit migration approval. Browser clipboard workflows already use `navigator.clipboard`, not the removed renderer `electron.clipboard` module; no new clipboard bridge or permission was introduced. The native sandbox/IPC/window/clipboard-policy and local inference checks must be repeated when the runtime changes, and a source-runtime pass does not certify a newly packaged executable. Review the [upstream breaking changes](https://www.electronjs.org/docs/latest/breaking-changes) and [support schedule](https://releases.electronjs.org/schedule) before a future self-build or archival snapshot.
+
 ## Permission Model
 
 Startup acquires Electron's single-instance lock before namespace migration, settings loading or IPC registration. A denied lock quits without starting those services; the primary instance restores and focuses its live window on a second launch. Portable executable lock identity still requires the final Windows runtime smoke test.
