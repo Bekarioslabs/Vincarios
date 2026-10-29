@@ -106,4 +106,7 @@ test('Selection Action sends the complete open draft and retains the disk baseli
   assert.equal(result.after.items[0].id, result.before.items[0].id);
   assert.equal(result.after.items[0].currentContent, '# Original\n');
   assert.equal(result.after.items[0].proposedContent, '# Revised\n');
+  assert.deepEqual({ ...result.after.items[0].auditMetadata }, {
+    origin: 'ai_update', provider: 'lm-studio', model: 'google/gemma-4-12b-qat'
+  });
 });

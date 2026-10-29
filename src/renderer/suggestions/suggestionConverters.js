@@ -15,6 +15,7 @@
       proposal: {
         type: 'update_note',
         category: 'tags/properties',
+        auditMetadata: { origin: 'suggest_tags' },
         title: 'Update metadata: ' + baseName(validation.targetPath),
         targetPath: validation.targetPath,
         currentContent: validation.currentContent,

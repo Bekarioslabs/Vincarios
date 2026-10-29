@@ -233,6 +233,11 @@
       content: generated.content,
       metadata: generated.metadata,
       originAction,
+      auditMetadata: {
+        origin: originAction,
+        provider: options.auditMetadata && options.auditMetadata.provider,
+        model: options.auditMetadata && options.auditMetadata.model
+      },
       reason: 'Save assistant response as a Markdown note.',
       risk: 'low'
     };

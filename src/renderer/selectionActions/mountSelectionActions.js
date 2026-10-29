@@ -260,7 +260,7 @@
             path: request.path,
             truncated: request.truncated,
             content: result.message.content
-          }), [], { allowSave: true, suggestedTitle: buildSummaryTitle('md', request.path), responseSubfolder: 'Summaries', originAction: 'summarize_file', presentation: 'summary' });
+          }), [], { allowSave: true, suggestedTitle: buildSummaryTitle('md', request.path), responseSubfolder: 'Summaries', originAction: 'summarize_file', presentation: 'summary', auditMetadata: { provider: result.provider && result.provider.id, model: result.model } });
           setText(status, 'File summarized: ' + request.path);
           return;
         }
@@ -470,6 +470,11 @@
         }
 
         try {
+          proposal.proposal.auditMetadata = {
+            origin: 'ai_update',
+            provider: result.provider && result.provider.id,
+            model: result.model
+          };
           const reviewItem = reviewBasket.upsertOpenUpdateProposal(proposal.proposal, draftKey);
           const message = reviewItem && reviewItem.replaced === true
             ? 'Update proposal refreshed in Review Basket.'
@@ -564,7 +569,7 @@
             includedFileCount: request.files.length,
             limitedByFileCount: request.limitedByFileCount,
             content: result.message.content
-          }), [], { allowSave: true, suggestedTitle: buildSummaryTitle('dir', snapshot.path), responseSubfolder: 'Summaries', originAction: 'summarize_folder', presentation: 'summary' });
+          }), [], { allowSave: true, suggestedTitle: buildSummaryTitle('dir', snapshot.path), responseSubfolder: 'Summaries', originAction: 'summarize_folder', presentation: 'summary', auditMetadata: { provider: result.provider && result.provider.id, model: result.model } });
           setText(status, 'Folder Markdown summarized: ' + snapshot.path);
           return;
         }
@@ -713,7 +718,7 @@
       const chatLog = app.querySelector('#chat-log');
       if (!chatLog) return;
       if (typeof window !== 'undefined' && window.VincariosChat && typeof window.VincariosChat.appendMessage === 'function') {
-        const message = window.VincariosChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction, presentation: options.presentation });
+        const message = window.VincariosChat.appendMessage(chatLog, 'assistant', content, { allowSave: options.allowSave === true, actions: actions || [], reviewBasket: reviewBasket, status: status, suggestedTitle: options.suggestedTitle, responseSubfolder: options.responseSubfolder, originAction: options.originAction, presentation: options.presentation, auditMetadata: options.auditMetadata });
         if (options.pending && message) {
           message.classList.add('chat-message-pending');
           message.setAttribute('aria-busy', 'true');

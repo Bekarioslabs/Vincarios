@@ -84,6 +84,7 @@ function createProviderChatService(options) {
       return {
         ok: true,
         provider: publicProvider(provider),
+        model: assessment ? assessment.model : model,
         message: {
           role: 'assistant',
           content

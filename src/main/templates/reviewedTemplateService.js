@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { createVaultAuditService } = require('../audit/vaultAuditService');
+const { normalizeAuditProvenance, contentIntegrity } = require('../audit/auditMetadata');
 const { createVaultContext } = require('../vault/vaultContext');
 const { executeAuditedMutation } = require('../vault/vaultWriteTransaction');
 const { validateNewName } = require('../../shared/pathRules/newNames');
@@ -83,6 +84,8 @@ function createReviewedTemplateService(options) {
         path: plan.targetPath,
         createdFolders: plan.folders.map((folder) => folder.relativePath),
         created: plan.files.map((file) => file.relativePath),
+        provenance: normalizeAuditProvenance(input && (input.auditMetadata || { origin: input.originAction })),
+        fileIntegrity: plan.files.map((file) => Object.assign({ path: file.relativePath }, contentIntegrity(null, file.content))),
         result: 'created'
       },
       mutationFailureCode: 'template_create_failed',

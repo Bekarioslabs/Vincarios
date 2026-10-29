@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { createVaultAuditService } = require('../audit/vaultAuditService');
+const { normalizeAuditProvenance, contentIntegrity } = require('../audit/auditMetadata');
 const { createVaultContext } = require('./vaultContext');
 const { executeAuditedMutation } = require('./vaultWriteTransaction');
 const { CURRENT_INTERNAL_NAMESPACE } = require('../../shared/internalNamespace');
@@ -72,6 +73,7 @@ function createVaultBackupService(options) {
       action: 'backup_note',
       sourcePath: resolved.relativePath,
       backupPath,
+      provenance: normalizeAuditProvenance({ origin: 'backup' }),
       reason: String(options && options.action ? options.action : 'manual_backup')
     };
 
@@ -86,6 +88,7 @@ function createVaultBackupService(options) {
             fileSystem.copyFileSync(resolved.absolutePath, backupAbsolutePath, fileSystem.constants.COPYFILE_EXCL);
             created = true;
             auditEntry.backupPath = backupPath;
+            auditEntry.integrity = contentIntegrity(null, fileSystem.readFileSync(backupAbsolutePath));
             return;
           } catch (error) {
             if (error.code !== 'EEXIST') throw error;

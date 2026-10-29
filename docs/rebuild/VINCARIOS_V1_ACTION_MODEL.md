@@ -80,6 +80,8 @@ Current implemented slice: assistant `Save as Note` creates a selected `create_n
 
 Phase 3 is complete at this core foundation boundary. `insert_into_note`, `move_note`, `rename_note`, and `archive_note` remain known schema types so model output can be classified safely, but they are deliberately non-executable until their own reviewed services exist. Manual F2 Rename Light is separate from AI `rename_note`: it is same-folder only, app-initiated from the File Tree, audited, and explicitly does not update links in V1. This prevents accidental AI execution while keeping the future action vocabulary stable.
 
+Review execution forwards optional generation provenance without changing the write API or granting approval. New AI responses/updates preserve the provider and resolved request model; Source edits and local metadata suggestions carry their own origin. Main allowlists those informational claims and computes content hashes/byte counts itself. See SAFETY_RULES, Audit Log, for the byte-level contract and privacy/trust limits. Legacy pending proposals remain executable through normal review even when their provenance is unknown.
+
 ## Cleanup Reports
 
 V1 cleanup must not flood the Review Basket with every discovered suggestion. The flow is:

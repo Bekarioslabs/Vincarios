@@ -92,6 +92,14 @@ Minimum fields:
 - provider/model if relevant
 - backup path if created
 
+`main/audit/auditMetadata.js` owns the new additive fields. Main computes `integrity.before` / `integrity.after` as SHA256 plus byte count, not character count. Updates use raw bytes read from disk and the successful UTF-8 write payload after line-ending preservation; creation uses `before: null`, distinct from an empty existing file. Rename records raw bytes around the rename. A backup records the new copy's bytes with `before: null`; reviewed templates record a bounded `fileIntegrity` list for every created note. Folder-only creation has no content integrity record. Existing audit lines are not migrated.
+
+`provenance` contains only allowlisted origin, provider (`lm-studio` / `ollama`) and an optional model ID of at most 160 characters. Model IDs cannot contain free text, controls, URLs or Windows drive paths. Absent/invalid origin becomes `unknown`; absent/invalid provider or model becomes `null`. New AI responses and content-update proposals retain the resolved request model at generation time, including auto selection; saving them later never guesses from current settings. Older proposals may lack this information. Source edits, tag suggestions and presets use their app-flow origin without inventing a provider.
+
+Provenance supplied through the renderer is a **claim**, not proof of generation or human approval. Arbitrary extra metadata, supplied hashes, prompts, instructions and note bodies are not copied into the audit entry. Main-owned content hashes cannot be overridden by those claims. None of these fields authorizes a write or bypasses existing checks. Failed mutations still roll back through the existing transaction; no successful write entry is appended for a failed operation.
+
+The local audit file is not signed or tamper-proof, and checksums are not an external-edit lock. They describe the bytes observed/written by this operation, not a guarantee against concurrent changes by other applications. Paths, model IDs and hashes can still be sensitive: inspect the log before sharing it. Review and R/W state currently live in the renderer; separate Main-owned approval authority remains outside this hardening slice.
+
 ## Diff Rule
 
 If a write changes an existing Markdown file, show the user what changes before applying.

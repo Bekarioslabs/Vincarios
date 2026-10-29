@@ -40,6 +40,27 @@ function createDocumentStub() {
   };
 }
 
+test('Save as Note keeps the response model snapshot rather than a later provider selection', () => {
+  const previousDocument = global.document;
+  const previousWindow = global.window;
+  global.document = createDocumentStub();
+  global.window = { VincariosReviewBasketState: require('../src/renderer/review/reviewBasketState') };
+  try {
+    const basket = global.window.VincariosReviewBasketState.createReviewBasketState();
+    const message = appendMessage({ querySelector() { return null; }, appendChild() {} }, 'assistant', '# Summary', {
+      reviewBasket: basket, originAction: 'summarize_file',
+      auditMetadata: { provider: 'lm-studio', model: 'google/gemma-4-12b-qat' }
+    });
+    message.querySelector('.chat-message-save').listeners.click();
+    assert.deepEqual(basket.getSnapshot().items[0].auditMetadata, {
+      origin: 'summarize_file', provider: 'lm-studio', model: 'google/gemma-4-12b-qat'
+    });
+  } finally {
+    global.document = previousDocument;
+    global.window = previousWindow;
+  }
+});
+
 function createNode(tagName) {
   const node = {
     tagName,
@@ -49,6 +70,7 @@ function createNode(tagName) {
     className: '',
     textContent: '',
     innerHTML: '',
+    listeners: {},
     appendChild(child) {
       this.children.push(child);
       return child;
@@ -57,7 +79,7 @@ function createNode(tagName) {
     setAttribute(name, value) {
       this.attributes[name] = String(value);
     },
-    addEventListener() {},
+    addEventListener(type, listener) { this.listeners[type] = listener; },
     querySelector(selector) {
       return findNode(this, selector);
     },

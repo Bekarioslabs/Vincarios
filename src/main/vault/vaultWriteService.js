@@ -3,6 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { createVaultAuditService } = require('../audit/vaultAuditService');
+const { normalizeAuditProvenance, contentIntegrity } = require('../audit/auditMetadata');
 const { createVaultContext } = require('./vaultContext');
 const { createVaultBackupService } = require('./vaultBackupService');
 const { executeAuditedMutation } = require('./vaultWriteTransaction');
@@ -101,6 +102,8 @@ function createVaultWriteService(options) {
       auditEntry: {
         action: 'create_note',
         path: resolved.relativePath,
+        provenance: normalizeAuditProvenance(input && input.auditMetadata),
+        integrity: contentIntegrity(null, payload.content),
         result: 'created'
       },
       mutationFailureCode: 'write_failed',
@@ -160,6 +163,7 @@ function createVaultWriteService(options) {
       auditEntry: {
         action: 'create_folder',
         path: resolved.relativePath,
+        provenance: normalizeAuditProvenance(input && input.auditMetadata),
         result: 'created'
       },
       mutationFailureCode: 'write_failed',
@@ -192,12 +196,13 @@ function createVaultWriteService(options) {
       return fail('file_not_found', 'Cannot update a missing note.');
     }
 
-    let currentDiskContent;
+    let currentDiskBytes;
     try {
-      currentDiskContent = fileSystem.readFileSync(resolved.absolutePath, 'utf8');
+      currentDiskBytes = fileSystem.readFileSync(resolved.absolutePath);
     } catch (error) {
       return fail('read_failed', 'Could not read note before update.');
     }
+    const currentDiskContent = currentDiskBytes.toString('utf8');
     if (currentDiskContent !== payload.currentContent) {
       return fail('stale_content', 'Current note content changed before update.');
     }
@@ -217,12 +222,14 @@ function createVaultWriteService(options) {
         fileSystem.writeFileSync(resolved.absolutePath, proposedContent, 'utf8');
       },
       rollback() {
-        fileSystem.writeFileSync(resolved.absolutePath, currentDiskContent, 'utf8');
+        fileSystem.writeFileSync(resolved.absolutePath, currentDiskBytes);
       },
       auditEntry: {
         action: 'update_note',
         path: resolved.relativePath,
         backupPath: backup.backupPath,
+        provenance: normalizeAuditProvenance(input && input.auditMetadata),
+        integrity: contentIntegrity(currentDiskBytes, proposedContent),
         result: 'updated'
       },
       mutationFailureCode: 'write_failed',
@@ -277,22 +284,28 @@ function createVaultWriteService(options) {
     const backup = backupService.backupMarkdownNote(source.relativePath, { action: 'rename_file' });
     if (!backup.ok) return backup;
 
+    const auditEntry = {
+      action: 'rename_file',
+      path: source.relativePath,
+      targetPath: target.relativePath,
+      backupPath: backup.backupPath,
+      provenance: normalizeAuditProvenance({ origin: 'rename' }),
+      result: 'renamed',
+      linksUpdated: false
+    };
+    let renamed = false;
     const transaction = executeAuditedMutation({
       auditService,
       mutate() {
+        const before = fileSystem.readFileSync(source.absolutePath);
         fileSystem.renameSync(source.absolutePath, target.absolutePath);
+        renamed = true;
+        auditEntry.integrity = contentIntegrity(before, fileSystem.readFileSync(target.absolutePath));
       },
       rollback() {
-        fileSystem.renameSync(target.absolutePath, source.absolutePath);
+        if (renamed) fileSystem.renameSync(target.absolutePath, source.absolutePath);
       },
-      auditEntry: {
-        action: 'rename_file',
-        path: source.relativePath,
-        targetPath: target.relativePath,
-        backupPath: backup.backupPath,
-        result: 'renamed',
-        linksUpdated: false
-      },
+      auditEntry,
       mutationFailureCode: 'rename_failed',
       mutationFailureMessage: 'Could not rename file.'
     });

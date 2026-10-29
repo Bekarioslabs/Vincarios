@@ -93,6 +93,7 @@ test('provider chat service uses the first available provider model when configu
   assert.equal(requests.length, 2);
   assert.equal(requests[0].url, 'http://127.0.0.1:1234/v1/models');
   assert.equal(JSON.parse(requests[1].options.body).model, 'google/gemma-4-12b-qat');
+  assert.equal(result.model, 'google/gemma-4-12b-qat');
 });
 test('provider chat service returns a safe error result when provider request fails', async () => {
   const service = createProviderChatService({

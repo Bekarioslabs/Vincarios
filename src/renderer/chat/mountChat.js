@@ -241,7 +241,10 @@
       });
       if (!handled) {
         options.messages.push({ role: 'assistant', content: result.message.content });
-        appendMessage(options.chatLog, 'assistant', result.message.content, { reviewBasket: options.reviewBasket, status: options.status });
+        appendMessage(options.chatLog, 'assistant', result.message.content, {
+          reviewBasket: options.reviewBasket, status: options.status,
+          auditMetadata: { provider: result.provider && result.provider.id, model: result.model }
+        });
       }
       reportStatus(options, 'Response received.', { type: 'success', action: 'Provider response', targetPath: '', detail: '' });
     } else {
@@ -464,6 +467,7 @@
         responseSubfolder: options.responseSubfolder,
         profile: options.profile,
         originAction: options.originAction,
+        auditMetadata: options.auditMetadata,
         metadata: options.metadata
       });
       options.reviewBasket.addProposal(proposal);

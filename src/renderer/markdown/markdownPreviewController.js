@@ -371,6 +371,7 @@
       const result = onProposeUpdate({
         type: 'update_note',
         title: 'Manual source edit',
+        auditMetadata: { origin: 'source_editor' },
         targetPath: currentPath,
         currentContent: loadedSource,
         proposedContent: lineEndings.preserveLineEndings(getEditorSource(), loadedSource),

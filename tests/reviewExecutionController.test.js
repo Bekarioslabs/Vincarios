@@ -4,6 +4,28 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { createReviewExecutionController } = require('../src/renderer/review/reviewExecutionController');
 
+test('review execution carries generation provenance through to the real audit entry', async (t) => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const { createVaultWriteService } = require('../src/main/vault/vaultWriteService');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-review-provenance-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const service = createVaultWriteService();
+  service.setRoot(root);
+  const controller = createReviewExecutionController({ api: { vault: service } });
+  assert.equal((await controller.executeProposal({ type: 'create_note', title: 'Note',
+    content: 'old', originAction: 'save_assistant_response'
+  })).ok, true);
+  assert.equal((await controller.executeProposal({ type: 'update_note', targetPath: 'Note.md',
+    currentContent: 'old', proposedContent: 'new',
+    auditMetadata: { origin: 'ai_update', provider: 'ollama', model: 'gemma:12b' }
+  })).ok, true);
+  const entries = fs.readFileSync(path.join(root, '.vincarios/audit.jsonl'), 'utf8').trim().split('\n').map(JSON.parse);
+  assert.equal(entries[0].provenance.origin, 'save_assistant_response');
+  assert.deepEqual(entries[2].provenance, { origin: 'ai_update', provider: 'ollama', model: 'gemma:12b' });
+});
+
 test('review execution controller delegates a template proposal as one atomic main request', async () => {
   const calls = [];
   let refreshCount = 0;

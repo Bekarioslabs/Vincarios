@@ -23,7 +23,8 @@
         const result = await api.vault.createNote({
           targetFolder: proposal.targetFolder,
           title: proposal.title,
-          content: proposal.content
+          content: proposal.content,
+          auditMetadata: proposal.auditMetadata || { origin: proposal.originAction }
         });
         if (result && result.ok) {
           await refreshFileTree();
@@ -51,7 +52,8 @@
         const result = await api.vault.updateNote({
           targetPath: proposal.targetPath,
           currentContent: proposal.currentContent,
-          proposedContent: proposal.proposedContent
+          proposedContent: proposal.proposedContent,
+          auditMetadata: proposal.auditMetadata
         });
         if (result && result.ok) {
           await refreshLoadedMarkdown(proposal.targetPath);
