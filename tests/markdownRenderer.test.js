@@ -180,3 +180,23 @@ test('escapes unsupported copied HTML formatting instead of rendering unsafe att
   assert.doesNotMatch(html, /&lt;mark/);
   assert.doesNotMatch(html, /&lt;font/);
 });
+
+for (const inline of ['[[Target]]', '![[assets/map.png]]', '==highlight==', '%%comment%%']) {
+  test('custom inline syntax advances during link-label validation: ' + inline, () => {
+    const html = renderMarkdown('[before ' + inline + ' after](https://example.invalid)');
+    assert.match(html, /before/);
+    assert.match(html, /after/);
+    assert.doesNotMatch(html, /<a\b|\ssrc=|<script\b/);
+  });
+}
+
+test('renders map-style Markdown with nested wikilinks in inert JSON comments', () => {
+  const html = renderMarkdown('---\ntype: map\nrelations: ["[[Target]]"]\n---\n# Sample map\n\n' +
+    '![[assets/map.jpg|400]]\n\n| Location | Note |\n| --- | --- |\n| Port | [[Target]] |\n\n' +
+    '<!-- MAP_MARKERS_DATA: [{"description":"A link to [[Target]]"}] -->');
+  assert.match(html, /<h1>Sample map<\/h1>/);
+  assert.match(html, /<table>/);
+  assert.match(html, /data-image-target="assets\/map.jpg"/);
+  assert.match(html, /data-link-target="Target"/);
+  assert.doesNotMatch(html, /<!--|<script\b|\ssrc=/);
+});

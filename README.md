@@ -98,7 +98,7 @@ The output is written to `release/`. This is a self-build option, not an officia
 - Theme Editor/shareable theme packages, advanced YAML editing, link repair, drag-and-drop move, and batch internal-link insertion are not implemented. The [historical backlog](docs/rebuild/VINCARIOS_POST_V1_BACKLOG.md) is reference material for independent forks, not a release commitment.
 - Folder-context packets are bounded snapshots, not live folders. Replace a packet explicitly to capture later note changes.
 - Indexing excludes hidden notes and dot-prefixed folders, including third-party history/backup folders. Refresh enabled indexes once to remove entries from an older cache; notes and backups are not deleted.
-- A reported preview error involving a map note remains unresolved because the reproducing note is unavailable. Obsidian plugin-specific map rendering is not supported. Final closure verification is still pending; this preparation state is not a completed release candidate.
+- Map notes can be read as Markdown, including properties, tables, local image embeds and note links. Other applications' interactive maps and Obsidian plugin-specific rendering are not reproduced. Final closure verification is still pending; this preparation state is not a completed release candidate.
 - Pinned dependencies and checksums do not provide ongoing security updates. Review dependencies yourself before building or maintaining a fork.
 
 ## License

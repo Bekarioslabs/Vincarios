@@ -269,6 +269,8 @@ HTML remains escaped by default. V1 includes a narrow safe copied-formatting com
 
 Markdown preview renders sanitized HTML from Markdown source. It supports the V1 baseline: headings, paragraphs, lists, tables, blockquotes, code spans, fenced code blocks, emphasis, Markdown links, Obsidian-style wikilinks, and YAML frontmatter.
 
+Custom inline rules consume matched syntax during both rendering and silent link-label validation; the silent pass emits no tokens. Nested wikilinks, image embeds, highlights and comments inside ordinary link labels or map-style JSON text therefore do not abort the preview. This is Markdown compatibility, not support for an external application's interactive map UI; HTML remains escaped.
+
 YAML frontmatter is shown as a visible Obsidian-like Properties block at the top of the Markdown preview, including simple inline arrays and block-list values such as `tags:\n  - item`. It is not directly editable in this renderer block. The source editor can stage manual full-note updates through the `Update` button; blocked update attempts show visible preview feedback instead of silently failing. V1.1 will add a dedicated Properties/YAML editor for typed frontmatter fields and preserved custom properties through the shared Frontmatter Contract; it replaces the rejected idea of a one-off V1 `Add Tag` control. Persisted changes still remain reviewed proposals, never direct writes.
 
 Unsafe raw HTML is escaped. Renderer fallback must use text output, not unsanitized `innerHTML`. The copied-formatting compatibility layer is limited to allowlisted inline text styling and stays owned by `src/renderer/markdown/markdownFormattingCompat.js`.

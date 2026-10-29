@@ -20,6 +20,7 @@
     md.core.ruler.after('inline', 'vincarios_task_lists', transformTaskLists);
   }
 
+  // Silent link-label validation consumes matches without emitting tokens.
   function parseImageEmbed(state, silent) {
     if (!state.src.startsWith('![[', state.pos)) return false;
     const end = state.src.indexOf(']]', state.pos + 3);
@@ -32,16 +33,16 @@
     if (!silent) {
       const token = state.push('obsidian_image_embed', 'img', 0);
       token.meta = { target, label };
-      state.pos = end + 2;
     }
+    state.pos = end + 2;
     return true;
   }
 
-  function parseComment(state, silent) {
+  function parseComment(state) {
     if (!state.src.startsWith('%%', state.pos)) return false;
     const end = state.src.indexOf('%%', state.pos + 2);
     if (end === -1) return false;
-    if (!silent) state.pos = end + 2;
+    state.pos = end + 2;
     return true;
   }
 
@@ -52,8 +53,8 @@
     if (!silent) {
       const token = state.push('obsidian_highlight', 'mark', 0);
       token.content = state.src.slice(state.pos + 2, end);
-      state.pos = end + 2;
     }
+    state.pos = end + 2;
     return true;
   }
 
@@ -69,8 +70,8 @@
     if (!silent) {
       const token = state.push('obsidian_wikilink', 'span', 0);
       token.meta = { target, label: label || target };
-      state.pos = end + 2;
     }
+    state.pos = end + 2;
     return true;
   }
 
