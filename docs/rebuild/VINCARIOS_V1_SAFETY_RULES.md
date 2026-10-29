@@ -47,6 +47,10 @@ The policy follows [Electron's sender-validation guidance](https://www.electronj
 
 The build configuration disables RunAsNode, Node-options environment overrides and CLI inspection; it enables embedded ASAR integrity and ASAR-only application loading. These installed-builder options are configuration-tested. Verification of the actual inner packaged executable, native inference/YAML inside ASAR and the final checksum remains a separate release gate; no newly hardened portable artifact is claimed before that build/test. File-protocol extra privileges are unchanged. Fuses are not code signing and do not make an unsigned executable untamperable.
 
+## Index Visibility
+
+Synchronous and asynchronous Markdown index scans exclude every dot-prefixed path segment, including third-party backup/history folders and hidden notes. Targeted index reads reject these paths too. This matches the visible File Tree, change watcher and link-search scope; it does not expand general filesystem permissions. Refresh enabled indexes once to remove entries retained by an older cache. No notes or backup files are deleted.
+
 ## Permission Model
 
 Startup acquires Electron's single-instance lock before namespace migration, settings loading or IPC registration. A denied lock quits without starting those services; the primary instance restores and focuses its live window on a second launch. Portable executable lock identity still requires the final Windows runtime smoke test.

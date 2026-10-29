@@ -2,7 +2,6 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { DEFAULT_BLOCKED_DOT_SEGMENTS } = require('../../shared/pathRules');
 const { isMarkdownPath } = require('../vault/vaultReadService');
 
 async function scanVaultMarkdownDocuments(vaultRoot, options) {
@@ -70,8 +69,7 @@ async function readDocument(vaultRoot, relativePath, includeContent, asyncFs) {
 }
 
 function isBlockedEntry(name) {
-  const normalized = String(name || '');
-  return normalized.startsWith('.') && DEFAULT_BLOCKED_DOT_SEGMENTS.has(normalized.toLowerCase());
+  return String(name || '').startsWith('.');
 }
 
 function isAborted(signal) {

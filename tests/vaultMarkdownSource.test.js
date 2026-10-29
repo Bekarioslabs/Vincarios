@@ -34,6 +34,29 @@ test('vault Markdown source requires an opened vault', () => {
   assert.equal(result.code, 'vault_not_open');
 });
 
+test('all Markdown source entry points exclude arbitrary hidden files and folders', async (t) => {
+  const root = createTempVault();
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  writeFile(root, 'Notes/Visible.md', '# Visible');
+  writeFile(root, '.third-party-backups/Old.md', '# Private old draft');
+  writeFile(root, 'Notes/.history/Old.markdown', '# Private nested draft');
+  writeFile(root, 'Notes/.draft.md', '# Hidden note');
+  const source = createVaultMarkdownSource();
+  assert.equal(source.setRoot(root).ok, true);
+
+  for (const result of [source.listMarkdownDocuments(), source.listMarkdownInventory(),
+    await source.listMarkdownDocumentsAsync(), await source.listMarkdownInventoryAsync()]) {
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.documents.map((document) => document.path), ['Notes/Visible.md']);
+  }
+  for (const hidden of ['.third-party-backups/Old.md', 'Notes/.history/Old.markdown', 'Notes\\.draft.md']) {
+    const result = source.readMarkdownDocument(hidden);
+    assert.equal(result.ok, false, hidden);
+    assert.equal(result.code, 'hidden_index_path', hidden);
+  }
+  assert.equal(source.readMarkdownDocument('Notes/Visible.md').ok, true);
+});
+
 function writeFile(root, relativePath, content) {
   const absolutePath = path.join(root, ...relativePath.split('/'));
   fs.mkdirSync(path.dirname(absolutePath), { recursive: true });

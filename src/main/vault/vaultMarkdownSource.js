@@ -2,7 +2,6 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
-const { DEFAULT_BLOCKED_DOT_SEGMENTS } = require('../../shared/pathRules');
 const { isMarkdownPath } = require('./vaultReadService');
 const { createVaultContext } = require('./vaultContext');
 const { scanVaultMarkdownDocuments } = require('../indexing/asyncVaultMarkdownScanner');
@@ -49,6 +48,9 @@ function createVaultMarkdownSource(options) {
     if (!vault) return fail('vault_not_open', 'No vault is open.');
     const resolved = vault.resolve(relativePath, { allowRoot: false });
     if (!resolved.ok) return resolved;
+    if (resolved.relativePath.split('/').some(isBlockedEntry)) {
+      return fail('hidden_index_path', 'Hidden vault paths are excluded from indexing.');
+    }
     if (!isMarkdownPath(resolved.relativePath)) return fail('not_markdown', 'Only Markdown files can be indexed.');
     try {
       const stat = fileSystem.statSync(resolved.absolutePath);
@@ -102,7 +104,7 @@ function createVaultMarkdownSource(options) {
 }
 
 function isBlockedEntry(name) {
-  return String(name || '').startsWith('.') && DEFAULT_BLOCKED_DOT_SEGMENTS.has(String(name).toLowerCase());
+  return String(name || '').startsWith('.');
 }
 function ok(value) { return Object.assign({ ok: true }, value); }
 function fail(code, message) { return { ok: false, code, message }; }
