@@ -200,7 +200,16 @@ function bootstrapElectron(electron, options) {
   });
 
   app.whenReady().then(() => {
-    createMainWindow(electron, { projectRoot });
+    const window = createMainWindow(electron, { projectRoot });
+    const warning = typeof settingsStore.takeLoadWarning === 'function' ? settingsStore.takeLoadWarning() : null;
+    if (warning) {
+      try {
+        dialog.showMessageBoxSync(window, { type: 'warning', title: 'App settings recovery', message: warning.message, buttons: ['OK'], noLink: true });
+      } catch (_error) {
+        console.error(warning.message);
+      }
+    }
+
 
     app.on('activate', () => {
       if (electron.BrowserWindow.getAllWindows().length === 0) {

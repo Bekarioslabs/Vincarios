@@ -197,3 +197,146 @@ test('settings store persists only normalized app theme modes', () => {
   assert.equal(reloaded.getSettings().theme.mode, 'light');
   assert.equal(store.setTheme({ mode: 'unsupported' }).settings.theme.mode, 'dark');
 });
+
+function recoveryFixture(t) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-recovery-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  return { dir, filePath: path.join(dir, 'settings.json') };
+}
+
+test('malformed settings are preserved byte-for-byte before defaults may be saved', (t) => {
+  const { dir, filePath } = recoveryFixture(t);
+  const original = Buffer.from('{"theme": { broken\n');
+  fs.writeFileSync(filePath, original);
+  const store = createSettingsStore({ filePath });
+  const copies = fs.readdirSync(dir).filter((name) => name.startsWith('settings.json.corrupt-'));
+  assert.equal(copies.length, 1);
+  assert.deepEqual(fs.readFileSync(path.join(dir, copies[0])), original);
+  assert.deepEqual(fs.readFileSync(filePath), original);
+  const warning = store.takeLoadWarning();
+  assert.equal(warning.code, 'settings_recovered');
+  assert.ok(warning.message.includes(copies[0]));
+  assert.equal(store.takeLoadWarning(), null);
+  assert.equal(store.setTheme({ mode: 'light' }).ok, true);
+  assert.equal(JSON.parse(fs.readFileSync(filePath, 'utf8')).theme.mode, 'light');
+  assert.deepEqual(fs.readFileSync(path.join(dir, copies[0])), original);
+});
+
+for (const code of ['EACCES', 'EIO']) {
+  test('unreadable settings block every mutation without quarantine or state changes: ' + code, (t) => {
+    const { dir, filePath } = recoveryFixture(t);
+    const original = '{"theme":{"mode":"light"}}';
+    fs.writeFileSync(filePath, original);
+    const fileSystem = Object.assign({}, fs, { readFileSync(target, ...args) {
+      if (target === filePath) throw Object.assign(new Error('Private diagnostic details'), { code });
+      return fs.readFileSync(target, ...args);
+    } });
+    const store = createSettingsStore({ filePath, fs: fileSystem });
+    const before = store.getSettings();
+    const mutations = [
+      () => store.setTheme({ mode: 'light' }), () => store.setLimits({ maxListedFiles: 42 }),
+      () => store.setActiveProvider('ollama'), () => store.setSelectedProviderModel('ollama', 'example'),
+      () => store.setProviderUrlOverride('ollama', 'http://localhost:11435'), () => store.resetProviderUrlOverride('ollama'),
+      () => store.setEmbeddingSettings({ similarNotes: { minimumScorePercent: 72 } }),
+      () => store.setActionDefaults({}), () => store.setRecentVaults({ recentVaults: [] }),
+      () => store.setLayoutPreferences({ panels: { filesCollapsed: true } }),
+      () => store.updateSettings((draft) => { draft.theme.mode = 'light'; return draft; })
+    ];
+    for (const mutate of mutations) assert.deepEqual(mutate(), { ok: false, code: 'settings_read_failed', message: 'App settings could not be read. Check file permissions and restart Vincarios before saving settings.' });
+    assert.equal(store.getSettings(), before);
+    assert.equal(fs.readFileSync(filePath, 'utf8'), original);
+    assert.deepEqual(fs.readdirSync(dir), ['settings.json']);
+    assert.equal(store.takeLoadWarning().code, 'settings_read_failed');
+    assert.equal(store.takeLoadWarning(), null);
+  });
+}
+
+test('failed recovery copy blocks saving and leaves the original untouched', (t) => {
+  const { dir, filePath } = recoveryFixture(t);
+  fs.writeFileSync(filePath, '{broken');
+  const fileSystem = Object.assign({}, fs, { openSync() { throw Object.assign(new Error('Denied'), { code: 'EACCES' }); } });
+  const store = createSettingsStore({ filePath, fs: fileSystem });
+  assert.equal(store.setTheme({ mode: 'light' }).ok, false);
+  assert.equal(store.takeLoadWarning().code, 'settings_recovery_failed');
+  assert.equal(fs.readFileSync(filePath, 'utf8'), '{broken');
+  assert.deepEqual(fs.readdirSync(dir), ['settings.json']);
+});
+
+test('recovery names do not overwrite earlier copies even at an identical time', (t) => {
+  const { dir, filePath } = recoveryFixture(t);
+  fs.writeFileSync(filePath, '{broken');
+  const now = () => new Date('2026-10-26T18:00:00.000Z');
+  const first = createSettingsStore({ filePath, now });
+  const names = fs.readdirSync(dir);
+  const firstCopy = names.find((name) => name !== 'settings.json');
+  assert.ok(firstCopy);
+  fs.writeFileSync(path.join(dir, firstCopy), 'Earlier retained bytes');
+  const second = createSettingsStore({ filePath, now });
+  assert.equal(first.takeLoadWarning().code, 'settings_recovered');
+  assert.equal(second.takeLoadWarning().code, 'settings_recovered');
+  assert.equal(fs.readdirSync(dir).length, 3);
+  assert.equal(fs.readFileSync(path.join(dir, firstCopy), 'utf8'), 'Earlier retained bytes');
+});
+
+test('a partial owned recovery copy is removed on failure, never the source', (t) => {
+  const { dir, filePath } = recoveryFixture(t);
+  fs.writeFileSync(filePath, '{broken');
+  const fileSystem = Object.assign({}, fs, { writeFileSync(target, content, ...args) {
+    if (typeof target === 'number') {
+      fs.writeSync(target, Buffer.from('part'));
+      throw Object.assign(new Error('Full disk'), { code: 'ENOSPC' });
+    }
+    return fs.writeFileSync(target, content, ...args);
+  } });
+  const store = createSettingsStore({ filePath, fs: fileSystem });
+  assert.equal(store.takeLoadWarning().code, 'settings_recovery_failed');
+  assert.equal(store.setLimits({ maxListedFiles: 42 }).ok, false);
+  assert.equal(fs.readFileSync(filePath, 'utf8'), '{broken');
+  assert.deepEqual(fs.readdirSync(dir), ['settings.json']);
+});
+
+test('missing and valid settings do not report a recovery warning', (t) => {
+  const { filePath } = recoveryFixture(t);
+  const missing = createSettingsStore({ filePath });
+  assert.equal(missing.takeLoadWarning(), null);
+  assert.equal(missing.setTheme({ mode: 'light' }).ok, true);
+  const valid = createSettingsStore({ filePath });
+  assert.equal(valid.takeLoadWarning(), null);
+  assert.equal(valid.getSettings().theme.mode, 'light');
+});
+
+test('settings write failure is reported without changing in-memory settings', (t) => {
+  const { filePath } = recoveryFixture(t);
+  const store = createSettingsStore({ filePath, fs: Object.assign({}, fs, {
+    writeFileSync() { throw Object.assign(new Error('Denied'), { code: 'EACCES' }); }
+  }) });
+  const before = store.getSettings();
+  assert.deepEqual(store.setTheme({ mode: 'light' }), { ok: false, code: 'settings_write_failed', message: 'App settings could not be saved. Check file permissions and available disk space, then try again.' });
+  assert.equal(store.getSettings(), before);
+});
+
+test('invalid JSON root values are preserved rather than treated as a settings object', (t) => {
+  const { dir } = recoveryFixture(t);
+  for (const [index, content] of ['null', '[]', '"text"', 'true'].entries()) {
+    const filePath = path.join(dir, 'settings-' + index + '.json');
+    fs.writeFileSync(filePath, content);
+    const store = createSettingsStore({ filePath });
+    assert.equal(store.takeLoadWarning().code, 'settings_recovered');
+    assert.equal(fs.readFileSync(filePath, 'utf8'), content);
+  }
+});
+
+test('exhausted exclusive recovery names block saves without overwriting any copy', (t) => {
+  const { filePath } = recoveryFixture(t);
+  fs.writeFileSync(filePath, '{broken');
+  let attempts = 0;
+  const fileSystem = Object.assign({}, fs, { openSync() {
+    attempts += 1;
+    throw Object.assign(new Error('Already exists'), { code: 'EEXIST' });
+  } });
+  const store = createSettingsStore({ filePath, fs: fileSystem });
+  assert.equal(attempts, 100);
+  assert.equal(store.takeLoadWarning().code, 'settings_recovery_failed');
+  assert.equal(store.setTheme({ mode: 'light' }).ok, false);
+  assert.equal(fs.readFileSync(filePath, 'utf8'), '{broken');
+});

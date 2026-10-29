@@ -40,18 +40,28 @@ function createProviderModelService(options) {
   }
 
   function setActiveProvider(providerId) {
+    const previousProviderId = settingsState.getActiveProvider().id;
     const result = settingsState.setActiveProvider(providerId);
     if (result.ok && settingsStore && typeof settingsStore.setActiveProvider === 'function') {
-      settingsStore.setActiveProvider(result.activeProvider.id);
+      const saved = settingsStore.setActiveProvider(result.activeProvider.id);
+      if (saved && saved.ok === false) {
+        settingsState.setActiveProvider(previousProviderId);
+        return saved;
+      }
     }
     return result;
   }
 
   function setSelectedModel(providerId, model) {
+    const previous = settingsState.getProviders().find((provider) => provider.id === String(providerId || '').trim());
     const result = settingsState.setSelectedModel(providerId, model);
     if (result.ok && settingsStore && typeof settingsStore.setSelectedProviderModel === 'function') {
       const provider = result.providers.find((item) => item.id === String(providerId || '').trim());
-      settingsStore.setSelectedProviderModel(providerId, provider ? provider.selectedModel : model);
+      const saved = settingsStore.setSelectedProviderModel(providerId, provider ? provider.selectedModel : model);
+      if (saved && saved.ok === false) {
+        if (previous) settingsState.setSelectedModel(providerId, previous.selectedModel);
+        return saved;
+      }
     }
     return result;
   }

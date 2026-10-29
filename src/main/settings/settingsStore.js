@@ -6,6 +6,12 @@ const { normalizeActionDefaults } = require('../../shared/settings/actionDefault
 const { normalizeAppTheme } = require('../../shared/settings/theme');
 
 const SETTINGS_VERSION = 1;
+const MAX_RECOVERY_ATTEMPTS = 100;
+const SETTINGS_FAILURE_MESSAGES = Object.freeze({
+  settings_read_failed: 'App settings could not be read. Check file permissions and restart Vincarios before saving settings.',
+  settings_recovery_failed: 'App settings are invalid and could not be backed up. Preserve the original file, check file permissions and disk space, then restart Vincarios before saving settings.',
+  settings_write_failed: 'App settings could not be saved. Check file permissions and available disk space, then try again.'
+});
 const DEFAULT_SIMILAR_NOTES = Object.freeze({
   minimumScorePercent: 65,
   maxResults: 8,
@@ -39,7 +45,10 @@ const DEFAULT_LIMITS = Object.freeze({
 function createSettingsStore(options) {
   options = options || {};
   const filePath = options.filePath || '';
-  let settings = normalizeAppSettings(loadSettingsFile(filePath, options.initialSettings));
+  const fileSystem = options.fs || fs;
+  const loaded = loadSettingsFile(filePath, options.initialSettings, fileSystem, options.now || (() => new Date()));
+  let settings = normalizeAppSettings(loaded.settings);
+  let loadWarning = loaded.warning || null;
 
   function getSettings() {
     return settings;
@@ -48,9 +57,27 @@ function createSettingsStore(options) {
   function updateSettings(mutator) {
     const draft = cloneSettings(settings);
     const next = typeof mutator === 'function' ? mutator(draft) : draft;
-    settings = normalizeAppSettings(next || draft);
-    saveSettingsFile(filePath, settings);
+    const normalized = normalizeAppSettings(next || draft);
+    saveSettingsFile(filePath, normalized, fileSystem);
+    settings = normalized;
     return settings;
+  }
+
+  function takeLoadWarning() {
+    const warning = loadWarning;
+    loadWarning = null;
+    return warning;
+  }
+
+  function protectWrite(operation) {
+    return (...args) => {
+      if (loaded.blocked) return Object.assign({}, loaded.blocked);
+      try {
+        return operation(...args);
+      } catch (_error) {
+        return settingsFailure('settings_write_failed');
+      }
+    };
   }
 
   function setActiveProvider(providerId) {
@@ -157,17 +184,18 @@ function createSettingsStore(options) {
 
   return Object.freeze({
     getSettings,
-    updateSettings,
-    setActiveProvider,
-    setSelectedProviderModel,
-    setProviderUrlOverride,
-    resetProviderUrlOverride,
-    setLimits,
-    setEmbeddingSettings,
-    setActionDefaults,
-    setRecentVaults,
-    setLayoutPreferences,
-    setTheme
+    takeLoadWarning,
+    updateSettings: protectWrite(updateSettings),
+    setActiveProvider: protectWrite(setActiveProvider),
+    setSelectedProviderModel: protectWrite(setSelectedProviderModel),
+    setProviderUrlOverride: protectWrite(setProviderUrlOverride),
+    resetProviderUrlOverride: protectWrite(resetProviderUrlOverride),
+    setLimits: protectWrite(setLimits),
+    setEmbeddingSettings: protectWrite(setEmbeddingSettings),
+    setActionDefaults: protectWrite(setActionDefaults),
+    setRecentVaults: protectWrite(setRecentVaults),
+    setLayoutPreferences: protectWrite(setLayoutPreferences),
+    setTheme: protectWrite(setTheme)
   });
 }
 
@@ -303,20 +331,68 @@ function validateProviderBaseUrl(value) {
   return { ok: true, value: url.toString().replace(/\/+$/g, '') };
 }
 
-function loadSettingsFile(filePath, fallback) {
-  if (!filePath) return fallback || {};
+function loadSettingsFile(filePath, fallback, fileSystem, now) {
+  if (!filePath) return { settings: fallback || {} };
+  let original;
   try {
-    if (!fs.existsSync(filePath)) return fallback || {};
-    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    original = fileSystem.readFileSync(filePath);
   } catch (error) {
-    return fallback || {};
+    if (error.code === 'ENOENT') return { settings: fallback || {} };
+    const blocked = settingsFailure('settings_read_failed');
+    return { settings: fallback || {}, blocked, warning: blocked };
   }
+  try {
+    const settings = JSON.parse(original.toString('utf8'));
+    if (settings && typeof settings === 'object' && !Array.isArray(settings)) return { settings };
+  } catch (_error) {
+    // Parse errors are recoverable only after the exact source bytes are retained.
+  }
+  const backupPath = preserveInvalidSettings(filePath, original, fileSystem, now);
+  if (!backupPath) {
+    const blocked = settingsFailure('settings_recovery_failed');
+    return { settings: fallback || {}, blocked, warning: blocked };
+  }
+  return { settings: fallback || {}, warning: {
+    code: 'settings_recovered',
+    message: 'App settings are invalid. The original was preserved as ' + path.basename(backupPath) + '. This session uses defaults; reconfigure Settings if needed. The original settings file is replaced only when settings are saved.'
+  } };
 }
 
-function saveSettingsFile(filePath, settings) {
+function preserveInvalidSettings(filePath, original, fileSystem, now) {
+  const stamp = now().toISOString().replace(/[.:]/g, '-');
+  for (let attempt = 0; attempt < MAX_RECOVERY_ATTEMPTS; attempt += 1) {
+    const backupPath = filePath + '.corrupt-' + stamp + (attempt ? '-' + attempt : '');
+    let descriptor = null;
+    let created = false;
+    try {
+      descriptor = fileSystem.openSync(backupPath, 'wx');
+      created = true;
+      fileSystem.writeFileSync(descriptor, original);
+      fileSystem.closeSync(descriptor);
+      descriptor = null;
+      return backupPath;
+    } catch (error) {
+      if (descriptor !== null) {
+        try { fileSystem.closeSync(descriptor); } catch (_closeError) {}
+      }
+      if (created) {
+        try { fileSystem.unlinkSync(backupPath); } catch (_cleanupError) {}
+      }
+      if (!created && error.code === 'EEXIST') continue;
+      return '';
+    }
+  }
+  return '';
+}
+
+function settingsFailure(code) {
+  return { ok: false, code, message: SETTINGS_FAILURE_MESSAGES[code] };
+}
+
+function saveSettingsFile(filePath, settings, fileSystem) {
   if (!filePath) return;
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, JSON.stringify(settings, null, 2) + '\n', 'utf8');
+  fileSystem.mkdirSync(path.dirname(filePath), { recursive: true });
+  fileSystem.writeFileSync(filePath, JSON.stringify(settings, null, 2) + '\n', 'utf8');
 }
 
 function cloneSettings(settings) {

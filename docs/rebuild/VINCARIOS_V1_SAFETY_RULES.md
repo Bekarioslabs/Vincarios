@@ -21,6 +21,14 @@ Normal note access validates protected path segments both before and after resol
 
 The source now pins Electron 44.10.0, replacing the unsupported 42 branch after explicit migration approval. Browser clipboard workflows already use `navigator.clipboard`, not the removed renderer `electron.clipboard` module; no new clipboard bridge or permission was introduced. The native sandbox/IPC/window/clipboard-policy and local inference checks must be repeated when the runtime changes, and a source-runtime pass does not certify a newly packaged executable. Review the [upstream breaking changes](https://www.electronjs.org/docs/latest/breaking-changes) and [support schedule](https://releases.electronjs.org/schedule) before a future self-build or archival snapshot.
 
+## App Settings Recovery
+
+The Main settings store distinguishes a missing file (`ENOENT`) from unreadable data. Missing settings use defaults normally. A read/permission failure uses session defaults but blocks every settings mutation until the file can be read after restart; it must not be called JSON corruption or silently overwritten. Failed saves return an explicit settings error and do not commit the candidate in-memory settings. Provider/model selection restores its previous runtime value when persistence fails.
+
+Malformed JSON or a non-object JSON root is recoverable only after the exact source bytes have been preserved beside the app settings file as a unique `settings.json.corrupt-<timestamp>[-suffix]` copy. Exclusive creation never overwrites an earlier copy; only collisions are retried, up to 100 attempts. On a partial-copy failure, cleanup may remove only the copy created by that attempt. If preservation fails, saving remains blocked. The original settings file is left intact until a later settings save; a successful recovery copy permits saving new defaults/preferences without losing the retained original.
+
+Bootstrap displays one native warning per settings-store startup after creating the main window. The warning distinguishes successful recovery from blocked read/recovery, names the retained copy when available and gives a next action; raw filesystem errors and absolute paths are not sent to the renderer. Valid or genuinely missing settings produce no recovery warning. This is settings-load recovery, not a claim of crash-durable or transactional ordinary settings saves.
+
 ## Permission Model
 
 Startup acquires Electron's single-instance lock before namespace migration, settings loading or IPC registration. A denied lock quits without starting those services; the primary instance restores and focuses its live window on a second launch. Portable executable lock identity still requires the final Windows runtime smoke test.

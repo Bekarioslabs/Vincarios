@@ -471,3 +471,46 @@ test('second-instance event restores and focuses the live primary window', () =>
   windows.length = 0;
   assert.doesNotThrow(() => listeners.get('second-instance')());
 });
+
+test('bootstrap displays a settings recovery warning once after the window is created', (t) => {
+  const os = require('node:os');
+  const { createSettingsStore } = require('../src/main/settings/settingsStore');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'vincarios-settings-start-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const filePath = path.join(root, 'settings.json');
+  fs.writeFileSync(filePath, '{broken');
+  const settingsStore = createSettingsStore({ filePath });
+  const messages = [];
+  const windows = [];
+  let ready;
+  function BrowserWindow() {
+    this.webContents = { on() {}, setWindowOpenHandler() {}, send() {} };
+    this.loadFile = () => Promise.resolve();
+    windows.push(this);
+  }
+  BrowserWindow.getAllWindows = () => windows;
+  const electron = {
+    app: { requestSingleInstanceLock: () => true, on() {}, getVersion: () => 'test', whenReady: () => ({ then(callback) { ready = callback; } }) },
+    ipcMain: { handle() {} },
+    BrowserWindow,
+    dialog: { showMessageBoxSync(parent, options) { messages.push({ parent, options }); return 0; } }
+  };
+  const options = { projectRoot: root, settingsFilePath: filePath, settingsStore };
+  const service = { subscribe: () => () => {}, sendChat() {}, getStatus() {}, getSettings: () => settingsStore.getSettings() };
+  ['vaultReadService', 'vaultWriteService', 'reviewedTemplateService', 'vaultProfileService',
+    'vaultRecentFilesService', 'vaultInventoryService', 'vaultReviewBasketService', 'settingsService',
+    'providerStatusService', 'providerModelService', 'chatService', 'vaultIndexFreshnessService',
+    'embeddingIndexer', 'embeddingSearchService', 'embeddingIndexStatusService', 'embeddingIndexHealthService',
+    'metadataIndexer', 'metadataIndexStatusService', 'fullTextIndexer', 'fullTextIndexStatusService',
+    'fullTextIndexHealthService', 'vaultIndexHealthService', 'vaultChangeService', 'vaultSearchService',
+    'vaultSessionCoordinator'].forEach((name) => { options[name] = service; });
+  bootstrapElectron(electron, options);
+  assert.equal(messages.length, 0);
+  ready();
+  assert.equal(messages.length, 1);
+  assert.equal(messages[0].parent, windows[0]);
+  assert.equal(messages[0].options.type, 'warning');
+  assert.match(messages[0].options.message, /settings\.json\.corrupt-/);
+  ready();
+  assert.equal(messages.length, 1);
+});

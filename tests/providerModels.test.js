@@ -100,3 +100,17 @@ test('provider model service persists active provider and selected model when se
     ['model', 'ollama', 'qwen2.5:7b']
   ]);
 });
+
+test('failed settings persistence does not leave a changed provider or model active', () => {
+  const settingsState = createProviderSettingsState();
+  const before = settingsState.getActiveProvider();
+  const failure = { ok: false, code: 'settings_read_failed', message: 'Settings are unreadable.' };
+  const service = createProviderModelService({ settingsState, settingsStore: {
+    setActiveProvider: () => failure,
+    setSelectedProviderModel: () => failure
+  } });
+  assert.deepEqual(service.setActiveProvider('ollama'), failure);
+  assert.equal(settingsState.getActiveProvider().id, before.id);
+  assert.deepEqual(service.setSelectedModel(before.id, 'new-model'), failure);
+  assert.equal(settingsState.getActiveProvider().selectedModel, before.selectedModel);
+});
