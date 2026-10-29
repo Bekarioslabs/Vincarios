@@ -3,17 +3,19 @@
 Current status: STATUS.md (private planning file, German).
 
 > **Quick Reference**
-> vincarios is a local-first Markdown vault assistant. Safety first. All vault writes are explicit, reviewable, and backed up. Providers generate text only — they never touch files.
+> vincarios is a local-first Markdown vault assistant. Safety first. Note writes use explicit review; existing-note changes require backups. Providers generate text only — they never touch files.
 
 ---
 
 ## 1. Identity & Scope
 
-vincarios is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian, it does not replace it.
+vincarios is a local-first Markdown and project workspace. Obsidian-style vault compatibility is a supported workflow, not the product's entire identity; it does not replace Obsidian.
 
 **Not vincarios:** general-purpose agent, cloud AI client, standalone media manager, plugin ecosystem.
 
 Do not add features outside V1 without updating the product brief and asking Beka.
+
+**Closure direction:** feature development has ended. Finish the accepted safety hardening and internal Windows verification, then prepare an unmaintained GPL source archive without a public EXE. The repository is not yet publicly archived. Old rebuild/beta instructions do not authorize deleting, resetting, scaffolding or publishing anything. See the source archive checklist in `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`; remote operations still require explicit approval.
 
 **Priorities:** Safety → Reliable Markdown workflows → Review UX → Maintainable architecture → Local providers
 
@@ -23,7 +25,7 @@ Do not add features outside V1 without updating the product brief and asking Bek
 
 ## 2. Safety Laws
 
-These are enforced in code, not prompts. Non-negotiable.
+These are required application contracts, not prompt instructions. Main enforces paths, payload limits, backups, stale-content checks and audit transactions. The renderer currently owns R/W state and visible review; IPC sender checks do not independently prove human approval or protect against compromised code already running in the trusted app frame. Do not claim that Main enforces a separate permission/review authority.
 
 - Providers never read or write vault files.
 - Renderer never gets direct filesystem access.
@@ -101,7 +103,7 @@ When adding behavior, identify the owner first. If unclear, update `docs/rebuild
 Use folder roles in code, not hard-coded names.
 Source of truth: `src/shared/vaultProfile/defaults.js` — always read the file before assuming role names.
 
-Phase 5.4 target (English defaults — may not yet be in code):
+Current English defaults in `defaults.js`:
 ```
 inbox     → 00_Inbox
 daily     → 01_Daily
@@ -111,7 +113,7 @@ brain     → 90_AI_Brain
 archive   → 99_Archive
 ```
 
-If `defaults.js` still contains German names, that is the current canonical state. Do not change role names without Beka's explicit instruction.
+Vault profiles can assign these roles to other folder paths or leave them unassigned. Do not change role names without Beka's explicit instruction.
 
 ### Code Rules
 

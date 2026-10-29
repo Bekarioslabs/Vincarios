@@ -31,6 +31,8 @@
 - [ ] Find Similar Notes opens its inline options directly below the action and sends results to Suggestions.
 - [ ] Suggest Tags on `11 Astronomical Field Notes.md` is deterministic and does not require a provider call.
 - [ ] Propose Content Update on `03 Editor Update Target.md` requires R and W, accepts an instruction, and creates a whole-note reviewed diff rather than writing directly.
+- [ ] With the local model loaded, a small note's update form reports likely fit; expandable details distinguish observed context and estimates. Typing and submission recheck. No write occurs before Review execution.
+- [ ] Unload the selected model and attempt an update: unknown context, no generation/proposal, instruction retained. Load it manually and retry to recover. A note below the character limit but above the context estimate is similarly blocked. Ordinary chat/manual editing remain unchanged.
 - [ ] Collapse Files. File/folder actions are inactive until Files is visible again.
 
 ## External Endpoint Consent

@@ -1,6 +1,6 @@
-# vincarios Post-V1 Backlog
+# vincarios Historical Post-V1 Ideas
 
-This is a prioritised design backlog, not a promise or delivery schedule. Each item needs a dedicated design, owner, tests, and review-flow check before implementation.
+Feature development has ended; there are no planned upstream releases. These earlier ideas are retained as reference for independent forks, not an active backlog, promised features or a delivery schedule. Historical version headings below describe the former plan only. Any fork implementation needs its own design, owner, tests and review-flow checks.
 
 ## `0.1.x` - Public Beta Stabilisation
 

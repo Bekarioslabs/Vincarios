@@ -14,6 +14,8 @@
 - [ ] Execute the update for `03 Editor Update Target.md`. Preview refreshes immediately to the committed content.
 - [ ] Confirm a backup exists under the vault-local `.vincarios/backups/` hierarchy for the original note.
 - [ ] Confirm `.vincarios/audit.jsonl` receives an entry for the executed action without storing unrelated note content.
+- [ ] New note/update/rename audit entries include Main-computed SHA256/byte counts; updates retain the original raw-byte hash and line-ending-preserved output hash. Creation has `before: null`; template creation lists each file separately. Existing historical lines need not contain the new fields.
+- [ ] A new AI update or saved answer retains its generation-time provider/resolved model, even if the active provider/model is changed before execution. Source edits and local tag suggestions have no invented provider. Old proposals may have unknown provenance; it is informational, never approval. Inspect logs before sharing: paths/model IDs/hashes can be sensitive even without note bodies.
 - [ ] Change the target externally after creating another update proposal, then execute the stale proposal. Vincarios rejects it instead of overwriting newer content.
 - [ ] Execute the imported note and create-note proposals. Existing filenames are never silently overwritten.
 - [ ] Execute the project proposal. Either every planned folder/file appears or none remains after a forced collision/failure.
@@ -27,6 +29,18 @@
 - [ ] An empty replacement remains non-executable; a deliberately large but valid rewrite can still be applied after review and acknowledgement.
 - [ ] Close any old source-launched instance, start the updated app, minimize it and launch the same app again. The first window is restored/focused; no second window or second vault session is created. Repeat with the final portable build at A11; source tests alone do not certify portable lock identity.
 - [ ] On a disposable vault copy only, a real watcher failure reports that automatic file updates stopped; manually refreshing Files remains available, and reopening the vault restarts watching. A late warning from the old session must not appear in the new vault. Error injection and callback isolation are covered automatically; native failure behavior remains a manual gate.
+
+## App Settings Recovery (A09)
+
+- [ ] With valid settings, start the app, change a normal setting, restart and verify persistence without a recovery warning.
+- [ ] In an isolated disposable app profile only, malformed settings show one startup recovery warning naming a retained `.corrupt-...` copy. The copy retains the original bytes before any defaults can be saved. Never damage a real user's settings for this check.
+- [ ] Automated controlled-filesystem cases distinguish missing settings from permission/read errors, reject saving when read/recovery failed, bound exclusive-copy retries, and keep the previous in-memory settings/provider/model after a reported save failure. These tests do not replace native-dialog appearance or final portable smoke checks.
+
+## IPC Boundary (A09)
+
+- [ ] The updated source app starts normally; Open Vault/recent activation, Preview, Search, Settings save, local chat and one reviewed write still work without an unexpected sender-denial message.
+- [ ] Expected service errors and cancelled dialogs retain their original codes/messages; an unavailable index or stale proposal is not replaced by a generic IPC error.
+- [ ] Developer/native probe: `node scripts/probe-ipc-boundary.js` passes trusted-frame requests, rejects same-origin subframes/foreign windows/wrong documents, accepts a shell reload, hides thrown private error details and revokes the previous window after replacement. It uses only its owned temporary profile and synthetic files; final packaged-runtime acceptance remains separate.
 
 ## Review Persistence
 
@@ -57,6 +71,9 @@ $actual -eq $expected
 ```
 
 ## Final Safety Check
+
+- [ ] After the runtime/permission update, copy a neutral chat/preview fragment, cut and paste neutral text in Source with Ctrl+X/Ctrl+V and the app's context-menu commands. No permission error, lost text or unsolicited access prompt; discard the local edit afterward.
+- [ ] On the final built artifact, inspect the inner `win-unpacked/vincarios.exe` with the already installed fuse tool: RunAsNode, NodeOptions and CLI inspect disabled; embedded ASAR integrity and ASAR-only loading enabled. A static package.json assertion is not artifact verification. No unpinned network-fetched npx tool.
 
 - [ ] No provider action worked without the required R/W state.
 - [ ] No write reached the vault without Review.

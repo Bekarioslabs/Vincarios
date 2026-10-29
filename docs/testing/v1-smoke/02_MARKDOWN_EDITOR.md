@@ -43,6 +43,22 @@
 - [ ] In the final portable build, View has no Reload/Force Reload items. Window close still offers Stay/Discard for unsaved local edits.
 - [ ] Optional developer probe: `node scripts/probe-editor-unload.js` runs hidden real Electron windows with synthetic notes and an isolated temporary profile. It verifies native reload/menu/close paths and cleans up its owned fixture; foreground keyboard accelerators still require the manual check above.
 
+## Markdown Extension Consistency (A08)
+
+- [ ] In a disposable vault, open `.markdown` and `.MARKDOWN` notes. Preview, Summary/Context/Similar/Tags/Update actions and context badges treat them like `.md` notes without bypassing R/W checks.
+- [ ] Execute one reviewed editor addition to each extension. Verify content, original-version backup and clean editor readback; no `not_markdown` error and no double `.md` suffix.
+- [ ] An extensionless relative wikilink opens a nearby `.markdown` note even without an index. The Link Picker includes indexed `.markdown` results and retains that suffix in inserted links; selecting `Guide.markdown` beside `Guide.md` must open the chosen long-extension note, not its sibling. Extensionless cross-folder lookup still reaches the vault-root candidate after a relative miss.
+- [ ] After an external `.markdown` edit, metadata search picks up changed tags via the existing incremental flow. A later external deletion removes its metadata record. Embedding/full-text freshness remains an independent status, not proof of metadata failure.
+- [ ] Rename a disposable `.markdown` note first with an explicit `.markdown` suffix, then without a suffix. The supported extension is preserved; links are not automatically updated by Rename Light.
+
+## New Names (A08)
+
+- [ ] New Note/New Project: device names such as `CON` or `AUX.txt`, `Bad#Name`, `Bad[Name]`, trailing period/space and empty input show an error. The dialog stays open and adds no proposal; no silently renamed output appears.
+- [ ] Create `Aurora  Lab!` and a note with an explicit `.MARKDOWN` suffix through Review. Preview, Review and actual filesystem names agree, including repeated internal spaces, punctuation and suffix case.
+- [ ] F2 a disposable note to `NUL.md`, `Bad#Name` and a name with a trailing space. Each fails without changing the original. A valid new name preserves the original extension when omitted.
+- [ ] Open an existing note named `Old [draft] #1.md` directly in Files and apply one small reviewed edit. The old name remains readable and unchanged. Existing unusual folder names do not prevent creating an ordinarily named child.
+- [ ] Developer boundary checks cover 255/256 UTF-16 units, suffix overhead, control characters and direct Main/template requests; the UI is not the only gate.
+
 ## Malformed Frontmatter
 
 - [ ] Open `09 Malformed Frontmatter.md`. Its Markdown body remains readable and malformed YAML remains visible.

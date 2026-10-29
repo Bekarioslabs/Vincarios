@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const { parse } = require('yaml');
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
 const ciWorkflow = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', 'ci.yml'), 'utf8');
@@ -25,6 +26,21 @@ test('Windows release build is a portable, versioned candidate with bundled loca
 
 test('release package keeps native ONNX runtime outside ASAR', () => {
   assert.deepEqual(packageJson.build.asarUnpack, ['node_modules/onnxruntime-node/**']);
+});
+
+test('self-built application includes the project license as well as third-party notices', () => {
+  assert.equal(packageJson.build.files.includes('LICENSE'), true);
+  assert.ok(fs.statSync(path.join(__dirname, '..', 'LICENSE')).isFile());
+});
+
+test('packaged runtime disables Node entry overrides and requires the integrity-checked ASAR', () => {
+  assert.deepEqual(packageJson.build.electronFuses, {
+    runAsNode: false,
+    enableNodeOptionsEnvironmentVariable: false,
+    enableNodeCliInspectArguments: false,
+    enableEmbeddedAsarIntegrityValidation: true,
+    onlyLoadAppFromAsar: true
+  });
 });
 
 test('Windows application icon contains PNG frames for small and high-DPI displays', () => {
@@ -68,15 +84,13 @@ test('CI keeps portable tests and adds a verified Windows packaging smoke job', 
   assert.match(ciWorkflow, /package-windows:[\s\S]*runs-on: windows-latest/);
   assert.match(ciWorkflow, /package-windows:[\s\S]*run: npm run model:provision/);
   assert.match(ciWorkflow, /package-windows:[\s\S]*run: npm run build:win/);
-  assert.match(ciWorkflow, /actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7\.0\.1/);
 });
 
-test('packaged runtime disables Node entry overrides and requires the integrity-checked ASAR', () => {
-  assert.deepEqual(packageJson.build.electronFuses, {
-    runAsNode: false,
-    enableNodeOptionsEnvironmentVariable: false,
-    enableNodeCliInspectArguments: false,
-    enableEmbeddedAsarIntegrityValidation: true,
-    onlyLoadAppFromAsar: true
-  });
+test('source-only archive CI validates the Windows build without distributing a binary', () => {
+  const workflow = parse(ciWorkflow);
+  const steps = workflow.jobs['package-windows'].steps;
+  assert.equal(steps.some((step) => step.run === 'npm run build:win'), true);
+  const artifactUploads = Object.values(workflow.jobs).flatMap((job) => job.steps || [])
+    .filter((step) => typeof step.uses === 'string' && step.uses.startsWith('actions/upload-artifact@'));
+  assert.deepEqual(artifactUploads, []);
 });

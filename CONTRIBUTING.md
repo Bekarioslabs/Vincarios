@@ -1,10 +1,10 @@
 # Contributing To vincarios
 
-Thanks for considering a contribution. vincarios is still a V1 rebuild, so the most valuable contributions are small, tested, and aligned with the safety model.
+Feature development has ended. Final closure checks are in progress before publication as an unmaintained source archive; the repository is not yet publicly archived. Upstream does not promise issue triage, pull-request review, merges, releases or technical support. Do not wait for an upstream response before deciding whether to maintain an independent fork.
 
 ## Product Boundary
 
-vincarios is a local-first assistant for Obsidian-style Markdown vault organization. It complements Obsidian; it is not a second Obsidian, a general agent platform, or a cloud AI client.
+vincarios is a local-first Markdown and project workspace with Obsidian-style vault compatibility. It is not a second Obsidian, a general agent platform, or a cloud AI client. The following guidance is retained for people studying or maintaining a fork, not as an invitation to an active upstream roadmap.
 
 Before proposing a large feature, check:
 
@@ -21,11 +21,11 @@ npm run check
 npm test
 ```
 
-On Windows, `start.bat` can launch the local Electron app when `npm` is not available in the active shell.
+On Windows, `start.bat` is an alternative launcher after dependency installation. See README for model provisioning and Windows self-build instructions. Upstream publishes source, not a ready-to-run EXE.
 
 ## Required Checks
 
-Before opening a pull request, run:
+Before distributing or reviewing changes in a fork, run:
 
 ```bash
 npm run audit:security
@@ -33,7 +33,7 @@ npm run licenses:check
 npm test
 ```
 
-GitHub CI runs the same policy and test gates, then packages a verified Windows portable smoke artifact.
+The retained CI workflow runs policy/test gates and checks Windows packaging without uploading an executable. Fork maintainers must choose their own distribution, security and support policy.
 
 ## Architecture Rules
 
@@ -46,9 +46,9 @@ GitHub CI runs the same policy and test gates, then packages a verified Windows 
 
 See `AGENTS.md` and `docs/rebuild/VINCARIOS_V1_ARCHITECTURE.md` before changing architecture.
 
-## Pull Request Guidelines
+## Guidelines For Fork Changes
 
-A good PR should:
+A focused change should:
 
 - stay focused on one behavior or module area
 - include or update tests for changed behavior
@@ -57,7 +57,7 @@ A good PR should:
 
 ## Contribution License
 
-By submitting a contribution to this repository, you license that contribution under GPL-3.0-only. You retain your copyright.
+The existing source is licensed under GPL-3.0-only. Independent forks and redistribution must comply with the project license and third-party notices. This document is not a separate license or a promise to accept contributions.
 
 ## Commit Style
 

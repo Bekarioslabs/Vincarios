@@ -33,6 +33,13 @@
     "productName": "vincarios",
     "icon": "src/renderer/assets/brand/vincarios-icon.ico",
     "asar": true,
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true
+    },
     "asarUnpack": [
       "node_modules/onnxruntime-node/**"
     ],
@@ -43,6 +50,7 @@
       "src/**/*",
       "index.html",
       "package.json",
+      "LICENSE",
       "third_party/**/*",
       "!**/.vincarios/**",
       "!dev-vault/**",
@@ -77,13 +85,6 @@
     },
     "portable": {
       "requestExecutionLevel": "user"
-    },
-    "electronFuses": {
-      "runAsNode": false,
-      "enableNodeOptionsEnvironmentVariable": false,
-      "enableNodeCliInspectArguments": false,
-      "enableEmbeddedAsarIntegrityValidation": true,
-      "onlyLoadAppFromAsar": true
     }
   },
   "devDependencies": {

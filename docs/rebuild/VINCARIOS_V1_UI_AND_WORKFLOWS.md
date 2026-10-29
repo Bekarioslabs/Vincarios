@@ -317,12 +317,12 @@ Missing permissions for Selection Actions are handled by app logic before provid
 Current V1 foundation actions:
 
 - selected Markdown file currently shows `Summarize file`, `Use as context`, `Find similar notes`, `Suggest tags`, and `Propose content update`. `Suggest tags` creates local heuristic metadata suggestions from the selected file path/title/frontmatter and sends them to Suggestions as `metadata_candidate` items; it does not call the provider or write directly. `Propose content update` stays visible and clickable for Markdown files; when R/W or loaded content are missing it appears visually muted and clicks show app-side guidance. When ready, it asks for an explicit content-change instruction, then adds or refreshes one reviewed whole-note `update_note` draft for that file in the Review Basket. Rename, move, archive, and delete remain separate future actions.
-- selected folder currently shows `Use as context`, `List folder`, `Analyze folder`, and `Summarize MD files`.
-- `Use as context` is active for readable folders and for readable loaded Markdown files. Folder context is path-only; Markdown file context includes loaded note content.
+- selected folder currently shows `Use as context`, `Inspect folder`, and `Summarize MD files`.
+- `Use as context` is active for readable folders and readable loaded Markdown files. Folder context uses an explicit bounded Markdown snapshot; legacy folder-path packets carry no note content. File context includes loaded note content.
 - inactive actions remain visible as intentional V1 slots and must not execute hidden behavior.
 - Selection Action presentation comes from the Action Registry: short labels keep rows scannable, semantic Lucide icons remain centrally replaceable, category dots show Context/Read/Write/Organize as a supporting cue, and tooltips/accessible labels keep the full action meaning available. Action rows do not use category-color borders.
 - Execution kinds are explicit: `app` means deterministic app work with no model call; `embedding` means local similarity inference; `provider` means a local provider request when the action is submitted. File/folder context and tag suggestions are currently `app`, Similar Notes is `embedding`, and summaries/content-update proposals are `provider`.
-- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working. `Summarize MD files` reads only direct Markdown files from the selected folder, applies Settings/Limits caps, ignores images/PDFs/attachments, and returns a normal saveable vincarios answer. Summary answers suggest editable Save-as-Note titles in the form `Summary - MD - <file name> - YYYY-MM-DD` for Markdown files and `Summary - DIR - <folder name> - YYYY-MM-DD` for folders. They default to `AI Responses/Summaries` under the configured Inbox role.
+- provider-backed Selection Actions show a visible pending chat message with a lightweight spinner while the provider is working. `Summarize MD files` uses the chosen current-folder/subfolder scope with depth, file and character caps, ignores images/PDFs/attachments, and returns a saveable vincarios answer. Summary answers suggest editable Save-as-Note titles in the form `Summary - MD - <file name> - YYYY-MM-DD` for Markdown files and `Summary - DIR - <folder name> - YYYY-MM-DD` for folders. They default to `AI Responses/Summaries` under the configured Inbox role.
 - future custom actions belong behind Settings and must produce visible proposals or context items, not direct writes.
 
 ## Context System Decisions
@@ -347,7 +347,7 @@ Selected context is explicit, visible, request-scoped, and deterministic:
 - if the selected target changes before retry, the retry must stop with a clear mismatch message instead of applying the old blocked action to the new target.
 - if the selected file has permission but no loaded content, vincarios should instruct the user to reselect/click the file or refresh the preview inside vincarios, not switch to external upload instructions.
 - Without explicit Context Basket items, folder-scoped follow-up prompts are guidance-only in V1. The app should point the user to Selection Actions instead of inferring a parent folder from wording.
-- selected folder listing is executed by the deterministic `List folder` Selection Action when `R` is active. Natural-language folder wording may show only this inline help: `Use "List folder" in Selection Actions to inspect the selected folder.` It must not list, read, or create blocked actions by itself. The `List folder` message may offer `Check whole tree` as a follow-up app button for recursive structure listing. Pending scope replies and existing blocked-action retries remain app-state driven. Supported `list_folder` model-action envelopes remain a fallback and are checked against active app state before execution. Visible app-generated folder listings must not be stored back into provider chat history with their file names; history receives only a short app-result marker so old listings cannot become stale model context. Context intent stays narrow: pending-action replies, existing blocked-action retries, and help-only selection-action guidance. It must not grow into one-off typo lists, deictic "here/it" guesses, or broad fuzzy prompt matching.
+- selected folder inspection is executed by the deterministic `Inspect folder` Selection Action when `R` is active. Without explicit Context Basket items, natural-language folder wording may show `Use "Inspect Folder" in Selection Actions to inspect the selected folder.` It must not list, read, or create blocked actions by itself. The inspection message may offer `Check whole tree` for bounded recursive structure listing. Pending scope replies and existing blocked-action retries remain app-state driven. Supported `list_folder` model-action envelopes remain a validated fallback. Visible app-generated listing filenames are not stored in provider history; history receives only a short app-result marker. Context intent must not grow into typo lists or broad fuzzy prompt matching.
 
 For selected folders:
 - vincarios may use the folder path as the active target.
@@ -440,6 +440,8 @@ Current V1 Settings implementation:
 - `Providers` exposes LM Studio/Ollama URL overrides, provider capability badges, active provider persistence, and selected model persistence.
 - Provider URLs are validated and persisted through main-process settings services.
 - Active provider and selected model are persisted through the provider model service.
+- Invalid app-settings JSON triggers one startup warning after the main window is created. The warning identifies the retained recovery copy and explains that defaults are in use; the original file is replaced only by a subsequent settings save.
+- Unreadable settings or a failed recovery copy instead block saving for the session with an explicit permission/recovery message. Correct the file access and restart; do not treat a failed save as an active provider/model change.
 - Saving or resetting a provider URL refreshes provider status through an app event, not through direct module coupling.
 - `Limits` exposes the V1 caps for provider timeout, model-list timeout, selected-file context, folder/file listing, analysis file count, and review suggestion count.
 - `Vault Profile` configures the opened vault through a portable `.vincarios/profile.json`, while preserving the Phase 2 vault-profile helpers for consumers.
@@ -560,8 +562,7 @@ The Selection Actions panel replaces broad prompt guessing with explicit app-sid
 Current V1 foundation actions for selected folders:
 
 - Use as context
-- List folder
-- Analyze folder
+- Inspect folder
 - Summarize MD files
 
 Current V1 foundation actions for selected Markdown files:

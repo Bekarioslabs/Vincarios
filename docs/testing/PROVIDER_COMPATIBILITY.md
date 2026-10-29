@@ -22,4 +22,5 @@ Add a row only after the listed flows pass in the manual smoke pack:
 
 - LM Studio and Ollama are the supported local-provider baselines for `v0.1.0-beta.1`.
 - An unlisted local OpenAI-compatible endpoint may work, but has not been verified for the public beta.
+- Dedicated whole-note Content Update requires an already loaded model and a readable effective context: LM Studio native `/api/v1/models` `loaded_instances[].config.context_length`, or Ollama `/api/ps` `context_length`. Unknown/ambiguous allocations block this action, not ordinary chat/summaries. Metadata GETs do not load models. Estimates deliberately favor false rejection over unverified fit; configure context in the provider or use Source editing if blocked.
 - The bundled embedding artifacts are identified separately in `THIRD_PARTY_NOTICES.md` and verified by `npm run model:verify`.

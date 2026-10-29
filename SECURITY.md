@@ -6,12 +6,14 @@ vincarios is a local-first Markdown vault assistant. Its security model is built
 
 | Version | Supported |
 |---|---|
-| V1 rebuild / main branch | Yes |
-| Archived prototype | No |
+| Current source / main branch | No ongoing maintenance |
+| Historical versions or self-built applications | No |
+
+Feature development has ended; final source-archive preparation is still in progress. No security updates, vulnerability-response deadlines or technical support are promised after closure. The repository is not yet publicly archived. No official executable will be distributed with the source archive.
 
 ## Security Model
 
-Electron is pinned to an exact version for release reproducibility. Dependency updates should be deliberate: update, review advisories, run tests, review the lockfile diff, then pin the new version. Release builds should come from a clean checkout, use the lockfile, and publish SHA256 checksums. Until code signing exists, beta builds must be described as unsigned.
+Electron is pinned to an exact version for reproducibility, not ongoing security. A fork or self-build needs its own dependency review: check advisories, review changes and the lockfile, test, then pin the chosen version. The maintainer's internal Windows build is unsigned and is not an official public download. Previously passing checks do not certify a later checkout, machine or dependency ecosystem.
 
 vincarios follows these non-negotiable rules:
 
@@ -25,6 +27,8 @@ vincarios follows these non-negotiable rules:
 - V1 has no Trusted/Yolo mode.
 - Oversized provider and write payloads are rejected before provider calls or file writes happen.
 
+Main enforces the filesystem transaction and trusted-window IPC boundaries. R/W context state and visible review are currently renderer-owned; they are not independently proven human approval in Main. The design does not claim protection from malicious code already executing in the trusted app frame.
+
 See `docs/rebuild/VINCARIOS_V1_SAFETY_RULES.md` for the active safety design.
 
 ## Supply-Chain Controls
@@ -33,17 +37,19 @@ See `docs/rebuild/VINCARIOS_V1_SAFETY_RULES.md` for the active safety design.
 - `npm run audit:security` evaluates the complete dependency tree and fails on every known vulnerability. There are no advisory exceptions.
 - `npm run licenses:check` verifies the committed runtime license inventory and rejects missing or unreviewed license expressions.
 - The bundled embedding model is pinned to one source revision and six SHA256 checksums. It is verified before first load and before packaging.
-- CI pins official GitHub actions to commit SHAs and builds a Windows portable smoke artifact after the test job passes.
+- CI pins official GitHub actions to commit SHAs and checks Windows packaging after the test job passes, without uploading the executable. Existing older CI artifacts and Release assets still need a repository-side review before public visibility.
 
-## Beta Trust Guidance
+## Unmaintained Source Guidance
 
-vincarios is local-first and intentionally uses a small dependency surface, but beta builds should still be treated as software from a small/new project. Cautious testers should use a test vault first or build from source. Public release preparation must include dependency audit, secret scan, clean-install check, and release checksums.
+Use a disposable vault or a backed-up copy when evaluating a self-build. The application parses Markdown/YAML and uses Electron and native inference dependencies; do not assume that archiving or building from source makes it safe for untrusted content. Final closure checks include dependency/license/model verification, a history secret scan and internal candidate tests. Their dated results must not be presented as continuous monitoring or a guarantee that no vulnerability exists.
 
 ## Reporting A Vulnerability
 
 Please report security issues privately instead of opening a public issue.
 
 Email [dev@bekarioslabs.de](mailto:dev@bekarioslabs.de), or use the repository's private vulnerability reporting flow when available. Do not include private vault content unless it is essential to reproduce the issue; use a minimal synthetic example whenever possible.
+
+The contact may receive information but does not imply monitored intake, a response deadline or a promised patch. GitHub reporting features may change when the repository is archived. Maintainers of independent forks need their own security contact and supported-version policy.
 
 A useful report includes:
 

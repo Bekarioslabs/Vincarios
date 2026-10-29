@@ -17,17 +17,9 @@
 
 Normal note access validates protected path segments both before and after resolving filesystem links. An in-vault junction into `.obsidian`, `.vincarios`, or `.git` returns `protected_path`, including new descendants below an existing linked ancestor. The canonical check reuses the shared relative-path rules and their blocked-segment options; it does not inspect the absolute vault root name as a note segment. Ordinary links within the vault remain allowed, while links outside it remain blocked. App-owned index/configuration storage retains its separate internal paths and is not authorized through normal note access.
 
-## Runtime Baseline
+## Index Visibility
 
-The source now pins Electron 44.10.0, replacing the unsupported 42 branch after explicit migration approval. Browser clipboard workflows already use `navigator.clipboard`, not the removed renderer `electron.clipboard` module; no new clipboard bridge or permission was introduced. The native sandbox/IPC/window/clipboard-policy and local inference checks must be repeated when the runtime changes, and a source-runtime pass does not certify a newly packaged executable. Review the [upstream breaking changes](https://www.electronjs.org/docs/latest/breaking-changes) and [support schedule](https://releases.electronjs.org/schedule) before a future self-build or archival snapshot.
-
-## App Settings Recovery
-
-The Main settings store distinguishes a missing file (`ENOENT`) from unreadable data. Missing settings use defaults normally. A read/permission failure uses session defaults but blocks every settings mutation until the file can be read after restart; it must not be called JSON corruption or silently overwritten. Failed saves return an explicit settings error and do not commit the candidate in-memory settings. Provider/model selection restores its previous runtime value when persistence fails.
-
-Malformed JSON or a non-object JSON root is recoverable only after the exact source bytes have been preserved beside the app settings file as a unique `settings.json.corrupt-<timestamp>[-suffix]` copy. Exclusive creation never overwrites an earlier copy; only collisions are retried, up to 100 attempts. On a partial-copy failure, cleanup may remove only the copy created by that attempt. If preservation fails, saving remains blocked. The original settings file is left intact until a later settings save; a successful recovery copy permits saving new defaults/preferences without losing the retained original.
-
-Bootstrap displays one native warning per settings-store startup after creating the main window. The warning distinguishes successful recovery from blocked read/recovery, names the retained copy when available and gives a next action; raw filesystem errors and absolute paths are not sent to the renderer. Valid or genuinely missing settings produce no recovery warning. This is settings-load recovery, not a claim of crash-durable or transactional ordinary settings saves.
+Synchronous and asynchronous Markdown index scans exclude every dot-prefixed path segment, including third-party backup/history folders and hidden notes. Targeted index reads reject these paths too. This matches the visible File Tree, change watcher and link-search scope; it does not expand general filesystem permissions. Refresh enabled indexes once to remove entries retained by an older cache. No notes or backup files are deleted.
 
 ## IPC Sender And Error Boundary
 
@@ -37,19 +29,25 @@ Unexpected synchronous exceptions and asynchronous handler rejections return `ip
 
 The policy follows [Electron's sender-validation guidance](https://www.electronjs.org/docs/latest/tutorial/security#17-validate-the-sender-of-all-ipc-messages), with stricter app-owned window/frame identity checks. The optional `node scripts/probe-ipc-boundary.js` exercises real sandboxed Electron frames/windows using synthetic files and a temporary profile; it never opens a user vault. Its adversarial iframe fixture enables a narrow preload bridge in subframes only for the test, not in the app.
 
-## Whole-Note Update Context Budget
-
-`chat:check-update-budget` uses the trusted sender boundary. This metadata-only preflight sends only model/status GETs to a local provider, never note text or a generation request. A successful preflight is not reusable authorization: `chat:send` with `purpose: whole_note_update` rechecks allocation and caps output. Unsupported/external providers and unknown allocations fail closed for this action. Conservative estimation never authorizes source truncation or context enlargement and does not replace existing write safeguards.
-
 ## Application Permissions And Packaged Runtime
 
 `main/app/applicationGuards.js` is installed after the single-instance lock and before any app WebContents is created. Every new WebContents blocks renderer-driven top-level/frame navigation, popups and webview attachment; existing per-window restrictions remain. Each encountered session receives both permission-check and permission-request handlers. Only clipboard read, sanitized write and the legacy synchronous paste permission can be granted, and only to the live current main window, its main frame and the exact packaged shell URL. Missing details, child/foreign frames, replaced windows and every other browser permission are denied. Clipboard read is needed by the app's explicit Paste workflow; this is not a defense against malicious code already executing in the trusted shell. These browser permissions are separate from vault R/W permissions.
 
 The build configuration disables RunAsNode, Node-options environment overrides and CLI inspection; it enables embedded ASAR integrity and ASAR-only application loading. These installed-builder options are configuration-tested. Verification of the actual inner packaged executable, native inference/YAML inside ASAR and the final checksum remains a separate release gate; no newly hardened portable artifact is claimed before that build/test. File-protocol extra privileges are unchanged. Fuses are not code signing and do not make an unsigned executable untamperable.
 
-## Index Visibility
+The source now pins Electron 44.10.0, replacing the unsupported 42 branch after explicit migration approval. Browser clipboard workflows already use `navigator.clipboard`, not the removed renderer `electron.clipboard` module; no new clipboard bridge or permission was introduced. The native sandbox/IPC/window/clipboard-policy and local inference checks must be repeated when the runtime changes, and a source-runtime pass does not certify a newly packaged executable. Review the [upstream breaking changes](https://www.electronjs.org/docs/latest/breaking-changes) and [support schedule](https://releases.electronjs.org/schedule) before a future self-build or archival snapshot.
 
-Synchronous and asynchronous Markdown index scans exclude every dot-prefixed path segment, including third-party backup/history folders and hidden notes. Targeted index reads reject these paths too. This matches the visible File Tree, change watcher and link-search scope; it does not expand general filesystem permissions. Refresh enabled indexes once to remove entries retained by an older cache. No notes or backup files are deleted.
+## Whole-Note Update Context Budget
+
+`chat:check-update-budget` uses the trusted sender boundary. This metadata-only preflight sends only model/status GETs to a local provider, never note text or a generation request. A successful preflight is not reusable authorization: `chat:send` with `purpose: whole_note_update` rechecks allocation and caps output. Unsupported/external providers and unknown allocations fail closed for this action. Conservative estimation never authorizes source truncation or context enlargement and does not replace existing write safeguards.
+
+## App Settings Recovery
+
+The Main settings store distinguishes a missing file (`ENOENT`) from unreadable data. Missing settings use defaults normally. A read/permission failure uses session defaults but blocks every settings mutation until the file can be read after restart; it must not be called JSON corruption or silently overwritten. Failed saves return an explicit settings error and do not commit the candidate in-memory settings. Provider/model selection restores its previous runtime value when persistence fails.
+
+Malformed JSON or a non-object JSON root is recoverable only after the exact source bytes have been preserved beside the app settings file as a unique `settings.json.corrupt-<timestamp>[-suffix]` copy. Exclusive creation never overwrites an earlier copy; only collisions are retried, up to 100 attempts. On a partial-copy failure, cleanup may remove only the copy created by that attempt. If preservation fails, saving remains blocked. The original settings file is left intact until a later settings save; a successful recovery copy permits saving new defaults/preferences without losing the retained original.
+
+Bootstrap displays one native warning per settings-store startup after creating the main window. The warning distinguishes successful recovery from blocked read/recovery, names the retained copy when available and gives a next action; raw filesystem errors and absolute paths are not sent to the renderer. Valid or genuinely missing settings produce no recovery warning. This is settings-load recovery, not a claim of crash-durable or transactional ordinary settings saves.
 
 ## Permission Model
 

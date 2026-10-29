@@ -1,12 +1,16 @@
 # vincarios V1 Final Briefing
 
+## Closure Direction
+
+Feature development has ended. Complete accepted safety hardening and internal Windows verification, then prepare a source-only GPL archive. No public EXE or ongoing beta/support program is planned; the repository has not yet been publicly archived. Product descriptions below document implemented behavior, not new feature commitments. Historical future-version references are ideas for independent forks. The source archive checklist owns the remaining publication gates.
+
 Audit triage reference: [VINCARIOS_V1_AUDIT_TRIAGE.md](./VINCARIOS_V1_AUDIT_TRIAGE.md).
 
 ## Product Sentence
 
 vincarios is a local-first Markdown and project workspace that helps users safely analyze, organize, connect, and update notes through visible, reviewable, reversible actions. Obsidian-style vault compatibility is a supported workflow, not the product's entire identity.
 
-This is the final V1 public positioning. The product name is styled as lowercase `vincarios` in user-facing text; PascalCase `vincarios...` remains valid for internal JavaScript identifiers.
+This is the V1 product positioning. The product name is styled as lowercase `vincarios` in user-facing text; PascalCase `Vincarios...` remains valid for internal JavaScript identifiers.
 
 ## Product Boundary
 
@@ -14,7 +18,7 @@ vincarios V1 is:
 
 - local-first
 - Markdown-first
-- Obsidian-vault oriented
+- compatible with Obsidian-style vault workflows
 - review-first
 - safety-first
 
@@ -123,19 +127,19 @@ Selecting a file or folder in Files only changes the active UI target. It does n
 
 The Context Basket is the explicit selected-file/folder context source. Items are added through app flows such as Selection Actions, shown in the Chat workspace, removable individually, clearable together, and clickable to reveal/select their target in Files.
 
-File context items attach Markdown content only when they were explicitly added and `R` allowed the read at add time. Folder context items attach path context only. Natural-language folder questions may show inline help, but they must not list folder contents. Folder contents are listed through deterministic app actions such as `List folder`, with `R` checked first. Attached context is request-scoped and is not stored in chat history.
+File context items attach Markdown content only when explicitly added with `R`. Folder Context creates a visible bounded Markdown snapshot after an explicit scope choice: current folder or subfolders, depth, maximum files and total-character limits. The packet records included paths/content, effective scope and truncation. It is not a live folder feed; replace it explicitly to capture later note changes. Legacy path-only folder items still contain no note content. Attached context is request-scoped and is not stored in chat history.
 
 If Read is not active for the selected file/folder or one of its parent folders, vincarios must ask the user to enable `R`; it must not guess from the file name or ask for a file upload.
 
 Missing Read/Write blocks show a clear permission message in chat or the relevant panel. V1 does not show permission retry buttons, because they look too similar to real follow-up actions. After enabling the missing permission, the user repeats the original Selection Action or request explicitly. If the selected file has permission but no loaded content, vincarios should instruct the user to reselect/click the file or refresh the preview inside vincarios, not switch to external upload instructions.
 
-Selected folders expose the folder path only. They are not blindly fully loaded. Folder intent handles pending-action replies, existing blocked-action retries, help-only Selection Action guidance, and model-action fallback checks. Typo/fuzzy matching, deictic "here/it" guesses, and broad prompt workarounds are not part of the intent layer. Natural-language folder-content prompts show the inline help `Use "List folder" in Selection Actions to inspect the selected folder.` They do not list, read, or create blocked actions by themselves. Current-level folder listing is owned by the `List folder` Selection Action. Folder scope is controlled by `PendingActionState` plus `FolderContextController` only for open app flows; short replies such as `all` or `alle` only resolve an existing pending folder action. Supported folder-list model-action envelopes remain a fallback, are checked against the active selection, and are returned as a vincarios message instead of raw tool-call text. `list_directory` is normalized to `list_folder` as a structured action alias. Visible app-generated folder listings are not stored in provider history with file names; only a short app-result marker is stored to prevent stale folder-list reuse.
+Selecting a folder does not load it into chat. With explicit Context Basket items, ordinary folder questions continue to the provider instead of being replaced by selection guidance. Without explicit items, folder-content wording may show `Use "Inspect Folder" in Selection Actions to inspect the selected folder.` It does not itself list or read the folder. `Inspect folder` is deterministic and reads structure only; `Check whole tree` uses bounded recursion. Existing pending scope replies and blocked-action retries remain separate app-state flows. Supported `list_folder` / `list_directory` envelopes remain a validated fallback, not provider filesystem access; generated listing filenames are not stored in provider history.
 
-Future Folder Context Index: selected folders can be counted first, then listed and remembered only after user approval. Persistent folder indexes belong in `.vincarios/` or a configured cache location, not blindly in normal vault notes. They should later combine with embeddings for folder candidates, similar-note lookup, and stale-index detection.
+Persistent local indexes are separate from explicit Context Basket snapshots. Index health, metadata search, Similar Notes and opt-in full-text data live under the app-owned `.vincarios/` namespace, not in normal vault notes. Local indexing alone does not attach notes to a provider request.
 
 Context package sources are visibly separated with source labels such as `context_basket`; future dropped Markdown and embedding candidate sources must use their own labels instead of blending into the active selection. Dropped `.md` files become temporary context immediately. They are not automatically imported into the vault. External dropped Markdown files get an `Import to Inbox` action.
 
-Selection Actions are deterministic app buttons for selected targets. Action colors represent behavior categories (`Context`, `Read`, `Write`, later `Organize`); target types use neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`. Current V1 actions include folder context/list/analyze/summarize flows and Markdown summarize/context/similar-notes/tag/update flows. Folder context is path-only; Markdown file context includes loaded note content. Future actions must enter through the same action registry and permission checks.
+Selection Actions are deterministic app buttons for selected targets. Action colors represent behavior categories (`Context`, `Read`, `Write`, later `Organize`); target types use neutral badges such as `DIR`, `MD`, `IMG`, and `FILE`. Current folder actions are Context, Inspect and Summary; Markdown actions are Summary, Context, Similar Notes, Suggest tags and Propose content update. Folder Context and Summary share explicit bounded Markdown scope. Future actions must enter through the same action registry and permission checks.
 ## Actions
 
 Read/search:
@@ -149,6 +153,7 @@ Write:
 
 - `create_note` - executable in Phase 3
 - `update_note` - executable in Phase 3 with diff, backup, stale-content check, and audit
+- `create_from_template` - executable as one reviewed Main-owned transaction
 - `insert_into_note` - known, non-executable until its focused service exists
 - `move_note` - known, non-executable until its focused service exists
 - `rename_note` - known, non-executable until its focused service exists
@@ -161,7 +166,7 @@ Suggestions:
 - `suggest_folder`
 - `proposal_plan`
 
-`delete_note` is not a normal V1 action. V1 archives first. Permanent deletion is a separate trash-emptying workflow.
+`delete_note` is not executable in V1. Automatic archive and trash-emptying workflows are not implemented; do not present their schema vocabulary as available file operations.
 
 ## Embeddings V1-Light
 
@@ -169,7 +174,7 @@ Embeddings are local search support, not automation authority.
 
 V1 provides similar-note discovery from the local vector index. Tag/YAML suggestions in V1 use conservative local metadata heuristics and may later be improved by metadata-index inputs. Link candidates and folder/destination candidates move to V1.1 because they need exact diff/review and safe move/link-update services before they can become executable.
 
-Indexing is automatic by default, can be disabled in Options, and can be rebuilt manually.
+Settings exposes index health and one refresh flow for enabled indexes. Full-text search is an explicit opt-in. Watcher-driven freshness/incremental updates do not promise automatic embedding rebuilds after every change; the displayed state determines whether a manual refresh is needed.
 
 ## New Project
 
@@ -223,6 +228,7 @@ Not V1 Options:
 - Providers never read/write files.
 - Renderer never gets direct filesystem power.
 - Main validates paths and enforces safety.
+- Main enforces filesystem transactions and the trusted-window IPC boundary; visible review and R/W context state are currently renderer-owned, not independently proven human approval in Main.
 - Prompt rules live in a prompt module, not in UI rendering.
 - Review state is separate from chat.
 - Permissions and context are separate modules.
@@ -273,4 +279,4 @@ Do not copy old large orchestration files forward.
 
 Use the same lessons, not the same structure.
 
-Phase 5.4 UX Intent Foundation is now the required bridge before Phase 5.5. It exists to remove broad prompt-trigger dependency before reviewed updates. The target is a deterministic UI flow: Files top-left, Selection Actions top-right, Markdown Preview below both, grouped left navigation, two-pane Settings, Obsidian-like YAML Properties display, scoped selection behavior, file-tree keyboard navigation, and English default development vault roles.
+The implemented UI uses grouped left navigation, a main workspace and resizable Files, Selection Actions and Markdown Preview panes. Two-pane Settings, visible YAML Properties, scoped selection and file-tree keyboard navigation remain the current foundation. This document describes that implementation; historical phase labels are not new build instructions.
