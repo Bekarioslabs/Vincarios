@@ -9,6 +9,7 @@ const DEFAULT_DEBOUNCE_MS = 350;
 
 function createVaultChangeService(options) {
   options = options || {};
+  const fileSystem = options.fs || fs;
   const watch = options.watch || fs.watch;
   const schedule = options.setTimeout || setTimeout;
   const cancel = options.clearTimeout || clearTimeout;
@@ -83,6 +84,15 @@ function createVaultChangeService(options) {
 
   function flush() {
     timer = null;
+    let rootAvailable = false;
+    try {
+      // A deletion-pending Windows directory can still stat as a directory.
+      rootAvailable = fileSystem.existsSync(vaultRoot) && fileSystem.statSync(vaultRoot).isDirectory();
+    } catch (_error) {}
+    if (!rootAvailable) {
+      onWatcherError(watcherRevision);
+      return;
+    }
     const event = Object.freeze({
       root: vaultRoot,
       affectsMarkdownIndex: pendingMarkdownChange,

@@ -53,6 +53,8 @@ Bootstrap displays one native warning per settings-store startup after creating 
 
 Startup acquires Electron's single-instance lock before namespace migration, settings loading or IPC registration. A denied lock quits without starting those services; the primary instance restores and focuses its live window on a second launch. Portable executable lock identity still requires the final Windows runtime smoke test.
 
+Vault watching checks root existence and directory type once per debounced change batch, not per raw file event and not by polling. If the root disappears, becomes a file or those checks fail, the existing watcher-unavailable path closes the watcher, drops queued changes and invalidates index health once. Both probes are needed: Windows can report a deletion-pending directory through `stat` even when the existence check fails, while emitting repeated rename/change events rather than `error`. A later explicit root activation starts a new watcher normally; old callbacks remain session-isolated. This check neither reads note contents nor recreates a removed vault, and it does not certify all filesystem permissions or prevent external races after the check.
+
 - Local File Tree navigation, Markdown Preview, deterministic local Search, and local index building do not require Read permission. They remain inside the selected vault and never send note content to a provider by themselves.
 - Read permission allows a selected file or folder snapshot to become provider-bound AI context.
 - Write permission allows proposals to be considered.

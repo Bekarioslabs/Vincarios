@@ -9,7 +9,9 @@ test('vault change service debounces visible vault changes and ignores protected
   let watchCallback = null;
   const timers = [];
   const events = [];
+  let rootChecks = 0;
   const service = createVaultChangeService({
+    fs: { existsSync: () => true, statSync() { rootChecks += 1; return { isDirectory: () => true }; } },
     watch(_root, _options, callback) { watchCallback = callback; return { close() {} }; },
     setTimeout(callback) { timers.push(callback); return timers.length; },
     clearTimeout() {}
@@ -22,7 +24,9 @@ test('vault change service debounces visible vault changes and ignores protected
   watchCallback('change', 'Assets/Cover.png');
 
   assert.equal(timers.length, 1);
+  assert.equal(rootChecks, 0);
   timers[0]();
+  assert.equal(rootChecks, 1);
 
   assert.deepEqual(events, [{
     root: 'D:/Vault',
@@ -50,6 +54,7 @@ test('vault change service marks unknown and folder events for safe metadata reb
   const timers = [];
   const events = [];
   const service = createVaultChangeService({
+    fs: { existsSync: () => true, statSync: () => ({ isDirectory: () => true }) },
     watch(_root, _options, callback) { watchCallback = callback; return { close() {} }; },
     setTimeout(callback) { timers.push(callback); return timers.length; },
     clearTimeout() {}
@@ -100,6 +105,7 @@ test('old watcher events and queued flush cannot affect a newly opened vault', (
   const timers = [];
   const events = [];
   const service = createVaultChangeService({
+    fs: { existsSync: () => true, statSync: () => ({ isDirectory: () => true }) },
     watch(_root, _options, callback) {
       const watcher = new EventEmitter();
       watcher.close = () => {};
@@ -147,3 +153,45 @@ test('watch setup failure invalidates health and a later root activation retries
   assert.equal(calls, 2);
   service.close();
 });
+
+for (const state of ['missing', 'not-directory', 'unreadable', 'delete-pending']) {
+  test('a debounced change closes an unusable vault root once and can recover: ' + state, () => {
+    const timers = [];
+    const callbacks = [];
+    const events = [];
+    let available = false;
+    let closes = 0;
+    const service = createVaultChangeService({
+      fs: { existsSync: () => available || state !== 'delete-pending', statSync() {
+        if (available || state === 'delete-pending') return { isDirectory: () => true };
+        if (state === 'not-directory') return { isDirectory: () => false };
+        throw Object.assign(new Error('Synthetic root failure'), { code: state === 'missing' ? 'ENOENT' : 'EACCES' });
+      } },
+      watch(_root, _options, callback) {
+        callbacks.push(callback);
+        return { close() { closes += 1; } };
+      },
+      setTimeout(callback) { timers.push(callback); return timers.length; },
+      clearTimeout() {}
+    });
+    service.subscribe((event) => events.push(event));
+    service.setRoot('D:/First');
+    callbacks[0]('rename', undefined);
+    timers[0]();
+    assert.equal(closes, 1);
+    assert.deepEqual(events, [{ root: 'D:/First', affectsMarkdownIndex: true, requiresMetadataRebuild: true,
+      markdownPaths: [], watcherUnavailable: true, code: 'vault_watch_unavailable' }]);
+    callbacks[0]('rename', undefined);
+    timers[0]();
+    assert.equal(events.length, 1);
+    assert.equal(timers.length, 1);
+    available = true;
+    service.setRoot('D:/Next');
+    callbacks[1]('change', 'Current.md');
+    timers[1]();
+    assert.equal(events.length, 2);
+    assert.equal(events[1].root, 'D:/Next');
+    assert.deepEqual(events[1].markdownPaths, ['Current.md']);
+    service.close();
+  });
+}
