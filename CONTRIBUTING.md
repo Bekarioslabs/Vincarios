@@ -1,6 +1,6 @@
 # Contributing To vincarios
 
-Feature development has ended. Final closure checks are in progress before publication as an unmaintained source archive; the repository is not yet publicly archived. There will be no further development, updates, technical support, issue triage, pull-request reviews or merges. Issues and pull requests are not accepted; security reports will not be processed or answered. Continue the project in an independent fork rather than waiting for an upstream response.
+Feature development has ended. This is an unmaintained source snapshot, with no further development, updates, technical support, issue triage, pull-request reviews or merges. Issues and pull requests are not accepted; security reports will not be processed or answered. Continue the project in an independent fork rather than waiting for an upstream response.
 
 ## Product Boundary
 

@@ -73,6 +73,8 @@ Lowercase wordmark: `vinca` uses `--text-accent`, `rios` uses `--text-strong`. D
 
 Windows window/package icon: `vincarios-icon.ico`, generated from the dark SVG with `node scripts/generate-app-icon.js`. Regenerate after replacing that SVG; existing EXEs require rebuilding.
 
+Public README: centered 128px logo with the existing dark/light SVG variants selected through a `picture` element, lowercase project name, short description and visible unmaintained-source notice. One large workspace screenshot and a two-column gallery lead; secondary views live in a `details` section. Reviewed, unchanged screenshots are stored in `docs/screenshots/`; exclude captures showing local machine paths. Keep this presentation separate from runtime UI styling.
+
 ## Colors
 
 YAML lists all 36 primitive colors. `ember` = `--color-amber-500`; `ember-interactive` = `--color-amber-600`. Shade families support folder visuals; components consume semantic roles.

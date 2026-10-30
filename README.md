@@ -1,22 +1,53 @@
-# vincarios
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="src/renderer/assets/brand/vincarios-logo-dark.svg">
+    <img src="src/renderer/assets/brand/vincarios-logo-light.svg" alt="vincarios logo" width="128">
+  </picture>
+</p>
 
-**Local-first Markdown assistant.**
+<h1 align="center">vincarios</h1>
+
+<p align="center">A local-first Markdown workspace with explicit AI context and reviewed note changes.</p>
 
 vincarios is a local-first Markdown and project workspace for safely analyzing, organizing, connecting, and updating notes through visible, reviewable actions. It works well with Obsidian-style vaults without attempting to replace Obsidian.
 
-## Status
+> **Project status: discontinued, no longer maintained.** vincarios is provided as-is.
+> Active development has ended. No future updates, bug fixes, compatibility/security updates
+> or technical support will be provided. Issues and pull requests are not accepted;
+> security reports will not be processed or answered. Independent forks are welcome.
 
-**Discontinued project; source-only archive preparation.** vincarios is provided as-is. Active development has ended; no future updates, bug fixes, compatibility/security updates or technical support will be provided. Issues and pull requests are not accepted, and security reports will not be processed or answered. Final closure checks are in progress; the repository has not yet been publicly archived.
+**Source only, GPL-3.0-only.** No official EXE or installer is distributed. The final snapshot retains the tested `0.1.0-beta.1` package identifier; it is not a stable 1.0 release or an announcement of a continuing beta program. See [CONTRIBUTING.md](CONTRIBUTING.md) for independent-fork guidance.
 
-The publication target is the GPL-3.0-only source code and a source ZIP, not a downloadable EXE or installer. The final snapshot retains the tested `0.1.0-beta.1` package identifier; it is not a stable 1.0 release or an announcement of a continuing beta program. Independent forks are welcome under the license; see [CONTRIBUTING.md](CONTRIBUTING.md).
+![The Markdown workspace: vault navigation, Selection Actions, and a preview with properties, task lists, a table and an embedded image](docs/screenshots/workspace.webp)
 
-![vincarios overview: local Markdown vaults, local AI and reviewed note changes](gestaltung/quellen/social-preview.png)
+| Local Search | Local AI And Explicit Context |
+|---|---|
+| ![Searching the local vault by name, path, metadata and optional full-text content](docs/screenshots/search.webp) | ![A local-model summary beside its source notes and explicitly selected Context Basket items](docs/screenshots/summarize.webp) |
+| **Review Before Writing** | **Light Mode** |
+| ![The Review Basket and a diff showing proposed note removals and additions before execution](docs/screenshots/review-diff.webp) | ![The workspace in its light theme with an Inbox report and Markdown preview](docs/screenshots/theme-light-02.webp) |
 
-The graphic illustrates the note-review workflow. App settings and local cache writes are separate from reviewed note-content changes.
+Screenshots use demonstration notes. Model-generated text in a proposal is illustrative, not a specification of app capabilities. Note-content changes use the review workflow; settings and local cache writes are separate.
+
+<details>
+<summary>More screenshots: themes, vault profiles and indexing</summary>
+
+### High-Contrast Theme
+
+![The same workspace with a black background and turquoise interface accents](docs/screenshots/theme-dark-02.webp)
+
+### Vault Profile
+
+![Mapping folder roles to vault folders with selectable icons and colors](docs/screenshots/vault-profile.webp)
+
+### Local Indexes
+
+![Embedding and metadata index status, optional Full-text Search and the shared refresh action](docs/screenshots/settings-embeddings.webp)
+
+</details>
 
 ## Development Approach
 
-vincarios was developed with AI assistance and human oversight. Closure changes are reviewed against its safety architecture, covered by automated checks where practical, and validated through manual smoke tests. This is not a certification of security or suitability for valuable data. Start with a test vault or a backed-up copy.
+vincarios was developed with AI assistance and human oversight. The final source snapshot received automated checks and manual Windows smoke tests. These dated checks are not a certification of security or suitability for valuable data. Start with a test vault or a backed-up copy.
 
 ## What V1 Does
 
@@ -55,7 +86,7 @@ Requirements:
 
 Download the repository's source ZIP and extract it into a writable folder, or clone the source. Open PowerShell in that folder. A source ZIP does not include dependencies, the embedding model, private settings or a ready-to-run desktop application.
 
-For a tagged source release, use GitHub's automatic `Source code (zip)` or `Source code (tar.gz)` download; no separate custom source ZIP is planned. A release tag identifies its source commit, not a promise of ongoing support.
+For a tagged source release, use GitHub's automatic `Source code (zip)` or `Source code (tar.gz)` download; no separate custom source ZIP is supplied. A release tag identifies its source commit, not a promise of ongoing support.
 
 ```powershell
 npm ci
@@ -91,7 +122,7 @@ npm run model:provision
 npm run build:win
 ```
 
-The output is written to `release/`. This is a self-build option, not an official binary download. Builds are Windows-only and unsigned; Windows may show an unknown-publisher warning. The maintainer's closure build is for internal verification and will not be attached to a public Release or uploaded as a CI artifact. Anyone redistributing a build is responsible for their own packaging, source/license compliance and update policy.
+The output is written to `release/`. This is a self-build option, not an official binary download. Builds are Windows-only and unsigned; Windows may show an unknown-publisher warning. The maintainer's closure build is for internal verification only; no executable is attached to the source release or uploaded as a CI artifact. Anyone redistributing a build is responsible for their own packaging, source/license compliance and update policy.
 
 ## V1 Limits
 
@@ -102,7 +133,7 @@ The output is written to `release/`. This is a self-build option, not an officia
 - Theme Editor/shareable theme packages, advanced YAML editing, link repair, drag-and-drop move, and batch internal-link insertion are not implemented. The [historical backlog](docs/rebuild/VINCARIOS_POST_V1_BACKLOG.md) is reference material for independent forks, not a release commitment.
 - Folder-context packets are bounded snapshots, not live folders. Replace a packet explicitly to capture later note changes.
 - Indexing excludes hidden notes and dot-prefixed folders, including third-party history/backup folders. Refresh enabled indexes once to remove entries from an older cache; notes and backups are not deleted.
-- Map notes can be read as Markdown, including properties, tables, local image embeds and note links. Other applications' interactive maps and Obsidian plugin-specific rendering are not reproduced. Final closure verification is still pending; this preparation state is not a completed release candidate.
+- Map notes can be read as Markdown, including properties, tables, local image embeds and note links. Other applications' interactive maps and Obsidian plugin-specific rendering are not reproduced.
 - Pinned dependencies and checksums do not provide ongoing security updates. Review dependencies yourself before building or maintaining a fork.
 
 ## License

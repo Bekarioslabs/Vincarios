@@ -2,7 +2,7 @@
 
 ## Closure Target
 
-**Target:** finish the accepted safety hardening, then publish the GPL-3.0-only source and archive the repository after explicit approval. No public EXE, installer or CI binary artifact is planned. The repository has not yet been publicly archived.
+**Target:** preserve the accepted safety-hardened final snapshot as unmaintained GPL-3.0-only source. No public EXE, installer or CI binary artifact is distributed. Public visibility, a source release and repository archival require separate explicit approvals; this document does not assert their current GitHub state.
 
 Use GitHub's automatically generated `Source code (zip)` / `Source code (tar.gz)` for the approved release tag; do not upload a redundant custom source ZIP. Record the exact source commit. GitHub can regenerate archive compression, so do not promise an indefinitely identical ZIP checksum. Verify extracted contents and a clean setup instead. See [GitHub's archive documentation](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives).
 

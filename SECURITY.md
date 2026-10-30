@@ -9,7 +9,7 @@ vincarios is a local-first Markdown vault assistant. Its security model is built
 | Current source / main branch | No ongoing maintenance |
 | Historical versions or self-built applications | No |
 
-Feature development has ended; final source-archive preparation is still in progress. No security updates, fixes, technical support or security-report handling are provided. Reports will not be processed or answered. The repository is not yet publicly archived. No official executable will be distributed with the source archive.
+Feature development has ended. This is an unmaintained source snapshot: no security updates, fixes, technical support or security-report handling are provided. Reports will not be processed or answered. No official executable is distributed with the source archive.
 
 ## Security Model
 
@@ -37,7 +37,7 @@ See `docs/rebuild/VINCARIOS_V1_SAFETY_RULES.md` for the active safety design.
 - `npm run audit:security` evaluates the complete dependency tree and fails on every known vulnerability. There are no advisory exceptions.
 - `npm run licenses:check` verifies the committed runtime license inventory and rejects missing or unreviewed license expressions.
 - The bundled embedding model is pinned to one source revision and six SHA256 checksums. It is verified before first load and before packaging.
-- CI pins official GitHub actions to commit SHAs and checks Windows packaging after the test job passes, without uploading the executable. Existing older CI artifacts and Release assets still need a repository-side review before public visibility.
+- CI pins official GitHub actions to commit SHAs and checks Windows packaging after the test job passes, without uploading the executable. No official binary assets are distributed. Fork maintainers must review their own workflows and downloads rather than assuming this policy applies to them.
 
 ## Unmaintained Source Guidance
 

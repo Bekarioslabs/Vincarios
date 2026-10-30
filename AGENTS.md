@@ -15,7 +15,7 @@ vincarios is a local-first Markdown and project workspace. Obsidian-style vault 
 
 Do not add features outside V1 without updating the product brief and asking Beka.
 
-**Closure direction:** feature development has ended. Finish the accepted safety hardening and internal Windows verification, then prepare an unmaintained GPL source archive without a public EXE. The repository is not yet publicly archived. Old rebuild/beta instructions do not authorize deleting, resetting, scaffolding or publishing anything. See the source archive checklist in `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`; remote operations still require explicit approval.
+**Closure direction:** feature development has ended. The accepted safety hardening and internal Windows verification define the final unmaintained GPL source snapshot; there is no public EXE. Repository visibility, release and archival are separate administrative operations, not implied by this status. Old rebuild/beta instructions do not authorize deleting, resetting, scaffolding or publishing anything. See the source archive checklist in `docs/rebuild/VINCARIOS_V1_IMPLEMENTATION_PLAN.md`; remote operations still require explicit approval.
 
 **Priorities:** Safety → Reliable Markdown workflows → Review UX → Maintainable architecture → Local providers
 
